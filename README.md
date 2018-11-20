@@ -44,6 +44,8 @@ cImport("clib.h")
 cCompile("clib/src/*.c")
 ```
 
+Refer to the ```tests``` directory for examples on how the library can be used.
+
 __Documentation__
 
 Detailed documentation is still forthcoming.
