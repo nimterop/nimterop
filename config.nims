@@ -1,0 +1,1 @@
+switch("gcc.linkerexe", "g++")

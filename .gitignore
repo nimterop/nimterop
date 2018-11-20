@@ -1,0 +1,5 @@
+nimcache
+*.exe
+*.swp
+test*
+toast
