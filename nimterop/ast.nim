@@ -28,7 +28,7 @@ proc preprocDef(node: ref Ast) =
 
     if name.nBl and val.nBl and name notin gConsts:
       gConsts.add(name)
-      if val.getType().nBl:
+      if val.getLit().nBl:
         # #define NAME VALUE
         gConstStr &= &"  {name.getIdentifier()}* = {val} # preprocDef()\n"
 
@@ -65,13 +65,17 @@ proc structSpecifier(node: ref Ast, name = "") =
       of "type_identifier":
         let typ = getNodeValIf(node.children[0], "type_identifier")
         if typ.nBl:
-          # typedef struct X Y
           gTypes.add(name)
-          gTypeStr &= &"  {name}* = {typ} #1 structSpecifier()\n"
+          if name != typ:
+            # typedef struct X Y
+            gTypeStr &= &"  {name}* = {typ} #1 structSpecifier()\n"
+          else:
+            # typedef struct X X
+            gTypeStr &= &"  {name}* {{.importc: \"{name}\", header: {gCurrentHeader}, bycopy.}} = object #2 structSpecifier()\n"
 
       of "field_declaration_list":
         # typedef struct { fields } X
-        stmt = &"  {name}* {{.importc: \"{name}\", header: {gCurrentHeader}, bycopy.}} = object #2 structSpecifier()\n"
+        stmt = &"  {name}* {{.importc: \"{name}\", header: {gCurrentHeader}, bycopy.}} = object #3 structSpecifier()\n"
           
         for field in node.children[0].children:
           let ts = typeScan(field, "field_declaration", "field_identifier", "    ")
@@ -85,7 +89,7 @@ proc structSpecifier(node: ref Ast, name = "") =
     let ename = getNodeValIf(node.children[0], "type_identifier")
     if ename.nBl and ename notin gTypes:
       # struct X { fields }
-      stmt &= &"  {ename}* {{.importc: \"struct {ename}\", header: {gCurrentHeader}, bycopy.}} = object #3 structSpecifier()\n"
+      stmt &= &"  {ename}* {{.importc: \"struct {ename}\", header: {gCurrentHeader}, bycopy.}} = object #4 structSpecifier()\n"
 
       for field in node.children[1].children:
         let ts = typeScan(field, "field_declaration", "field_identifier", "    ")
