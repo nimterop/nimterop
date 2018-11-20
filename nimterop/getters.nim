@@ -16,7 +16,7 @@ proc getLit*(str: string): string =
     str.contains(re"^0x[\d]+$"):
     return str
 
-proc getNodeValIf*(node: Ast, esym: string): string =
+proc getNodeValIf*(node: ref Ast, esym: string): string =
   if esym != node.sym:
     return
   
@@ -28,7 +28,7 @@ proc getGccPaths*(mode = "c"): string =
   
   return staticExec("gcc -Wp,-v -x" & mode & " " & nul)
 
-proc getLineCol*(node: Ast): tuple[line, col: int] =
+proc getLineCol*(node: ref Ast): tuple[line, col: int] =
   result.line = 1
   result.col = 1
   echo gCode[node.start .. node.stop-1]

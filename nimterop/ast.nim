@@ -20,7 +20,7 @@ proc addHeader*(fullpath: string) =
 # Preprocessor
 #
   
-proc preprocDef(node: Ast) =
+proc preprocDef(node: ref Ast) =
   if node.children.len() == 2:
     let
       name = getNodeValIf(node.children[0], "identifier")
@@ -36,7 +36,7 @@ proc preprocDef(node: Ast) =
 # Types
 #
 
-proc typeScan(node: Ast, sym, identifier, offset: string): string =
+proc typeScan(node: ref Ast, sym, identifier, offset: string): string =
   if node.sym != sym or node.children.len() != 2:
     return
 
@@ -58,7 +58,7 @@ proc typeScan(node: Ast, sym, identifier, offset: string): string =
   else:
     return
 
-proc structSpecifier(node: Ast, name = "") =
+proc structSpecifier(node: ref Ast, name = "") =
   var stmt: string
   if node.children.len() == 1 and name notin gTypes:
     case node.children[0].sym:
@@ -96,7 +96,7 @@ proc structSpecifier(node: Ast, name = "") =
       gTypes.add(name)
       gTypeStr &= stmt
 
-proc enumSpecifier(node: Ast, name = "") =
+proc enumSpecifier(node: ref Ast, name = "") =
   var
     ename: string
     elid: int
@@ -131,7 +131,7 @@ proc enumSpecifier(node: Ast, name = "") =
     gTypes.add(name)
     gTypeStr &= stmt
 
-proc typeDefinition(node: Ast) =
+proc typeDefinition(node: ref Ast) =
   if node.children.len() == 2:
     let
       name = getNodeValIf(node.children[1], "type_identifier")
@@ -154,7 +154,7 @@ proc typeDefinition(node: Ast) =
           of "enum_specifier":
             enumSpecifier(node.children[0], name)
 
-proc functionDeclarator(node: Ast, typ: string) =
+proc functionDeclarator(node: ref Ast, typ: string) =
   if node.children.len() == 2:
     let
       name = getNodeValIf(node.children[0], "identifier")
@@ -181,7 +181,7 @@ proc functionDeclarator(node: Ast, typ: string) =
       gProcs.add(name)
       gProcStr &= stmt
       
-proc declaration*(node: Ast) =
+proc declaration*(node: ref Ast) =
   if node.children.len() == 2 and node.children[1].sym == "function_declarator":
     let
       ptyp = getNodeValIf(node.children[0], "primitive_type")
@@ -196,7 +196,7 @@ proc declaration*(node: Ast) =
       if styp.nBl:
         functionDeclarator(node.children[1], styp)
           
-proc genNimAst*(node: Ast) =
+proc genNimAst*(node: ref Ast) =
   case node.sym:
     of "ERROR":
       let (line, col) = getLineCol(node)
@@ -213,6 +213,8 @@ proc genNimAst*(node: Ast) =
     of "enum_specifier":
       if node.parent.sym notin ["type_definition", "declaration"]:
         enumSpecifier(node)
+    of "":
+      return
 
   for child in node.children:
     genNimAst(child)

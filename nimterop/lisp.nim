@@ -26,7 +26,7 @@ proc tokenize(fullpath: string) =
       else:
         collect &= $i
 
-proc readFromTokens(): Ast =
+proc readFromTokens(): ref Ast =
   if idx == gTokens.len():
     echo "Bad AST"
     quit(1)
@@ -35,6 +35,7 @@ proc readFromTokens(): Ast =
     if gTokens.len() - idx < 2:
       echo "Corrupt AST"
       quit(1)
+    result = new(Ast)
     result.sym = gTokens[idx+1]
     result.start = gTokens[idx+2].parseInt()
     result.stop = gTokens[idx+3].parseInt()
@@ -42,18 +43,16 @@ proc readFromTokens(): Ast =
     result.children = @[]
     while gTokens[idx] != ")":
       var res = readFromTokens()
-      if res.sym.nBl:
-        res.parent = addr result
+      if not res.isNil() and res.sym.nBl:
+        res.parent = result
         result.children.add(res)
-    idx += 1
-    return
   elif gTokens[idx] == ")":
     echo "Poor AST"
     quit(1)
   
   idx += 1
 
-proc printAst*(node: Ast, offset=""): string =
+proc printAst*(node: ref Ast, offset=""): string =
   result = offset & "(" & node.sym & " " & $node.start & " " & $node.stop
   if node.children.len() != 0:
     result &= "\n"
@@ -63,7 +62,7 @@ proc printAst*(node: Ast, offset=""): string =
   else:
     result &= ")\n"
 
-proc parseLisp*(fullpath: string): Ast =
+proc parseLisp*(fullpath: string): ref Ast =
   tokenize(fullpath)
         
   return readFromTokens()

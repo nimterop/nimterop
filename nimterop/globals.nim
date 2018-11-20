@@ -4,8 +4,8 @@ type
   Ast* = object
     sym*: string
     start*, stop*: int
-    parent*: ptr Ast
-    children*: seq[Ast]
+    parent*: ref Ast
+    children*: seq[ref Ast]
 
 var
   gDefines* {.compiletime.}: seq[string]
