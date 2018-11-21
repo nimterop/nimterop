@@ -31,7 +31,6 @@ proc getGccPaths*(mode = "c"): string =
 proc getLineCol*(node: ref Ast): tuple[line, col: int] =
   result.line = 1
   result.col = 1
-  echo gCode[node.start .. node.stop-1]
   for i in 0 .. node.start-1:
     if gCode[i] == '\n':
       result.col = 0

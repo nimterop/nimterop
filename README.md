@@ -58,6 +58,8 @@ Detailed documentation is still forthcoming.
 
 `cImport()` - import all supported definitions from specific import header file
 
+`gitPull()` - pull a git repository prior to C/C++ interop
+
 __Implementation Details__
 
 In order to use the tree-sitter C library at compile-time, it has to be compiled into a separate binary called `toast` (to AST) since the Nim VM doesn't yet support FFI. `toast` takes a C/C++ file and runs it through the tree-sitter API which returns an AST data structure. This is then printed out to stdout in a Lisp S-Expression format.
