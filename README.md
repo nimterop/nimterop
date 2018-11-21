@@ -27,6 +27,11 @@ nimble install "http://github.com/genotrance/nimtreesitter?subdir=treesitter_cpp
 
 nimble install http://github.com/genotrance/nimterop
 ```
+or:
+```bash
+git clone http://github.com/genotrance/nimterop && cd nimterop
+nimble installWithDeps
+```
 
 This will download and install nimterop in the standard Nimble package location, typically ~/.nimble. Once installed, it can be imported into any Nim program.
 

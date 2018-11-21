@@ -12,8 +12,19 @@ installDirs = @["nimterop"]
 
 requires "nim >= 0.19.0", "treesitter >= 0.1.0", "treesitter_c >= 0.1.0", "treesitter_cpp >= 0.1.0", "regex >= 0.10.0"
 
+proc execCmd(cmd:string)=
+  echo cmd
+  exec cmd
+
 task test, "Test":
-  exec "nim c -r tests/tnimterop"
+  execCmd "nim c -r tests/tnimterop"
 
 task testext, "Test":
-  exec "nim c -r tests/tnimteropext"
+  execCmd "nim c -r tests/tnimteropext"
+
+task installWithDeps, "install dependencies":
+  for a in ["http://github.com/genotrance/nimtreesitter?subdir=treesitter",
+            "http://github.com/genotrance/nimtreesitter?subdir=treesitter_c",
+            "http://github.com/genotrance/nimtreesitter?subdir=treesitter_cpp",]:
+    execCmd "nimble install -y " & a
+  execCmd "nimble install"
