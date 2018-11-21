@@ -21,9 +21,9 @@ __Installation__
 Nimterop can be installed via [Nimble](https://github.com/nim-lang/nimble):
 
 ```
-> nimble install http://github.com/genotrance/nimtreesitter?subdir=treesitter
-> nimble install http://github.com/genotrance/nimtreesitter?subdir=treesitter_c
-> nimble install http://github.com/genotrance/nimtreesitter?subdir=treesitter_cpp
+> nimble install "http://github.com/genotrance/nimtreesitter?subdir=treesitter"
+> nimble install "http://github.com/genotrance/nimtreesitter?subdir=treesitter_c"
+> nimble install "http://github.com/genotrance/nimtreesitter?subdir=treesitter_cpp"
 
 > nimble install http://github.com/genotrance/nimterop
 ```
