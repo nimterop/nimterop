@@ -16,7 +16,7 @@ proc getLit*(str: string): string =
     str.contains(re"^0x[\d]+$"):
     return str
 
-proc getNodeValIf*(node: ref Ast, esym: string): string =
+proc getNodeValIf*(node: ref Ast, esym: Sym): string =
   if esym != node.sym:
     return
   
