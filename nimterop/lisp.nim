@@ -24,6 +24,10 @@ proc tokenize(fullpath: string) =
       else:
         collect &= $i
 
+  if gTokens.len() == 0:
+    echo "toast binary not installed - nimble install nimterop to force build"
+    quit(1)
+
 proc readFromTokens(): ref Ast =
   if idx == gTokens.len():
     echo "Bad AST"
@@ -35,14 +39,17 @@ proc readFromTokens(): ref Ast =
       quit(1)
     if gTokens[idx+1] != "comment":
       result = new(Ast)
-      result.sym = gTokens[idx+1]
-      result.start = gTokens[idx+2].parseInt()
-      result.stop = gTokens[idx+3].parseInt()
+      try:
+        result.sym = parseEnum[Sym](gTokens[idx+1])
+      except:
+        result.sym = IGNORED
+      result.start = gTokens[idx+2].parseInt().uint32
+      result.stop = gTokens[idx+3].parseInt().uint32
       result.children = @[]
     idx += 4
     while gTokens[idx] != ")":
       var res = readFromTokens()
-      if not res.isNil() and res.sym.nBl:
+      if not res.isNil():
         res.parent = result
         result.children.add(res)
   elif gTokens[idx] == ")":
@@ -52,7 +59,7 @@ proc readFromTokens(): ref Ast =
   idx += 1
 
 proc printAst*(node: ref Ast, offset=""): string =
-  result = offset & "(" & node.sym & " " & $node.start & " " & $node.stop
+  result = offset & "(" & $node.sym & " " & $node.start & " " & $node.stop
   if node.children.len() != 0:
     result &= "\n"
     for child in node.children:
