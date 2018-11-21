@@ -8,7 +8,7 @@ proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'})
 
 proc getType*(str: string): string =
-  result = str.strip(chars={'_'}).replace(re"([u]?int[\d]+)_t", "$1")
+  result = str.strip(chars={'_'}).replace(re"([u]?int[\d]+)_t", "$1").replace(re"^void$", "object")
   
 proc getLit*(str: string): string =
   if str.contains(re"^[\-]?[\d]+$") or

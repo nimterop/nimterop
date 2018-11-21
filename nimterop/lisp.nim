@@ -13,16 +13,14 @@ proc tokenize(fullpath: string) =
   
   gTokens = @[]
   idx = 0
-  for i in staticExec("toast " & fullpath):
+  for i in staticExec("toast -u " & fullpath):
     case i:
-      of ' ', '\n', '\r', ')':
+      of ' ', '\n', '\r', '(', ')':
         if collect.nBl:
           gTokens.add(collect)
           collect = ""
-        if i == ')':
-          gTokens.add(")")
-      of '(':
-        gTokens.add("(")
+        if i in ['(', ')']:
+          gTokens.add($i)
       else:
         collect &= $i
 

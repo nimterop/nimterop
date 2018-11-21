@@ -8,6 +8,9 @@ const HELP = """
 > toast header.h
 """
 
+var
+  gPretty = true
+
 proc printLisp(root: TSNode, data: var string) =
   var
     node = root
@@ -16,21 +19,30 @@ proc printLisp(root: TSNode, data: var string) =
     
   while true:
     if not node.tsNodeIsNull():
-      stdout.write spaces(depth) & "(" & $node.tsNodeType() & " " & $node.tsNodeStartByte() & " " & $node.tsNodeEndByte()
+      if gPretty:
+        stdout.write spaces(depth)
+      stdout.write "(" & $node.tsNodeType() & " " & $node.tsNodeStartByte() & " " & $node.tsNodeEndByte()
 
     if node.tsNodeNamedChildCount() != 0:
-      echo ""
+      if gPretty:
+        echo ""
       nextnode = node.tsNodeNamedChild(0)
       depth += 1
     else:
-      echo ")"
+      if gPretty:
+        echo ")"
+      else:
+        stdout.write ")"
       nextnode = node.tsNodeNextNamedSibling()
 
     if nextnode.tsNodeIsNull():
       while true:
         node = node.tsNodeParent()
         depth -= 1
-        echo spaces(depth) & ")"
+        if gPretty:
+          echo spaces(depth) & ")"
+        else:
+          stdout.write ")"
         if node == root:
           break
         if not node.tsNodeNextNamedSibling().tsNodeIsNull():
@@ -93,6 +105,8 @@ proc parseCli() =
     if param in ["-h", "--help", "-?", "/?", "/h"]:
       echo HELP
       quit()
+    elif param == "-u":
+      gPretty = false
     else:
       process(param)
 
