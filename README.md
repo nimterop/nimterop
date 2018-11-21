@@ -20,12 +20,12 @@ __Installation__
 
 Nimterop can be installed via [Nimble](https://github.com/nim-lang/nimble):
 
-```
-> nimble install http://github.com/genotrance/nimtreesitter?subdir=treesitter
-> nimble install http://github.com/genotrance/nimtreesitter?subdir=treesitter_c
-> nimble install http://github.com/genotrance/nimtreesitter?subdir=treesitter_cpp
+```bash
+nimble install "http://github.com/genotrance/nimtreesitter?subdir=treesitter"
+nimble install "http://github.com/genotrance/nimtreesitter?subdir=treesitter_c"
+nimble install "http://github.com/genotrance/nimtreesitter?subdir=treesitter_cpp"
 
-> nimble install http://github.com/genotrance/nimterop
+nimble install http://github.com/genotrance/nimterop
 ```
 
 This will download and install nimterop in the standard Nimble package location, typically ~/.nimble. Once installed, it can be imported into any Nim program.
