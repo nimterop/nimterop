@@ -35,12 +35,13 @@ proc readFromTokens(): ref Ast =
     if gTokens.len() - idx < 2:
       echo "Corrupt AST"
       quit(1)
-    result = new(Ast)
-    result.sym = gTokens[idx+1]
-    result.start = gTokens[idx+2].parseInt()
-    result.stop = gTokens[idx+3].parseInt()
+    if gTokens[idx+1] != "comment":
+      result = new(Ast)
+      result.sym = gTokens[idx+1]
+      result.start = gTokens[idx+2].parseInt()
+      result.stop = gTokens[idx+3].parseInt()
+      result.children = @[]
     idx += 4
-    result.children = @[]
     while gTokens[idx] != ")":
       var res = readFromTokens()
       if not res.isNil() and res.sym.nBl:
