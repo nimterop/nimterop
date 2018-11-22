@@ -1,5 +1,4 @@
 import nimterop/cimport
-import macros
 
 cDebug()
 
