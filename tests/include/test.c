@@ -4,13 +4,15 @@ int test_call_int() {
 	return 5;	
 }
 
-struct STRUCT1 test_call_int_param(int param1) {
+#ifdef FORCE
+struct STRUCT1 _test_call_int_param_(int param1) {
 	struct STRUCT1 s;
 	
 	s.field1 = param1;
 	
 	return s;
 }
+#endif
 
 STRUCT2 test_call_int_param2(int param1, STRUCT2 param2) {
 	STRUCT2 s;

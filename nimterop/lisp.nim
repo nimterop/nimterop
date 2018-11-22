@@ -13,7 +13,7 @@ proc tokenize(fullpath: string) =
   
   gTokens = @[]
   idx = 0
-  for i in staticExec("toast -u " & fullpath):
+  for i in staticExec("toast -m " & fullpath):
     case i:
       of ' ', '\n', '\r', '(', ')':
         if collect.nBl:
@@ -24,17 +24,17 @@ proc tokenize(fullpath: string) =
       else:
         collect &= $i
 
-  if gTokens.len() == 0:
+  if gTokens.len == 0:
     echo "toast binary not installed - nimble install nimterop to force build"
     quit(1)
 
 proc readFromTokens(): ref Ast =
-  if idx == gTokens.len():
+  if idx == gTokens.len:
     echo "Bad AST"
     quit(1)
 
   if gTokens[idx] == "(":
-    if gTokens.len() - idx < 2:
+    if gTokens.len - idx < 2:
       echo "Corrupt AST"
       quit(1)
     if gTokens[idx+1] != "comment":
@@ -60,7 +60,7 @@ proc readFromTokens(): ref Ast =
 
 proc printAst*(node: ref Ast, offset=""): string =
   result = offset & "(" & $node.sym & " " & $node.start & " " & $node.stop
-  if node.children.len() != 0:
+  if node.children.len != 0:
     result &= "\n"
     for child in node.children:
       result &= printAst(child, offset & " ")

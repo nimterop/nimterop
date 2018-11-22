@@ -23,10 +23,11 @@ proc getNodeValIf*(node: ref Ast, esym: Sym): string =
   return gCode[node.start .. node.stop-1].strip()
 
 proc getGccPaths*(mode = "c"): string =
-  let
+  var
     nul = when defined(Windows): "nul" else: "/dev/null"
+    mmode = if mode == "cpp": "c++" else: mode
   
-  return staticExec("gcc -Wp,-v -x" & mode & " " & nul)
+  return staticExec("gcc -Wp,-v -x" & mmode & " " & nul)
 
 proc getLineCol*(node: ref Ast): tuple[line, col: int] =
   result.line = 1

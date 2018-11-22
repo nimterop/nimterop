@@ -37,4 +37,4 @@ var
   gTypeStr* {.compiletime.}: string
 
 template nBl*(s: untyped): untyped =
-  (s.len() != 0)
+  (s.len != 0)

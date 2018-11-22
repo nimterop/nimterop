@@ -17,7 +17,7 @@ proc findPath(path: string, fail = true): string =
 
 proc cSearchPath*(path: string): string =
   result = findPath(path, fail = false)
-  if result.len() == 0:
+  if result.len == 0:
     var found = false
     for inc in gSearchDirs:
       result = (inc & "/" & path).replace("\\", "/")
@@ -31,12 +31,12 @@ proc cSearchPath*(path: string): string =
 macro cDebug*(): untyped =
   gDebug = true
 
-macro cDefine*(name: static[string], val: static[string] = ""): untyped =
+macro cDefine*(name: static string, val: static string = ""): untyped =
   result = newNimNode(nnkStmtList)
   
   var str = "-D" & name
   if val.nBl:
-    str &= "=\"" & val & "\""
+    str &= &"=\"{val}\""
   
   result.add(quote do:
     {.passC: `str`.}
@@ -45,36 +45,37 @@ macro cDefine*(name: static[string], val: static[string] = ""): untyped =
   if gDebug:
     echo result.repr
 
-macro cAddSearchDir*(dir: static[string]): untyped =
+macro cAddSearchDir*(dir: static string): untyped =
   result = newNimNode(nnkStmtList)
 
   let fullpath = cSearchPath(dir)
   if fullpath notin gSearchDirs:
     gSearchDirs.add(fullpath)
 
-macro cIncludeDir*(dir: static[string]): untyped =
+macro cIncludeDir*(dir: static string): untyped =
   result = newNimNode(nnkStmtList)
 
   let
     fullpath = findPath(dir)
-    str = "-I\"" & fullpath & "\""
+    str = &"-I\"{fullpath}\""
 
   if fullpath notin gIncludeDirs:
     gIncludeDirs.add(fullpath)
 
-  result.add(quote do:
-    {.passC: `str`.}
-  )
+    result.add(quote do:
+      {.passC: `str`.}
+    )
   
   if gDebug:
     echo result.repr
 
-macro cIncludeC*(): untyped =
+macro cAddStdDir*(mode = "c"): untyped =
   result = newNimNode(nnkStmtList)
 
   var
     inc = false
-  for line in getGccPaths().splitLines():
+
+  for line in getGccPaths(mode.strVal()).splitLines():
     if "#include <...> search starts here" in line:
       inc = true
       continue
@@ -82,10 +83,11 @@ macro cIncludeC*(): untyped =
       break
     
     if inc:
-      result = quote do:
-        cIncludeDir(line)
+      let sline = line.strip()
+      result.add quote do:
+        cAddSearchDir(`sline`)
 
-macro cCompile*(path: static[string]): untyped =
+macro cCompile*(path: static string): untyped =
   result = newNimNode(nnkStmtList)
 
   var
@@ -129,7 +131,7 @@ macro cCompile*(path: static[string]): untyped =
   if gDebug:
     echo result.repr
 
-macro cImport*(filename: static[string]): untyped =
+macro cImport*(filename: static string): untyped =
   result = newNimNode(nnkStmtList)
   result.add addReorder()
 

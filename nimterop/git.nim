@@ -18,7 +18,7 @@ proc execAction*(cmd: string): string =
     echo result
     quit(1)
 
-macro extractZip*(zipfile, outdir: static[string]): untyped =
+macro extractZip*(zipfile, outdir: static string): untyped =
   var cmd = "unzip -o $#"
   if defined(Windows):
     cmd = "powershell -nologo -noprofile -command \"& { Add-Type -A " &
@@ -28,7 +28,7 @@ macro extractZip*(zipfile, outdir: static[string]): untyped =
   echo "Extracting " & zipfile
   discard execAction(&"cd \"{getProjectPath()/outdir}\" && " & cmd % zipfile)
 
-macro downloadUrl*(url, outdir: static[string]): untyped =
+macro downloadUrl*(url, outdir: static string): untyped =
   let
     file = url.extractFilename()
     ext = file.splitFile().ext.toLowerAscii()
@@ -45,7 +45,7 @@ macro downloadUrl*(url, outdir: static[string]): untyped =
     discard quote do:
       extractZip(`file`, `outdir`)
 
-macro gitReset*(outdir: static[string]): untyped =
+macro gitReset*(outdir: static string): untyped =
   echo "Resetting " & outdir
 
   let cmd = &"cd \"{getProjectPath()/outdir}\" && git reset --hard"
@@ -53,7 +53,7 @@ macro gitReset*(outdir: static[string]): untyped =
     sleep(1000)
     echo "  Retrying ..."
 
-macro gitCheckout*(file, outdir: static[string]): untyped =
+macro gitCheckout*(file, outdir: static string): untyped =
   echo "Resetting " & file
 
   let cmd = &"cd \"{getProjectPath()/outdir}\" && git checkout $#" % file.replace(outdir & "/", "")
@@ -61,7 +61,7 @@ macro gitCheckout*(file, outdir: static[string]): untyped =
     sleep(500)
     echo "  Retrying ..."
 
-macro gitPull*(url: static[string], outdirN = "", plistN = "", checkoutN = ""): untyped =
+macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): untyped =
   let
     outdir = getProjectPath()/outdirN.strVal()
     plist = plistN.strVal()
@@ -78,14 +78,14 @@ macro gitPull*(url: static[string], outdirN = "", plistN = "", checkoutN = ""): 
   discard execAction(&"cd \"{outdir}\" && git init .")
   discard execAction(&"cd \"{outdir}\" && git remote add origin " & url)
 
-  if plist.len() != 0:
+  if plist.len != 0:
     let sparsefile = &"{outdir}/.git/info/sparse-checkout"
 
     discard execAction(&"cd \"{outdir}\" && git config core.sparsecheckout true")
     writeFile(sparsefile, plist)
     echo "Wrote"
 
-  if checkout.len() != 0:
+  if checkout.len != 0:
     echo "Checking out " & checkout
     discard execAction(&"cd \"{outdir}\" && git pull --tags origin master")
     discard execAction(&"cd \"{outdir}\" && git checkout {checkout}")

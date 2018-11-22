@@ -65,6 +65,8 @@ Detailed documentation is still forthcoming.
 
 `cAddSearchDir("XXX")` - add directory XXX to search path in calls to `cSearchPath()`
 
+`cAddStdDir("XXX")` - add standard "c" [default] or "cpp" include paths to search path
+
 `cSearchPath("header.h")` - return a file or directory found in search path configured using `cSearchPath()` - can be used in `cCompile()`, `cIncludeDir()` and `cImport()` calls
 
 `gitPull()` - pull a git repository prior to C/C++ interop

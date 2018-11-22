@@ -6,30 +6,28 @@ import treesitter/[runtime, c, cpp]
 
 const HELP = """
 > toast header.h
-"""
+-m     minimized output - non-pretty
+-c     C mode - CPP is default"""
 
-var
-  gPretty = true
-
-proc printLisp(root: TSNode, data: var string) =
+proc printLisp(root: TSNode, data: var string, pretty = true) =
   var
     node = root
     nextnode: TSNode
     depth = 0
-    
+
   while true:
     if not node.tsNodeIsNull():
-      if gPretty:
+      if pretty:
         stdout.write spaces(depth)
       stdout.write "(" & $node.tsNodeType() & " " & $node.tsNodeStartByte() & " " & $node.tsNodeEndByte()
 
     if node.tsNodeNamedChildCount() != 0:
-      if gPretty:
+      if pretty:
         echo ""
       nextnode = node.tsNodeNamedChild(0)
       depth += 1
     else:
-      if gPretty:
+      if pretty:
         echo ")"
       else:
         stdout.write ")"
@@ -39,7 +37,7 @@ proc printLisp(root: TSNode, data: var string) =
       while true:
         node = node.tsNodeParent()
         depth -= 1
-        if gPretty:
+        if pretty:
           echo spaces(depth) & ")"
         else:
           stdout.write ")"
@@ -54,11 +52,11 @@ proc printLisp(root: TSNode, data: var string) =
     if node == root:
       break
 
-proc process(path: string, mode="") =
+proc process(path: string, mode="cpp", pretty = true) =
   if not existsFile(path):
     echo "Invalid path " & path
     return
-  
+
   var
     parser = tsParserNew()
     ext = path.splitFile().ext
@@ -67,14 +65,14 @@ proc process(path: string, mode="") =
 
   defer:
     parser.tsParserDelete()
-    
-  if mode.len() != 0:
+
+  if mode.len != 0:
     pmode = mode
   elif ext in [".h", ".c"]:
     pmode = "c"
   elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
     pmode = "cpp"
-  
+
   if "cplusplus" in data or "extern \"C\"" in data:
     pmode = "cpp"
 
@@ -91,23 +89,29 @@ proc process(path: string, mode="") =
     quit()
 
   var
-    tree = parser.tsParserParseString(nil, data.cstring, data.len().uint32)
+    tree = parser.tsParserParseString(nil, data.cstring, data.len.uint32)
     root = tree.tsTreeRootNode()
 
   defer:
     tree.tsTreeDelete()
-    
-  printLisp(root, data)
+
+  printLisp(root, data, pretty)
 
 proc parseCli() =
-  let params = commandLineParams()
+  var
+    mode = "cpp"
+    params = commandLineParams()
+    pretty = true
+
   for param in params:
     if param in ["-h", "--help", "-?", "/?", "/h"]:
       echo HELP
       quit()
-    elif param == "-u":
-      gPretty = false
+    elif param == "-c":
+      mode = "c"
+    elif param == "-m":
+      pretty = false
     else:
-      process(param)
+      process(param, mode, pretty)
 
 parseCli()
