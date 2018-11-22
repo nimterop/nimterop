@@ -2,9 +2,10 @@ import nimterop/cimport
 
 cDebug()
 
-cIncludeDir("include")
-cCompile("test.c")
-cImport("test.h")
+cIncludeDir "include"
+cAddSearchDir "include"
+cCompile cSearchPath("test.c")
+cImport cSearchPath "test.h"
 
 doAssert TEST_INT == 512
 doAssert TEST_FLOAT == 5.12

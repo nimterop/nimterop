@@ -25,6 +25,7 @@ var
   gHeaders* {.compiletime.}: seq[string]
   gIncludeDirs* {.compiletime.}: seq[string]
   gProcs* {.compiletime.}: seq[string]
+  gSearchDirs* {.compiletime.}: seq[string]
   gTypes* {.compiletime.}: seq[string]
 
   gCode* {.compiletime.}: string

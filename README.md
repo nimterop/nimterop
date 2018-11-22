@@ -57,11 +57,15 @@ Detailed documentation is still forthcoming.
 
 `cDebug()` - enable debug messages
 
-`cDefine()` - `#define` an identifer that is forwarded to the compiler using `{.passC: "-DXXX".}` as well as _eventually_ used in processing `#ifdef` statements
+`cDefine("XXX")` - `#define` an identifer that is forwarded to the C/C++ compiler using `{.passC: "-DXXX".}` as well as _eventually_ used in processing `#ifdef` statements
 
-`cIncludeDir()` - add an include directory that is forwarded to the compiler using `{.passC: "-IXXX".}` as well as searched for files included using `cImport()` statements and following `cIncludeDir()` statements
+`cIncludeDir("XXX")` - add an include directory that is forwarded to the compiler using `{.passC: "-IXXX".}`
 
-`cImport()` - import all supported definitions from specific import header file
+`cImport("header.h")` - import all supported definitions from header file
+
+`cAddSearchDir("XXX")` - add directory XXX to search path in calls to `cSearchPath()`
+
+`cSearchPath("header.h")` - return a file or directory found in search path configured using `cSearchPath()` - can be used in `cCompile()`, `cIncludeDir()` and `cImport()` calls
 
 `gitPull()` - pull a git repository prior to C/C++ interop
 

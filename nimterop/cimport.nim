@@ -2,20 +2,31 @@ import macros, os, strformat, strutils
 
 import ast, getters, globals, lisp
 
-proc search(path: string): string =
-  result = joinPath(getProjectPath(), path).replace("\\", "/")
+proc findPath(path: string, fail = true): string =
+  # As is
+  result = path.replace("\\", "/")
   if not fileExists(result) and not dirExists(result):
-    result = path
+    # Relative to project path
+    result = joinPath(getProjectPath(), path).replace("\\", "/")
     if not fileExists(result) and not dirExists(result):
-      var found = false
-      for inc in gIncludeDirs:
-        result = inc & "/" & path
-        if fileExists(result) or dirExists(result):
-          found = true
-          break
-      if not found:
+      if fail:
         echo "File or directory not found: " & path
         quit(1)
+      else:
+        return ""
+
+proc cSearchPath*(path: string): string =
+  result = findPath(path, fail = false)
+  if result.len() == 0:
+    var found = false
+    for inc in gSearchDirs:
+      result = (inc & "/" & path).replace("\\", "/")
+      if fileExists(result) or dirExists(result):
+        found = true
+        break
+    if not found:
+      echo "File or directory not found: " & path
+      quit(1)
 
 macro cDebug*(): untyped =
   gDebug = true
@@ -34,13 +45,23 @@ macro cDefine*(name: static[string], val: static[string] = ""): untyped =
   if gDebug:
     echo result.repr
 
+macro cAddSearchDir*(dir: static[string]): untyped =
+  result = newNimNode(nnkStmtList)
+
+  let fullpath = cSearchPath(dir)
+  if fullpath notin gSearchDirs:
+    gSearchDirs.add(fullpath)
+
 macro cIncludeDir*(dir: static[string]): untyped =
   result = newNimNode(nnkStmtList)
 
-  let fullpath = search(dir)
-  gIncludeDirs.add(fullpath)
-  
-  let str = "-I\"" & fullpath & "\""
+  let
+    fullpath = findPath(dir)
+    str = "-I\"" & fullpath & "\""
+
+  if fullpath notin gIncludeDirs:
+    gIncludeDirs.add(fullpath)
+
   result.add(quote do:
     {.passC: `str`.}
   )
@@ -61,9 +82,8 @@ macro cIncludeC*(): untyped =
       break
     
     if inc:
-      if gDebug:
-        echo "Including " & line.strip()
-      gIncludeDirs.add(line.strip())
+      result = quote do:
+        cIncludeDir(line)
 
 macro cCompile*(path: static[string]): untyped =
   result = newNimNode(nnkStmtList)
@@ -94,7 +114,7 @@ macro cCompile*(path: static[string]): untyped =
   if path.contains("*") or path.contains("?"):
     dcompile(path)
   else:
-    let fpath = search(path)
+    let fpath = findPath(path)
     if fileExists(fpath):
       stmt &= fcompile(fpath) & "\n"
     elif dirExists(fpath):
@@ -114,7 +134,7 @@ macro cImport*(filename: static[string]): untyped =
   result.add addReorder()
 
   let
-    fullpath = search(filename)
+    fullpath = findPath(filename)
     root = parseLisp(fullpath)
 
   echo "Importing " & fullpath
