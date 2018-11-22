@@ -1,5 +1,4 @@
 import nimterop/cimport
-import macros
 
 cDebug()
 
@@ -7,9 +6,9 @@ cIncludeDir("include")
 cCompile("test.c")
 cImport("test.h")
 
-assert TEST_INT == 512
-assert TEST_FLOAT == 5.12
-assert TEST_HEX == 0x512
+doAssert TEST_INT == 512
+doAssert TEST_FLOAT == 5.12
+doAssert TEST_HEX == 0x512
 
 var
   pt: PRIMTYPE
@@ -32,8 +31,8 @@ s3.field1 = 7
 e = enum1
 e2 = enum4
     
-assert test_call_int() == 5
-assert test_call_int_param(5).field1 == 5
-assert test_call_int_param2(5, s2).field1 == 11
-assert test_call_int_param3(5, s).field1 == 10
-assert test_call_int_param4(e) == e2
+doAssert test_call_int() == 5
+doAssert test_call_int_param(5).field1 == 5
+doAssert test_call_int_param2(5, s2).field1 == 11
+doAssert test_call_int_param3(5, s).field1 == 10
+doAssert test_call_int_param4(e) == e2
