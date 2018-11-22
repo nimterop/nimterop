@@ -19,12 +19,9 @@ proc execCmd(cmd:string)=
 task test, "Test":
   execCmd "nim c -r tests/tnimterop"
 
-task testext, "Test":
-  execCmd "nim c -r tests/tnimteropext"
-
 task installWithDeps, "install dependencies":
   for a in ["http://github.com/genotrance/nimtreesitter?subdir=treesitter",
             "http://github.com/genotrance/nimtreesitter?subdir=treesitter_c",
             "http://github.com/genotrance/nimtreesitter?subdir=treesitter_cpp",]:
     execCmd "nimble install -y " & a
-  execCmd "nimble install"
+  execCmd "nimble install -y"
