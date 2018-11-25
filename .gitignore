@@ -1,5 +1,7 @@
 nimcache
+
+.DS_Store
+
 *.exe
 *.swp
-test*
 toast
