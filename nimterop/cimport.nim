@@ -34,16 +34,20 @@ macro cDebug*(): untyped =
 macro cDefine*(name: static string, val: static string = ""): untyped =
   result = newNimNode(nnkStmtList)
   
-  var str = "-D" & name
+  var str = name
   if val.nBl:
     str &= &"=\"{val}\""
   
-  result.add(quote do:
-    {.passC: `str`.}
-  )
+  if str notin gDefines:
+    gDefines.add(str)
+    str = "-D" & str
 
-  if gDebug:
-    echo result.repr
+    result.add(quote do:
+      {.passC: `str`.}
+    )
+
+    if gDebug:
+      echo result.repr
 
 macro cAddSearchDir*(dir: static string): untyped =
   result = newNimNode(nnkStmtList)
