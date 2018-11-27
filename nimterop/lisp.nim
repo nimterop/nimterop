@@ -1,7 +1,5 @@
 import strutils
 
-import regex
-
 import globals
 
 var

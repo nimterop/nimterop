@@ -20,10 +20,12 @@ type
 
 var
   gDefines* {.compiletime.}: seq[string]
+  gDefinesRT*: seq[string]
   gCompile* {.compiletime.}: seq[string]
   gConsts* {.compiletime.}: seq[string]
   gHeaders* {.compiletime.}: seq[string]
   gIncludeDirs* {.compiletime.}: seq[string]
+  gIncludeDirsRT*: seq[string]
   gProcs* {.compiletime.}: seq[string]
   gSearchDirs* {.compiletime.}: seq[string]
   gTypes* {.compiletime.}: seq[string]

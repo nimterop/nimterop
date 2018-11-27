@@ -1,8 +1,11 @@
-import macros, strformat, strutils
+import macros, ospaths, strformat, strutils
 
 import regex
 
 import git, globals
+
+proc sanitizePath*(path: string): string =
+  path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
 
 proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'})
@@ -42,12 +45,42 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   var
     mmode = if mode == "cpp": "c++" else: mode
     cmd = &"gcc -E -dD -x{mmode} "
+    gdef, gdir: seq[string]
 
-  for inc in gIncludeDirs:
+    rdata: seq[string] = @[]
+    start = false
+    sfile = fullpath.sanitizePath
+
+  when nimvm:
+    gdef = gDefines
+    gdir = gIncludeDirs
+  else:
+    gdef = gDefinesRT
+    gdir = gIncludeDirsRT
+
+  for inc in gdir:
     cmd &= &"-I\"{inc}\" "
 
-  for def in gDefines:
+  for def in gdef:
     cmd &= &"-D{def} "
 
   cmd &= &"\"{fullpath}\""
-  return staticExec(cmd)
+
+  # Include content only from file
+  for line in execAction(cmd).splitLines():
+    if line.strip() != "":
+      if line[0] == '#' and not line.contains("#pragma") and not line.contains("define"):
+        start = false
+        if sfile in line.sanitizePath:
+          start = true
+        if not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
+          start = true
+      else:
+        if start:
+          rdata.add(
+            line.multiReplace([("_Noreturn", ""), ("(())", ""), ("WINAPI", ""),
+                               ("__attribute__", ""), ("extern \"C\"", "")])
+              .replace(re"\(\([_a-z]+?\)\)", "")
+              .replace(re"\(\(__format__[\s]*\(__[gnu_]*printf__, [\d]+, [\d]+\)\)\);", ";")
+          )
+  return rdata.join("\n")

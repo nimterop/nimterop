@@ -1,4 +1,4 @@
-import macros, os, regex, strformat, strutils
+import macros, os, osproc, regex, strformat, strutils
 
 import globals
 
@@ -11,7 +11,10 @@ proc execAction*(cmd: string): string =
   when defined(Linux) or defined(MacOSX):
     ccmd = "bash -c '" & cmd & "'"
 
-  (result, ret) = gorgeEx(ccmd)
+  when nimvm:
+    (result, ret) = gorgeEx(ccmd)
+  else:
+    (result, ret) = execCmdEx(ccmd)
   if ret != 0:
     echo "Command failed: " & $ret
     echo ccmd
@@ -66,7 +69,7 @@ macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): u
     outdir = getProjectPath()/outdirN.strVal()
     plist = plistN.strVal()
     checkout = checkoutN.strVal()
- 
+
   if dirExists(outdir/".git"):
     discard quote do:
       gitReset(`outdirN`)

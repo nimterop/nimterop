@@ -1,13 +1,17 @@
 import os, strutils
 
-import regex
-
 import treesitter/[runtime, c, cpp]
+
+import nimterop/[globals, getters]
 
 const HELP = """
 > toast header.h
--m     minimized output - non-pretty
--c     C mode - CPP is default"""
+-a     print AST output
+-c     C mode - CPP is default
+-m     print minimized AST output - non-pretty (implies -a)
+-p     run preprocessor on header
+-D     definitions to pass to preprocessor
+-I     include directory to pass to preprocessor"""
 
 proc printLisp(root: TSNode, data: var string, pretty = true) =
   var
@@ -20,6 +24,8 @@ proc printLisp(root: TSNode, data: var string, pretty = true) =
       if pretty:
         stdout.write spaces(depth)
       stdout.write "(" & $node.tsNodeType() & " " & $node.tsNodeStartByte() & " " & $node.tsNodeEndByte()
+    else:
+      return
 
     if node.tsNodeNamedChildCount() != 0:
       if pretty:
@@ -37,6 +43,8 @@ proc printLisp(root: TSNode, data: var string, pretty = true) =
       while true:
         node = node.tsNodeParent()
         depth -= 1
+        if depth == -1:
+          break
         if pretty:
           echo spaces(depth) & ")"
         else:
@@ -52,7 +60,7 @@ proc printLisp(root: TSNode, data: var string, pretty = true) =
     if node == root:
       break
 
-proc process(path: string, mode="cpp", pretty = true) =
+proc process(path: string, mode="cpp", past, pretty, preprocess: bool) =
   if not existsFile(path):
     echo "Invalid path " & path
     return
@@ -61,7 +69,7 @@ proc process(path: string, mode="cpp", pretty = true) =
     parser = tsParserNew()
     ext = path.splitFile().ext
     pmode = ""
-    data = readFile(path)
+    data = ""
 
   defer:
     parser.tsParserDelete()
@@ -73,8 +81,10 @@ proc process(path: string, mode="cpp", pretty = true) =
   elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
     pmode = "cpp"
 
-  if "cplusplus" in data or "extern \"C\"" in data:
-    pmode = "cpp"
+  if preprocess:
+    data = getPreprocessor(path)
+  else:
+    data = readFile(path)
 
   if pmode == "c":
     if not parser.tsParserSetLanguage(treeSitterC()):
@@ -95,23 +105,38 @@ proc process(path: string, mode="cpp", pretty = true) =
   defer:
     tree.tsTreeDelete()
 
-  printLisp(root, data, pretty)
+  if past:
+    printLisp(root, data, pretty)
 
 proc parseCli() =
   var
     mode = "cpp"
     params = commandLineParams()
+
+    past = false
     pretty = true
+    preprocess = false
 
   for param in params:
-    if param in ["-h", "--help", "-?", "/?", "/h"]:
+    let flag = if param.len() <= 2: param else: param[0..<2]
+
+    if flag in ["-h", "--help", "-?", "/?", "/h"]:
       echo HELP
       quit()
-    elif param == "-c":
+    elif flag == "-a":
+      past = true
+    elif flag == "-c":
       mode = "c"
-    elif param == "-m":
+    elif flag == "-m":
+      past = true
       pretty = false
+    elif flag == "-p":
+      preprocess = true
+    elif flag == "-D":
+      gDefinesRT.add(param[2..^1])
+    elif flag == "-I":
+      gIncludeDirsRT.add(param[2..^1])
     else:
-      process(param, mode, pretty)
+      process(param, mode, past, pretty, preprocess)
 
 parseCli()
