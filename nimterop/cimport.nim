@@ -2,20 +2,29 @@ import macros, os, strformat, strutils
 
 import ast, getters, globals, lisp
 
+proc interpPath(dir: string): string=
+  # TODO: more robust: needs a DirSep after "$projpath"
+  result = dir.replace("$projpath", getProjectPath())
+
+proc joinPathIfRel(path1: string, path2: string): string =
+  if path2.isAbsolute:
+    result = path2
+  else:
+    result = joinPath(path1, path2)
+
 proc findPath(path: string, fail = true): string =
   # As is
   result = path.replace("\\", "/")
   if not fileExists(result) and not dirExists(result):
     # Relative to project path
-    result = joinPath(getProjectPath(), path).replace("\\", "/")
+    result = joinPathIfRel(getProjectPath(), path).replace("\\", "/")
     if not fileExists(result) and not dirExists(result):
       if fail:
-        echo "File or directory not found: " & path
-        quit(1)
+        doAssert false, "File or directory not found: " & path
       else:
         return ""
 
-proc cSearchPath*(path: string): string =
+proc cSearchPath*(path: string): string {.compileTime.}=
   result = findPath(path, fail = false)
   if result.len == 0:
     var found = false
@@ -24,9 +33,7 @@ proc cSearchPath*(path: string): string =
       if fileExists(result) or dirExists(result):
         found = true
         break
-    if not found:
-      echo "File or directory not found: " & path
-      quit(1)
+    doAssert found, "File or directory not found: " & path & " gSearchDirs: " & $gSearchDirs
 
 macro cDebug*(): untyped =
   gDebug = true
@@ -50,13 +57,12 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
       echo result.repr
 
 macro cAddSearchDir*(dir: static string): untyped =
-  result = newNimNode(nnkStmtList)
-
-  let fullpath = cSearchPath(dir)
-  if fullpath notin gSearchDirs:
-    gSearchDirs.add(fullpath)
+  var dir = interpPath(dir)
+  if dir notin gSearchDirs:
+    gSearchDirs.add(dir)
 
 macro cIncludeDir*(dir: static string): untyped =
+  var dir = interpPath(dir)
   result = newNimNode(nnkStmtList)
 
   let
