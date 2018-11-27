@@ -3,8 +3,8 @@ import nimterop/cimport
 cDebug()
 
 cDefine("FORCE")
-cIncludeDir "include"
-cAddSearchDir "include"
+cIncludeDir "$projpath/include"
+cAddSearchDir "$projpath/include"
 cCompile cSearchPath("test.c")
 cImport cSearchPath "test.h"
 
