@@ -1,4 +1,8 @@
+#include <stdint.h>
+
 #define TEST_INT 512
+#define TEST_FLOAT 5.12
+#define TEST_HEX 0x512
 
 int test_call_int();
 

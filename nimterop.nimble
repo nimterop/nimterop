@@ -18,7 +18,7 @@ proc execCmd(cmd:string)=
 
 task test, "Test":
   execCmd "nim c -r tests/tnimterop_c.nim"
-  execCmd "nim c -r tests/tnimterop_cpp.nim"
+  execCmd "nim cpp -r tests/tnimterop_cpp.nim"
 
 task installWithDeps, "install dependencies":
   for a in ["http://github.com/genotrance/nimtreesitter?subdir=treesitter",
