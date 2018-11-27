@@ -228,6 +228,9 @@ proc pDeclaration*(node: ref Ast) =
         pFunctionDeclarator(node.children[1], styp)
 
 proc genNimAst*(node: ref Ast) =
+  if node.isNil:
+    return
+
   case node.sym:
     of ERROR:
       let (line, col) = getLineCol(node)

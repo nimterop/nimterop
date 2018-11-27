@@ -8,7 +8,7 @@ var
 
 proc tokenize(fullpath: string) =
   var collect = ""
-  
+
   gTokens = @[]
   idx = 0
   for i in staticExec("toast -m " & fullpath):
@@ -53,7 +53,7 @@ proc readFromTokens(): ref Ast =
   elif gTokens[idx] == ")":
     echo "Poor AST"
     quit(1)
-  
+
   idx += 1
 
 proc printAst*(node: ref Ast, offset=""): string =
@@ -68,5 +68,5 @@ proc printAst*(node: ref Ast, offset=""): string =
 
 proc parseLisp*(fullpath: string): ref Ast =
   tokenize(fullpath)
-        
+
   return readFromTokens()

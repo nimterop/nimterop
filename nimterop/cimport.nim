@@ -33,11 +33,11 @@ macro cDebug*(): untyped =
 
 macro cDefine*(name: static string, val: static string = ""): untyped =
   result = newNimNode(nnkStmtList)
-  
+
   var str = name
   if val.nBl:
     str &= &"=\"{val}\""
-  
+
   if str notin gDefines:
     gDefines.add(str)
     str = "-D" & str
@@ -69,7 +69,7 @@ macro cIncludeDir*(dir: static string): untyped =
     result.add(quote do:
       {.passC: `str`.}
     )
-  
+
   if gDebug:
     echo result.repr
 
@@ -85,7 +85,7 @@ macro cAddStdDir*(mode = "c"): untyped =
       continue
     elif "End of search list" in line:
       break
-    
+
     if inc:
       let sline = line.strip()
       result.add quote do:
@@ -131,7 +131,7 @@ macro cCompile*(path: static string): untyped =
         dcompile(fpath / "*.c")
 
   result.add stmt.parseStmt()
-  
+
   if gDebug:
     echo result.repr
 
@@ -144,14 +144,14 @@ macro cImport*(filename: static string): untyped =
     root = parseLisp(fullpath)
 
   echo "Importing " & fullpath
-  
+
   gCode = staticRead(fullpath)
   gConstStr = ""
   gTypeStr = ""
-  
+
   addHeader(fullpath)
   genNimAst(root)
-  
+
   if gConstStr.nBl:
     if gDebug:
       echo "const\n" & gConstStr
@@ -170,6 +170,6 @@ macro cImport*(filename: static string): untyped =
     if gDebug:
       echo gProcStr
     result.add gProcStr.parseStmt()
-    
+
   if gDebug:
     echo result.repr
