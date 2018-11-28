@@ -1,25 +1,31 @@
-sudo: false
-language: c
 os:
   - linux
   - osx
-dist: trusty
 
-before_script:
-  - curl -u $TOKEN -o latest.json --silent https://api.github.com/repos/nim-lang/nightlies/releases/latest
-  - export RELEASE=`cat latest.json | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'`
-  - export TXZ=`cat latest.json | grep '"name":' | sed -E 's/.*"([^"]+)".*/\1/' | grep linux | tail -n 1`
-  - export VERSION=`echo $TXZ | cut -d"-" -f 2,2`
-  - echo "RELEASE = $RELEASE, TXZ = $TXZ, VERSION = $VERSION"
-  - curl -L --silent -o $TXZ "https://github.com/nim-lang/nightlies/releases/download/$RELEASE/$TXZ"
-  - tar xf $TXZ
-  - cd nim-$VERSION
-  - sh build.sh
-  - bin/nim c koch
-  - ./koch boot -d:release
-  - ./koch nimble
-  - export PATH=$(pwd)/bin:~/.nimble/bin:$PATH
-  - cd ..
+language: c
+
+env:
+  # test against both stable & devel
+  - BRANCH=stable
+  - BRANCH=devel
+
+cache:
+  directories:
+    - "$HOME/.nimble"
+    - "$HOME/.choosenim"
+
+matrix:
+  allow_failures:
+    - env: BRANCH=devel
+  fast_finish: true
+
+install:
+  - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
+  - |
+      curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
+      sh init.sh -y
+  - export PATH=$HOME/.nimble/bin:$PATH
+  - nimble refresh -y
 
 script:
   - nimble installWithDeps
