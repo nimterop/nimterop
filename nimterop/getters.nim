@@ -30,7 +30,7 @@ proc getNodeValIf*(node: TSNode, esym: string): string =
 proc getLineCol*(node: TSNode): tuple[line, col: int] =
   result.line = 1
   result.col = 1
-  for i in 0 .. node.tsNodeStartByte()-1:
+  for i in 0 .. node.tsNodeStartByte().int-1:
     if gStateRT.code[i] == '\n':
       result.col = 0
       result.line += 1
