@@ -1,3 +1,7 @@
+[![Chat on Gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/nimgen/Lobby)
+[![Build status](https://ci.appveyor.com/api/projects/status/nsaar5foexk9adan/branch/master?svg=true)](https://ci.appveyor.com/project/genotrance/nimterop/branch/master)
+[![Build Status](https://travis-ci.org/genotrance/nimterop.svg?branch=master)](https://travis-ci.org/genotrance/nimterop)
+
 Nimterop is a [Nim](https://nim-lang.org/) package that aims to make C/C++ interop seamless
 
 Nim has one of the best FFI you can find - importing C/C++ is supported out of the box. All you need to provide is type and proc definitions for Nim to interop with C/C++ binaries. Generation of these wrappers is easy for simple libraries but quickly gets out of hand. [c2nim](https://github.com/nim-lang/c2nim) greatly helps here by parsing and converting C/C++ into Nim but is limited due to the complex and constantly evolving C/C++ grammar. [nimgen](https://github.com/genotrance/nimgen) mainly focuses on automating the wrapping process and fills some holes but is again limited to c2nim's capabilities.
