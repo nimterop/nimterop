@@ -77,6 +77,8 @@ proc pStructSpecifier(node: TSNode, name = "") =
 
         if node.tsNodeNamedChild(0).tsNodeNamedChildCount() != 0:
           for i in 0 .. node.tsNodeNamedChild(0).tsNodeNamedChildCount()-1:
+            if $node.tsNodeNamedChild(0).tsNodeNamedChild(i).tsNodeType() == "comment":
+              continue
             let ts = typeScan(node.tsNodeNamedChild(0).tsNodeNamedChild(i), "field_declaration", "field_identifier", "    ")
             if ts.len == 0:
               return
@@ -95,6 +97,8 @@ proc pStructSpecifier(node: TSNode, name = "") =
 
       if node.tsNodeNamedChild(1).tsNodeNamedChildCount() != 0:
         for i in 0 .. node.tsNodeNamedChild(1).tsNodeNamedChildCount()-1:
+          if $node.tsNodeNamedChild(1).tsNodeNamedChild(i).tsNodeType() == "comment":
+            continue
           let ts = typeScan(node.tsNodeNamedChild(1).tsNodeNamedChild(i), "field_declaration", "field_identifier", "    ")
           if ts.len == 0:
             return
@@ -114,8 +118,11 @@ proc pEnumSpecifier(node: TSNode, name = "") =
     ename = name
     elid = 0
     stmt = &"  {name.getIdentifier()}* = enum        #1 pEnumSpecifier()\n"
-  elif name.len == 0 and node.tsNodeNamedChildCount() == 2 and $node.tsNodeNamedChild(1).tsNodeType() == "enumerator_list":
-    ename = getNodeValIf(node.tsNodeNamedChild(0), "type_identifier")
+  elif node.tsNodeNamedChildCount() == 2 and $node.tsNodeNamedChild(1).tsNodeType() == "enumerator_list":
+    if name.len == 0:
+      ename = getNodeValIf(node.tsNodeNamedChild(0), "type_identifier")
+    else:
+      ename = name
     elid = 1
     if ename.nBl:
       # enum X { fields }
@@ -128,6 +135,8 @@ proc pEnumSpecifier(node: TSNode, name = "") =
   if node.tsNodeNamedChild(elid).tsNodeNamedChildCount() != 0:
     for i in 0 .. node.tsNodeNamedChild(elid).tsNodeNamedChildCount()-1:
       let field = node.tsNodeNamedChild(elid).tsNodeNamedChild(i)
+      if $field.tsNodeType() == "comment":
+        continue
       if not field.tsNodeIsNull() and $field.tsNodeType() == "enumerator":
         let fname = getNodeValIf(field.tsNodeNamedChild(0), "identifier")
         if field.tsNodeNamedChildCount() == 1:
