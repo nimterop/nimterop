@@ -41,8 +41,8 @@ proc readFromTokens(): ref Ast =
         result.sym = parseEnum[Sym](gTokens[idx+1])
       except:
         result.sym = IGNORED
-      result.start = gTokens[idx+2].parseInt().uint32
-      result.stop = gTokens[idx+3].parseInt().uint32
+      result.start = gTokens[idx+2].parseInt()
+      result.stop = gTokens[idx+3].parseInt()
       result.children = @[]
     idx += 4
     while gTokens[idx] != ")":
