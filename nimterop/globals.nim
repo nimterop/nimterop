@@ -14,7 +14,7 @@ type
 
   Ast* = object
     sym*: Sym
-    start*, stop*: uint32
+    start*, stop*: int
     parent*: ref Ast
     children*: seq[ref Ast]
 
