@@ -13,6 +13,15 @@ check TEST_INT == 512
 check TEST_FLOAT == 5.12
 check TEST_HEX == 0x512
 
+when defined(osx):
+  check myvar1 == 10
+  # TODO
+  # check myvar2(3) == 3*10
+else:
+  check myvar1 == 20
+  # TODO
+  # check myvar2(3) == 3*20
+
 var
   pt: PRIMTYPE
   ct: CUSTTYPE

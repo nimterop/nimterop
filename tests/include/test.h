@@ -4,6 +4,19 @@
 #define TEST_FLOAT 5.12
 #define TEST_HEX 0x512
 
+#ifdef __APPLE__
+int foo1;
+#define myvar1 10
+#else
+double foo2;
+#define myvar1 20
+#endif
+
+#define myvar 33
+
+#define myvar2(x) \
+  x * myvar1
+
 typedef uint8_t PRIMTYPE;
 typedef PRIMTYPE CUSTTYPE;
 
