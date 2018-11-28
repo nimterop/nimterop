@@ -1,11 +1,8 @@
-import macros, ospaths, strformat, strutils
+import macros, ospaths, strformat, strutils, os
 
 import regex
 
 import git, globals
-
-proc sanitizePath*(path: string): string =
-  path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
 
 proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'})
@@ -49,7 +46,7 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
 
     rdata: seq[string] = @[]
     start = false
-    sfile = fullpath.sanitizePath
+    sfile = fullpath.normalizedPath
 
   when nimvm:
     gdef = gDefines
@@ -71,7 +68,7 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
     if line.strip() != "":
       if line[0] == '#' and not line.contains("#pragma") and not line.contains("define"):
         start = false
-        if sfile in line.sanitizePath:
+        if sfile in line.normalizedPath:
           start = true
         if not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
           start = true
