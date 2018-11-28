@@ -26,15 +26,19 @@ proc findPath(path: string, fail = true): string =
 
 proc getToast(fullpath: string): string =
   var
-    cmd = "toast -n -p "
+    cmd = "toast --pnim --preprocess "
 
   for i in gStateCT.defines:
-    cmd &= &"-D\"{i}\" "
+    cmd.add &"--defines+={i.quoteShell} "
 
   for i in gStateCT.includeDirs:
-    cmd &= &"-I\"{i}\" "
+    cmd.add &"--includeDirs+={i.quoteShell} "
 
-  result = staticExec(cmd & fullpath)
+  cmd.add &"--source:{fullpath.quoteShell}"
+  echo cmd
+  var (output, exitCode) = gorgeEx(cmd)
+  doAssert exitCode == 0, $exitCode
+  result = output
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   result = findPath(path, fail = false)

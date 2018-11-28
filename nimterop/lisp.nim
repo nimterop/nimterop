@@ -1,4 +1,5 @@
 import strutils
+import strformat
 
 import globals
 
@@ -11,7 +12,11 @@ proc tokenize(fullpath: string) =
 
   gTokens = @[]
   idx = 0
-  for i in staticExec("toast -m " & fullpath):
+  # TODO: consider calling API directly
+  const cmd = &"toast --past --pretty:false --source:{fullpath.quoteShell}"
+  var (output, exitCode) = gorgeEx cmd
+  doAssert exitCode == 0, $exitCode
+  for i in output:
     case i:
       of ' ', '\n', '\r', '(', ')':
         if collect.nBl:

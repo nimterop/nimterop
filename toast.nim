@@ -4,17 +4,6 @@ import treesitter/[runtime, c, cpp]
 
 import nimterop/[ast, globals, getters]
 
-const HELP = """
-> toast header.h
--a     print AST output
--m     print minimized AST output - non-pretty (implies -a)
--n     print Nim output
-
--c     C mode - CPP is default
--p     run preprocessor on header
--D     definitions to pass to preprocessor
--I     include directory to pass to preprocessor"""
-
 proc printLisp(root: TSNode) =
   var
     node = root
@@ -74,8 +63,8 @@ proc process(path: string) =
   defer:
     parser.tsParserDelete()
 
-  if gStateRT.mode.len != 0:
-    gStateRT.mode = "cpp"
+  if gStateRT.mode.len == 0:
+    gStateRT.mode = modeDefault
   elif ext in [".h", ".c"]:
     gStateRT.mode = "c"
   elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
@@ -110,37 +99,39 @@ proc process(path: string) =
   elif gStateRT.pnim:
     printNim(path, root)
 
-proc parseCli() =
-  var params = commandLineParams()
+proc main(
+    mode = modeDefault,
+    past = false,
+    pnim = false,
+    pretty = true,
+    preprocess = false,
+    defines: seq[string] = @[],
+    includeDirs: seq[string] = @[],
+    # defines.add(param[2..^1].strip(chars={'"'}))
+    source: string,
+  ) =
+  # TODO: should we add back `-m` param? meaning was:  print minimized AST output - non-pretty (implies -a)
 
-  gStateRT.mode = "cpp"
-  gStateRT.past = false
-  gStateRT.pnim = false
-  gStateRT.pretty = true
-  gStateRT.preprocess = false
+  gStateRT = State(
+    mode: mode,
+    past: past,
+    pnim: pnim,
+    pretty: pretty,
+    preprocess: preprocess,
+    # Note: was: strip(chars={'"'} but that seemed buggy (the shell should remove these already)
+    defines: defines,
+    includeDirs: includeDirs,
+  )
+  process(source)
 
-  for param in params:
-    let flag = if param.len() <= 2: param else: param[0..<2]
-
-    if flag in ["-h", "-?"]:
-      echo HELP
-      quit()
-    elif flag == "-a":
-      gStateRT.past = true
-    elif flag == "-c":
-      gStateRT.mode = "c"
-    elif flag == "-m":
-      gStateRT.past = true
-      gStateRT.pretty = false
-    elif flag == "-n":
-      gStateRT.pnim = true
-    elif flag == "-p":
-      gStateRT.preprocess = true
-    elif flag == "-D":
-      gStateRT.defines.add(param[2..^1].strip(chars={'"'}))
-    elif flag == "-I":
-      gStateRT.includeDirs.add(param[2..^1].strip(chars={'"'}))
-    else:
-      process(param)
-
-parseCli()
+when isMainModule:
+  import cligen
+  dispatch(main, help = {
+    "past": "print AST output",
+    "mode": "language; see CompileMode", # TODO: auto-generate valid choices
+    "pnim": "run preprocessor on header",
+    "defines": "definitions to pass to preprocessor",
+    "includeDirs": "include directory to pass to preprocessor",
+    "preprocess": "print Nim output",
+    "source" : "C/C++ source/header",
+  })
