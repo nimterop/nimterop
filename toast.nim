@@ -120,7 +120,7 @@ proc parseCli() =
   for param in params:
     let flag = if param.len() <= 2: param else: param[0..<2]
 
-    if flag in ["-h", "--help", "-?", "/?", "/h"]:
+    if flag in ["-h", "-?"]:
       echo HELP
       quit()
     elif flag == "-a":
