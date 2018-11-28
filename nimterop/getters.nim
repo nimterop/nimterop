@@ -1,4 +1,4 @@
-import macros, ospaths, strformat, strutils
+import macros, os, strformat, strutils
 
 import regex
 
