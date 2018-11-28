@@ -1,0 +1,86 @@
+version: '{build}'
+
+image:
+  - Ubuntu
+  - Visual Studio 2017
+
+matrix:
+  fast_finish: true
+
+environment:
+  matrix:
+    - NIM_VERSION: 0.19.0
+
+for:
+-
+  matrix:
+    only:
+      - image: Visual Studio 2017
+
+  environment:
+    ARCH: 32
+    MINGW_URL: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/8.1.0/threads-posix/dwarf
+    MINGW_ARCHIVE: i686-8.1.0-release-posix-dwarf-rt_v6-rev0.7z
+    SFNET_URL: https://sourceforge.net/projects/msys2/files/REPOS/MINGW/i686
+
+  install:
+    - CD c:\
+    - IF not exist "binaries" (
+      echo %NIM_VERSION% &&
+      MKDIR binaries &&
+      CD binaries &&
+      appveyor DownloadFile "%MINGW_URL%/%MINGW_ARCHIVE%/download" -FileName "%MINGW_ARCHIVE%" &&
+      7z x -y "%MINGW_ARCHIVE%"> nul &&
+      del "%MINGW_ARCHIVE%" &&
+      appveyor DownloadFile "https://nim-lang.org/download/nim-%NIM_VERSION%_x%ARCH%.zip" -FileName "nim-%NIM_VERSION%_x%ARCH%.zip" &&
+      7z x -y "nim-%NIM_VERSION%_x%ARCH%.zip"> nul &&
+      del "nim-%NIM_VERSION%_x%ARCH%.zip")
+    - SET PATH=c:\binaries\mingw%ARCH%\bin;c:\binaries\nim-%NIM_VERSION%\bin;%USERPROFILE%\.nimble\bin;%PATH%
+    - CD c:\projects\nimterop
+
+  on_finish:
+    - 7z a -r buildlogs-win-pkgs.zip %USERPROFILE%\.nimble\pkgs
+    - appveyor PushArtifact buildlogs-win-pkgs.zip
+    - 7z a -r buildlogs-win-projects.zip c:\projects\*
+    - appveyor PushArtifact buildlogs-win-projects.zip
+
+  cache:
+    - c:\binaries
+
+-
+  matrix:
+    only:
+      - image: Ubuntu
+
+  install:
+    - if [ ! -e /home/appveyor/binaries ]; then
+        echo $NIM_VERSION &&
+        mkdir /home/appveyor/binaries &&
+        cd /home/appveyor/binaries &&
+        curl -s -o nim-$NIM_VERSION.tar.xz https://nim-lang.org/download/nim-$NIM_VERSION.tar.xz &&
+        tar xJf nim-$NIM_VERSION.tar.xz &&
+        cd nim-$NIM_VERSION &&
+        sh build.sh &&
+        bin/nim c -d:release koch &&
+        ./koch boot -d:release &&
+        ./koch nimble -d:release;
+      fi
+    - export PATH=/home/appveyor/binaries/nim-$NIM_VERSION/bin:~/.nimble/bin:$PATH
+    - cd /home/appveyor/projects/nimterop
+
+  on_finish:
+    - zip -r -q buildlogs-lin-pkgs.zip ~/.nimble/pkgs
+    - appveyor PushArtifact buildlogs-lin-pkgs.zip
+    - zip -r -q buildlogs-lin-projects.zip /home/appveyor/projects
+    - appveyor PushArtifact buildlogs-lin-projects.zip
+
+  cache:
+  - /home/appveyor/binaries
+
+build_script:
+  - nimble installWithDeps
+
+test_script:
+  - nimble test
+
+deploy: off
