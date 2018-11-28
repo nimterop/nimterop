@@ -1,42 +1,16 @@
-import macros
-
 type
-  Sym* = enum
-    ERROR, IGNORED,
-    enumerator, enumerator_list, enum_specifier,
-    declaration,
-    field_declaration, field_declaration_list, field_identifier, function_declarator,
-    identifier,
-    number_literal,
-    parameter_declaration, parameter_list, pointer_declarator, preproc_arg, preproc_def, primitive_type,
-    struct_specifier,
-    type_definition, type_identifier
+  State* = object
+    compile*, defines*, headers*, includeDirs*, searchDirs*: seq[string]
 
-  Ast* = object
-    sym*: Sym
-    start*, stop*: int
-    parent*: ref Ast
-    children*: seq[ref Ast]
+    debug*, past*, preprocess*, pnim*, pretty*: bool
+
+    consts*, procs*, types*: seq[string]
+
+    code*, constStr*, currentHeader*, mode*, procStr*, typeStr*: string
 
 var
-  gDefines* {.compiletime.}: seq[string]
-  gDefinesRT*: seq[string]
-  gCompile* {.compiletime.}: seq[string]
-  gConsts* {.compiletime.}: seq[string]
-  gHeaders* {.compiletime.}: seq[string]
-  gIncludeDirs* {.compiletime.}: seq[string]
-  gIncludeDirsRT*: seq[string]
-  gProcs* {.compiletime.}: seq[string]
-  gSearchDirs* {.compiletime.}: seq[string]
-  gTypes* {.compiletime.}: seq[string]
-
-  gCode* {.compiletime.}: string
-  gConstStr* {.compiletime.}: string
-  gCurrentHeader* {.compiletime.}: string
-  gDebug* {.compiletime.}: bool
-  gReorder* {.compiletime.}: bool
-  gProcStr* {.compiletime.}: string
-  gTypeStr* {.compiletime.}: string
+  gStateCT* {.compiletime.}: State
+  gStateRT*: State
 
 template nBl*(s: untyped): untyped =
   (s.len != 0)

@@ -2,6 +2,8 @@ import macros, ospaths, strformat, strutils
 
 import regex
 
+import treesitter/runtime
+
 import git, globals
 
 proc sanitizePath*(path: string): string =
@@ -19,20 +21,23 @@ proc getLit*(str: string): string =
     str.contains(re"^0x[\d]+$"):
     return str
 
-proc getNodeValIf*(node: ref Ast, esym: Sym): string =
-  if esym != node.sym:
+proc getNodeValIf*(node: TSNode, esym: string): string =
+  if esym != $node.tsNodeType():
     return
 
-  return gCode[node.start .. node.stop-1].strip()
+  return gStateRT.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
 
-proc getLineCol*(node: ref Ast): tuple[line, col: int] =
+proc getLineCol*(node: TSNode): tuple[line, col: int] =
   result.line = 1
   result.col = 1
-  for i in 0 .. node.start-1:
-    if gCode[i] == '\n':
+  for i in 0 .. node.tsNodeStartByte()-1:
+    if gStateRT.code[i] == '\n':
       result.col = 0
       result.line += 1
     result.col += 1
+
+proc getCurrentHeader*(fullpath: string): string =
+  ("header" & fullpath.splitFile().name.replace(re"[-.]+", ""))
 
 proc getGccPaths*(mode = "c"): string =
   var
@@ -45,23 +50,15 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   var
     mmode = if mode == "cpp": "c++" else: mode
     cmd = &"gcc -E -dD -x{mmode} "
-    gdef, gdir: seq[string]
 
     rdata: seq[string] = @[]
     start = false
     sfile = fullpath.sanitizePath
 
-  when nimvm:
-    gdef = gDefines
-    gdir = gIncludeDirs
-  else:
-    gdef = gDefinesRT
-    gdir = gIncludeDirsRT
-
-  for inc in gdir:
+  for inc in gStateRT.includeDirs:
     cmd &= &"-I\"{inc}\" "
 
-  for def in gdef:
+  for def in gStateRT.defines:
     cmd &= &"-D{def} "
 
   cmd &= &"\"{fullpath}\""

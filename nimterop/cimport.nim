@@ -1,6 +1,6 @@
 import macros, os, strformat, strutils
 
-import ast, getters, globals, lisp
+import getters, globals
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
@@ -24,19 +24,31 @@ proc findPath(path: string, fail = true): string =
       else:
         return ""
 
+proc getToast(fullpath: string): string =
+  var
+    cmd = "toast -n -p "
+
+  for i in gStateCT.defines:
+    cmd &= &"-D\"{i}\" "
+
+  for i in gStateCT.includeDirs:
+    cmd &= &"-I\"{i}\" "
+
+  result = staticExec(cmd & fullpath)
+
 proc cSearchPath*(path: string): string {.compileTime.}=
   result = findPath(path, fail = false)
   if result.len == 0:
     var found = false
-    for inc in gSearchDirs:
+    for inc in gStateCT.searchDirs:
       result = (inc & "/" & path).replace("\\", "/")
       if fileExists(result) or dirExists(result):
         found = true
         break
-    doAssert found, "File or directory not found: " & path & " gSearchDirs: " & $gSearchDirs
+    doAssert found, "File or directory not found: " & path & " gStateCT.searchDirs: " & $gStateCT.searchDirs
 
 macro cDebug*(): untyped =
-  gDebug = true
+  gStateCT.debug = true
 
 macro cDefine*(name: static string, val: static string = ""): untyped =
   result = newNimNode(nnkStmtList)
@@ -45,21 +57,21 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
   if val.nBl:
     str &= &"=\"{val}\""
 
-  if str notin gDefines:
-    gDefines.add(str)
+  if str notin gStateCT.defines:
+    gStateCT.defines.add(str)
     str = "-D" & str
 
     result.add(quote do:
       {.passC: `str`.}
     )
 
-    if gDebug:
+    if gStateCT.debug:
       echo result.repr
 
 macro cAddSearchDir*(dir: static string): untyped =
   var dir = interpPath(dir)
-  if dir notin gSearchDirs:
-    gSearchDirs.add(dir)
+  if dir notin gStateCT.searchDirs:
+    gStateCT.searchDirs.add(dir)
 
 macro cIncludeDir*(dir: static string): untyped =
   var dir = interpPath(dir)
@@ -69,14 +81,14 @@ macro cIncludeDir*(dir: static string): untyped =
     fullpath = findPath(dir)
     str = &"-I\"{fullpath}\""
 
-  if fullpath notin gIncludeDirs:
-    gIncludeDirs.add(fullpath)
+  if fullpath notin gStateCT.includeDirs:
+    gStateCT.includeDirs.add(fullpath)
 
     result.add(quote do:
       {.passC: `str`.}
     )
 
-  if gDebug:
+  if gStateCT.debug:
     echo result.repr
 
 macro cAddStdDir*(mode = "c"): untyped =
@@ -109,11 +121,11 @@ macro cCompile*(path: static string): untyped =
     var
       ufn = fn
       uniq = 1
-    while ufn in gCompile:
+    while ufn in gStateCT.compile:
       ufn = fn & $uniq
       uniq += 1
 
-    gCompile.add(ufn)
+    gStateCT.compile.add(ufn)
     if fn == ufn:
       return "{.compile: \"$#\".}" % file.replace("\\", "/")
     else:
@@ -138,44 +150,18 @@ macro cCompile*(path: static string): untyped =
 
   result.add stmt.parseStmt()
 
-  if gDebug:
+  if gStateCT.debug:
     echo result.repr
 
 macro cImport*(filename: static string): untyped =
   result = newNimNode(nnkStmtList)
-  result.add addReorder()
 
   let
     fullpath = findPath(filename)
-    root = parseLisp(fullpath)
 
   echo "Importing " & fullpath
 
-  gCode = staticRead(fullpath)
-  gConstStr = ""
-  gTypeStr = ""
+  result.add parseStmt(getToast(fullpath))
 
-  addHeader(fullpath)
-  genNimAst(root)
-
-  if gConstStr.nBl:
-    if gDebug:
-      echo "const\n" & gConstStr
-    result.add parseStmt(
-      "const\n" & gConstStr
-    )
-
-  if gTypeStr.nBl:
-    if gDebug:
-      echo "type\n" & gTypeStr
-    result.add parseStmt(
-      "type\n" & gTypeStr
-    )
-
-  if gProcStr.nBl:
-    if gDebug:
-      echo gProcStr
-    result.add gProcStr.parseStmt()
-
-  if gDebug:
+  if gStateCT.debug:
     echo result.repr
