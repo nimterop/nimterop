@@ -239,7 +239,7 @@ proc genNimAst(root: TSNode) =
       case $node.tsNodeType():
         of "ERROR":
           let (line, col) = getLineCol(node)
-          echo &"Potentially invalid syntax at line {line} column {col}"
+          echo &"# Potentially invalid syntax at line {line} column {col}"
         of "preproc_def":
           pPreprocDef(node)
         of "type_definition":
