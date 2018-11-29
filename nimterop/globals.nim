@@ -7,6 +7,7 @@ type
     consts*, procs*, types*: seq[string]
 
     code*, constStr*, currentHeader*, mode*, procStr*, typeStr*: string
+    sourceFile*: string # eg, C or C++ source or header file
 
 var
   gStateCT* {.compiletime.}: State
