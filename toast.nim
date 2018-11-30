@@ -63,6 +63,8 @@ proc process(path: string) =
   defer:
     parser.tsParserDelete()
 
+  gStateRT.sourceFile = path
+
   if gStateRT.mode.len == 0:
     gStateRT.mode = modeDefault
   elif ext in [".h", ".c"]:
