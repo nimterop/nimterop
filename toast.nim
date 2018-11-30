@@ -97,14 +97,17 @@ proc process(path: string) =
     tree.tsTreeDelete()
 
   if gStateRT.past:
+    # TODO: print to a file, like nimout
     printLisp(root)
-  elif gStateRT.pnim:
-    printNim(path, root)
+  if gStateRT.nimout.len > 0:
+    writeFile gStateRT.nimout, printNim(path, root)
 
 proc main(
     mode = modeDefault,
     past = false,
-    pnim = false,
+    logUnhandled = false,
+    nimout = "",
+    keepNimout = false,
     pretty = true,
     preprocess = false,
     defines: seq[string] = @[],
@@ -117,12 +120,14 @@ proc main(
   gStateRT = State(
     mode: mode,
     past: past,
-    pnim: pnim,
+    nimout: nimout,
     pretty: pretty,
     preprocess: preprocess,
     # Note: was: strip(chars={'"'} but that seemed buggy (the shell should remove these already)
     defines: defines,
     includeDirs: includeDirs,
+    logUnhandled: logUnhandled,
+    keepNimout: keepNimout,
   )
   process(source)
 
@@ -131,9 +136,9 @@ when isMainModule:
   dispatch(main, help = {
     "past": "print AST output",
     "mode": "language; see CompileMode", # TODO: auto-generate valid choices
-    "pnim": "run preprocessor on header",
     "defines": "definitions to pass to preprocessor",
     "includeDirs": "include directory to pass to preprocessor",
-    "preprocess": "print Nim output",
-    "source" : "C/C++ source/header",
+    "preprocess": "run preprocessor on header",
+    "nimout": "generated nim file",
+    "source" : "input C/C++ source/header",
   })

@@ -41,3 +41,7 @@ struct STRUCT1 _test_call_int_param_(int param1);
 STRUCT2 test_call_int_param2(int param1, STRUCT2 param2);
 STRUCT2 test_call_int_param3(int param1, struct STRUCT1 param2);
 ENUM2 test_call_int_param4(enum ENUM param1);
+
+
+// uncommenting this will show a `Potentially invalid syntax` message
+// <>

@@ -1,7 +1,7 @@
 import std/unittest
 import nimterop/cimport
 
-cDebug()
+# cDebug()
 
 cDefine("FORCE")
 cIncludeDir "$projpath/include"

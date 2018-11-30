@@ -4,7 +4,7 @@ import regex
 
 import treesitter/runtime
 
-import git, globals
+import "." / [git, globals, utils]
 
 proc sanitizePath*(path: string): string =
   path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])

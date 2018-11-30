@@ -1,6 +1,5 @@
 import macros, os, strformat, strutils
-
-import getters, globals
+import "." / [globals, getters, utils]
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
@@ -25,8 +24,16 @@ proc findPath(path: string, fail = true): string =
         return ""
 
 proc getToast(fullpath: string): string =
+  # Note: this ran into: https://github.com/OpenSystemsLab/tempfile.nim/issues/9
+  # import tempfile
+  # let nimout = mktemp(prefix="nimterop.gen.", suffix=".nim")
+  let randstr = "D20181129T165842" # TODO: actual random; and make sure doesn't exist (at CT)
+  let nimout = getTempDir().joinPath(fmt"nimterop_{randstr}.nim")
+  if existsFileStatic(nimout):
+    removeFileStatic nimout
+
   var
-    cmd = "toast --pnim --preprocess "
+    cmd = fmt"toast --nimout:{nimout.quoteShell} --preprocess "
 
   for i in gStateCT.defines:
     cmd.add &"--defines+={i.quoteShell} "
@@ -36,9 +43,12 @@ proc getToast(fullpath: string): string =
 
   cmd.add &"--source:{fullpath.quoteShell}"
   echo cmd
-  var (output, exitCode) = gorgeEx(cmd)
-  doAssert exitCode == 0, $exitCode
-  result = output
+
+  var output = execAction(cmd)
+  echo output
+  result = staticRead nimout
+  if not gStateCT.keepNimout:
+    removeFileStatic nimout
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   result = findPath(path, fail = false)

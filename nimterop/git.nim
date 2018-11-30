@@ -1,25 +1,6 @@
 import macros, os, osproc, regex, strformat, strutils
 
-import globals
-
-proc execAction*(cmd: string): string =
-  var
-    ccmd = ""
-    ret = 0
-  when defined(Windows):
-    ccmd = "cmd /c " & cmd
-  when defined(Linux) or defined(MacOSX):
-    ccmd = "bash -c '" & cmd & "'"
-
-  when nimvm:
-    (result, ret) = gorgeEx(ccmd)
-  else:
-    (result, ret) = execCmdEx(ccmd)
-  if ret != 0:
-    echo "Command failed: " & $ret
-    echo ccmd
-    echo result
-    quit(1)
+import "." / [globals, utils]
 
 macro extractZip*(zipfile, outdir: static string): untyped =
   var cmd = "unzip -o $#"
