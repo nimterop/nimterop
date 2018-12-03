@@ -239,7 +239,8 @@ proc genNimAst(root: TSNode) =
       case $node.tsNodeType():
         of "ERROR":
           let (line, col) = getLineCol(node)
-          echo &"# Potentially invalid syntax at line {line} column {col}"
+          let file = gStateRT.sourceFile
+          echo &"# [toast] Potentially invalid syntax at {file}:{line}:{col}"
         of "preproc_def":
           pPreprocDef(node)
         of "type_definition":
@@ -253,6 +254,7 @@ proc genNimAst(root: TSNode) =
           if $node.tsNodeParent.tsNodeType() notin ["type_definition", "declaration"]:
             pEnumSpecifier(node)
         else:
+          # TODO: log
           discard
     else:
       return
