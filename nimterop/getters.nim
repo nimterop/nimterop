@@ -20,6 +20,11 @@ proc getType*(str: string): string =
     replace("unsigned ", "u").
     replace(re"([u]?int[\d]+)_t", "$1")
 
+  if result == "uchar":
+    result = "cuchar"
+  elif result == "double":
+    result = "cdouble"
+
 proc getLit*(str: string): string =
   if str.contains(re"^[\-]?[\d]+$") or
     str.contains(re"^[\-]?[\d]*\.[\d]+$") or
