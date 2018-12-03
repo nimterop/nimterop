@@ -15,7 +15,7 @@ proc initGrammar() =
         name = gStateRT.data[0].val.getIdentifier()
         val = gStateRT.data[1].val
 
-      if name notin gStateRT.consts:
+      if name notin gStateRT.consts and val.nBl:
         gStateRT.consts.add(name)
         gStateRT.constStr &= &"  {name}* = {val}\n"
   ))
@@ -27,6 +27,9 @@ proc initGrammar() =
   gStateRT.grammar.add(("""
    (type_definition
     (primitive_type|type_identifier?)
+    (sized_type_specifier?
+     (primitive_type)
+    )
     (struct_specifier?
      (type_identifier)
     )
@@ -66,6 +69,9 @@ proc initGrammar() =
     (field_declaration_list
      (field_declaration+
       (primitive_type|type_identifier?)
+      (sized_type_specifier?
+       (primitive_type)
+      )
       (struct_specifier?
        (type_identifier)
       )
@@ -88,6 +94,9 @@ proc initGrammar() =
      (field_declaration_list
       (field_declaration+
        (primitive_type|type_identifier?)
+       (sized_type_specifier?
+        (primitive_type)
+       )
        (struct_specifier?
         (type_identifier)
        )
@@ -163,6 +172,9 @@ proc initGrammar() =
   gStateRT.grammar.add(("""
    (declaration
     (primitive_type|type_identifier?)
+    (sized_type_specifier?
+     (primitive_type)
+    )
     (struct_specifier?
      (type_identifier)
     )
@@ -171,13 +183,19 @@ proc initGrammar() =
      (parameter_list
       (parameter_declaration*
        (primitive_type|type_identifier?)
+       (sized_type_specifier?
+        (primitive_type)
+       )
        (struct_specifier?
         (type_identifier)
        )
        (enum_specifier?
         (type_identifier)
        )
-       (identifier)
+       (identifier?)
+       (pointer_declarator?
+        (identifier)
+       )
       )
      )
     )
@@ -187,13 +205,19 @@ proc initGrammar() =
       (parameter_list
        (parameter_declaration*
         (primitive_type|type_identifier?)
+        (sized_type_specifier?
+         (primitive_type)
+        )
         (struct_specifier?
          (type_identifier)
         )
         (enum_specifier?
          (type_identifier)
         )
-        (identifier)
+        (identifier?)
+        (pointer_declarator?
+         (identifier)
+        )
        )
       )
      )
@@ -220,7 +244,10 @@ proc initGrammar() =
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
-        gStateRT.procStr &= &"proc {fnname}({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+        if ftyp != "object":
+          gStateRT.procStr &= &"proc {fnname}({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+        else:
+          gStateRT.procStr &= &"proc {fnname}({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
 
   ))
 

@@ -12,6 +12,7 @@ const gAtoms = @[
   "number_literal",
   "preproc_arg",
   "primitive_type",
+  "sized_type_specifier",
   "type_identifier"
 ]
 
@@ -21,7 +22,10 @@ proc saveNodeData(node: TSNode): bool =
     var
       val = node.getNodeVal()
 
-    if name == "primitive_type":
+    if name == "primitive_type" and node.tsNodeParent.tsNodeType() == "sized_type_specifier":
+      return true
+
+    if name in ["primitive_type", "sized_type_specifier"]:
       val = val.getType()
 
     if node.tsNodeParent().tsNodeType() == "pointer_declarator":
@@ -36,6 +40,8 @@ proc searchAstForNode(ast: ref Ast, node: TSNode): bool =
   let
     childNames = node.getTSNodeNamedChildNames().join()
 
+  if ast.isNil:
+    return
   if ast.children.len != 0:
     let
       rstr = ast.getRegexForAstChildren()

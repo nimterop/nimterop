@@ -13,7 +13,12 @@ proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'})
 
 proc getType*(str: string): string =
-  result = str.strip(chars={'_'}).replace(re"([u]?int[\d]+)_t", "$1").replace(re"^void$", "object")
+  if str == "void":
+    return "object"
+
+  result = str.strip(chars={'_'}).
+    replace("unsigned ", "u").
+    replace(re"([u]?int[\d]+)_t", "$1")
 
 proc getLit*(str: string): string =
   if str.contains(re"^[\-]?[\d]+$") or
