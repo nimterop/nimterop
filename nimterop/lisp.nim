@@ -1,22 +1,18 @@
 import strutils
 import strformat
 
-import globals
+import "."/[getters, globals]
 
 var
-  gTokens {.compiletime.}: seq[string]
-  idx {.compiletime.} = 0
+  gTokens: seq[string]
+  idx = 0
 
-proc tokenize(fullpath: string) =
+proc tokenize(tree: string) =
   var collect = ""
 
   gTokens = @[]
   idx = 0
-  # TODO: consider calling API directly
-  const cmd = &"toast --past --pretty:false --source:{fullpath.quoteShell}"
-  var (output, exitCode) = gorgeEx cmd
-  doAssert exitCode == 0, $exitCode
-  for i in output:
+  for i in tree:
     case i:
       of ' ', '\n', '\r', '(', ')':
         if collect.nBl:
@@ -26,10 +22,6 @@ proc tokenize(fullpath: string) =
           gTokens.add($i)
       else:
         collect &= $i
-
-  if gTokens.len == 0:
-    echo "toast binary not installed - nimble install nimterop to force build"
-    quit(1)
 
 proc readFromTokens(): ref Ast =
   if idx == gTokens.len:
@@ -42,18 +34,12 @@ proc readFromTokens(): ref Ast =
       quit(1)
     if gTokens[idx+1] != "comment":
       result = new(Ast)
-      try:
-        result.sym = parseEnum[Sym](gTokens[idx+1])
-      except:
-        result.sym = IGNORED
-      result.start = gTokens[idx+2].parseInt()
-      result.stop = gTokens[idx+3].parseInt()
+      (result.name, result.kind) = gTokens[idx+1].getNameKind()
       result.children = @[]
-    idx += 4
+    idx += 2
     while gTokens[idx] != ")":
       var res = readFromTokens()
       if not res.isNil():
-        res.parent = result
         result.children.add(res)
   elif gTokens[idx] == ")":
     echo "Poor AST"
@@ -62,7 +48,8 @@ proc readFromTokens(): ref Ast =
   idx += 1
 
 proc printAst*(node: ref Ast, offset=""): string =
-  result = offset & "(" & $node.sym & " " & $node.start & " " & $node.stop
+  result = offset & "(" & node.name & node.kind.toString()
+
   if node.children.len != 0:
     result &= "\n"
     for child in node.children:
@@ -71,7 +58,7 @@ proc printAst*(node: ref Ast, offset=""): string =
   else:
     result &= ")\n"
 
-proc parseLisp*(fullpath: string): ref Ast =
-  tokenize(fullpath)
+proc parseLisp*(tree: string): ref Ast =
+  tokenize(tree)
 
   return readFromTokens()
