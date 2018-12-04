@@ -100,6 +100,8 @@ proc process(path: string) =
     printLisp(root)
   elif gStateRT.pnim:
     printNim(path, root)
+  elif gStateRT.preprocess:
+    echo gStateRT.code
 
 proc main(
     mode = modeDefault,

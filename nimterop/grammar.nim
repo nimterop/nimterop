@@ -15,7 +15,7 @@ proc initGrammar() =
     proc () {.closure, locks: 0.} =
       let
         name = gStateRT.data[0].val.getIdentifier()
-        val = gStateRT.data[1].val
+        val = gStateRT.data[1].val.getLit()
 
       if name notin gStateRT.consts and val.nBl:
         gStateRT.consts.add(name)
@@ -44,7 +44,7 @@ proc initGrammar() =
     proc () {.closure, locks: 0.} =
       var
         name = gStateRT.data[1].val.getIdentifier()
-        typ = gStateRT.data[0].val
+        typ = gStateRT.data[0].val.getIdentifier()
 
       if name notin gStateRT.types:
         gStateRT.types.add(name)
@@ -58,11 +58,14 @@ proc initGrammar() =
       gStateRT.types.add(nname)
       gStateRT.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {gStateRT.currentHeader}, bycopy.}} = object\n"
 
-      for i in fstart .. gStateRT.data.len-fend:
+      var
+        i = fstart
+      while i < gStateRT.data.len-fend:
         let
-          ftyp = gStateRT.data[i].val
+          ftyp = gStateRT.data[i].val.getIdentifier()
           fname = gStateRT.data[i+1].val.getIdentifier()
         gStateRT.typeStr &= &"    {fname}*: {ftyp}\n"
+        i += 2
 
   # struct X {}
   gStateRT.grammar.add(("""
@@ -86,7 +89,7 @@ proc initGrammar() =
    )
   """,
     proc () {.closure, locks: 0.} =
-      pStructCommon(gStateRT.data[0].val, 1, 2, "struct ")
+      pStructCommon(gStateRT.data[0].val, 1, 0, "struct ")
   ))
 
   # typedef struct X {}
@@ -113,7 +116,7 @@ proc initGrammar() =
    )
   """,
     proc () {.closure, locks: 0.} =
-      pStructCommon(gStateRT.data[^1].val, 0, 3)
+      pStructCommon(gStateRT.data[^1].val, 0, 1)
   ))
 
   proc pEnumCommon(name: string, fstart, fend: int, prefix="") =
@@ -231,7 +234,7 @@ proc initGrammar() =
   """,
     proc () {.closure, locks: 0.} =
       let
-        ftyp = gStateRT.data[0].val
+        ftyp = gStateRT.data[0].val.getIdentifier()
         fname = gStateRT.data[1].val
         fnname = fname.getIdentifier()
 
@@ -242,13 +245,14 @@ proc initGrammar() =
         if gStateRT.data.len > 2:
           while i < gStateRT.data.len-1:
             let
-              ptyp = gStateRT.data[i].val
+              ptyp = gStateRT.data[i].val.getIdentifier()
               pname = gStateRT.data[i+1].val.getIdentifier()
             pout &= &"{pname}: {ptyp},"
             i += 2
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
+        gStateRT.procs.add(fnname)
         if ftyp != "object":
           gStateRT.procStr &= &"proc {fnname}({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
         else:

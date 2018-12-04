@@ -17,13 +17,18 @@ proc getType*(str: string): string =
     return "object"
 
   result = str.strip(chars={'_'}).
-    replace("unsigned ", "u").
+    multiReplace([
+      ("unsigned ", "cu"),
+      ("double ", "cdouble"),
+      ("long ", "clong"),
+    ]).
     replace(re"([u]?int[\d]+)_t", "$1")
 
-  if result == "uchar":
-    result = "cuchar"
-  elif result == "double":
-    result = "cdouble"
+  case result:
+    of "long":
+      result = "clong"
+    of "double":
+      result = "cdouble"
 
 proc getLit*(str: string): string =
   if str.contains(re"^[\-]?[\d]+$") or
