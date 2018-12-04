@@ -42,6 +42,7 @@ proc searchAstForNode(ast: ref Ast, node: TSNode): bool =
 
   if ast.isNil:
     return
+
   if ast.children.len != 0:
     let
       rstr = ast.getRegexForAstChildren()
@@ -50,7 +51,7 @@ proc searchAstForNode(ast: ref Ast, node: TSNode): bool =
       if node.getTSNodeNamedChildCountSansComments() != 0:
         var flag = true
         for i in 0 .. node.tsNodeNamedChildCount()-1:
-          if node.tsNodeType() != "comment":
+          if $node.tsNodeNamedChild(i).tsNodeType() != "comment":
             let
               nodeChild = node.tsNodeNamedChild(i)
               astChild = ast.getAstChildByName($nodeChild.tsNodeType())
