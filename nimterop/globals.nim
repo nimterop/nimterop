@@ -1,5 +1,7 @@
 import tables
 
+import regex
+
 type
   Kind* = enum
     exactlyOne
@@ -12,6 +14,7 @@ type
     kind*: Kind
     children*: seq[ref Ast]
     tonim*: proc () {.closure, locks: 0.}
+    regex*: Regex
 
   State* = object
     compile*, defines*, headers*, includeDirs*, searchDirs*: seq[string]

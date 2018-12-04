@@ -1,5 +1,7 @@
 import strformat, tables
 
+import regex
+
 import "."/[getters, globals, lisp]
 
 proc initGrammar() =
@@ -254,6 +256,13 @@ proc initGrammar() =
 
   ))
 
+proc initRegex(ast: ref Ast) =
+  if ast.children.len != 0:
+    for child in ast.children:
+      child.initRegex()
+
+    ast.regex = ast.getRegexForAstChildren().re()
+
 proc parseGrammar*() =
   initGrammar()
 
@@ -263,6 +272,7 @@ proc parseGrammar*() =
       ast = gStateRT.grammar[i].grammar.parseLisp()
 
     ast.tonim = gStateRT.grammar[i].call
+    ast.initRegex()
     if ast.name notin gStateRT.ast:
       gStateRT.ast[ast.name] = @[ast]
     else:

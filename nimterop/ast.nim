@@ -53,10 +53,7 @@ proc searchAstForNode(ast: ref Ast, node: TSNode): bool =
     return
 
   if ast.children.len != 0:
-    let
-      rstr = ast.getRegexForAstChildren()
-
-    if childNames.contains(rstr.toPattern):
+    if childNames.contains(ast.regex):
       if node.getTSNodeNamedChildCountSansComments() != 0:
         var flag = true
         for i in 0 .. node.tsNodeNamedChildCount()-1:
