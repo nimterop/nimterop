@@ -28,7 +28,7 @@ proc initGrammar() =
    (type_definition
     (primitive_type|type_identifier?)
     (sized_type_specifier?
-     (primitive_type)
+     (primitive_type?)
     )
     (struct_specifier?
      (type_identifier)
@@ -95,7 +95,7 @@ proc initGrammar() =
       (field_declaration+
        (primitive_type|type_identifier?)
        (sized_type_specifier?
-        (primitive_type)
+        (primitive_type?)
        )
        (struct_specifier?
         (type_identifier)
@@ -171,9 +171,10 @@ proc initGrammar() =
   # typ function(typ param1, ...)
   gStateRT.grammar.add(("""
    (declaration
+    (type_qualifier?)
     (primitive_type|type_identifier?)
     (sized_type_specifier?
-     (primitive_type)
+     (primitive_type?)
     )
     (struct_specifier?
      (type_identifier)
@@ -182,9 +183,10 @@ proc initGrammar() =
      (identifier)
      (parameter_list
       (parameter_declaration*
+       (type_qualifier?)
        (primitive_type|type_identifier?)
        (sized_type_specifier?
-        (primitive_type)
+        (primitive_type?)
        )
        (struct_specifier?
         (type_identifier)
@@ -200,13 +202,14 @@ proc initGrammar() =
      )
     )
     (pointer_declarator?
-     (function_declarator?
+     (function_declarator
       (identifier)
       (parameter_list
        (parameter_declaration*
+        (type_qualifier?)
         (primitive_type|type_identifier?)
         (sized_type_specifier?
-         (primitive_type)
+         (primitive_type?)
         )
         (struct_specifier?
          (type_identifier)

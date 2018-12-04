@@ -28,9 +28,18 @@ proc saveNodeData(node: TSNode): bool =
     if name in ["primitive_type", "sized_type_specifier"]:
       val = val.getType()
 
-    if node.tsNodeParent().tsNodeType() == "pointer_declarator":
-      if gStateRT.data[^1].val != "object":
-        gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val
+    let
+      nparent = node.tsNodeParent()
+    if not nparent.tsNodeIsNull():
+      let
+        npname = nparent.tsNodeType()
+        npparent = nparent.tsNodeParent()
+      if npname == "pointer_declarator" or
+        (npname == "function_declarator" and
+          not npparent.tsNodeIsNull() and npparent.tsNodeType() == "pointer_declarator"):
+
+        if gStateRT.data[^1].val != "object":
+          gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val
 
     gStateRT.data.add((name, val))
 
