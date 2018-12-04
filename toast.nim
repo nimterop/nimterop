@@ -121,7 +121,8 @@ proc main(
     defines: defines,
     includeDirs: includeDirs,
   )
-  process(source[0])
+  if source.len != 0:
+    process(source[0])
 
 when isMainModule:
   import cligen
