@@ -34,7 +34,7 @@ proc getToast(fullpath: string): string =
   for i in gStateCT.includeDirs:
     cmd.add &"--includeDirs+={i.quoteShell} "
 
-  cmd.add &"--source:{fullpath.quoteShell}"
+  cmd.add &"{fullpath.quoteShell}"
   echo cmd
   var (output, exitCode) = gorgeEx(cmd)
   doAssert exitCode == 0, $exitCode

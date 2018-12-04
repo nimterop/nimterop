@@ -109,10 +109,8 @@ proc main(
     preprocess = false,
     defines: seq[string] = @[],
     includeDirs: seq[string] = @[],
-    # defines.add(param[2..^1].strip(chars={'"'}))
-    source: string,
+    source: seq[string],
   ) =
-  # TODO: should we add back `-m` param? meaning was:  print minimized AST output - non-pretty (implies -a)
 
   gStateRT = State(
     mode: mode,
@@ -120,11 +118,10 @@ proc main(
     pnim: pnim,
     pretty: pretty,
     preprocess: preprocess,
-    # Note: was: strip(chars={'"'} but that seemed buggy (the shell should remove these already)
     defines: defines,
     includeDirs: includeDirs,
   )
-  process(source)
+  process(source[0])
 
 when isMainModule:
   import cligen
@@ -136,4 +133,10 @@ when isMainModule:
     "includeDirs": "include directory to pass to preprocessor",
     "preprocess": "print Nim output",
     "source" : "C/C++ source/header",
+  }, short = {
+    "past": 'a',
+    "pnim": 'n',
+    "defines": 'D',
+    "includeDirs": 'I',
+    "preprocess": 'p'
   })
