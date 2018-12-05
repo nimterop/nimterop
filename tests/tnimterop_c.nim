@@ -28,6 +28,9 @@ var
   vptr: VOIDPTR
   iptr: INTPTR
 
+  u: UNION1
+  u2: UNION2
+
 pt = 3
 ct = 4
 
@@ -38,10 +41,16 @@ s3.field1 = 7
 e = enum1
 e2 = enum4
 
+u2.field2 = 'c'
+
 check test_call_int() == 5
-check test_call_int_param(5).field1 == 5
-check test_call_int_param2(5, s2).field1 == 11
-check test_call_int_param3(5, s).field1 == 10
-check test_call_int_param4(e) == e2
+check test_call_param(5).field1 == 5
+check test_call_param2(5, s2).field1 == 11
+check test_call_param3(5, s).field1 == 10
+check test_call_param4(e) == e2
+check test_call_param5(5.0).field2 == 5.0
+check test_call_param6(u2) == 'c'
+u.field1 = 4
+check test_call_param7(u) == 4
 
 cAddStdDir()

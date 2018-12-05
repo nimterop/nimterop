@@ -2,6 +2,8 @@ import tables
 
 import regex
 
+import treesitter/runtime
+
 type
   Kind* = enum
     exactlyOne
@@ -13,7 +15,7 @@ type
     name*: string
     kind*: Kind
     children*: seq[ref Ast]
-    tonim*: proc () {.closure, locks: 0.}
+    tonim*: proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.}
     regex*: Regex
 
   State* = object
@@ -28,7 +30,7 @@ type
 
     ast*: Table[string, seq[ref Ast]]
     data*: seq[tuple[name, val: string]]
-    grammar*: seq[tuple[grammar: string, call: proc() {.locks: 0.}]]
+    grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.locks: 0.}]]
 
 var
   gStateCT* {.compiletime.}: State

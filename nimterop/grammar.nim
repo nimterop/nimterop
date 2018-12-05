@@ -1,6 +1,8 @@
-import strformat, tables
+import strformat, strutils, tables
 
 import regex
+
+import treesitter/runtime
 
 import "."/[getters, globals, lisp]
 
@@ -12,7 +14,7 @@ proc initGrammar() =
     (preproc_arg)
    )
   """,
-    proc () {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
       let
         name = gStateRT.data[0].val.getIdentifier()
         val = gStateRT.data[1].val.getLit()
@@ -41,7 +43,7 @@ proc initGrammar() =
     )
    )
   """,
-    proc () {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
       var
         name = gStateRT.data[1].val.getIdentifier()
         typ = gStateRT.data[0].val.getIdentifier()
@@ -51,12 +53,31 @@ proc initGrammar() =
         gStateRT.typeStr &= &"  {name}* = {typ}\n"
   ))
 
-  proc pStructCommon(name: string, fstart, fend: int, prefix="") =
-    let
+  proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
+    var
       nname = name.getIdentifier()
+      prefix = ""
+      union = ""
+
+    case $node.tsNodeType():
+      of "struct_specifier":
+        prefix = "struct "
+      of "union_specifier":
+        prefix = "union "
+        union = " {.union.}"
+      of "type_definition":
+        if node.getTSNodeNamedChildCountSansComments() != 0:
+          for i in 0 .. node.tsNodeNamedChildCount()-1:
+            let
+              nchild = $node.tsNodeNamedChild(i).tsNodeType()
+            if nchild != "comment":
+              if nchild == "union_specifier":
+                union = " {.union.}"
+              break
+
     if nname notin gStateRT.types:
       gStateRT.types.add(nname)
-      gStateRT.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {gStateRT.currentHeader}, bycopy.}} = object\n"
+      gStateRT.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {gStateRT.currentHeader}, bycopy.}} = object{union}\n"
 
       var
         i = fstart
@@ -69,13 +90,13 @@ proc initGrammar() =
 
   # struct X {}
   gStateRT.grammar.add(("""
-   (struct_specifier
+   (struct_specifier|union_specifier
     (type_identifier)
     (field_declaration_list
      (field_declaration+
       (primitive_type|type_identifier?)
       (sized_type_specifier?
-       (primitive_type)
+       (primitive_type?)
       )
       (struct_specifier?
        (type_identifier)
@@ -88,14 +109,14 @@ proc initGrammar() =
     )
    )
   """,
-    proc () {.closure, locks: 0.} =
-      pStructCommon(gStateRT.data[0].val, 1, 0, "struct ")
+    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+      pStructCommon(ast, node, gStateRT.data[0].val, 1, 1)
   ))
 
   # typedef struct X {}
   gStateRT.grammar.add(("""
    (type_definition
-    (struct_specifier
+    (struct_specifier|union_specifier
      (field_declaration_list
       (field_declaration+
        (primitive_type|type_identifier?)
@@ -115,11 +136,11 @@ proc initGrammar() =
     (type_identifier)
    )
   """,
-    proc () {.closure, locks: 0.} =
-      pStructCommon(gStateRT.data[^1].val, 0, 1)
+    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+      pStructCommon(ast, node, gStateRT.data[^1].val, 0, 1)
   ))
 
-  proc pEnumCommon(name: string, fstart, fend: int, prefix="") =
+  proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
     let
       nname = name.getIdentifier()
     if nname notin gStateRT.types:
@@ -151,8 +172,8 @@ proc initGrammar() =
     )
    )
   """,
-    proc () {.closure, locks: 0.} =
-      pEnumCommon(gStateRT.data[0].val, 1, 0)
+    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+      pEnumCommon(ast, node, gStateRT.data[0].val, 1, 0)
   ))
 
   # typedef enum {} X
@@ -169,8 +190,8 @@ proc initGrammar() =
     (type_identifier)
    )
   """,
-    proc () {.closure, locks: 0.} =
-      pEnumCommon(gStateRT.data[^1].val, 0, 1)
+    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+      pEnumCommon(ast, node, gStateRT.data[^1].val, 0, 1)
   ))
 
   # typ function(typ param1, ...)
@@ -181,7 +202,7 @@ proc initGrammar() =
     (sized_type_specifier?
      (primitive_type?)
     )
-    (struct_specifier?
+    (struct_specifier|union_specifier?
      (type_identifier)
     )
     (function_declarator?
@@ -193,7 +214,7 @@ proc initGrammar() =
        (sized_type_specifier?
         (primitive_type?)
        )
-       (struct_specifier?
+       (struct_specifier|union_specifier?
         (type_identifier)
        )
        (enum_specifier?
@@ -216,7 +237,7 @@ proc initGrammar() =
         (sized_type_specifier?
          (primitive_type?)
         )
-        (struct_specifier?
+        (struct_specifier|union_specifier?
          (type_identifier)
         )
         (enum_specifier?
@@ -232,7 +253,7 @@ proc initGrammar() =
     )
    )
   """,
-    proc () {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
       let
         ftyp = gStateRT.data[0].val.getIdentifier()
         fname = gStateRT.data[1].val
@@ -277,10 +298,11 @@ proc parseGrammar*() =
 
     ast.tonim = gStateRT.grammar[i].call
     ast.initRegex()
-    if ast.name notin gStateRT.ast:
-      gStateRT.ast[ast.name] = @[ast]
-    else:
-      gStateRT.ast[ast.name].add(ast)
+    for n in ast.name.split("|"):
+      if n notin gStateRT.ast:
+        gStateRT.ast[n] = @[ast]
+      else:
+        gStateRT.ast[n].add(ast)
 
 proc printGrammar*() =
   for name in gStateRT.ast.keys():

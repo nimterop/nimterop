@@ -14,8 +14,8 @@ Most of the functionality is contained within the `toast` binary that is built w
 
 The nimterop feature set is still limited when compared with c2nim. Supported language constructs include:
 - `#define NAME VALUE` where `VALUE` is a number (int, float, hex)
-- `struct X`, `typedef struct`, `enum X`, `typedef enum`
-- Functions with primitive types, structs, enums and typedef structs/enums as params and return values
+- `struct X`, `typedef struct`, `enum X`, `typedef enum`, `union X`, `typedef union`
+- Functions with primitive types, structs, enums, unions and typedef structs/enums/unions as params and return values
 - Pointers to data types
 
 Given the simplicity and success of this approach so far, it seems feasible to continue on for more complex code. The goal is to make interop seamless so nimterop will focus on wrapping headers and not the outright conversion of C/C++ implementation.

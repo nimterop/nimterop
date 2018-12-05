@@ -84,7 +84,7 @@ proc searchAst(root: TSNode) =
       if name in gStateRT.ast:
         for ast in gStateRT.ast[name]:
           if searchAstForNode(ast, node):
-            ast.tonim()
+            ast.tonim(ast, node)
             break
         gStateRT.data = @[]
     else:
