@@ -1,4 +1,4 @@
-import os, strutils
+import os, strformat, strutils
 
 import treesitter/[runtime, c, cpp]
 
@@ -14,7 +14,9 @@ proc printLisp(root: TSNode) =
     if not node.tsNodeIsNull():
       if gStateRT.pretty:
         stdout.write spaces(depth)
-      stdout.write "(" & $node.tsNodeType() & " " & $node.tsNodeStartByte() & " " & $node.tsNodeEndByte()
+      let
+        (line, col) = node.getLineCol()
+      stdout.write &"({$node.tsNodeType()} {line} {col} {node.tsNodeEndByte() - node.tsNodeStartByte()}"
     else:
       return
 
@@ -66,11 +68,10 @@ proc process(path: string) =
   gStateRT.sourceFile = path
 
   if gStateRT.mode.len == 0:
-    gStateRT.mode = modeDefault
-  elif ext in [".h", ".c"]:
-    gStateRT.mode = "c"
-  elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
-    gStateRT.mode = "cpp"
+    if ext in [".h", ".c"]:
+      gStateRT.mode = "c"
+    elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
+      gStateRT.mode = "cpp"
 
   if gStateRT.preprocess:
     gStateRT.code = getPreprocessor(path)
