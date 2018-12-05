@@ -50,6 +50,8 @@ proc initGrammar() =
 
       if name notin gStateRT.types:
         gStateRT.types.add(name)
+        if name == typ:
+          typ = "object"
         gStateRT.typeStr &= &"  {name}* = {typ}\n"
   ))
 
