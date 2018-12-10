@@ -9,15 +9,15 @@ env:
   - BRANCH=stable
   - BRANCH=devel
 
-cache:
-  directories:
-    - "$HOME/.nimble"
-    - "$HOME/.choosenim"
+# cache:
+  # directories:
+    # - "$HOME/.nimble"
+    # - "$HOME/.choosenim"
 
-matrix:
-  allow_failures:
-    - env: BRANCH=devel
-  fast_finish: true
+# matrix:
+  # allow_failures:
+    # - env: BRANCH=devel
+  # fast_finish: true
 
 install:
   - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
@@ -25,7 +25,7 @@ install:
       curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
       sh init.sh -y
   - export PATH=$HOME/.nimble/bin:$PATH
-  - nimble refresh -y
+  # - nimble refresh -y
 
 script:
   - nimble installWithDeps
