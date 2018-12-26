@@ -19,9 +19,9 @@ proc execCmd(cmd:string)=
 task test, "Test":
   execCmd "nim c -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
-  when defined(windows):
-    execCmd "nim c -r tests/tmath.nim"
-    execCmd "nim cpp -r tests/tmath.nim"
+  # when defined(windows):
+    # execCmd "nim c -r tests/tmath.nim"
+    # execCmd "nim cpp -r tests/tmath.nim"
 
 task installWithDeps, "install dependencies":
   for a in ["http://github.com/genotrance/nimtreesitter?subdir=treesitter",

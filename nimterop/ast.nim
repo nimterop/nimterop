@@ -9,6 +9,7 @@ import "."/[getters, globals, grammar]
 const gAtoms = @[
   "field_identifier",
   "identifier",
+  "math_expression",
   "number_literal",
   "preproc_arg",
   "primitive_type",
@@ -25,7 +26,10 @@ proc saveNodeData(node: TSNode): bool =
     if name == "primitive_type" and node.tsNodeParent.tsNodeType() == "sized_type_specifier":
       return true
 
-    if name in ["primitive_type", "sized_type_specifier"]:
+    if name == "number_literal" and node.tsNodeParent.tsNodeType() == "math_expression":
+      return true
+
+    if name in ["math_expression", "primitive_type", "sized_type_specifier"]:
       val = val.getType()
 
     let
@@ -39,7 +43,7 @@ proc saveNodeData(node: TSNode): bool =
           not npparent.tsNodeIsNull() and npparent.tsNodeType() == "pointer_declarator"):
 
         if gStateRT.data[^1].val != "object":
-          gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val
+          gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
 
     gStateRT.data.add((name, val))
 

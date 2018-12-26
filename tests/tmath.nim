@@ -4,6 +4,8 @@ import unittest
 type
   locale_t = object
 
+cDebug()
+
 cAddStdDir()
 cImport cSearchPath("math.h")
 

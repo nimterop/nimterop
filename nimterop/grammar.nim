@@ -119,6 +119,7 @@ proc initGrammar() =
   gStateRT.grammar.add(("""
    (type_definition
     (struct_specifier|union_specifier
+     (type_identifier?)
      (field_declaration_list
       (field_declaration+
        (primitive_type|type_identifier?)
@@ -139,12 +140,22 @@ proc initGrammar() =
    )
   """,
     proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
-      pStructCommon(ast, node, gStateRT.data[^1].val, 0, 1)
+      var
+        offset = 0
+
+      if gStateRT.data[0].name == "type_identifier":
+        offset = 1
+
+      pStructCommon(ast, node, gStateRT.data[^1].val, offset, 1)
   ))
 
   proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
-    let
+    var
       nname = name.getIdentifier()
+
+    if nname.len == 0:
+      nname = getUniqueIdentifier(gStateRT.types)
+
     if nname notin gStateRT.types:
       gStateRT.types.add(nname)
       gStateRT.typeStr &= &"  {nname}* = enum\n"
@@ -155,7 +166,7 @@ proc initGrammar() =
         let
           fname = gStateRT.data[i].val.getIdentifier()
 
-        if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name == "number_literal":
+        if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["math_expression", "number_literal"]:
           gStateRT.typeStr &= &"    {fname} = {gStateRT.data[i+1].val}\n"
           i += 2
         else:
@@ -165,27 +176,42 @@ proc initGrammar() =
   # enum X {}
   gStateRT.grammar.add(("""
    (enum_specifier
-    (type_identifier)
+    (type_identifier?)
     (enumerator_list
      (enumerator+
       (identifier)
       (number_literal?)
+      (math_expression?
+       (number_literal)
+      )
      )
     )
    )
   """,
     proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
-      pEnumCommon(ast, node, gStateRT.data[0].val, 1, 0)
+      var
+        name = ""
+        offset = 0
+
+      if gStateRT.data[0].name == "type_identifier":
+        name = gStateRT.data[0].val
+        offset = 1
+
+      pEnumCommon(ast, node, name, offset, 0)
   ))
 
   # typedef enum {} X
   gStateRT.grammar.add(("""
    (type_definition
     (enum_specifier
+     (type_identifier?)
      (enumerator_list
       (enumerator+
        (identifier)
        (number_literal?)
+       (math_expression?
+        (number_literal)
+       )
       )
      )
     )
@@ -193,13 +219,19 @@ proc initGrammar() =
    )
   """,
     proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
-      pEnumCommon(ast, node, gStateRT.data[^1].val, 0, 1)
+      var
+        offset = 0
+
+      if gStateRT.data[0].name == "type_identifier":
+        offset = 1
+
+      pEnumCommon(ast, node, gStateRT.data[^1].val, offset, 1)
   ))
 
   # typ function(typ param1, ...)
   gStateRT.grammar.add(("""
    (declaration
-    (type_qualifier?)
+    (type_qualifier|storage_class_specifier?)
     (primitive_type|type_identifier?)
     (sized_type_specifier?
      (primitive_type?)

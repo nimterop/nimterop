@@ -12,6 +12,16 @@ proc sanitizePath*(path: string): string =
 proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'})
 
+proc getUniqueIdentifier*(exists: seq[string]): string =
+  var
+    name = gStateRT.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
+    count = 1
+
+  while (name & $count) in exists:
+    count += 1
+
+  return name & $count
+
 proc getType*(str: string): string =
   if str == "void":
     return "object"
@@ -22,7 +32,8 @@ proc getType*(str: string): string =
       ("double ", "cdouble"),
       ("long ", "clong"),
     ]).
-    replace(re"([u]?int[\d]+)_t", "$1")
+    replace(re"([u]?int[\d]+)_t", "$1").
+    replace(re"([u]?int)ptr_t", "ptr $1")
 
   case result:
     of "long":
