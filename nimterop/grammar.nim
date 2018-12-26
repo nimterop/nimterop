@@ -154,7 +154,7 @@ proc initGrammar() =
       nname = name.getIdentifier()
 
     if nname.len == 0:
-      nname = getUniqueIdentifier(gStateRT.types)
+      nname = getUniqueIdentifier(gStateRT.types, "Enum")
 
     if nname notin gStateRT.types:
       gStateRT.types.add(nname)

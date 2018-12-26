@@ -12,9 +12,9 @@ proc sanitizePath*(path: string): string =
 proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'})
 
-proc getUniqueIdentifier*(exists: seq[string]): string =
+proc getUniqueIdentifier*(exists: seq[string], prefix = ""): string =
   var
-    name = gStateRT.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
+    name = prefix & "_" & gStateRT.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
     count = 1
 
   while (name & $count) in exists:

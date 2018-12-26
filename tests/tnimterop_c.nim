@@ -24,6 +24,8 @@ var
 
   e: ENUM
   e2: ENUM2 = enum5
+  e3: Enum_testh1 = enum7
+  e4: ENUM4 = enum11
 
   vptr: VOIDPTR
   iptr: INTPTR
@@ -52,5 +54,8 @@ check test_call_param5(5.0).field2 == 5.0
 check test_call_param6(u2) == 'c'
 u.field1 = 4
 check test_call_param7(u) == 4
+
+check e3 == enum7
+check e4 == enum11
 
 cAddStdDir()

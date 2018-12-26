@@ -29,6 +29,18 @@ typedef enum {
 	enum6
 } ENUM2;
 
+enum {
+	enum7,
+	enum8,
+	enum9
+};
+
+typedef enum ENUM4 {
+	enum10,
+	enum11,
+	enum12
+} ENUM4;
+
 typedef void * VOIDPTR;
 typedef int * INTPTR;
 
@@ -41,7 +53,7 @@ union UNION1 {
 	float field2;
 };
 
-typedef union {
+typedef union UNION2 {
 	double field1;
 	unsigned char field2;
 } UNION2;
