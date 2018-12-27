@@ -261,7 +261,8 @@ proc initGrammar() =
   # typ function(typ param1, ...)
   gStateRT.grammar.add(("""
    (declaration
-    (type_qualifier|storage_class_specifier?)
+    (storage_class_specifier?)
+    (type_qualifier?)
     (primitive_type|type_identifier?)
     (sized_type_specifier?
      (primitive_type?)

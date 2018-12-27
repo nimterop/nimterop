@@ -44,6 +44,8 @@ proc saveNodeData(node: TSNode): bool =
 
         if gStateRT.data[^1].val != "object":
           gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
+        else:
+          gStateRT.data[^1].val = "pointer"
 
     gStateRT.data.add((name, val))
 
