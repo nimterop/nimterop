@@ -14,7 +14,7 @@ proc initGrammar() =
     (preproc_arg)
    )
   """,
-    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) =
       let
         name = gStateRT.data[0].val.getIdentifier()
         val = gStateRT.data[1].val.getLit()
@@ -43,7 +43,7 @@ proc initGrammar() =
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) =
       var
         name = gStateRT.data[1].val.getIdentifier()
         typ = gStateRT.data[0].val.getIdentifier()
@@ -125,7 +125,7 @@ proc initGrammar() =
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) =
       pStructCommon(ast, node, gStateRT.data[0].val, 1, 1)
   ))
 
@@ -161,7 +161,7 @@ proc initGrammar() =
     (type_identifier)
    )
   """,
-    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) =
       var
         offset = 0
 
@@ -210,7 +210,7 @@ proc initGrammar() =
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) =
       var
         name = ""
         offset = 0
@@ -240,7 +240,7 @@ proc initGrammar() =
     (type_identifier)
    )
   """,
-    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) =
       var
         offset = 0
 
@@ -309,7 +309,7 @@ proc initGrammar() =
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.} =
+    proc (ast: ref Ast, node: TSNode) =
       let
         ftyp = gStateRT.data[0].val.getIdentifier()
         fname = gStateRT.data[1].val

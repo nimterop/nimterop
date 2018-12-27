@@ -15,7 +15,7 @@ type
     name*: string
     kind*: Kind
     children*: seq[ref Ast]
-    tonim*: proc (ast: ref Ast, node: TSNode) {.closure, locks: 0.}
+    tonim*: proc (ast: ref Ast, node: TSNode)
     regex*: Regex
 
   State* = object
@@ -30,7 +30,7 @@ type
 
     ast*: Table[string, seq[ref Ast]]
     data*: seq[tuple[name, val: string]]
-    grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.locks: 0.}]]
+    grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
 var
   gStateCT* {.compiletime.}: State
