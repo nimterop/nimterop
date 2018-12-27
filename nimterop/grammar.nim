@@ -24,12 +24,7 @@ proc initGrammar() =
         gStateRT.constStr &= &"  {name}* = {val}\n"
   ))
 
-  # typedef int X
-  # typedef X Y
-  # typedef struct X Y
-  # typedef ?* Y
-  gStateRT.grammar.add(("""
-   (type_definition
+  let typeGrammar = """
     (primitive_type|type_identifier?)
     (sized_type_specifier?
      (primitive_type?)
@@ -37,6 +32,15 @@ proc initGrammar() =
     (struct_specifier|union_specifier|enum_specifier?
      (type_identifier)
     )
+  """
+
+  # typedef int X
+  # typedef X Y
+  # typedef struct X Y
+  # typedef ?* Y
+  gStateRT.grammar.add((&"""
+   (type_definition
+    {typeGrammar}
     (type_identifier?)
     (pointer_declarator?
      (type_identifier)
@@ -96,30 +100,24 @@ proc initGrammar() =
           gStateRT.typeStr &= &"    {fname}*: {ftyp}\n"
           i += 2
 
+  let fieldGrammar = """
+    (field_identifier?)
+    (array_declarator?
+     (field_identifier)
+     (identifier|number_literal)
+    )
+  """
+
   # struct X {}
-  gStateRT.grammar.add(("""
+  gStateRT.grammar.add((&"""
    (struct_specifier|union_specifier
     (type_identifier)
     (field_declaration_list
      (field_declaration+
-      (primitive_type|type_identifier?)
-      (sized_type_specifier?
-       (primitive_type?)
-      )
-      (struct_specifier|union_specifier|enum_specifier?
-       (type_identifier)
-      )
-      (field_identifier?)
+      {typeGrammar}
+      {fieldGrammar}
       (pointer_declarator?
-       (field_identifier?)
-       (array_declarator?
-        (field_identifier)
-        (identifier|number_literal)
-       )
-      )
-      (array_declarator?
-       (field_identifier)
-       (identifier|number_literal)
+        {fieldGrammar}
       )
      )
     )
@@ -130,34 +128,9 @@ proc initGrammar() =
   ))
 
   # typedef struct X {}
-  gStateRT.grammar.add(("""
+  gStateRT.grammar.add((&"""
    (type_definition
-    (struct_specifier|union_specifier
-     (type_identifier?)
-     (field_declaration_list
-      (field_declaration+
-       (primitive_type|type_identifier?)
-       (sized_type_specifier?
-        (primitive_type?)
-       )
-       (struct_specifier|union_specifier|enum_specifier?
-        (type_identifier)
-       )
-       (field_identifier?)
-       (pointer_declarator?
-        (field_identifier?)
-        (array_declarator?
-         (field_identifier)
-         (identifier|number_literal)
-        )
-       )
-       (array_declarator?
-        (field_identifier)
-        (identifier|number_literal)
-       )
-      )
-     )
-    )
+    {gStateRT.grammar[^1].grammar}
     (type_identifier)
    )
   """,
@@ -231,20 +204,9 @@ proc initGrammar() =
   ))
 
   # typedef enum {} X
-  gStateRT.grammar.add(("""
+  gStateRT.grammar.add((&"""
    (type_definition
-    (enum_specifier
-     (type_identifier?)
-     (enumerator_list
-      (enumerator+
-       (identifier)
-       (number_literal?)
-       (math_expression?
-        (number_literal)
-       )
-      )
-     )
-    )
+    {gStateRT.grammar[^1].grammar}
     (type_identifier)
    )
   """,
@@ -258,33 +220,13 @@ proc initGrammar() =
       pEnumCommon(ast, node, gStateRT.data[^1].val, offset, 1)
   ))
 
-  # typ function(typ param1, ...)
-  gStateRT.grammar.add(("""
-   (declaration
-    (storage_class_specifier?)
-    (type_qualifier?)
-    (primitive_type|type_identifier?)
-    (sized_type_specifier?
-     (primitive_type?)
-    )
-    (struct_specifier|union_specifier?
-     (type_identifier)
-    )
+  let funcGrammar = &"""
     (function_declarator?
      (identifier)
      (parameter_list
       (parameter_declaration*
        (type_qualifier?)
-       (primitive_type|type_identifier?)
-       (sized_type_specifier?
-        (primitive_type?)
-       )
-       (struct_specifier|union_specifier?
-        (type_identifier)
-       )
-       (enum_specifier?
-        (type_identifier)
-       )
+       {typeGrammar}
        (identifier?)
        (pointer_declarator?
         (identifier)
@@ -292,29 +234,17 @@ proc initGrammar() =
       )
      )
     )
+  """
+
+  # typ function(typ param1, ...)
+  gStateRT.grammar.add((&"""
+   (declaration
+    (storage_class_specifier?)
+    (type_qualifier?)
+    {typeGrammar}
+    {funcGrammar}
     (pointer_declarator?
-     (function_declarator
-      (identifier)
-      (parameter_list
-       (parameter_declaration*
-        (type_qualifier?)
-        (primitive_type|type_identifier?)
-        (sized_type_specifier?
-         (primitive_type?)
-        )
-        (struct_specifier|union_specifier?
-         (type_identifier)
-        )
-        (enum_specifier?
-         (type_identifier)
-        )
-        (identifier?)
-        (pointer_declarator?
-         (identifier)
-        )
-       )
-      )
-     )
+     {funcGrammar}
     )
    )
   """,
