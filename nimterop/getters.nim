@@ -6,11 +6,36 @@ import treesitter/runtime
 
 import git, globals
 
+const gReserved = """
+addr and as asm
+bind block break
+case cast concept const continue converter
+defer discard distinct div do
+elif else end enum except export
+finally for from func
+if import in include interface is isnot iterator
+let
+macro method mixin mod
+nil not notin
+of or out
+proc ptr
+raise ref return
+shl shr static
+template try tuple type
+using
+var
+when while
+xor
+yield""".split(Whitespace)
+
 proc sanitizePath*(path: string): string =
   path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
 
 proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'})
+
+  if result in gReserved:
+    result = &"`{result}`"
 
 proc getUniqueIdentifier*(exists: seq[string], prefix = ""): string =
   var

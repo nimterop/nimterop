@@ -124,6 +124,9 @@ proc printNim*(fullpath: string, root: TSNode) =
 
   root.searchAst()
 
+  if gStateRT.enumStr.nBl:
+    echo gStateRT.enumStr
+
   if gStateRT.constStr.nBl:
     echo "const\n" & gStateRT.constStr
 

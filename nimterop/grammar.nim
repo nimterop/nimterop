@@ -176,24 +176,32 @@ proc initGrammar() =
       nname = name.getIdentifier()
 
     if nname.len == 0:
-      nname = getUniqueIdentifier(gStateRT.types, "Enum")
+      nname = getUniqueIdentifier(gStateRT.enums, "Enum")
 
-    if nname notin gStateRT.types:
-      gStateRT.types.add(nname)
-      gStateRT.typeStr &= &"  {nname}* = enum\n"
+    if nname notin gStateRT.enums:
+      gStateRT.enums.add(nname)
+      gStateRT.enumStr &= &"\ntype {nname}* = distinct int"
+      gStateRT.enumStr &= &"\nconverter enumToInt(en: {nname}): int = en.int\n"
 
       var
         i = fstart
+        count = 0
       while i < gStateRT.data.len-fend:
         let
           fname = gStateRT.data[i].val.getIdentifier()
 
-        if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["math_expression", "number_literal"]:
-          gStateRT.typeStr &= &"    {fname} = {gStateRT.data[i+1].val}\n"
-          i += 2
-        else:
-          gStateRT.typeStr &= &"    {fname}\n"
-          i += 1
+        if fname notin gStateRT.consts:
+          if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["math_expression", "number_literal"]:
+            gStateRT.constStr &= &"  {fname} = {gStateRT.data[i+1].val}.{nname}\n"
+            try:
+              count = gStateRT.data[i+1].val.parseInt() + 1
+            except:
+              count += 1
+            i += 2
+          else:
+            gStateRT.constStr &= &"  {fname} = {count}.{nname}\n"
+            i += 1
+            count += 1
 
   # enum X {}
   gStateRT.grammar.add(("""

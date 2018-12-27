@@ -13,20 +13,19 @@ proc joinPathIfRel(path1: string, path2: string): string =
     result = joinPath(path1, path2)
 
 proc findPath(path: string, fail = true): string =
-  # As is
-  result = path.replace("\\", "/")
+  # Relative to project path
+  result = joinPathIfRel(getProjectPath(), path).replace("\\", "/")
   if not fileExists(result) and not dirExists(result):
-    # Relative to project path
-    result = joinPathIfRel(getProjectPath(), path).replace("\\", "/")
-    if not fileExists(result) and not dirExists(result):
-      if fail:
-        doAssert false, "File or directory not found: " & path
-      else:
-        return ""
+    if fail:
+      doAssert false, "File or directory not found: " & path
+    else:
+      return ""
 
 proc getToast(fullpath: string): string =
   var
-    cmd = "toast --pnim --preprocess "
+    cmd = when defined(Windows): "cmd /c " else: ""
+
+  cmd &= "toast --pnim --preprocess "
 
   for i in gStateCT.defines:
     cmd.add &"--defines+={i.quoteShell} "
