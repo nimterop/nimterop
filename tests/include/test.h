@@ -46,6 +46,10 @@ typedef int * INTPTR;
 
 typedef struct {
 	int *field;
+	int field2[TEST_INT];
+	enum ENUM field3[TEST_INT];
+	int *field4[TEST_INT];
+	ENUM4 *field5[TEST_INT];
 } STRUCT4;
 
 union UNION1 {

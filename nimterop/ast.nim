@@ -34,12 +34,12 @@ proc saveNodeData(node: TSNode): bool =
 
     let
       nparent = node.tsNodeParent()
-    if not nparent.tsNodeIsNull():
+    if not nparent.tsNodeIsNull() and node.tsNodePrevNamedSibling().tsNodeIsNull():
       let
         npname = nparent.tsNodeType()
         npparent = nparent.tsNodeParent()
       if npname == "pointer_declarator" or
-        (npname == "function_declarator" and
+        ($npname in ["function_declarator", "array_declarator"] and
           not npparent.tsNodeIsNull() and npparent.tsNodeType() == "pointer_declarator"):
 
         if gStateRT.data[^1].val != "object":

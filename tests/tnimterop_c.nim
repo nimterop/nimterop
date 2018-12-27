@@ -39,6 +39,8 @@ ct = 4
 s.field1 = 5
 s2.field1 = 6
 s3.field1 = 7
+s4.field2[2] = 5
+s4.field3[3] = enum1
 
 e = enum1
 e2 = enum4

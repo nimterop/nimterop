@@ -34,7 +34,7 @@ proc initGrammar() =
     (sized_type_specifier?
      (primitive_type?)
     )
-    (struct_specifier?
+    (struct_specifier|union_specifier|enum_specifier?
      (type_identifier)
     )
     (type_identifier?)
@@ -87,7 +87,7 @@ proc initGrammar() =
         let
           ftyp = gStateRT.data[i].val.getIdentifier()
           fname = gStateRT.data[i+1].val.getIdentifier()
-        if i+2 < gStateRT.data.len-fend and gStateRT.data[i+2].name == "identifier":
+        if i+2 < gStateRT.data.len-fend and gStateRT.data[i+2].name in ["identifier", "number_literal"]:
           let
             flen = gStateRT.data[i+2].val.getIdentifier()
           gStateRT.typeStr &= &"    {fname}*: array[{flen}, {ftyp}]\n"
@@ -106,7 +106,7 @@ proc initGrammar() =
       (sized_type_specifier?
        (primitive_type?)
       )
-      (struct_specifier?
+      (struct_specifier|union_specifier|enum_specifier?
        (type_identifier)
       )
       (field_identifier?)
@@ -114,12 +114,12 @@ proc initGrammar() =
        (field_identifier?)
        (array_declarator?
         (field_identifier)
-        (identifier)
+        (identifier|number_literal)
        )
       )
       (array_declarator?
        (field_identifier)
-       (identifier)
+       (identifier|number_literal)
       )
      )
     )
@@ -140,7 +140,7 @@ proc initGrammar() =
        (sized_type_specifier?
         (primitive_type?)
        )
-       (struct_specifier?
+       (struct_specifier|union_specifier|enum_specifier?
         (type_identifier)
        )
        (field_identifier?)
@@ -148,12 +148,12 @@ proc initGrammar() =
         (field_identifier?)
         (array_declarator?
          (field_identifier)
-         (identifier)
+         (identifier|number_literal)
         )
        )
        (array_declarator?
         (field_identifier)
-        (identifier)
+        (identifier|number_literal)
        )
       )
      )
