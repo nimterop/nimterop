@@ -87,8 +87,14 @@ proc initGrammar() =
         let
           ftyp = gStateRT.data[i].val.getIdentifier()
           fname = gStateRT.data[i+1].val.getIdentifier()
-        gStateRT.typeStr &= &"    {fname}*: {ftyp}\n"
-        i += 2
+        if i+2 < gStateRT.data.len-fend and gStateRT.data[i+2].name == "identifier":
+          let
+            flen = gStateRT.data[i+2].val.getIdentifier()
+          gStateRT.typeStr &= &"    {fname}*: array[{flen}, {ftyp}]\n"
+          i += 3
+        else:
+          gStateRT.typeStr &= &"    {fname}*: {ftyp}\n"
+          i += 2
 
   # struct X {}
   gStateRT.grammar.add(("""
@@ -105,7 +111,15 @@ proc initGrammar() =
       )
       (field_identifier?)
       (pointer_declarator?
+       (field_identifier?)
+       (array_declarator?
+        (field_identifier)
+        (identifier)
+       )
+      )
+      (array_declarator?
        (field_identifier)
+       (identifier)
       )
      )
     )
@@ -131,7 +145,15 @@ proc initGrammar() =
        )
        (field_identifier?)
        (pointer_declarator?
+        (field_identifier?)
+        (array_declarator?
+         (field_identifier)
+         (identifier)
+        )
+       )
+       (array_declarator?
         (field_identifier)
+        (identifier)
        )
       )
      )

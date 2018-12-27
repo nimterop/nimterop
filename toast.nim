@@ -134,10 +134,10 @@ when isMainModule:
   dispatch(main, help = {
     "past": "print AST output",
     "mode": "language; see CompileMode", # TODO: auto-generate valid choices
-    "pnim": "run preprocessor on header",
+    "pnim": "print Nim output",
     "defines": "definitions to pass to preprocessor",
     "includeDirs": "include directory to pass to preprocessor",
-    "preprocess": "print Nim output",
+    "preprocess": "run preprocessor on header",
     "source" : "C/C++ source/header",
   }, short = {
     "past": 'a',
