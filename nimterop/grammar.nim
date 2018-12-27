@@ -100,27 +100,32 @@ proc initGrammar() =
           gStateRT.typeStr &= &"    {fname}*: {ftyp}\n"
           i += 2
 
-  let fieldGrammar = """
-    (field_identifier?)
-    (array_declarator?
-     (field_identifier)
-     (identifier|number_literal)
-    )
-  """
+  let
+    fieldGrammar = """
+      (field_identifier?)
+      (array_declarator?
+       (field_identifier)
+       (identifier|number_literal)
+      )
+    """
+
+    fieldListGrammar = &"""
+      (field_declaration_list
+       (field_declaration+
+        {typeGrammar}
+        {fieldGrammar}
+        (pointer_declarator?
+         {fieldGrammar}
+        )
+       )
+      )
+    """
 
   # struct X {}
   gStateRT.grammar.add((&"""
    (struct_specifier|union_specifier
     (type_identifier)
-    (field_declaration_list
-     (field_declaration+
-      {typeGrammar}
-      {fieldGrammar}
-      (pointer_declarator?
-        {fieldGrammar}
-      )
-     )
-    )
+    {fieldListGrammar}
    )
   """,
     proc (ast: ref Ast, node: TSNode) =
@@ -130,7 +135,10 @@ proc initGrammar() =
   # typedef struct X {}
   gStateRT.grammar.add((&"""
    (type_definition
-    {gStateRT.grammar[^1].grammar}
+    (struct_specifier|union_specifier
+     (type_identifier?)
+     {fieldListGrammar}
+    )
     (type_identifier)
    )
   """,

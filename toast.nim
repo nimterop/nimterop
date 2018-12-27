@@ -4,7 +4,7 @@ import treesitter/runtime
 import treesitter_c/c
 import treesitter_cpp/cpp
 
-import nimterop/[ast, globals, getters]
+import nimterop/[ast, globals, getters, grammar]
 
 proc printLisp(root: TSNode) =
   var
@@ -112,6 +112,7 @@ proc main(
     pnim = false,
     pretty = true,
     preprocess = false,
+    pgrammar = false,
     defines: seq[string] = @[],
     includeDirs: seq[string] = @[],
     source: seq[string],
@@ -126,7 +127,11 @@ proc main(
     defines: defines,
     includeDirs: includeDirs,
   )
-  if source.len != 0:
+
+  if pgrammar:
+    parseGrammar()
+    printGrammar()
+  elif source.len != 0:
     process(source[0])
 
 when isMainModule:
@@ -138,11 +143,13 @@ when isMainModule:
     "defines": "definitions to pass to preprocessor",
     "includeDirs": "include directory to pass to preprocessor",
     "preprocess": "run preprocessor on header",
+    "pgrammar": "print grammar",
     "source" : "C/C++ source/header",
   }, short = {
     "past": 'a',
     "pnim": 'n',
     "defines": 'D',
     "includeDirs": 'I',
-    "preprocess": 'p'
+    "preprocess": 'p',
+    "pgrammar": 'g'
   })
