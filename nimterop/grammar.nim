@@ -25,6 +25,7 @@ proc initGrammar() =
   ))
 
   let typeGrammar = """
+    (type_qualifier?)
     (primitive_type|type_identifier?)
     (sized_type_specifier?
      (primitive_type?)
@@ -88,6 +89,10 @@ proc initGrammar() =
       var
         i = fstart
       while i < gStateRT.data.len-fend:
+        if gStateRT.data[i].name == "field_declaration":
+          i += 1
+          continue
+
         let
           ftyp = gStateRT.data[i].val.getIdentifier()
           fname = gStateRT.data[i+1].val.getIdentifier()
@@ -96,16 +101,63 @@ proc initGrammar() =
             flen = gStateRT.data[i+2].val.getIdentifier()
           gStateRT.typeStr &= &"    {fname}*: array[{flen}, {ftyp}]\n"
           i += 3
+        elif i+2 < gStateRT.data.len-fend and gStateRT.data[i+2].name == "function_declarator":
+          var
+            pout, pname, ptyp = ""
+            count = 1
+
+          i += 3
+          while i < gStateRT.data.len-fend:
+            if gStateRT.data[i].name == "field_declaration":
+              break
+
+            ptyp = gStateRT.data[i].val.getIdentifier()
+            if gStateRT.data[i+1].name == "identifier":
+              pname = gStateRT.data[i+1].val.getIdentifier()
+              i += 2
+            else:
+              pname = "a" & $count
+              count += 1
+              i += 1
+            if ptyp != "object":
+              pout &= &"{pname}: {ptyp},"
+
+          if pout.len != 0 and pout[^1] == ',':
+            pout = pout[0 .. ^2]
+          if ftyp != "object":
+            gStateRT.typeStr &= &"    {fname}*: proc({pout}): {ftyp} {{.nimcall.}}\n"
+          else:
+            gStateRT.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
+          i += 1
         else:
           gStateRT.typeStr &= &"    {fname}*: {ftyp}\n"
           i += 2
 
   let
-    fieldGrammar = """
+    paramListGrammar = &"""
+     (parameter_list
+      (parameter_declaration*
+       {typeGrammar}
+       (identifier?)
+       (pointer_declarator?
+        (identifier)
+       )
+       (abstract_pointer_declarator?)
+      )
+     )
+    """
+
+    fieldGrammar = &"""
       (field_identifier?)
       (array_declarator?
        (field_identifier)
        (identifier|number_literal)
+      )
+      (function_declarator?
+       (pointer_declarator
+        (field_identifier)
+       )
+       {paramListGrammar}
       )
     """
 
@@ -231,16 +283,7 @@ proc initGrammar() =
   let funcGrammar = &"""
     (function_declarator?
      (identifier)
-     (parameter_list
-      (parameter_declaration*
-       (type_qualifier?)
-       {typeGrammar}
-       (identifier?)
-       (pointer_declarator?
-        (identifier)
-       )
-      )
-     )
+     {paramListGrammar}
     )
   """
 
@@ -248,7 +291,6 @@ proc initGrammar() =
   gStateRT.grammar.add((&"""
    (declaration
     (storage_class_specifier?)
-    (type_qualifier?)
     {typeGrammar}
     {funcGrammar}
     (pointer_declarator?

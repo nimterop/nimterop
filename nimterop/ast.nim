@@ -32,22 +32,27 @@ proc saveNodeData(node: TSNode): bool =
     if name in ["math_expression", "primitive_type", "sized_type_specifier"]:
       val = val.getType()
 
-    let
-      nparent = node.tsNodeParent()
-    if not nparent.tsNodeIsNull() and node.tsNodePrevNamedSibling().tsNodeIsNull():
-      let
-        npname = nparent.tsNodeType()
-        npparent = nparent.tsNodeParent()
-      if npname == "pointer_declarator" or
-        ($npname in ["function_declarator", "array_declarator"] and
-          not npparent.tsNodeIsNull() and npparent.tsNodeType() == "pointer_declarator"):
-
-        if gStateRT.data[^1].val != "object":
-          gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
-        else:
-          gStateRT.data[^1].val = "pointer"
+    if node.tsNodePrevNamedSibling().tsNodeIsNull() and
+      ((node.isPName("pointer_declarator") and not node.isPPName("function_declarator")) or
+      (node.getPName() in ["function_declarator", "array_declarator"] and node.isPPName("pointer_declarator"))):
+      if gStateRT.data[^1].val != "object":
+        gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
+        if gStateRT.data[^1].val == "ptr char":
+          gStateRT.data[^1].val = "cstring"
+      else:
+        gStateRT.data[^1].val = "pointer"
 
     gStateRT.data.add((name, val))
+
+    if node.isPName("pointer_declarator") and node.isPPName("function_declarator"):
+      gStateRT.data.add(("function_declarator", ""))
+
+  elif name in ["abstract_pointer_declarator"]:
+    gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
+    if gStateRT.data[^1].val == "ptr char":
+      gStateRT.data[^1].val = "cstring"
+  elif name == "field_declaration":
+    gStateRT.data.add(("field_declaration", ""))
 
   return true
 

@@ -49,3 +49,9 @@ unsigned char test_call_param6(UNION2 param1) {
 int test_call_param7(union UNION1 param1) {
 	return param1.field1;
 }
+
+float test_call_param8(int *param1) {
+	*param1 = 5 * *param1;
+
+	return 1.0 * *param1;
+}

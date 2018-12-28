@@ -52,6 +52,12 @@ typedef struct {
 	ENUM4 *field5[TEST_INT];
 } STRUCT4;
 
+typedef struct STRUCT5 {
+	int (*tci)();
+	struct STRUCT1 (*tcp)(int);
+	float (*tcp8)(int *i);
+} STRUCT5;
+
 union UNION1 {
 	int field1;
 	float field2;
@@ -70,3 +76,4 @@ ENUM2 test_call_param4(enum ENUM param1);
 union UNION1 test_call_param5(float param1);
 unsigned char test_call_param6(UNION2 param1);
 int test_call_param7(union UNION1 param1);
+float test_call_param8(int *param1);

@@ -164,7 +164,15 @@ macro cImport*(filename: static string): untyped =
 
   echo "Importing " & fullpath
 
-  result.add parseStmt(getToast(fullpath))
+  let
+    output = getToast(fullpath)
+
+  try:
+    result.add parseStmt(output)
+  except:
+    echo output
+    echo "Failed to import generated nim"
+    result.add parseStmt(output)
 
   if gStateCT.debug:
     echo result.repr
