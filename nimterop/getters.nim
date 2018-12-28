@@ -95,10 +95,11 @@ proc getCurrentHeader*(fullpath: string): string =
 
 proc getGccPaths*(mode = "c"): string =
   var
+    ret = 0
     nul = when defined(Windows): "nul" else: "/dev/null"
     mmode = if mode == "cpp": "c++" else: mode
 
-  return staticExec("gcc -Wp,-v -x" & mmode & " " & nul)
+  (result, ret) = gorgeEx("gcc -Wp,-v -x" & mmode & " " & nul)
 
 proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   var

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #define TEST_INT 512
@@ -77,3 +81,7 @@ union UNION1 test_call_param5(float param1);
 unsigned char test_call_param6(UNION2 param1);
 int test_call_param7(union UNION1 param1);
 float test_call_param8(int *param1);
+
+#ifdef __cplusplus
+}
+#endif
