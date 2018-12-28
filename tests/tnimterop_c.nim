@@ -13,6 +13,13 @@ check TEST_INT == 512
 check TEST_FLOAT == 5.12
 check TEST_HEX == 0x512
 
+when defined(osx):
+  check OSDEF == 10
+elif defined(windows):
+  check OSDEF == 20
+else:
+  check OSDEF == 30
+
 var
   pt: PRIMTYPE
   ct: CUSTTYPE
@@ -34,7 +41,7 @@ var
   u: UNION1
   u2: UNION2
 
-  i: int
+  i: cint
 
 pt = 3
 ct = 4

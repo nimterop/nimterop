@@ -8,6 +8,18 @@ extern "C" {
 #define TEST_FLOAT 5.12
 #define TEST_HEX 0x512
 
+#ifdef __APPLE__
+#define OSDEF 10
+#endif
+
+#ifdef _WIN32
+#define OSDEF 20
+#endif
+
+#ifdef __linux__
+#define OSDEF 30
+#endif
+
 typedef uint8_t PRIMTYPE;
 typedef PRIMTYPE CUSTTYPE;
 
