@@ -20,6 +20,10 @@ elif defined(windows):
 else:
   check OSDEF == 30
 
+block:
+  # workaround for https://github.com/nim-lang/Nim/issues/10129
+  const ok = OSDEF
+
 var
   pt: PRIMTYPE
   ct: CUSTTYPE
@@ -79,3 +83,10 @@ check e3 == enum7
 check e4 == enum11
 
 cAddStdDir()
+
+## failing tests
+when false:
+  static: # Error: undeclared identifier: 'foobar1'
+    doAssert foobar1(3) == OSDEF * 3
+when false: # Error: undeclared identifier: 'foobar2'
+    doAssert foobar2(3) == 3 + 1
