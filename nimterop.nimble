@@ -18,7 +18,7 @@ proc execCmd(cmd:string)=
 
 task test, "Test":
   execCmd "nim c -r tests/tnimterop_c.nim"
-  #execCmd "nim cpp -r tests/tnimterop_c.nim"
+  execCmd "nim cpp -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
   # when defined(windows):
     # execCmd "nim c -r tests/tmath.nim"

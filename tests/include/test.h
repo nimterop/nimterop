@@ -20,6 +20,9 @@ extern "C" {
 #define OSDEF 30
 #endif
 
+#define foobar1(x) OSDEF * x
+#define foobar2(x) x + 1
+
 typedef uint8_t PRIMTYPE;
 typedef PRIMTYPE CUSTTYPE;
 
