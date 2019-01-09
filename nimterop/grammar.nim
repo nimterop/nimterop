@@ -60,6 +60,18 @@ proc initGrammar() =
         gStateRT.typeStr &= &"  {name}* = {typ}\n"
   ))
 
+  template funcParamCommon(pname, ptyp, pout, count, i: untyped): untyped =
+    ptyp = gStateRT.data[i].val.getIdentifier()
+    if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "identifier":
+      pname = gStateRT.data[i+1].val.getIdentifier()
+      i += 2
+    else:
+      pname = "a" & $count
+      count += 1
+      i += 1
+    if ptyp != "object":
+      pout &= &"{pname}: {ptyp},"
+
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
     var
       nname = name.getIdentifier()
@@ -111,16 +123,7 @@ proc initGrammar() =
             if gStateRT.data[i].name == "field_declaration":
               break
 
-            ptyp = gStateRT.data[i].val.getIdentifier()
-            if gStateRT.data[i+1].name == "identifier":
-              pname = gStateRT.data[i+1].val.getIdentifier()
-              i += 2
-            else:
-              pname = "a" & $count
-              count += 1
-              i += 1
-            if ptyp != "object":
-              pout &= &"{pname}: {ptyp},"
+            funcParamCommon(pname, ptyp, pout, count, i)
 
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
@@ -214,7 +217,7 @@ proc initGrammar() =
     if nname notin gStateRT.enums:
       gStateRT.enums.add(nname)
       gStateRT.enumStr &= &"\ntype {nname}* = distinct int"
-      gStateRT.enumStr &= &"\nconverter enumToInt(en: {nname}): int = en.int\n"
+      gStateRT.enumStr &= &"\nconverter enumToInt(en: {nname}): int {{.used.}} = en.int\n"
 
       var
         i = fstart
@@ -306,15 +309,14 @@ proc initGrammar() =
 
       if fnname notin gStateRT.procs:
         var
-          pout = ""
+          pout, pname, ptyp = ""
           i = 2
+          count = 1
+
         if gStateRT.data.len > 2:
-          while i < gStateRT.data.len-1:
-            let
-              ptyp = gStateRT.data[i].val.getIdentifier()
-              pname = gStateRT.data[i+1].val.getIdentifier()
-            pout &= &"{pname}: {ptyp},"
-            i += 2
+          while i < gStateRT.data.len:
+            funcParamCommon(pname, ptyp, pout, count, i)
+
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
