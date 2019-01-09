@@ -51,8 +51,8 @@ proc saveNodeData(node: TSNode): bool =
     gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
     if gStateRT.data[^1].val == "ptr char":
       gStateRT.data[^1].val = "cstring"
-  elif name == "field_declaration":
-    gStateRT.data.add(("field_declaration", ""))
+  elif name in ["field_declaration", "function_declarator"]:
+    gStateRT.data.add((name, ""))
 
   return true
 

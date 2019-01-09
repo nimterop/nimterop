@@ -120,6 +120,10 @@ proc initGrammar() =
 
           i += 3
           while i < gStateRT.data.len-fend:
+            if gStateRT.data[i].name == "function_declarator":
+              i += 1
+              continue
+
             if gStateRT.data[i].name == "field_declaration":
               break
 
@@ -284,7 +288,7 @@ proc initGrammar() =
   ))
 
   let funcGrammar = &"""
-    (function_declarator?
+    (function_declarator*
      (identifier)
      {paramListGrammar}
     )
@@ -296,7 +300,11 @@ proc initGrammar() =
     (storage_class_specifier?)
     {typeGrammar}
     {funcGrammar}
-    (pointer_declarator?
+    (pointer_declarator*
+     {funcGrammar}
+    )
+    {funcGrammar}
+    (pointer_declarator*
      {funcGrammar}
     )
    )
@@ -304,27 +312,36 @@ proc initGrammar() =
     proc (ast: ref Ast, node: TSNode) =
       let
         ftyp = gStateRT.data[0].val.getIdentifier()
-        fname = gStateRT.data[1].val
-        fnname = fname.getIdentifier()
 
-      if fnname notin gStateRT.procs:
+      var
+        i = 1
+      while i < gStateRT.data.len:
+        if gStateRT.data[i].name == "function_declarator":
+          i += 1
+          continue
+
         var
+          fname = gStateRT.data[i].val
+          fnname = fname.getIdentifier()
           pout, pname, ptyp = ""
-          i = 2
           count = 1
 
-        if gStateRT.data.len > 2:
-          while i < gStateRT.data.len:
-            funcParamCommon(pname, ptyp, pout, count, i)
+        i += 1
+        while i < gStateRT.data.len:
+          if gStateRT.data[i].name == "function_declarator":
+            break
+
+          funcParamCommon(pname, ptyp, pout, count, i)
 
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
-        gStateRT.procs.add(fnname)
-        if ftyp != "object":
-          gStateRT.procStr &= &"proc {fnname}({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
-        else:
-          gStateRT.procStr &= &"proc {fnname}({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+        if fnname notin gStateRT.procs:
+          gStateRT.procs.add(fnname)
+          if ftyp != "object":
+            gStateRT.procStr &= &"proc {fnname}({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+          else:
+            gStateRT.procStr &= &"proc {fnname}({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
 
   ))
 

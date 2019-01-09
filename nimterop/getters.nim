@@ -56,6 +56,8 @@ proc getType*(str: string): string =
       ("unsigned ", "cu"),
       ("double ", "cdouble"),
       ("long ", "clong"),
+      ("ssize_t", "int"),
+      ("size_t", "uint")
     ]).
     replace(re"([u]?int[\d]+)_t", "$1").
     replace(re"([u]?int)ptr_t", "ptr $1")
