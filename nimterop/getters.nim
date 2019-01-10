@@ -141,10 +141,7 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
       else:
         if start:
           rdata.add(
-            line.multiReplace([("_Noreturn", ""), ("(())", ""), ("WINAPI", ""),
-                               ("__attribute__", ""), ("extern \"C\"", "")])
-              .replace(re"\(\([_a-z]+?\)\)", "")
-              .replace(re"\(\(__format__[\s]*\(__[gnu_]*printf__, [\d]+, [\d]+\)\)\);", ";")
+            line.replace(re"__attribute__[ ]*\(\(.*?\)\) ", "")
           )
   return rdata.join("\n")
 
