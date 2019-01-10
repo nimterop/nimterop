@@ -1,4 +1,4 @@
-import macros, os, strformat, strutils
+import macros, os, strformat, strutils, tables
 
 import regex
 
@@ -28,6 +28,25 @@ when while
 xor
 yield""".split(Whitespace)
 
+const gTypeMap = {
+  "long": "clong",
+  "unsigned long": "culong",
+  "char": "cchar",
+  "signed char": "cschar",
+  "short": "cshort",
+  "int": "cint",
+  "size_t": "uint",
+  "ssize_t": "int",
+  "long long": "clonglong",
+  "float": "cfloat",
+  "double": "cdouble",
+  "long double": "clongdouble",
+  "unsigned char": "cuchar",
+  "unsigned short": "cushort",
+  "unsigned int": "cuint",
+  "unsigned long long": "culonglong"
+}.toTable()
+
 proc sanitizePath*(path: string): string =
   path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
 
@@ -52,21 +71,11 @@ proc getType*(str: string): string =
     return "object"
 
   result = str.strip(chars={'_'}).
-    multiReplace([
-      ("unsigned ", "cu"),
-      ("double ", "cdouble"),
-      ("long ", "clong"),
-      ("ssize_t", "int"),
-      ("size_t", "uint")
-    ]).
     replace(re"([u]?int[\d]+)_t", "$1").
     replace(re"([u]?int)ptr_t", "ptr $1")
 
-  case result:
-    of "long":
-      result = "clong"
-    of "double":
-      result = "cdouble"
+  if gTypeMap.hasKey(result):
+    result = gTypeMap[result]
 
 proc getLit*(str: string): string =
   if str.contains(re"^[\-]?[\d]+$") or
