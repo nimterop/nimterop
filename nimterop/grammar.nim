@@ -232,14 +232,14 @@ proc initGrammar() =
 
         if fname notin gStateRT.consts:
           if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["math_expression", "number_literal"]:
-            gStateRT.constStr &= &"  {fname} = {gStateRT.data[i+1].val}.{nname}\n"
+            gStateRT.constStr &= &"  {fname}* = {gStateRT.data[i+1].val}.{nname}\n"
             try:
               count = gStateRT.data[i+1].val.parseInt() + 1
             except:
               count += 1
             i += 2
           else:
-            gStateRT.constStr &= &"  {fname} = {count}.{nname}\n"
+            gStateRT.constStr &= &"  {fname}* = {count}.{nname}\n"
             i += 1
             count += 1
 
@@ -339,9 +339,9 @@ proc initGrammar() =
         if fnname notin gStateRT.procs:
           gStateRT.procs.add(fnname)
           if ftyp != "object":
-            gStateRT.procStr &= &"proc {fnname}({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+            gStateRT.procStr &= &"proc {fnname}*({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
           else:
-            gStateRT.procStr &= &"proc {fnname}({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+            gStateRT.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
 
   ))
 
