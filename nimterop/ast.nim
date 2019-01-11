@@ -9,6 +9,7 @@ import "."/[getters, globals, grammar]
 const gAtoms = @[
   "field_identifier",
   "identifier",
+  "shift_expression",
   "math_expression",
   "number_literal",
   "preproc_arg",
@@ -26,7 +27,7 @@ proc saveNodeData(node: TSNode): bool =
     if name == "primitive_type" and node.tsNodeParent.tsNodeType() == "sized_type_specifier":
       return true
 
-    if name == "number_literal" and node.tsNodeParent.tsNodeType() == "math_expression":
+    if name == "number_literal" and $node.tsNodeParent.tsNodeType() in ["shift_expression", "math_expression"]:
       return true
 
     if name in ["math_expression", "primitive_type", "sized_type_specifier"]:

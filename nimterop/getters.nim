@@ -51,7 +51,7 @@ proc sanitizePath*(path: string): string =
   path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
 
 proc getIdentifier*(str: string): string =
-  result = str.strip(chars={'_'})
+  result = str.strip(chars={'_'}).replace(re"_+", "_")
 
   if result in gReserved:
     result = &"`{result}`"

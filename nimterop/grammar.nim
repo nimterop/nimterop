@@ -231,7 +231,14 @@ proc initGrammar() =
           fname = gStateRT.data[i].val.getIdentifier()
 
         if fname notin gStateRT.consts:
-          if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["math_expression", "number_literal"]:
+          if i+1 < gStateRT.data.len-fend and
+            gStateRT.data[i+1].name in ["shift_expression", "math_expression", "number_literal"]:
+            if " " in gStateRT.data[i+1].val:
+              gStateRT.data[i+1].val = "(" & gStateRT.data[i+1].val.replace(" ", "") & ")"
+            gStateRT.data[i+1].val = gStateRT.data[i+1].val.multiReplace([
+              ("<<", " shl "), (">>", " shr ")
+            ])
+
             gStateRT.constStr &= &"  {fname}* = {gStateRT.data[i+1].val}.{nname}\n"
             try:
               count = gStateRT.data[i+1].val.parseInt() + 1
@@ -251,8 +258,8 @@ proc initGrammar() =
      (enumerator+
       (identifier)
       (number_literal?)
-      (math_expression?
-       (number_literal)
+      (shift_expression|math_expression?
+       (number_literal+)
       )
      )
     )
