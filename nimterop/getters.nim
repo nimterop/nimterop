@@ -112,6 +112,20 @@ proc getGccPaths*(mode = "c"): string =
 
   (result, ret) = gorgeEx("gcc -Wp,-v -x" & mmode & " " & nul)
 
+proc removeStatic*(content: string): string =
+  ## Replace static function bodies with a semicolon and commented
+  ## out body
+  return content.replace(
+    re"(?ms)static inline(.*?\))(\s*\{(\s*?.*?$)*?[\n\r]\})",
+    proc (m: RegexMatch, s: string): string =
+      let funcDecl = s[m.group(0)[0]]
+      let body = s[m.group(1)[0]].strip()
+      result = ""
+
+      result.add("$#;" % [funcDecl])
+      result.add(body.replace(re"(?m)^(.*\n?)", "//$1"))
+  )
+
 proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   var
     mmode = if mode == "cpp": "c++" else: mode
@@ -130,20 +144,36 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   cmd &= &"\"{fullpath}\""
 
   # Include content only from file
-  for line in execAction(cmd).splitLines():
+  for line in execAction(cmd, true).splitLines():
     if line.strip() != "":
-      if line[0] == '#' and not line.contains("#pragma") and not line.contains("define"):
+      if line.len > 1 and line[0 .. 1] == "# ":
         start = false
-        if sfile in line.sanitizePath:
+        let
+          saniLine = line.sanitizePath
+        if sfile in saniLine:
           start = true
-        if not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
+        elif not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
           start = true
+        elif gStateRT.recurse:
+          if sfile.parentDir() in saniLine:
+            start = true
+          else:
+            for inc in gStateRT.includeDirs:
+              if inc.absolutePath().sanitizePath in saniLine:
+                start = true
+                break
+          if start:
+            rdata.add(&"// {line}")
       else:
         if start:
+          if "#undef" in line:
+            continue
           rdata.add(
-            line.replace(re"__attribute__[ ]*\(\(.*?\)\) ", "")
+            line.
+              replace("__restrict", "").
+              replace(re"__attribute__[ ]*\(\(.*?\)\)([ ,;])", "$1")
           )
-  return rdata.join("\n")
+  return rdata.join("\n").removeStatic()
 
 converter toString*(kind: Kind): string =
   return case kind:

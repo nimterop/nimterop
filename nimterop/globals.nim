@@ -21,7 +21,7 @@ type
   State* = object
     compile*, defines*, headers*, includeDirs*, searchDirs*: seq[string]
 
-    debug*, past*, preprocess*, pnim*, pretty*: bool
+    debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
     consts*, enums*, procs*, types*: seq[string]
 

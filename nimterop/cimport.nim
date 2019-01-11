@@ -21,11 +21,14 @@ proc findPath(path: string, fail = true): string =
     else:
       return ""
 
-proc getToast(fullpath: string): string =
+proc getToast(fullpath: string, recurse: bool = false): string =
   var
     cmd = when defined(Windows): "cmd /c " else: ""
 
   cmd &= "toast --pnim --preprocess "
+
+  if recurse:
+    cmd.add "--recurse "
 
   for i in gStateCT.defines:
     cmd.add &"--defines+={i.quoteShell} "
@@ -156,7 +159,7 @@ macro cCompile*(path: static string): untyped =
   if gStateCT.debug:
     echo result.repr
 
-macro cImport*(filename: static string): untyped =
+macro cImport*(filename: static string, recurse: static bool = false): untyped =
   result = newNimNode(nnkStmtList)
 
   let
@@ -165,7 +168,7 @@ macro cImport*(filename: static string): untyped =
   echo "Importing " & fullpath
 
   let
-    output = getToast(fullpath)
+    output = getToast(fullpath, recurse)
 
   try:
     result.add parseStmt(output)

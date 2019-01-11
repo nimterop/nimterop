@@ -2,7 +2,7 @@ import macros, os, osproc, regex, strformat, strutils
 
 import globals
 
-proc execAction*(cmd: string): string =
+proc execAction*(cmd: string, nostderr=false): string =
   var
     ccmd = ""
     ret = 0
@@ -14,7 +14,10 @@ proc execAction*(cmd: string): string =
   when nimvm:
     (result, ret) = gorgeEx(ccmd)
   else:
-    (result, ret) = execCmdEx(ccmd)
+    if nostderr:
+      (result, ret) = execCmdEx(ccmd, {poUsePath})
+    else:
+      (result, ret) = execCmdEx(ccmd)
   if ret != 0:
     echo "Command failed: " & $ret
     echo ccmd
@@ -66,7 +69,7 @@ macro gitCheckout*(file, outdir: static string): untyped =
 
 macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): untyped =
   let
-    outdir = getProjectPath()/outdirN.strVal()
+    outdir = if outdirN.strVal().isAbsolute(): outdirN.strVal() else: getProjectPath()/outdirN.strVal()
     plist = plistN.strVal()
     checkout = checkoutN.strVal()
 

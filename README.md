@@ -12,15 +12,9 @@ The goal of nimterop is to leverage the [tree-sitter](http://tree-sitter.github.
 
 Most of the functionality is contained within the `toast` binary that is built when nimterop is installed and can be used standalone similar to how c2nim can be used today. In addition, nimterop also offers an API to pull in the generated Nim content directly into an application.
 
-The nimterop feature set is still limited when compared with c2nim. Supported language constructs include:
-- `#define NAME VALUE` where `VALUE` is a number (int, float, hex)
-- `struct X`, `typedef struct`, `enum X`, `typedef enum`, `union X`, `typedef union`
-- Functions with primitive types, structs, enums, unions and typedef structs/enums/unions as params and return values
-- Pointers to data types
+The nimterop feature set is still limited to C but is expanding rapidly. C++ support will be added once most popular C libraries can be wrapped seamlessly.
 
 Given the simplicity and success of this approach so far, it seems feasible to continue on for more complex code. The goal is to make interop seamless so nimterop will focus on wrapping headers and not the outright conversion of C/C++ implementation.
-
-C++ constructs such as classes and templats are still TBD depending on the results of the C interop.
 
 __Installation__
 
@@ -71,6 +65,8 @@ Detailed documentation is still forthcoming.
 
 `cImport("header.h")` - import all supported definitions from header file
 
+`cImport("header.h", recurse=true)` - import all supported definitions from header file and #includes
+
 `cAddSearchDir("XXX")` - add directory XXX to search path in calls to `cSearchPath()`
 
 `cAddStdDir("XXX")` - add standard "c" [default] or "cpp" include paths to search path
@@ -81,9 +77,11 @@ Detailed documentation is still forthcoming.
 
 __Implementation Details__
 
-In order to use the tree-sitter C library at compile-time, it has to be compiled into a separate binary called `toast` (to AST) since the Nim VM doesn't yet support FFI. `toast` takes a C/C++ file and runs it through the tree-sitter API which returns an AST data structure. This can then be printed out to stdout in a Lisp S-Expression format or the relevant Nim wrapper output. This content can be saved to a `.nim` file and imported if so desired.
+In order to use the tree-sitter C library, it has to be compiled into a separate binary called `toast` (to AST) since the Nim VM doesn't yet support FFI. `toast` takes a C/C++ file and runs it through the tree-sitter API which returns an AST data structure. This can then be printed out to stdout in a Lisp S-Expression format or the relevant Nim wrapper output. This content can be saved to a `.nim` file and imported if so desired.
 
 Alternatively, the `cImport()` macro allows easier creation of wrappers in code. It runs `toast` on the specified header file and injects the generated wrapper content into the application at compile time. A few other helper procs are provided to influence this process.
+
+`toast` can also be used to run the header through the preprocessor which cleans up the code considerably. Along with the recursion capability which runs through all #include files, one large simpler header file can be created which can then be processed with c2nim if so desired.
 
 The tree-sitter library is limited as well - it may fail on some advanced language constructs but is designed to handle them gracefully since it is expected to have bad code while actively typing in an editor. When an error is detected, tree-sitter includes an ERROR node at that location in the AST. At this time, `cImport()` will complain and continue if it encounters any errors. Depending on how severe the errors are, compilation may succeed or fail. Glaring issues will be communicated to the tree-sitter team but their goals may not always align with those of this project.
 
