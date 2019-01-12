@@ -44,9 +44,7 @@ proc saveNodeData(node: TSNode): bool =
       gStateRT.data.add(("function_declarator", ""))
 
   elif name in ["abstract_pointer_declarator"]:
-    gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
-    if gStateRT.data[^1].val == "ptr char":
-      gStateRT.data[^1].val = "cstring"
+    gStateRT.data.add(("pointer_declarator", ""))
   elif name in ["field_declaration", "function_declarator"]:
     gStateRT.data.add((name, ""))
 

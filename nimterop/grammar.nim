@@ -24,52 +24,37 @@ proc initGrammar() =
         gStateRT.constStr &= &"  {name}* = {val}\n"
   ))
 
-  let typeGrammar = """
-    (type_qualifier?)
-    (primitive_type|type_identifier?)
-    (sized_type_specifier?
-     (primitive_type?)
-    )
-    (struct_specifier|union_specifier|enum_specifier?
-     (type_identifier)
-    )
-  """
+  let
+    typeGrammar = """
+     (type_qualifier?)
+     (primitive_type|type_identifier?)
+     (sized_type_specifier?
+      (primitive_type?)
+     )
+     (struct_specifier|union_specifier|enum_specifier?
+      (type_identifier)
+     )
+    """
 
-  # typedef int X
-  # typedef X Y
-  # typedef struct X Y
-  # typedef ?* Y
-  gStateRT.grammar.add((&"""
-   (type_definition
-    {typeGrammar}
-    (type_identifier?)
-    (pointer_declarator?
-     (type_identifier)
-    )
-   )
-  """,
-    proc (ast: ref Ast, node: TSNode) =
-      var
-        i = 0
-        typ = gStateRT.data[i].val.getIdentifier()
-        name = ""
-        tptr = ""
+    paramListGrammar = &"""
+     (parameter_list
+      (parameter_declaration*
+       {typeGrammar}
+       (identifier|type_identifier?)
+       (pointer_declarator?
+        (identifier|type_identifier)
+       )
+       (abstract_pointer_declarator?)
+      )
+     )
+    """
 
-      i += 1
-      if i < gStateRT.data.len:
-        if gStateRT.data[i].name == "pointer_declarator":
-          tptr = "ptr "
-          i += 1
-
-        name = gStateRT.data[i].val.getIdentifier()
-
-      if name notin gStateRT.types:
-        gStateRT.types.add(name)
-        if name == typ or typ == "object":
-          gStateRT.typeStr &= &"  {name}* = object\n"
-        else:
-          gStateRT.typeStr &= &"  {name}* = {tptr}{typ}\n"
-  ))
+    funcGrammar = &"""
+     (function_declarator*
+      (identifier|type_identifier)
+      {paramListGrammar}
+     )
+    """
 
   template funcParamCommon(pname, ptyp, pptr, pout, count, i: untyped): untyped =
     ptyp = gStateRT.data[i].val.getIdentifier()
@@ -88,6 +73,64 @@ proc initGrammar() =
       i += 1
     if ptyp != "object":
       pout &= &"{pname}: {pptr}{ptyp},"
+
+  # typedef int X
+  # typedef X Y
+  # typedef struct X Y
+  # typedef ?* Y
+  gStateRT.grammar.add((&"""
+   (type_definition
+    {typeGrammar}
+    (type_identifier?)
+    (pointer_declarator?
+     (type_identifier!)
+     {funcGrammar}
+    )
+    {funcGrammar}
+   )
+  """,
+    proc (ast: ref Ast, node: TSNode) =
+      var
+        i = 0
+        typ = gStateRT.data[i].val.getIdentifier()
+        name = ""
+        tptr = ""
+
+      i += 1
+      if i < gStateRT.data.len:
+        if gStateRT.data[i].name == "pointer_declarator":
+          tptr = "ptr "
+          i += 1
+
+      if i < gStateRT.data.len:
+        name = gStateRT.data[i].val.getIdentifier()
+        i += 1
+
+      if name notin gStateRT.types:
+        if i < gStateRT.data.len and gStateRT.data[^1].name == "function_declarator":
+          var
+            pout, pname, ptyp, pptr = ""
+            count = 1
+
+          while i < gStateRT.data.len:
+            if gStateRT.data[i].name == "function_declarator":
+              break
+
+            funcParamCommon(pname, ptyp, pptr, pout, count, i)
+
+          if pout.len != 0 and pout[^1] == ',':
+            pout = pout[0 .. ^2]
+          if typ != "object":
+            gStateRT.typeStr &= &"  {name}* = proc({pout}): {tptr}{typ} {{.nimcall.}}\n"
+          else:
+            gStateRT.typeStr &= &"  {name}*: proc({pout}) {{.nimcall.}}\n"
+        else:
+          gStateRT.types.add(name)
+          if name == typ or typ == "object":
+            gStateRT.typeStr &= &"  {name}* = object\n"
+          else:
+            gStateRT.typeStr &= &"  {name}* = {tptr}{typ}\n"
+  ))
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
     var
@@ -163,23 +206,13 @@ proc initGrammar() =
             gStateRT.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
             i += 1
         else:
-          gStateRT.typeStr &= &"    {fname}*: {fptr}{ftyp}\n"
+          if ftyp == "object":
+            gStateRT.typeStr &= &"    {fname}*: pointer\n"
+          else:
+            gStateRT.typeStr &= &"    {fname}*: {fptr}{ftyp}\n"
           i += 1
 
   let
-    paramListGrammar = &"""
-     (parameter_list
-      (parameter_declaration*
-       {typeGrammar}
-       (identifier?)
-       (pointer_declarator?
-        (identifier)
-       )
-       (abstract_pointer_declarator?)
-      )
-     )
-    """
-
     fieldGrammar = &"""
       (field_identifier!)
       (array_declarator!
@@ -319,13 +352,6 @@ proc initGrammar() =
 
       pEnumCommon(ast, node, gStateRT.data[^1].val, offset, 1)
   ))
-
-  let funcGrammar = &"""
-    (function_declarator+
-     (identifier)
-     {paramListGrammar}
-    )
-  """
 
   # typ function(typ param1, ...)
   gStateRT.grammar.add((&"""
