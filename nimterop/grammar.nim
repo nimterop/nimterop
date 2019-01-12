@@ -51,7 +51,10 @@ proc initGrammar() =
 
     funcGrammar = &"""
      (function_declarator*
-      (identifier|type_identifier)
+      (identifier|type_identifier!)
+      (pointer_declarator
+       (type_identifier)
+      )
       {paramListGrammar}
      )
     """
@@ -123,7 +126,7 @@ proc initGrammar() =
           if typ != "object":
             gStateRT.typeStr &= &"  {name}* = proc({pout}): {tptr}{typ} {{.nimcall.}}\n"
           else:
-            gStateRT.typeStr &= &"  {name}*: proc({pout}) {{.nimcall.}}\n"
+            gStateRT.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
         else:
           gStateRT.types.add(name)
           if name == typ or typ == "object":
@@ -169,7 +172,7 @@ proc initGrammar() =
           continue
 
         if gStateRT.data[i].name notin ["field_identifier", "pointer_declarator"]:
-          ftyp = gStateRT.data[i].val.getIdentifier()
+          ftyp = gStateRT.data[i].val.getType()
           i += 1
 
         if gStateRT.data[i].name == "pointer_declarator":
@@ -289,9 +292,13 @@ proc initGrammar() =
         let
           fname = gStateRT.data[i].val.getIdentifier()
 
+        if gStateRT.data[i].name == "enumerator":
+          i += 1
+          continue
+
         if fname notin gStateRT.consts:
           if i+1 < gStateRT.data.len-fend and
-            gStateRT.data[i+1].name in ["shift_expression", "math_expression", "number_literal"]:
+            gStateRT.data[i+1].name in ["identifier", "shift_expression", "math_expression", "number_literal"]:
             if " " in gStateRT.data[i+1].val:
               gStateRT.data[i+1].val = "(" & gStateRT.data[i+1].val.replace(" ", "") & ")"
             gStateRT.data[i+1].val = gStateRT.data[i+1].val.multiReplace([
@@ -315,7 +322,7 @@ proc initGrammar() =
     (type_identifier?)
     (enumerator_list
      (enumerator+
-      (identifier)
+      (identifier+)
       (number_literal?)
       (shift_expression|math_expression?
        (number_literal+)

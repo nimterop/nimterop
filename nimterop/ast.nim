@@ -40,13 +40,12 @@ proc saveNodeData(node: TSNode): bool =
 
     gStateRT.data.add((name, val))
 
-    if node.isPName("pointer_declarator") and node.isPPName("function_declarator"):
+    if node.tsNodeType() == "field_identifier" and node.isPName("pointer_declarator") and
+      node.isPPName("function_declarator"):
       gStateRT.data.add(("function_declarator", ""))
 
-  elif name in ["abstract_pointer_declarator"]:
-    gStateRT.data.add(("pointer_declarator", ""))
-  elif name in ["field_declaration", "function_declarator"]:
-    gStateRT.data.add((name, ""))
+  elif name in ["abstract_pointer_declarator", "enumerator", "field_declaration", "function_declarator"]:
+    gStateRT.data.add((name.replace("abstract_", ""), ""))
 
   return true
 
