@@ -50,18 +50,35 @@ proc initGrammar() =
   """,
     proc (ast: ref Ast, node: TSNode) =
       var
-        name = gStateRT.data[1].val.getIdentifier()
-        typ = gStateRT.data[0].val.getIdentifier()
+        i = 0
+        typ = gStateRT.data[i].val.getIdentifier()
+        name = ""
+        tptr = ""
+
+      i += 1
+      if i < gStateRT.data.len:
+        if gStateRT.data[i].name == "pointer_declarator":
+          tptr = "ptr "
+          i += 1
+
+        name = gStateRT.data[i].val.getIdentifier()
 
       if name notin gStateRT.types:
         gStateRT.types.add(name)
-        if name == typ:
-          typ = "object"
-        gStateRT.typeStr &= &"  {name}* = {typ}\n"
+        if name == typ or typ == "object":
+          gStateRT.typeStr &= &"  {name}* = object\n"
+        else:
+          gStateRT.typeStr &= &"  {name}* = {tptr}{typ}\n"
   ))
 
-  template funcParamCommon(pname, ptyp, pout, count, i: untyped): untyped =
+  template funcParamCommon(pname, ptyp, pptr, pout, count, i: untyped): untyped =
     ptyp = gStateRT.data[i].val.getIdentifier()
+    if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "pointer_declarator":
+      pptr = "ptr "
+      i += 1
+    else:
+      pptr = ""
+
     if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "identifier":
       pname = gStateRT.data[i+1].val.getIdentifier()
       i += 2
@@ -70,7 +87,7 @@ proc initGrammar() =
       count += 1
       i += 1
     if ptyp != "object":
-      pout &= &"{pname}: {ptyp},"
+      pout &= &"{pname}: {pptr}{ptyp},"
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
     var
@@ -100,25 +117,34 @@ proc initGrammar() =
 
       var
         i = fstart
+        ftyp, fname: string
+        fptr = ""
       while i < gStateRT.data.len-fend:
+        fptr = ""
         if gStateRT.data[i].name == "field_declaration":
           i += 1
           continue
 
-        let
+        if gStateRT.data[i].name notin ["field_identifier", "pointer_declarator"]:
           ftyp = gStateRT.data[i].val.getIdentifier()
-          fname = gStateRT.data[i+1].val.getIdentifier()
-        if i+2 < gStateRT.data.len-fend and gStateRT.data[i+2].name in ["identifier", "number_literal"]:
+          i += 1
+
+        if gStateRT.data[i].name == "pointer_declarator":
+          fptr = "ptr "
+          i += 1
+
+        fname = gStateRT.data[i].val.getIdentifier()
+        if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["identifier", "number_literal"]:
           let
-            flen = gStateRT.data[i+2].val.getIdentifier()
-          gStateRT.typeStr &= &"    {fname}*: array[{flen}, {ftyp}]\n"
-          i += 3
-        elif i+2 < gStateRT.data.len-fend and gStateRT.data[i+2].name == "function_declarator":
+            flen = gStateRT.data[i+1].val.getIdentifier()
+          gStateRT.typeStr &= &"    {fname}*: array[{flen}, {fptr}{ftyp}]\n"
+          i += 2
+        elif i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name == "function_declarator":
           var
-            pout, pname, ptyp = ""
+            pout, pname, ptyp, pptr = ""
             count = 1
 
-          i += 3
+          i += 2
           while i < gStateRT.data.len-fend:
             if gStateRT.data[i].name == "function_declarator":
               i += 1
@@ -127,18 +153,18 @@ proc initGrammar() =
             if gStateRT.data[i].name == "field_declaration":
               break
 
-            funcParamCommon(pname, ptyp, pout, count, i)
+            funcParamCommon(pname, ptyp, pptr, pout, count, i)
 
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
           if ftyp != "object":
-            gStateRT.typeStr &= &"    {fname}*: proc({pout}): {ftyp} {{.nimcall.}}\n"
+            gStateRT.typeStr &= &"    {fname}*: proc({pout}): {fptr}{ftyp} {{.nimcall.}}\n"
           else:
             gStateRT.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
-          i += 1
+            i += 1
         else:
-          gStateRT.typeStr &= &"    {fname}*: {ftyp}\n"
-          i += 2
+          gStateRT.typeStr &= &"    {fname}*: {fptr}{ftyp}\n"
+          i += 1
 
   let
     paramListGrammar = &"""
@@ -155,12 +181,12 @@ proc initGrammar() =
     """
 
     fieldGrammar = &"""
-      (field_identifier?)
-      (array_declarator?
+      (field_identifier!)
+      (array_declarator!
        (field_identifier)
        (identifier|number_literal)
       )
-      (function_declarator?
+      (function_declarator+
        (pointer_declarator
         (field_identifier)
        )
@@ -172,10 +198,10 @@ proc initGrammar() =
       (field_declaration_list
        (field_declaration+
         {typeGrammar}
-        {fieldGrammar}
-        (pointer_declarator?
+        (pointer_declarator!
          {fieldGrammar}
         )
+        {fieldGrammar}
        )
       )
     """
@@ -295,7 +321,7 @@ proc initGrammar() =
   ))
 
   let funcGrammar = &"""
-    (function_declarator*
+    (function_declarator+
      (identifier)
      {paramListGrammar}
     )
@@ -306,31 +332,31 @@ proc initGrammar() =
    (declaration
     (storage_class_specifier?)
     {typeGrammar}
-    {funcGrammar}
-    (pointer_declarator*
+    (pointer_declarator!
      {funcGrammar}
     )
     {funcGrammar}
-    (pointer_declarator*
-     {funcGrammar}
-    )
    )
   """,
     proc (ast: ref Ast, node: TSNode) =
-      let
-        ftyp = gStateRT.data[0].val.getIdentifier()
-
       var
+        ftyp = gStateRT.data[0].val.getIdentifier()
+        fptr = ""
         i = 1
+
       while i < gStateRT.data.len:
         if gStateRT.data[i].name == "function_declarator":
           i += 1
           continue
 
+        if gStateRT.data[i].name == "pointer_declarator":
+          fptr = "ptr "
+          i += 1
+
         var
           fname = gStateRT.data[i].val
           fnname = fname.getIdentifier()
-          pout, pname, ptyp = ""
+          pout, pname, ptyp, pptr = ""
           count = 1
 
         i += 1
@@ -338,7 +364,7 @@ proc initGrammar() =
           if gStateRT.data[i].name == "function_declarator":
             break
 
-          funcParamCommon(pname, ptyp, pout, count, i)
+          funcParamCommon(pname, ptyp, pptr, pout, count, i)
 
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
@@ -346,7 +372,7 @@ proc initGrammar() =
         if fnname notin gStateRT.procs:
           gStateRT.procs.add(fnname)
           if ftyp != "object":
-            gStateRT.procStr &= &"proc {fnname}*({pout}): {ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+            gStateRT.procStr &= &"proc {fnname}*({pout}): {fptr}{ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
           else:
             gStateRT.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
 
@@ -357,7 +383,14 @@ proc initRegex(ast: ref Ast) =
     for child in ast.children:
       child.initRegex()
 
-    ast.regex = ast.getRegexForAstChildren().re()
+    var
+      reg: string
+    try:
+      reg = ast.getRegexForAstChildren()
+      ast.regex = reg.re()
+    except:
+      echo reg
+      raise newException(Exception, getCurrentExceptionMsg())
 
 proc parseGrammar*() =
   initGrammar()

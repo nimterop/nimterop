@@ -10,6 +10,7 @@ type
     oneOrMore     # +
     zeroOrMore    # *
     zeroOrOne     # ?
+    orWithNext    # !
 
   Ast* = object
     name*: string

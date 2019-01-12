@@ -185,6 +185,8 @@ converter toString*(kind: Kind): string =
       "*"
     of zeroOrOne:
       "?"
+    of orWithNext:
+      "!"
 
 converter toKind*(kind: string): Kind =
   return case kind:
@@ -194,6 +196,8 @@ converter toKind*(kind: string): Kind =
       zeroOrMore
     of "?":
       zeroOrOne
+    of "!":
+      orWithNext
     else:
       exactlyOne
 
@@ -223,7 +227,12 @@ proc getRegexForAstChildren*(ast: ref Ast): string =
   result = "^"
   for i in 0 .. ast.children.len-1:
     let kind: string = ast.children[i].kind
-    result &= &"(?:{ast.children[i].name}){kind}"
+    let begin = if result[^1] == '|': "" else: "(?:"
+    case kind:
+      of "!":
+        result &= &"{begin}{ast.children[i].name}|"
+      else:
+        result &= &"{begin}{ast.children[i].name}){kind}"
   result &= "$"
 
 proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =

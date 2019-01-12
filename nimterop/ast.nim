@@ -36,12 +36,7 @@ proc saveNodeData(node: TSNode): bool =
     if node.tsNodePrevNamedSibling().tsNodeIsNull() and
       ((node.isPName("pointer_declarator") and not node.isPPName("function_declarator")) or
       (node.getPName() in ["function_declarator", "array_declarator"] and node.isPPName("pointer_declarator"))):
-      if gStateRT.data[^1].val != "object":
-        gStateRT.data[^1].val = "ptr " & gStateRT.data[^1].val.getIdentifier()
-        if gStateRT.data[^1].val == "ptr char":
-          gStateRT.data[^1].val = "cstring"
-      else:
-        gStateRT.data[^1].val = "pointer"
+      gStateRT.data.add(("pointer_declarator", ""))
 
     gStateRT.data.add((name, val))
 
