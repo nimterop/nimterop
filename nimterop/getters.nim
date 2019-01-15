@@ -129,7 +129,7 @@ proc removeStatic*(content: string): string =
 proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   var
     mmode = if mode == "cpp": "c++" else: mode
-    cmd = &"gcc -E -dD -x{mmode} "
+    cmd = &"gcc -E -dD -x{mmode} -w "
 
     rdata: seq[string] = @[]
     start = false
@@ -144,7 +144,7 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   cmd &= &"\"{fullpath}\""
 
   # Include content only from file
-  for line in execAction(cmd, true).splitLines():
+  for line in execAction(cmd).splitLines():
     if line.strip() != "":
       if line.len > 1 and line[0 .. 1] == "# ":
         start = false

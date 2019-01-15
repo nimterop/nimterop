@@ -267,7 +267,9 @@ proc initGrammar() =
       var
         offset = 0
 
-      if gStateRT.data[0].name == "type_identifier":
+      if gStateRT.data.len > 1 and
+        gStateRT.data[0].name == "type_identifier" and
+        gStateRT.data[1].name != "field_identifier":
         offset = 1
 
       pStructCommon(ast, node, gStateRT.data[^1].val, offset, 1)
