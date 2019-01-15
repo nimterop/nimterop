@@ -165,25 +165,31 @@ proc initGrammar() =
         i = fstart
         ftyp, fname: string
         fptr = ""
+        aptr = ""
       while i < gStateRT.data.len-fend:
         fptr = ""
+        aptr = ""
         if gStateRT.data[i].name == "field_declaration":
           i += 1
           continue
 
-        if gStateRT.data[i].name notin ["field_identifier", "pointer_declarator"]:
+        if gStateRT.data[i].name notin ["field_identifier", "pointer_declarator", "array_pointer_declarator"]:
           ftyp = gStateRT.data[i].val.getType()
           i += 1
 
-        if gStateRT.data[i].name == "pointer_declarator":
-          fptr = "ptr "
-          i += 1
+        case gStateRT.data[i].name:
+          of "pointer_declarator":
+            fptr = "ptr "
+            i += 1
+          of "array_pointer_declarator":
+            aptr = "ptr "
+            i += 1
 
         fname = gStateRT.data[i].val.getIdentifier()
         if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["identifier", "number_literal"]:
           let
             flen = gStateRT.data[i+1].val.getIdentifier()
-          gStateRT.typeStr &= &"    {fname}*: array[{flen}, {fptr}{ftyp}]\n"
+          gStateRT.typeStr &= &"    {fname}*: {aptr}array[{flen}, {fptr}{ftyp}]\n"
           i += 2
         elif i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name == "function_declarator":
           var
@@ -219,7 +225,10 @@ proc initGrammar() =
     fieldGrammar = &"""
       (field_identifier!)
       (array_declarator!
-       (field_identifier)
+       (field_identifier!)
+       (pointer_declarator
+        (field_identifier)
+       )
        (identifier|number_literal)
       )
       (function_declarator+

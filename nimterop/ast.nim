@@ -33,15 +33,25 @@ proc saveNodeData(node: TSNode): bool =
     if name in ["math_expression", "primitive_type", "sized_type_specifier"]:
       val = val.getType()
 
-    if node.tsNodePrevNamedSibling().tsNodeIsNull() and
-      ((node.isPName("pointer_declarator") and not node.isPPName("function_declarator")) or
-      (node.getPName() in ["function_declarator", "array_declarator"] and node.isPPName("pointer_declarator"))):
-      gStateRT.data.add(("pointer_declarator", ""))
+    let
+      pname = node.getPName()
+      ppname = node.tsNodeParent().getPName()
+
+    if node.tsNodePrevNamedSibling().tsNodeIsNull():
+      if pname == "pointer_declarator":
+        if ppname notin ["function_declarator", "array_declarator"]:
+          gStateRT.data.add(("pointer_declarator", ""))
+        elif ppname == "array_declarator":
+          gStateRT.data.add(("array_pointer_declarator", ""))
+      elif pname in ["function_declarator", "array_declarator"]:
+        if ppname == "pointer_declarator":
+          gStateRT.data.add(("pointer_declarator", ""))
 
     gStateRT.data.add((name, val))
 
-    if node.tsNodeType() == "field_identifier" and node.isPName("pointer_declarator") and
-      node.isPPName("function_declarator"):
+    if node.tsNodeType() == "field_identifier" and
+      pname == "pointer_declarator" and
+      ppname == "function_declarator":
       gStateRT.data.add(("function_declarator", ""))
 
   elif name in ["abstract_pointer_declarator", "enumerator", "field_declaration", "function_declarator"]:
