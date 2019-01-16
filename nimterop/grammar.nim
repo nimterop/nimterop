@@ -59,6 +59,16 @@ proc initGrammar() =
      )
     """
 
+    arrGrammar = &"""
+     (array_declarator!
+      (pointer_declarator!
+       (type_identifier)
+      )
+      (type_identifier)
+      (identifier|number_literal)
+     )
+    """
+
   template funcParamCommon(pname, ptyp, pptr, pout, count, i: untyped): untyped =
     ptyp = gStateRT.data[i].val.getIdentifier()
     if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "pointer_declarator":
@@ -84,9 +94,11 @@ proc initGrammar() =
   gStateRT.grammar.add((&"""
    (type_definition
     {typeGrammar}
-    (type_identifier?)
-    (pointer_declarator?
+    (type_identifier!)
+    {arrGrammar}
+    (pointer_declarator!
      (type_identifier!)
+     {arrGrammar}
      {funcGrammar}
     )
     {funcGrammar}
@@ -98,12 +110,17 @@ proc initGrammar() =
         typ = gStateRT.data[i].val.getIdentifier()
         name = ""
         tptr = ""
+        aptr = ""
 
       i += 1
       if i < gStateRT.data.len:
-        if gStateRT.data[i].name == "pointer_declarator":
-          tptr = "ptr "
-          i += 1
+        case gStateRT.data[i].name:
+          of "pointer_declarator":
+            tptr = "ptr "
+            i += 1
+          of "array_pointer_declarator":
+            aptr = "ptr "
+            i += 1
 
       if i < gStateRT.data.len:
         name = gStateRT.data[i].val.getIdentifier()
@@ -129,10 +146,15 @@ proc initGrammar() =
             gStateRT.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
         else:
           gStateRT.types.add(name)
-          if name == typ or typ == "object":
-            gStateRT.typeStr &= &"  {name}* = object\n"
+          if i < gStateRT.data.len and gStateRT.data[i].name in ["identifier", "number_literal"]:
+            let
+              flen = gStateRT.data[i].val.getIdentifier()
+            gStateRT.typeStr &= &"  {name}*: = {aptr}array[{flen}, {tptr}{typ}]\n"
           else:
-            gStateRT.typeStr &= &"  {name}* = {tptr}{typ}\n"
+            if name == typ or typ == "object":
+              gStateRT.typeStr &= &"  {name}* = object\n"
+            else:
+              gStateRT.typeStr &= &"  {name}* = {tptr}{typ}\n"
   ))
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =

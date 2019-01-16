@@ -99,6 +99,8 @@ proc searchAst(root: TSNode) =
         for ast in gStateRT.ast[name]:
           if searchAstForNode(ast, node):
             ast.tonim(ast, node)
+            if gStateRT.debug:
+              gStateRT.debugStr &= "\n\n# " & gStateRT.data.join("\n# ")
             break
         gStateRT.data = @[]
     else:
@@ -145,3 +147,6 @@ proc printNim*(fullpath: string, root: TSNode) =
 
   if gStateRT.procStr.nBl:
     echo gStateRT.procStr
+
+  if gStateRT.debug and gStateRT.debugStr.nBl:
+    echo gStateRT.debugStr

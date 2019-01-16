@@ -26,7 +26,7 @@ type
 
     consts*, enums*, procs*, types*: seq[string]
 
-    code*, constStr*, currentHeader*, enumStr*, mode*, procStr*, typeStr*: string
+    code*, constStr*, currentHeader*, debugStr*, enumStr*, mode*, procStr*, typeStr*: string
     sourceFile*: string # eg, C or C++ source or header file
 
     ast*: Table[string, seq[ref Ast]]

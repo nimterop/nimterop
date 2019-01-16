@@ -114,6 +114,7 @@ proc main(
     preprocess = false,
     pgrammar = false,
     recurse = false,
+    debug = false,
     defines: seq[string] = @[],
     includeDirs: seq[string] = @[],
     source: seq[string],
@@ -126,6 +127,7 @@ proc main(
     pretty: pretty,
     preprocess: preprocess,
     recurse: recurse,
+    debug: debug,
     defines: defines,
     includeDirs: includeDirs,
   )
@@ -147,6 +149,7 @@ when isMainModule:
     "preprocess": "run preprocessor on header",
     "pgrammar": "print grammar",
     "recurse": "process #include files",
+    "debug": "enable debug output",
     "source" : "C/C++ source/header",
   }, short = {
     "past": 'a',
@@ -155,5 +158,6 @@ when isMainModule:
     "includeDirs": 'I',
     "preprocess": 'p',
     "recurse": 'r',
+    "debug": 'd',
     "pgrammar": 'g'
   })
