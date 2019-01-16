@@ -1,3 +1,5 @@
+{.experimental: "codeReordering".}
+
 import macros, os, strformat, strutils, tables
 
 import regex
@@ -44,14 +46,15 @@ const gTypeMap = {
   "unsigned char": "cuchar",
   "unsigned short": "cushort",
   "unsigned int": "cuint",
-  "unsigned long long": "culonglong"
+  "unsigned long long": "culonglong",
+  "time_t": "int32"
 }.toTable()
 
 proc sanitizePath*(path: string): string =
   path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
 
 proc getIdentifier*(str: string): string =
-  result = str.strip(chars={'_'}).replace(re"_+", "_")
+  result = str.strip(chars={'_'}).replace(re"_+", "_").getType()
 
   if result in gReserved:
     result = &"`{result}`"
