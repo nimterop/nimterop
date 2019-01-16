@@ -1,12 +1,8 @@
-{.experimental: "codeReordering".}
-
 import macros, os, strformat, strutils, tables
 
 import regex
 
-import treesitter/runtime
-
-import git, globals
+import "."/[git, globals, treesitter/runtime]
 
 const gReserved = """
 addr and as asm
@@ -53,6 +49,17 @@ const gTypeMap = {
 proc sanitizePath*(path: string): string =
   path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
 
+proc getType*(str: string): string =
+  if str == "void":
+    return "object"
+
+  result = str.strip(chars={'_'}).
+    replace(re"([u]?int[\d]+)_t", "$1").
+    replace(re"([u]?int)ptr_t", "ptr $1")
+
+  if gTypeMap.hasKey(result):
+    result = gTypeMap[result]
+
 proc getIdentifier*(str: string): string =
   result = str.strip(chars={'_'}).replace(re"_+", "_").getType()
 
@@ -68,17 +75,6 @@ proc getUniqueIdentifier*(exists: seq[string], prefix = ""): string =
     count += 1
 
   return name & $count
-
-proc getType*(str: string): string =
-  if str == "void":
-    return "object"
-
-  result = str.strip(chars={'_'}).
-    replace(re"([u]?int[\d]+)_t", "$1").
-    replace(re"([u]?int)ptr_t", "ptr $1")
-
-  if gTypeMap.hasKey(result):
-    result = gTypeMap[result]
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -116,15 +112,7 @@ proc getLineCol*(node: TSNode): tuple[line, col: int] =
 proc getCurrentHeader*(fullpath: string): string =
   ("header" & fullpath.splitFile().name.replace(re"[-.]+", ""))
 
-proc getGccPaths*(mode = "c"): string =
-  var
-    ret = 0
-    nul = when defined(Windows): "nul" else: "/dev/null"
-    mmode = if mode == "cpp": "c++" else: mode
-
-  (result, ret) = gorgeEx("gcc -Wp,-v -x" & mmode & " " & nul)
-
-proc removeStatic*(content: string): string =
+proc removeStatic(content: string): string =
   ## Replace static function bodies with a semicolon and commented
   ## out body
   return content.replace(

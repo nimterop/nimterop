@@ -2,9 +2,7 @@ import strformat, strutils, tables
 
 import regex
 
-import treesitter/runtime
-
-import "."/[getters, globals, grammar]
+import "."/[getters, globals, grammar, treesitter/runtime]
 
 const gAtoms = @[
   "field_identifier",

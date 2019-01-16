@@ -1,8 +1,8 @@
+import nimterop/setup
+
 import os, strformat, strutils
 
-import treesitter/runtime
-import treesitter_c/c
-import treesitter_cpp/cpp
+import nimterop/treesitter/[runtime, c, cpp]
 
 import nimterop/[ast, globals, getters, grammar]
 

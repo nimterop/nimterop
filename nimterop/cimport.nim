@@ -1,6 +1,6 @@
 import macros, os, strformat, strutils
 
-import getters, globals
+import "."/globals
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
@@ -41,6 +41,14 @@ proc getToast(fullpath: string, recurse: bool = false): string =
   var (output, exitCode) = gorgeEx(cmd)
   doAssert exitCode == 0, $exitCode
   result = output
+
+proc getGccPaths*(mode = "c"): string =
+  var
+    ret = 0
+    nul = when defined(Windows): "nul" else: "/dev/null"
+    mmode = if mode == "cpp": "c++" else: mode
+
+  (result, ret) = gorgeEx("gcc -Wp,-v -x" & mmode & " " & nul)
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   result = findPath(path, fail = false)

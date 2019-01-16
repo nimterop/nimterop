@@ -2,9 +2,7 @@ import strformat, strutils, tables
 
 import regex
 
-import treesitter/runtime
-
-import "."/[getters, globals, lisp]
+import "."/[getters, globals, lisp, treesitter/runtime]
 
 proc initGrammar() =
   # #define X Y

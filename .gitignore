@@ -5,3 +5,5 @@ nimcache
 *.exe
 *.swp
 toast
+inc
+tests

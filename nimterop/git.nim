@@ -1,6 +1,6 @@
 import macros, os, osproc, regex, strformat, strutils
 
-import globals
+import "."/globals
 
 proc execAction*(cmd: string, nostderr=false): string =
   var
@@ -89,7 +89,6 @@ macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): u
 
     discard execAction(&"cd \"{outdir}\" && git config core.sparsecheckout true")
     writeFile(sparsefile, plist)
-    echo "Wrote"
 
   if checkout.len != 0:
     echo "Checking out " & checkout
