@@ -80,6 +80,15 @@ proc getType*(str: string): string =
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
 
+proc getPtrType*(str: string): string =
+  result = case str:
+    of "ptr cchar":
+      "cstring"
+    of "ptr object":
+      "pointer"
+    else:
+      str
+
 proc getLit*(str: string): string =
   if str.contains(re"^[\-]?[\d]+$") or
     str.contains(re"^[\-]?[\d]*\.[\d]+$") or

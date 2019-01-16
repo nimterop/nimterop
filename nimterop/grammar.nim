@@ -85,7 +85,7 @@ proc initGrammar() =
       count += 1
       i += 1
     if ptyp != "object":
-      pout &= &"{pname}: {pptr}{ptyp},"
+      pout &= &"{pname}: {getPtrType(pptr&ptyp)},"
 
   # typedef int X
   # typedef X Y
@@ -141,7 +141,7 @@ proc initGrammar() =
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
           if typ != "object":
-            gStateRT.typeStr &= &"  {name}* = proc({pout}): {tptr}{typ} {{.nimcall.}}\n"
+            gStateRT.typeStr &= &"  {name}* = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}\n"
           else:
             gStateRT.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
         else:
@@ -149,12 +149,12 @@ proc initGrammar() =
           if i < gStateRT.data.len and gStateRT.data[i].name in ["identifier", "number_literal"]:
             let
               flen = gStateRT.data[i].val.getIdentifier()
-            gStateRT.typeStr &= &"  {name}* = {aptr}array[{flen}, {tptr}{typ}]\n"
+            gStateRT.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
           else:
             if name == typ or typ == "object":
               gStateRT.typeStr &= &"  {name}* = object\n"
             else:
-              gStateRT.typeStr &= &"  {name}* = {tptr}{typ}\n"
+              gStateRT.typeStr &= &"  {name}* = {getPtrType(tptr&typ)}\n"
   ))
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
@@ -211,7 +211,7 @@ proc initGrammar() =
         if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["identifier", "number_literal"]:
           let
             flen = gStateRT.data[i+1].val.getIdentifier()
-          gStateRT.typeStr &= &"    {fname}*: {aptr}array[{flen}, {fptr}{ftyp}]\n"
+          gStateRT.typeStr &= &"    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]\n"
           i += 2
         elif i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name == "function_declarator":
           var
@@ -232,7 +232,7 @@ proc initGrammar() =
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
           if ftyp != "object":
-            gStateRT.typeStr &= &"    {fname}*: proc({pout}): {fptr}{ftyp} {{.nimcall.}}\n"
+            gStateRT.typeStr &= &"    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}\n"
           else:
             gStateRT.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
             i += 1
@@ -240,7 +240,7 @@ proc initGrammar() =
           if ftyp == "object":
             gStateRT.typeStr &= &"    {fname}*: pointer\n"
           else:
-            gStateRT.typeStr &= &"    {fname}*: {fptr}{ftyp}\n"
+            gStateRT.typeStr &= &"    {fname}*: {getPtrType(fptr&ftyp)}\n"
           i += 1
 
   let
@@ -438,7 +438,7 @@ proc initGrammar() =
         if fnname notin gStateRT.procs:
           gStateRT.procs.add(fnname)
           if ftyp != "object":
-            gStateRT.procStr &= &"proc {fnname}*({pout}): {fptr}{ftyp} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+            gStateRT.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
           else:
             gStateRT.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
 
