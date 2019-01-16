@@ -149,7 +149,7 @@ proc initGrammar() =
           if i < gStateRT.data.len and gStateRT.data[i].name in ["identifier", "number_literal"]:
             let
               flen = gStateRT.data[i].val.getIdentifier()
-            gStateRT.typeStr &= &"  {name}*: = {aptr}array[{flen}, {tptr}{typ}]\n"
+            gStateRT.typeStr &= &"  {name}* = {aptr}array[{flen}, {tptr}{typ}]\n"
           else:
             if name == typ or typ == "object":
               gStateRT.typeStr &= &"  {name}* = object\n"
