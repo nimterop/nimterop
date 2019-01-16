@@ -78,7 +78,7 @@ for:
   - /home/appveyor/binaries
 
 build_script:
-  - nimble install
+  - nimble install -y
 
 test_script:
   - nimble test

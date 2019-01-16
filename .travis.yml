@@ -27,5 +27,5 @@ install:
   - export PATH=$HOME/.nimble/bin:$PATH
 
 script:
-  - nimble install
+  - nimble install -y
   - nimble test
