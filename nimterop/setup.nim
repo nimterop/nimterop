@@ -2,6 +2,8 @@ import os, strutils
 
 import "."/git
 
+const sourcePath = currentSourcePath().split({'\\', '/'})[0..^3].join("/") & "/inc"
+
 proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter/", "inc/treesitter", """
 include/*
@@ -14,7 +16,7 @@ src/runtime/*
 """)
 
   let
-    stack = "inc/treesitter/src/runtime/stack.c"
+    stack = sourcePath & "/treesitter/src/runtime/stack.c"
 
   stack.writeFile(stack.readFile().replace("inline Stack", "Stack"))
 
@@ -26,7 +28,7 @@ src/*.cc
 """)
 
   let
-    headerc = "inc/treesitter_c/src/parser.h"
+    headerc = sourcePath & "/treesitter_c/src/parser.h"
 
   headerc.writeFile("""
     typedef struct TSLanguage TSLanguage;
@@ -41,7 +43,7 @@ src/*.cc
 """)
 
   let
-    headercpp = "inc/treesitter_cpp/src/parser.h"
+    headercpp = sourcePath & "/treesitter_cpp/src/parser.h"
 
   headercpp.writeFile("""
     typedef struct TSLanguage TSLanguage;
