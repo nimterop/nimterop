@@ -63,6 +63,12 @@ Detailed documentation is still forthcoming.
 
 `cImport("header.h", recurse=true)` - import all supported definitions from header file and #includes
 
+`cCompile("file.c")` - compile C/C++ implementation into binary
+
+`cCompile("path/to/*.c")` - compile in all files matching wildcard
+
+`cCompile("path/to/dir", "cpp")` - compile in all C++ files found recursively
+
 `cAddSearchDir("XXX")` - add directory XXX to search path in calls to `cSearchPath()`
 
 `cAddStdDir("XXX")` - add standard "c" [default] or "cpp" include paths to search path
