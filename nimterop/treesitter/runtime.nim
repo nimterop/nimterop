@@ -9,7 +9,9 @@ static:
 
 const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/") & "/inc/treesitter"
 
-{.passC: "-std=c11 -DUTF8PROC_STATIC".}
+when defined(Linux):
+  {.passC: "-std=c11".}
+{.passC: "-DUTF8PROC_STATIC".}
 {.passC: "-I$1/include" % sourcePath.}
 {.passC: "-I$1/src" % sourcePath.}
 {.passC: "-I$1/../utf8proc" % sourcePath.}
