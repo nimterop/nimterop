@@ -2,7 +2,7 @@ import tables
 
 import regex
 
-when defined(NIMTEROP):
+when not defined(CIMPORT):
   import "."/treesitter/runtime
 
 type
@@ -17,7 +17,7 @@ type
     name*: string
     kind*: Kind
     children*: seq[ref Ast]
-    when defined(NIMTEROP):
+    when not defined(CIMPORT):
       tonim*: proc (ast: ref Ast, node: TSNode)
     regex*: Regex
 
@@ -33,7 +33,7 @@ type
 
     ast*: Table[string, seq[ref Ast]]
     data*: seq[tuple[name, val: string]]
-    when defined(NIMTEROP):
+    when not defined(CIMPORT):
       grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
 var

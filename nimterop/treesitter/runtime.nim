@@ -2,7 +2,7 @@
 
 import strutils
 
-const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/") &  "/inc/treesitter"
+const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/") & "/inc/treesitter"
 
 {.passC: "-std=c11 -DUTF8PROC_STATIC".}
 {.passC: "-I$1/include" % sourcePath.}

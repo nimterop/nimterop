@@ -1,6 +1,8 @@
 import macros, os, strformat, strutils
 
-import "."/globals
+const CIMPORT = 1
+
+include "."/globals
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
