@@ -27,22 +27,52 @@ xor
 yield""".split(Whitespace)
 
 const gTypeMap = {
-  "long": "clong",
-  "unsigned long": "culong",
+  # char
   "char": "cchar",
   "signed char": "cschar",
+  "unsigned char": "cuchar",
+
+  # short
   "short": "cshort",
+  "short int": "cshort",
+  "signed short": "cshort",
+  "signed short int": "cshort",
+  "unsigned short": "cushort",
+  "unsigned short int": "cushort",
+
+  # int
   "int": "cint",
-  "size_t": "uint",
-  "ssize_t": "int",
+  "signed": "cint",
+  "signed int": "cint",
+  "ssize_t": "cint",
+  "unsigned": "cuint",
+  "unsigned int": "cuint",
+  "size_t": "cuint",
+
+  # long
+  "long": "clong",
+  "long int": "clong",
+  "signed long": "clong",
+  "signed long int": "clong",
+  "off_t": "clong",
+  "unsigned long": "culong",
+  "unsigned long int": "culong",
+
+  # long long
   "long long": "clonglong",
+  "long long int": "clonglong",
+  "signed long long": "clonglong",
+  "signed long long int": "clonglong",
+  "off64_t": "clonglong",
+  "unsigned long long": "culonglong",
+  "unsigned long long int": "culonglong",
+
+  # floating point
   "float": "cfloat",
   "double": "cdouble",
   "long double": "clongdouble",
-  "unsigned char": "cuchar",
-  "unsigned short": "cushort",
-  "unsigned int": "cuint",
-  "unsigned long long": "culonglong",
+
+  # misc
   "time_t": "int32"
 }.toTable()
 
