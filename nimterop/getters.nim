@@ -73,7 +73,8 @@ const gTypeMap = {
   "long double": "clongdouble",
 
   # misc
-  "time_t": "int32"
+  "time_t": "int32",
+  "ptrdiff_t": "ByteAddress"
 }.toTable()
 
 proc sanitizePath*(path: string): string =
