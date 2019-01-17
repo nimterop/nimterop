@@ -1,5 +1,3 @@
-import nimterop/setup
-
 import os, strformat, strutils
 
 import nimterop/treesitter/[runtime, c, cpp]

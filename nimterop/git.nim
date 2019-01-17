@@ -1,7 +1,5 @@
 import macros, os, osproc, regex, strformat, strutils
 
-import "."/globals
-
 proc execAction*(cmd: string, nostderr=false): string =
   var
     ccmd = ""
@@ -78,7 +76,9 @@ macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): u
       gitReset(`outdirN`)
     return
   else:
-    echo execAction(&"mkdir \"{outdir}\"")
+    let
+      flag = when not defined(Windows): "-p" else: ""
+    echo execAction(&"mkdir {flag} \"{outdir}\"")
 
   echo "Setting up Git repo: " & url
   discard execAction(&"cd \"{outdir}\" && git init .")

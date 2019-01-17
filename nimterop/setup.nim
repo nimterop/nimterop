@@ -2,7 +2,7 @@ import os, strutils
 
 import "."/git
 
-static:
+proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter/", "inc/treesitter", """
 include/*
 src/runtime/*
@@ -13,12 +13,27 @@ src/runtime/*
 *.h
 """)
 
+  let
+    stack = "inc/treesitter/src/runtime/stack.c"
+
+  stack.writeFile(stack.readFile().replace("inline Stack", "Stack"))
+
+proc treesitterCSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter-c", "inc/treesitter_c", """
 src/*.h
 src/*.c
 src/*.cc
 """)
 
+  let
+    headerc = "inc/treesitter_c/src/parser.h"
+
+  headerc.writeFile("""
+    typedef struct TSLanguage TSLanguage;
+    const TSLanguage *tree_sitter_c();
+  """)
+
+proc treesitterCppSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter-cpp", "inc/treesitter_cpp", """
 src/*.h
 src/*.c
@@ -26,16 +41,7 @@ src/*.cc
 """)
 
   let
-    stack = "inc/treesitter/src/runtime/stack.c"
-    headerc = "inc/treesitter_c/src/parser.h"
     headercpp = "inc/treesitter_cpp/src/parser.h"
-
-  stack.writeFile(stack.readFile().replace("inline Stack", "Stack"))
-
-  headerc.writeFile("""
-    typedef struct TSLanguage TSLanguage;
-    const TSLanguage *tree_sitter_c();
-  """)
 
   headercpp.writeFile("""
     typedef struct TSLanguage TSLanguage;

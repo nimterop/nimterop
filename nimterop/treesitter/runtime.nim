@@ -2,6 +2,11 @@
 
 import strutils
 
+import ".."/setup
+
+static:
+  treesitterSetup()
+
 const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/") & "/inc/treesitter"
 
 {.passC: "-std=c11 -DUTF8PROC_STATIC".}

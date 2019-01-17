@@ -1,5 +1,10 @@
 import strutils
 
+import ".."/setup
+
+static:
+  treesitterCppSetup()
+
 import "."/runtime
 
 {.compile: ("../../inc/treesitter_cpp/src/parser.c", "parsercpp.o").}
