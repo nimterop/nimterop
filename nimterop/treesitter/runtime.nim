@@ -1,10 +1,14 @@
 {.experimental: "codeReordering".}
 
+import strutils
+
+const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/") &  "/inc/treesitter"
+
 {.passC: "-std=c11 -DUTF8PROC_STATIC".}
-{.passC: "-Iinc/treesitter/include".}
-{.passC: "-Iinc/treesitter/src".}
-{.passC: "-Iinc/utf8proc".}
-{.compile: "../../inc/treesitter/src/runtime/runtime.c".}
+{.passC: "-I$1/include" % sourcePath.}
+{.passC: "-I$1/src" % sourcePath.}
+{.passC: "-I$1/../utf8proc" % sourcePath.}
+{.compile: sourcePath & "/src/runtime/runtime.c".}
 
 type TSInputEncoding* = distinct int
 converter enumToInt(en: TSInputEncoding): int {.used.} = en.int
@@ -16,7 +20,7 @@ type TSLogType* = distinct int
 converter enumToInt(en: TSLogType): int {.used.} = en.int
 
 const
-  headerruntime = "inc/treesitter/include/tree_sitter/runtime.h"
+  headerruntime = sourcePath & "/include/tree_sitter/runtime.h"
   TREE_SITTER_LANGUAGE_VERSION* = 9
   TSInputEncodingUTF8* = 0.TSInputEncoding
   TSInputEncodingUTF16* = 1.TSInputEncoding
