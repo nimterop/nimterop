@@ -11,9 +11,10 @@ const
 cIncludeDir(inc)
 
 when defined(Linux):
-  {.passL: "-lpthread".}
-  cDefine("WITH_OSS")
-  cCompile(src/"backend/oss/*.cpp")
+  {.passC: "-std=c++0x".}
+  {.passL: "-lpthread -lasound".}
+  cDefine("WITH_ALSA")
+  cCompile(src/"backend/alsa/*.cpp")
 
 when defined(Windows):
   {.passC: "-msse".}
