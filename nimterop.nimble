@@ -12,9 +12,13 @@ installDirs = @["nimterop"]
 
 requires "nim >= 0.19.0", "regex >= 0.10.0", "cligen >= 0.9.17"
 
-proc execCmd(cmd: string)=
+proc execCmd(cmd: string) =
   echo cmd
   exec cmd
+
+proc tsoloud() =
+  execCmd "nim c -r tests/tsoloud.nim"
+  execCmd "nim cpp -r tests/tsoloud.nim"
 
 task test, "Test":
   execCmd "nim c -r tests/tnimterop_c.nim"
@@ -24,5 +28,8 @@ task test, "Test":
     execCmd "nim c -r tests/tmath.nim"
     execCmd "nim cpp -r tests/tmath.nim"
   when not defined(OSX):
-    execCmd "nim c -r tests/tsoloud.nim"
-    execCmd "nim cpp -r tests/tsoloud.nim"
+    when defined(Windows):
+      tsoloud()
+    else:
+      if not existsEnv("TRAVIS"):
+        tsoloud()
