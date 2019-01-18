@@ -11,7 +11,7 @@ const
 cIncludeDir(inc)
 
 when defined(Linux):
-  {.passC: "-std=c++0x".}
+  {.passC: "-std=c++11".}
   {.passL: "-lpthread".}
   cDefine("WITH_OSS")
   cCompile(src/"backend/oss/*.cpp")
