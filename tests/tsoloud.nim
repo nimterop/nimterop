@@ -1,6 +1,6 @@
 import os, nimterop/[cimport, git]
 
-gitPull("https://github.com/jarikomppa/soloud", "soloud", "include/*\nsrc & *\n")
+gitPull("https://github.com/jarikomppa/soloud", "soloud", "include/*\nsrc/*\n")
 
 cDebug()
 
