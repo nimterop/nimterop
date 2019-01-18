@@ -1,4 +1,4 @@
-import strformat, strutils, tables
+import sets, strformat, strutils, tables
 
 import regex
 
@@ -14,7 +14,7 @@ const gAtoms = @[
   "primitive_type",
   "sized_type_specifier",
   "type_identifier"
-]
+].toSet()
 
 proc saveNodeData(node: TSNode): bool =
   let name = $node.tsNodeType()

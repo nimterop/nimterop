@@ -1,4 +1,4 @@
-import tables
+import sets, tables
 
 import regex
 
@@ -26,7 +26,7 @@ type
 
     debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
-    consts*, enums*, procs*, types*: seq[string]
+    consts*, enums*, procs*, types*: HashSet[string]
 
     code*, constStr*, currentHeader*, debugStr*, enumStr*, mode*, procStr*, typeStr*: string
     sourceFile*: string # eg, C or C++ source or header file

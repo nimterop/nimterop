@@ -1,4 +1,4 @@
-import macros, os, strformat, strutils, tables
+import macros, os, sets, strformat, strutils, tables
 
 import regex
 
@@ -24,7 +24,7 @@ using
 var
 when while
 xor
-yield""".split(Whitespace)
+yield""".split(Whitespace).toSet()
 
 const gTypeMap = {
   # char
@@ -92,20 +92,24 @@ proc getType*(str: string): string =
     result = gTypeMap[result]
 
 proc getIdentifier*(str: string): string =
-  result = str.strip(chars={'_'}).replace(re"_+", "_").getType()
+  result = str.strip(chars={'_'}).replace(re"_+", "_")
 
   if result in gReserved:
     result = &"`{result}`"
 
-proc getUniqueIdentifier*(exists: seq[string], prefix = ""): string =
+proc getUniqueIdentifier*(existing: HashSet[string], prefix = ""): string =
   var
     name = prefix & "_" & gStateRT.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
+    nimName = name.replace("_", "").toLowerAscii
     count = 1
 
-  while (name & $count) in exists:
+  while (nimName & $count) in existing:
     count += 1
 
   return name & $count
+
+proc addNewIdentifer*(existing: var HashSet[string], name: string): bool =
+  return not existing.containsOrIncl(name.replace("_", "").toLowerAscii)
 
 proc getPtrType*(str: string): string =
   result = case str:

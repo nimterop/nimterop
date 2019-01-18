@@ -1,4 +1,4 @@
-import strformat, strutils, tables
+import sets, strformat, strutils, tables
 
 import regex
 
@@ -17,8 +17,7 @@ proc initGrammar() =
         name = gStateRT.data[0].val.getIdentifier()
         val = gStateRT.data[1].val.getLit()
 
-      if name notin gStateRT.consts and val.nBl:
-        gStateRT.consts.add(name)
+      if val.nBl and gStateRT.consts.addNewIdentifer(name):
         gStateRT.constStr &= &"  {name}* = {val}\n"
   ))
 
@@ -82,7 +81,8 @@ proc initGrammar() =
       pname = "a" & $count
       count += 1
       i += 1
-    pout &= &"{pname}: {getPtrType(pptr&ptyp)},"
+    if pptr == "ptr " or ptyp != "object":
+      pout &= &"{pname}: {getPtrType(pptr&ptyp)},"
 
   # typedef int X
   # typedef X Y
@@ -123,7 +123,7 @@ proc initGrammar() =
         name = gStateRT.data[i].val.getIdentifier()
         i += 1
 
-      if name notin gStateRT.types:
+      if gStateRT.types.addNewIdentifer(name):
         if i < gStateRT.data.len and gStateRT.data[^1].name == "function_declarator":
           var
             pout, pname, ptyp, pptr = ""
@@ -142,7 +142,6 @@ proc initGrammar() =
           else:
             gStateRT.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
         else:
-          gStateRT.types.add(name)
           if i < gStateRT.data.len and gStateRT.data[i].name in ["identifier", "number_literal"]:
             let
               flen = gStateRT.data[i].val.getIdentifier()
@@ -176,8 +175,7 @@ proc initGrammar() =
                 union = " {.union.}"
               break
 
-    if nname notin gStateRT.types:
-      gStateRT.types.add(nname)
+    if gStateRT.types.addNewIdentifer(nname):
       gStateRT.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {gStateRT.currentHeader}, bycopy.}} = object{union}\n"
 
       var
@@ -310,8 +308,7 @@ proc initGrammar() =
     if nname.len == 0:
       nname = getUniqueIdentifier(gStateRT.enums, "Enum")
 
-    if nname notin gStateRT.enums:
-      gStateRT.enums.add(nname)
+    if gStateRT.enums.addNewIdentifer(nname):
       gStateRT.enumStr &= &"\ntype {nname}* = distinct int"
       gStateRT.enumStr &= &"\nconverter enumToInt(en: {nname}): int {{.used.}} = en.int\n"
 
@@ -326,7 +323,7 @@ proc initGrammar() =
           i += 1
           continue
 
-        if fname notin gStateRT.consts:
+        if gStateRT.consts.addNewIdentifer(fname):
           if i+1 < gStateRT.data.len-fend and
             gStateRT.data[i+1].name in ["identifier", "shift_expression", "math_expression", "number_literal"]:
             if " " in gStateRT.data[i+1].val:
@@ -432,8 +429,7 @@ proc initGrammar() =
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
-        if fnname notin gStateRT.procs:
-          gStateRT.procs.add(fnname)
+        if gStateRT.procs.addNewIdentifer(fnname):
           if ftyp != "object":
             gStateRT.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
           else:
@@ -456,6 +452,11 @@ proc initRegex(ast: ref Ast) =
       raise newException(Exception, getCurrentExceptionMsg())
 
 proc parseGrammar*() =
+  gStateRT.consts.init()
+  gStateRT.enums.init()
+  gStateRT.procs.init()
+  gStateRT.types.init()
+
   initGrammar()
 
   gStateRT.ast = initTable[string, seq[ref Ast]]()
