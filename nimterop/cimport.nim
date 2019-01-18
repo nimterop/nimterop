@@ -1,6 +1,6 @@
 import macros, os, strformat, strutils
 
-const CIMPORT = 1
+const CIMPORT {.used.} = 1
 
 include "."/globals
 
@@ -22,6 +22,36 @@ proc findPath(path: string, fail = true): string =
       doAssert false, "File or directory not found: " & path
     else:
       return ""
+
+proc walkDirImpl(indir, inext: string, file=true): seq[string] =
+  let
+    dir = joinPathIfRel(getProjectPath(), indir)
+    ext =
+      if inext.len != 0:
+        when not defined(Windows):
+          "-name " & inext
+        else:
+          "\\" & inext
+      else:
+        ""
+
+  let
+    cmd =
+      when defined(Windows):
+        if file:
+          "cmd /c dir /s/b/a-d " & dir.replace("/", "\\") & ext
+        else:
+          "cmd /c dir /s/b/ad " & dir.replace("/", "\\")
+      else:
+        if file:
+          "find $1 -type f $2" % [dir, ext]
+        else:
+          "find $1 -type d" % dir
+
+    (output, ret) = gorgeEx(cmd)
+
+  if ret == 0:
+    result = output.splitLines()
 
 proc getToast(fullpath: string, recurse: bool = false): string =
   var
@@ -125,12 +155,11 @@ macro cAddStdDir*(mode = "c"): untyped =
       result.add quote do:
         cAddSearchDir(`sline`)
 
-macro cCompile*(path: static string): untyped =
+macro cCompile*(path: static string, mode = "c"): untyped =
   result = newNimNode(nnkStmtList)
 
   var
     stmt = ""
-    flags = ""
 
   proc fcompile(file: string): string =
     let fn = file.splitFile().name
@@ -147,22 +176,26 @@ macro cCompile*(path: static string): untyped =
     else:
       return "{.compile: (\"../$#\", \"$#.o\").}" % [file.replace("\\", "/"), ufn]
 
-  proc dcompile(dir: string) =
-    for f in walkFiles(dir):
-      stmt &= fcompile(f) & "\n"
+  proc dcompile(dir: string, ext=""): string =
+    let
+      files = walkDirImpl(dir, ext)
+
+    for f in files:
+      if f.len != 0:
+        result &= fcompile(f) & "\n"
 
   if path.contains("*") or path.contains("?"):
-    dcompile(path)
+    stmt &= dcompile(path)
   else:
     let fpath = findPath(path)
     if fileExists(fpath):
       stmt &= fcompile(fpath) & "\n"
     elif dirExists(fpath):
-      if flags.contains("cpp"):
+      if mode.strVal().contains("cpp"):
         for i in @["*.C", "*.cpp", "*.c++", "*.cc", "*.cxx"]:
-          dcompile(fpath / i)
+          stmt &= dcompile(fpath, i)
       else:
-        dcompile(fpath / "*.c")
+        stmt &= dcompile(fpath, "*.c")
 
   result.add stmt.parseStmt()
 

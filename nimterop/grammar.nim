@@ -82,8 +82,7 @@ proc initGrammar() =
       pname = "a" & $count
       count += 1
       i += 1
-    if ptyp != "object":
-      pout &= &"{pname}: {getPtrType(pptr&ptyp)},"
+    pout &= &"{pname}: {getPtrType(pptr&ptyp)},"
 
   # typedef int X
   # typedef X Y
@@ -149,7 +148,7 @@ proc initGrammar() =
               flen = gStateRT.data[i].val.getIdentifier()
             gStateRT.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
           else:
-            if name == typ or typ == "object":
+            if name == typ:
               gStateRT.typeStr &= &"  {name}* = object\n"
             else:
               gStateRT.typeStr &= &"  {name}* = {getPtrType(tptr&typ)}\n"
