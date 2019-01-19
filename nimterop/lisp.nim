@@ -34,8 +34,10 @@ proc readFromTokens(): ref Ast =
       quit(1)
     if gTokens[idx+1] != "comment":
       result = new(Ast)
-      (result.name, result.kind) = gTokens[idx+1].getNameKind()
+      (result.name, result.kind, result.recursive) = gTokens[idx+1].getNameKind()
       result.children = @[]
+      if result.recursive:
+        result.children.add(result)
     idx += 2
     while gTokens[idx] != ")":
       var res = readFromTokens()
@@ -48,9 +50,9 @@ proc readFromTokens(): ref Ast =
   idx += 1
 
 proc printAst*(node: ref Ast, offset=""): string =
-  result = offset & "(" & node.name & node.kind.toString()
+  result = offset & "(" & (if node.recursive: "^" else: "") & node.name & node.kind.toString()
 
-  if node.children.len != 0:
+  if node.children.len != 0 and not node.recursive:
     result &= "\n"
     for child in node.children:
       result &= printAst(child, offset & " ")

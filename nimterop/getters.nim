@@ -236,12 +236,16 @@ converter toKind*(kind: string): Kind =
     else:
       exactlyOne
 
-proc getNameKind*(name: string): tuple[name: string, kind: Kind] =
-  result.name = name
+proc getNameKind*(name: string): tuple[name: string, kind: Kind, recursive: bool] =
+  if name[0] == '^':
+    result.recursive = true
+    result.name = name[1 .. ^1]
+  else:
+    result.name = name
   result.kind = $name[^1]
 
   if result.kind != exactlyOne:
-    result.name = name[0 .. ^2]
+    result.name = result.name[0 .. ^2]
 
 proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
   if node.tsNodeNamedChildCount() != 0:
@@ -261,8 +265,9 @@ proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
 proc getRegexForAstChildren*(ast: ref Ast): string =
   result = "^"
   for i in 0 .. ast.children.len-1:
-    let kind: string = ast.children[i].kind
-    let begin = if result[^1] == '|': "" else: "(?:"
+    let
+      kind: string = ast.children[i].kind
+      begin = if result[^1] == '|': "" else: "(?:"
     case kind:
       of "!":
         result &= &"{begin}{ast.children[i].name}|"

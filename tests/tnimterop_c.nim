@@ -97,6 +97,10 @@ else:
 check e3 == enum7
 check e4 == enum11
 
+check enum13 == 4
+check enum14 == 9
+check enum15 == 2
+
 cAddStdDir()
 
 ## failing tests
