@@ -18,7 +18,7 @@ proc findPath(path: string, fail = true): string =
   # Relative to project path
   result = joinPathIfRel(getProjectPath(), path).replace("\\", "/")
   if not fileExists(result) and not dirExists(result):
-    doAssert not fail, "File or directory not found: " & path
+    doAssert (not fail), "File or directory not found: " & path
     result = ""
 
 proc walkDirImpl(indir, inext: string, file=true): seq[string] =
