@@ -78,17 +78,14 @@ proc process(path: string) =
   else:
     gStateRT.code = readFile(path)
 
+  doAssert gStateRT.code.len != 0, "Empty file or preprocessor error"
+
   if gStateRT.mode == "c":
-    if not parser.tsParserSetLanguage(treeSitterC()):
-      echo "Failed to load C parser"
-      quit()
+    doAssert parser.tsParserSetLanguage(treeSitterC()), "Failed to load C parser"
   elif gStateRT.mode == "cpp":
-    if not parser.tsParserSetLanguage(treeSitterCpp()):
-      echo "Failed to load C++ parser"
-      quit()
+    doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
   else:
-    echo "Invalid parser " & gStateRT.mode
-    quit()
+    doAssert false, "Invalid parser " & gStateRT.mode
 
   var
     tree = parser.tsParserParseString(nil, gStateRT.code.cstring, gStateRT.code.len.uint32)

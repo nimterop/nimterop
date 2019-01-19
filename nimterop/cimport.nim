@@ -18,10 +18,8 @@ proc findPath(path: string, fail = true): string =
   # Relative to project path
   result = joinPathIfRel(getProjectPath(), path).replace("\\", "/")
   if not fileExists(result) and not dirExists(result):
-    if fail:
-      doAssert false, "File or directory not found: " & path
-    else:
-      return ""
+    doAssert not fail, "File or directory not found: " & path
+    result = ""
 
 proc walkDirImpl(indir, inext: string, file=true): seq[string] =
   let
@@ -66,11 +64,21 @@ proc getFileDate(fullpath: string): string =
 
   (result, ret) = gorgeEx(cmd)
 
-  if ret != 0:
-    doAssert false, "File date error: " & fullpath & "\n" & result
+  doAssert ret == 0, "File date error: " & fullpath & "\n" & result
+
+proc getToastError(output: string): string =
+  # Filter out preprocessor errors
+  for line in output.splitLines():
+    if "fatal error:" in line.toLowerAscii:
+      result &= &"\nERROR: {line.split(\"fatal error\")[1]}\n"
+
+  # Toast error
+  if result.len == 0:
+    result = output
 
 proc getToast(fullpath: string, recurse: bool = false): string =
   var
+    ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
 
   cmd &= "toast --pnim --preprocess "
@@ -86,9 +94,8 @@ proc getToast(fullpath: string, recurse: bool = false): string =
 
   cmd.add &"{fullpath.quoteShell}"
   echo cmd
-  var (output, exitCode) = gorgeEx(cmd, cache=getFileDate(fullpath))
-  doAssert exitCode == 0, $exitCode
-  result = output
+  (result, ret) = gorgeEx(cmd, cache=getFileDate(fullpath))
+  doAssert ret == 0, getToastError(result)
 
 proc getGccPaths*(mode = "c"): string =
   var
