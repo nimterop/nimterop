@@ -77,7 +77,7 @@ typedef struct {
 	ENUM4 *field5[TEST_INT];
 } STRUCT4;
 
-typedef struct STRUCT5 {
+typedef struct struct5 {
 	int (*tci)();
 	struct STRUCT1 (*tcp)(int);
 	float (*tcp8)(int *i);

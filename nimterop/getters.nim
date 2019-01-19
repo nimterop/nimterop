@@ -109,7 +109,14 @@ proc getUniqueIdentifier*(existing: HashSet[string], prefix = ""): string =
   return name & $count
 
 proc addNewIdentifer*(existing: var HashSet[string], name: string): bool =
-  return not existing.containsOrIncl(name.replace("_", "").toLowerAscii)
+  let
+    nimName =
+      if existing == gStateRT.types:
+        name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
+      else:
+        name.replace("_", "").toLowerAscii
+
+  return not existing.containsOrIncl(nimName)
 
 proc getPtrType*(str: string): string =
   result = case str:

@@ -33,6 +33,7 @@ var
   s3: STRUCT3
   s4: STRUCT4
   s5: STRUCT5
+  s51: struct5
 
   e: ENUM
   e2: ENUM2 = enum5
@@ -62,7 +63,9 @@ else: # TODO: what's `defined(cpp)` for c ?
 s5.tci = test_call_int
 s5.tcp = test_call_param
 s5.tcp8 = test_call_param8
+s51.tci = test_call_int
 check s5.tci() == 5
+check s51.tci() == 5
 
 e = enum1
 e2 = enum4

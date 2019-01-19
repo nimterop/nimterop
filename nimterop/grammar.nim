@@ -171,8 +171,14 @@ proc initGrammar() =
             let
               nchild = $node.tsNodeNamedChild(i).tsNodeType()
             if nchild != "comment":
-              if nchild == "union_specifier":
-                union = " {.union.}"
+              case nchild:
+                of "struct_specifier":
+                  if fstart == 1:
+                    prefix = "struct "
+                of "union_specifier":
+                  if fstart == 1:
+                    prefix = "union "
+                  union = " {.union.}"
               break
 
     if gStateRT.types.addNewIdentifer(nname):
@@ -238,6 +244,15 @@ proc initGrammar() =
             gStateRT.typeStr &= &"    {fname}*: {getPtrType(fptr&ftyp)}\n"
           i += 1
 
+      if node.tsNodeType() == "type_definition" and
+        gStateRT.data[^1].name == "type_identifier":
+          let
+            dname = gStateRT.data[^1].val
+            ndname = gStateRT.data[^1].val.getIdentifier()
+
+          if gStateRT.types.addNewIdentifer(ndname):
+            gStateRT.typeStr &= &"  {ndname}* {{.importc: \"{dname}\", header: {gStateRT.currentHeader}, bycopy.}} = {nname}\n"
+
   let
     fieldGrammar = &"""
       (field_identifier!)
@@ -296,9 +311,11 @@ proc initGrammar() =
       if gStateRT.data.len > 1 and
         gStateRT.data[0].name == "type_identifier" and
         gStateRT.data[1].name != "field_identifier":
-        offset = 1
 
-      pStructCommon(ast, node, gStateRT.data[^1].val, offset, 1)
+        offset = 1
+        pStructCommon(ast, node, gStateRT.data[0].val, offset, 1)
+      else:
+        pStructCommon(ast, node, gStateRT.data[^1].val, offset, 1)
   ))
 
   proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
