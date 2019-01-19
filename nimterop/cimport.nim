@@ -59,8 +59,10 @@ proc getFileDate(fullpath: string): string =
     cmd =
       when defined(Windows):
         &"cmd /c for %a in ({fullpath.quoteShell}) do echo %~ta"
-      else:
+      elif defined(Linux):
         &"stat -c %y {fullpath.quoteShell}"
+      elif defined(OSX):
+        &"stat -f %m {fullpath.quoteShell}"
 
   (result, ret) = gorgeEx(cmd)
 
