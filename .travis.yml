@@ -24,5 +24,4 @@ install:
 script:
   - nimble install -y
   - nimble test
-  - mkdir test
-  - nimble --nimbleDir:test install nimterop -y
+  - nimble --nimbleDir:`pwd`/test install nimterop -y
