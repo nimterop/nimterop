@@ -325,14 +325,15 @@ proc initGrammar() =
 
         if gStateRT.consts.addNewIdentifer(fname):
           if i+1 < gStateRT.data.len-fend and
-            gStateRT.data[i+1].name in ["identifier", "shift_expression", "math_expression", "number_literal"]:
-            if " " in gStateRT.data[i+1].val:
-              gStateRT.data[i+1].val = "(" & gStateRT.data[i+1].val.replace(" ", "") & ")"
+            gStateRT.data[i+1].name in gEnumVals:
             gStateRT.data[i+1].val = gStateRT.data[i+1].val.multiReplace([
-              ("<<", " shl "), (">>", " shr ")
+              (" ", ""),
+              ("<<", " shl "), (">>", " shr "),
+              ("^", " xor "), ("&", " and "), ("|", " or "),
+              ("~", " not ")
             ])
 
-            gStateRT.constStr &= &"  {fname}* = {gStateRT.data[i+1].val}.{nname}\n"
+            gStateRT.constStr &= &"  {fname}* = ({gStateRT.data[i+1].val}).{nname}\n"
             try:
               count = gStateRT.data[i+1].val.parseInt() + 1
             except:
@@ -349,15 +350,12 @@ proc initGrammar() =
     (type_identifier?)
     (enumerator_list
      (enumerator+
-      (identifier+)
-      (number_literal?)
-      (shift_expression|math_expression?
-       (number_literal+)
-      )
+      (identifier?)
+      (^$1+)
      )
     )
    )
-  """,
+  """ % gEnumVals.join("|"),
     proc (ast: ref Ast, node: TSNode) =
       var
         name = ""
@@ -439,8 +437,9 @@ proc initGrammar() =
 
 proc initRegex(ast: ref Ast) =
   if ast.children.len != 0:
-    for child in ast.children:
-      child.initRegex()
+    if not ast.recursive:
+      for child in ast.children:
+        child.initRegex()
 
     var
       reg: string

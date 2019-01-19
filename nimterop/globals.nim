@@ -1,9 +1,32 @@
-import sets, tables
+import sequtils, sets, tables
 
 import regex
 
 when not declared(CIMPORT):
   import "."/treesitter/runtime
+
+const
+  gAtoms* = @[
+    "field_identifier",
+    "identifier",
+    "number_literal",
+    "preproc_arg",
+    "primitive_type",
+    "sized_type_specifier",
+    "type_identifier"
+  ].toSet()
+
+  gExpressions* = @[
+    "parenthesized_expression",
+    "bitwise_expression",
+    "shift_expression",
+    "math_expression"
+  ].toSet()
+
+  gEnumVals* = @[
+    "identifier",
+    "number_literal"
+  ].concat(toSeq(gExpressions.items))
 
 type
   Kind* = enum
@@ -16,6 +39,7 @@ type
   Ast* = object
     name*: string
     kind*: Kind
+    recursive*: bool
     children*: seq[ref Ast]
     when not declared(CIMPORT):
       tonim*: proc (ast: ref Ast, node: TSNode)

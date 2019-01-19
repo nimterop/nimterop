@@ -4,18 +4,6 @@ import regex
 
 import "."/[getters, globals, grammar, treesitter/runtime]
 
-const gAtoms = @[
-  "field_identifier",
-  "identifier",
-  "shift_expression",
-  "math_expression",
-  "number_literal",
-  "preproc_arg",
-  "primitive_type",
-  "sized_type_specifier",
-  "type_identifier"
-].toSet()
-
 proc saveNodeData(node: TSNode): bool =
   let name = $node.tsNodeType()
   if name in gAtoms:
@@ -25,10 +13,10 @@ proc saveNodeData(node: TSNode): bool =
     if name == "primitive_type" and node.tsNodeParent.tsNodeType() == "sized_type_specifier":
       return true
 
-    if name == "number_literal" and $node.tsNodeParent.tsNodeType() in ["shift_expression", "math_expression"]:
+    if name == "number_literal" and $node.tsNodeParent.tsNodeType() in gExpressions:
       return true
 
-    if name in ["math_expression", "primitive_type", "sized_type_specifier"]:
+    if name in ["primitive_type", "sized_type_specifier"]:
       val = val.getType()
 
     let
@@ -52,6 +40,10 @@ proc saveNodeData(node: TSNode): bool =
       ppname == "function_declarator":
       gStateRT.data.add(("function_declarator", ""))
 
+  elif name in gExpressions:
+    if $node.tsNodeParent.tsNodeType() notin gExpressions:
+      gStateRT.data.add((name, node.getNodeVal()))
+
   elif name in ["abstract_pointer_declarator", "enumerator", "field_declaration", "function_declarator"]:
     gStateRT.data.add((name.replace("abstract_", ""), ""))
 
@@ -65,14 +57,19 @@ proc searchAstForNode(ast: ref Ast, node: TSNode): bool =
     return
 
   if ast.children.len != 0:
-    if childNames.contains(ast.regex):
+    if childNames.contains(ast.regex) or
+      (childNames.len == 0 and ast.recursive):
       if node.getTSNodeNamedChildCountSansComments() != 0:
         var flag = true
         for i in 0 .. node.tsNodeNamedChildCount()-1:
           if $node.tsNodeNamedChild(i).tsNodeType() != "comment":
             let
               nodeChild = node.tsNodeNamedChild(i)
-              astChild = ast.getAstChildByName($nodeChild.tsNodeType())
+              astChild =
+                if not ast.recursive:
+                  ast.getAstChildByName($nodeChild.tsNodeType())
+                else:
+                  ast
             if not searchAstForNode(astChild, nodeChild):
               flag = false
               break

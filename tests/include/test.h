@@ -60,6 +60,12 @@ typedef enum ENUM4 {
 	enum12
 } ENUM4;
 
+enum ENUM5 {
+	enum13 = (1 << 2),
+	enum14 = ((1 << 3) | 1),
+	enum15 = (1 << (1 & 1))
+};
+
 typedef void * VOIDPTR;
 typedef int * INTPTR;
 
