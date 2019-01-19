@@ -24,5 +24,5 @@ install:
 script:
   - nimble install -y
   - nimble test
-  - cd ..
+  - mkdir test
   - nimble --nimbleDir:test install nimterop -y
