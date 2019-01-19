@@ -83,5 +83,6 @@ build_script:
 
 test_script:
   - nimble test
+  - nimble --nimbleDir:test install nimterop -y
 
 deploy: off
