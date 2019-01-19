@@ -53,6 +53,20 @@ proc walkDirImpl(indir, inext: string, file=true): seq[string] =
   if ret == 0:
     result = output.splitLines()
 
+proc getFileDate(fullpath: string): string =
+  var
+    ret = 0
+    cmd =
+      when defined(Windows):
+        &"cmd /c for %a in ({fullpath.quoteShell}) do echo %~ta"
+      else:
+        &"stat -c %y {fullpath.quoteShell}"
+
+  (result, ret) = gorgeEx(cmd)
+
+  if ret != 0:
+    doAssert false, "File date error: " & fullpath & "\n" & result
+
 proc getToast(fullpath: string, recurse: bool = false): string =
   var
     cmd = when defined(Windows): "cmd /c " else: ""
@@ -70,7 +84,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
 
   cmd.add &"{fullpath.quoteShell}"
   echo cmd
-  var (output, exitCode) = gorgeEx(cmd)
+  var (output, exitCode) = gorgeEx(cmd, cache=getFileDate(fullpath))
   doAssert exitCode == 0, $exitCode
   result = output
 

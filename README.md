@@ -59,7 +59,7 @@ Detailed documentation is still forthcoming.
 
 `cIncludeDir("XXX")` - add an include directory that is forwarded to the compiler using `{.passC: "-IXXX".}`
 
-`cImport("header.h")` - import all supported definitions from header file
+`cImport("header.h")` - import all supported definitions from header file. Output is cached in nimcache unless header.h changes or by using `nim -f`
 
 `cImport("header.h", recurse=true)` - import all supported definitions from header file and #includes
 
