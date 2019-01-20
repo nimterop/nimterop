@@ -226,8 +226,9 @@ macro cCompile*(path: static string, mode = "c"): untyped =
   ##     cCompile("file.c")
   ##     cCompile("path/to/*.c")
   ##
-  ## ``mode`` can be ``c`` or ``cpp`` and recursively searches for code files in
-  ##  specified path. ``c`` = ``*.c``, ``cpp`` = ``*.C``, ``*.cpp``, ``*.c++``, ``*.cc``, ``*.cxx``
+  ## ``mode`` recursively searches for code files in ``path``.
+  ##
+  ## ``c`` searches for ``*.c`` whereas ``cpp`` searches for ``*.C *.cpp *.c++ *.cc *.cxx``
   ##
   ## .. code-block:: nim
   ##
