@@ -4,6 +4,9 @@ const CIMPORT {.used.} = 1
 
 include "."/globals
 
+import "."/types
+export types
+
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
   result = dir.replace("$projpath", getProjectPath())

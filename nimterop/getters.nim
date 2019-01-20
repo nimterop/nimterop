@@ -70,11 +70,7 @@ const gTypeMap = {
   # floating point
   "float": "cfloat",
   "double": "cdouble",
-  "long double": "clongdouble",
-
-  # misc
-  "time_t": "int32",
-  "ptrdiff_t": "ByteAddress"
+  "long double": "clongdouble"
 }.toTable()
 
 proc sanitizePath*(path: string): string =
