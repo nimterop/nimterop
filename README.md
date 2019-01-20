@@ -51,7 +51,7 @@ The `toast` binary can also be used directly on the CLI. The `--help` flag provi
 
 __Documentation__
 
-Detailed documentation is still forthcoming.
+Documentation can be found [here](https://genotrance.github.io/nimterop/cimport.html).
 
 `cDebug()` - enable debug messages
 
