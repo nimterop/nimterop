@@ -55,11 +55,11 @@ Detailed documentation is still forthcoming.
 
 `cDebug()` - enable debug messages
 
-`cDefine("XXX")` - `#define` an identifer that is forwarded to the C/C++ compiler using `{.passC: "-DXXX".}` as well as _eventually_ used in processing `#ifdef` statements
+`cDefine("XXX")` - `#define` an identifer that is forwarded to the C/C++ compiler using `{.passC: "-DXXX".}`
 
-`cIncludeDir("XXX")` - add an include directory that is forwarded to the compiler using `{.passC: "-IXXX".}`
+`cIncludeDir("XXX")` - add an include directory that is forwarded to the C/C++ compiler using `{.passC: "-IXXX".}`
 
-`cImport("header.h")` - import all supported definitions from header file. Output is cached in nimcache unless header.h changes or by using `nim -f`
+`cImport("header.h")` - Import all supported definitions from specified header file. Generated content is cached in `nimcache` until `header.h` changes. If files imported by `header.h` change and affect the generated content, use `nim -f` to force regeneration of Nim code.
 
 `cImport("header.h", recurse=true)` - import all supported definitions from header file and #includes
 
@@ -69,9 +69,9 @@ Detailed documentation is still forthcoming.
 
 `cCompile("path/to/dir", "cpp")` - compile in all C++ files found recursively
 
-`cAddSearchDir("XXX")` - add directory XXX to search path in calls to `cSearchPath()`
+`cAddSearchDir("XXX")` - add directory XXX to the search path used in calls to `cSearchPath()`
 
-`cAddStdDir("XXX")` - add standard "c" [default] or "cpp" include paths to search path
+`cAddStdDir("XXX")` - add standard "c" [default] or "cpp" include paths to search path used in calls to `cSearchPath()`
 
 `cSearchPath("header.h")` - return a file or directory found in search path configured using `cSearchPath()` - can be used in `cCompile()`, `cIncludeDir()` and `cImport()` calls
 

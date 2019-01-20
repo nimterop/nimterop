@@ -6,7 +6,7 @@ when not declared(CIMPORT):
   import "."/treesitter/runtime
 
 const
-  gAtoms* = @[
+  gAtoms {.used.} = @[
     "field_identifier",
     "identifier",
     "number_literal",
@@ -16,27 +16,27 @@ const
     "type_identifier"
   ].toSet()
 
-  gExpressions* = @[
+  gExpressions {.used.} = @[
     "parenthesized_expression",
     "bitwise_expression",
     "shift_expression",
     "math_expression"
   ].toSet()
 
-  gEnumVals* = @[
+  gEnumVals {.used.} = @[
     "identifier",
     "number_literal"
   ].concat(toSeq(gExpressions.items))
 
 type
-  Kind* = enum
+  Kind = enum
     exactlyOne
     oneOrMore     # +
     zeroOrMore    # *
     zeroOrOne     # ?
     orWithNext    # !
 
-  Ast* = object
+  Ast = object
     name*: string
     kind*: Kind
     recursive*: bool
@@ -45,7 +45,7 @@ type
       tonim*: proc (ast: ref Ast, node: TSNode)
     regex*: Regex
 
-  State* = object
+  State = object
     compile*, defines*, headers*, includeDirs*, searchDirs*: seq[string]
 
     debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
@@ -61,15 +61,18 @@ type
       grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
 var
-  gStateCT* {.compiletime.}: State
-  gStateRT*: State
+  gStateCT {.compiletime, used.}: State
+  gStateRT {.used.}: State
 
-template nBl*(s: typed): untyped =
+template nBl(s: typed): untyped {.used.} =
   (s.len != 0)
 
-type CompileMode* = enum
+type CompileMode = enum
   c,
   cpp,
 
 # TODO: can cligen accept enum instead of string?
-const modeDefault* = $cpp # TODO: USE this everywhere relevant
+const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
+
+when not declared(CIMPORT):
+  export gAtoms, gExpressions, gEnumVals, Kind, Ast, State, gStateRT, nBl, CompileMode, modeDefault

@@ -73,7 +73,7 @@ proc getToastError(output: string): string =
   # Filter out preprocessor errors
   for line in output.splitLines():
     if "fatal error:" in line.toLowerAscii:
-      result &= &"\nERROR: {line.split(\"fatal error\")[1]}\n"
+      result &= "\nERROR:$1\n" % line.split("fatal error:")[1]
 
   # Toast error
   if result.len == 0:
@@ -100,7 +100,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
   (result, ret) = gorgeEx(cmd, cache=getFileDate(fullpath))
   doAssert ret == 0, getToastError(result)
 
-proc getGccPaths*(mode = "c"): string =
+proc getGccPaths(mode = "c"): string =
   var
     ret = 0
     nul = when defined(Windows): "nul" else: "/dev/null"
@@ -109,6 +109,12 @@ proc getGccPaths*(mode = "c"): string =
   (result, ret) = gorgeEx("gcc -Wp,-v -x" & mmode & " " & nul)
 
 proc cSearchPath*(path: string): string {.compileTime.}=
+  ## Return a file or directory found in search path configured using
+  ## ``cSearchPath()``
+  ##
+  ## This proc can be used to locate files or directories in calls to
+  ## ``cCompile()``, ``cIncludeDir()`` and ``cImport()``.
+
   result = findPath(path, fail = false)
   if result.len == 0:
     var found = false
@@ -117,12 +123,18 @@ proc cSearchPath*(path: string): string {.compileTime.}=
       if fileExists(result) or dirExists(result):
         found = true
         break
-    doAssert found, "File or directory not found: " & path & " gStateCT.searchDirs: " & $gStateCT.searchDirs
+    doAssert found, "File or directory not found: " & path &
+      " gStateCT.searchDirs: " & $gStateCT.searchDirs
 
 macro cDebug*(): untyped =
+  ## Enable debug messages and display the generated Nim code
+
   gStateCT.debug = true
 
 macro cDefine*(name: static string, val: static string = ""): untyped =
+  ## ``#define`` an identifer that is forwarded to the C/C++ compiler
+  ## using ``{.passC: "-DXXX".}``
+
   result = newNimNode(nnkStmtList)
 
   var str = name
@@ -141,11 +153,24 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
       echo result.repr
 
 macro cAddSearchDir*(dir: static string): untyped =
+  ## Add directory ``dir`` to the search path used in calls to
+  ## ``cSearchPath()``
+  ##
+  ## This allows something like this:
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    cAddSearchDir("path/to/includes")
+  ##    cImport cSearchPath("file.h")
+
   var dir = interpPath(dir)
   if dir notin gStateCT.searchDirs:
     gStateCT.searchDirs.add(dir)
 
 macro cIncludeDir*(dir: static string): untyped =
+  ## Add an include directory that is forwarded to the C/C++ compiler
+  ## using ``{.passC: "-IXXX".}``
+
   var dir = interpPath(dir)
   result = newNimNode(nnkStmtList)
 
@@ -164,6 +189,16 @@ macro cIncludeDir*(dir: static string): untyped =
     echo result.repr
 
 macro cAddStdDir*(mode = "c"): untyped =
+  ## Add the standard ``c`` [default] or ``cpp`` include paths to search
+  ## path used in calls to ``cSearchPath()``
+  ##
+  ## This allows something like this:
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    cAddStdDir()
+  ##    cImport cSearchPath("math.h")
+
   result = newNimNode(nnkStmtList)
 
   var
@@ -182,6 +217,22 @@ macro cAddStdDir*(mode = "c"): untyped =
         cAddSearchDir(`sline`)
 
 macro cCompile*(path: static string, mode = "c"): untyped =
+  ## Compile and link C/C++ implementation into resulting binary using ``{.compile.}``
+  ##
+  ## ``path`` can be a specific file or contain wildcards:
+  ##
+  ## .. code-block:: nim
+  ##
+  ##     cCompile("file.c")
+  ##     cCompile("path/to/*.c")
+  ##
+  ## ``mode`` can be ``c`` or ``cpp`` and recursively searches for code files in
+  ##  specified path. ``c`` = ``*.c``, ``cpp`` = ``*.C``, ``*.cpp``, ``*.c++``, ``*.cc``, ``*.cxx``
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    cCompile("path/to/dir", "cpp")
+
   result = newNimNode(nnkStmtList)
 
   var
@@ -229,6 +280,15 @@ macro cCompile*(path: static string, mode = "c"): untyped =
     echo result.repr
 
 macro cImport*(filename: static string, recurse: static bool = false): untyped =
+  ## Import all supported definitions from specified header file. Generated
+  ## content is cached in ``nimcache`` until ``filename`` changes. If files
+  ## imported by ``filename`` change and affect the generated content, use
+  ## ``nim -f`` to force regeneration of Nim code.
+  ##
+  ## ``recurse`` can be used to generate Nim wrappers from ``#include`` files
+  ## referenced in ``filename``. This is only done for files in the same
+  ## directory as ``filename`` or in a directory added using ``cIncludeDir()``.
+
   result = newNimNode(nnkStmtList)
 
   let
