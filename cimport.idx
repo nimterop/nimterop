@@ -1,5 +1,6 @@
 cSearchPath	cimport.html#cSearchPath,string	cimport: cSearchPath(path: string): string	
 cDebug	cimport.html#cDebug.m,	cimport: cDebug(): untyped	
+cDisableCaching	cimport.html#cDisableCaching.m,	cimport: cDisableCaching(): untyped	
 cDefine	cimport.html#cDefine.m,,string	cimport: cDefine(name: static string; val: static string = &quot;&quot;): untyped	
 cAddSearchDir	cimport.html#cAddSearchDir.m,	cimport: cAddSearchDir(dir: static string): untyped	
 cIncludeDir	cimport.html#cIncludeDir.m,	cimport: cIncludeDir(dir: static string): untyped	
