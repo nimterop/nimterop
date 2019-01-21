@@ -17,15 +17,15 @@ proc execCmd(cmd: string) =
   exec cmd
 
 proc tsoloud() =
-  execCmd "nim c --forceBuild -r tests/tsoloud.nim"
+  execCmd "nim c -r tests/tsoloud.nim"
   execCmd "nim cpp -r tests/tsoloud.nim"
 
 task test, "Test":
-  execCmd "nim c -f -r tests/tnimterop_c.nim"
+  execCmd "nim c -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_c.nim"
-  execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
+  execCmd "nim cpp -r tests/tnimterop_cpp.nim"
   when defined(windows):
-    execCmd "nim c -f -r tests/tmath.nim"
+    execCmd "nim c -r tests/tmath.nim"
     execCmd "nim cpp -r tests/tmath.nim"
   when not defined(OSX):
     when defined(Windows):

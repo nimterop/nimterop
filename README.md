@@ -55,11 +55,13 @@ Documentation can be found [here](https://genotrance.github.io/nimterop/cimport.
 
 `cDebug()` - enable debug messages
 
+`cDisableCaching()` - disable caching of generated Nim content from `cImport()`
+
 `cDefine("XXX")` - `#define` an identifer that is forwarded to the C/C++ compiler using `{.passC: "-DXXX".}`
 
 `cIncludeDir("XXX")` - add an include directory that is forwarded to the C/C++ compiler using `{.passC: "-IXXX".}`
 
-`cImport("header.h")` - Import all supported definitions from specified header file. Generated content is cached in `nimcache` until `header.h` changes. If files imported by `header.h` change and affect the generated content, use `nim -f` to force regeneration of Nim code.
+`cImport("header.h")` - Import all supported definitions from specified header file. Generated content is cached in `nimcache` until `header.h` changes
 
 `cImport("header.h", recurse=true)` - import all supported definitions from header file and #includes
 

@@ -69,6 +69,10 @@ proc getFileDate(fullpath: string): string =
 
   doAssert ret == 0, "File date error: " & fullpath & "\n" & result
 
+proc getCacheValue(fullpath: string): string =
+  if not gStateCT.nocache:
+    result = fullpath.getFileDate()
+
 proc getToastError(output: string): string =
   # Filter out preprocessor errors
   for line in output.splitLines():
@@ -97,7 +101,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
 
   cmd.add &"{fullpath.quoteShell}"
   echo cmd
-  (result, ret) = gorgeEx(cmd, cache=getFileDate(fullpath))
+  (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
 
 proc getGccPaths(mode = "c"): string =
@@ -130,6 +134,17 @@ macro cDebug*(): untyped =
   ## Enable debug messages and display the generated Nim code
 
   gStateCT.debug = true
+
+macro cDisableCaching*(): untyped =
+  ## Disable caching of generated Nim code - useful during wrapper development
+  ##
+  ## If files included by header bring processed by ``cImport()`` change and affect
+  ## the generated content, ``cImport()`` won't detect the change and use the cached
+  ## value. Use ``cDisableCaching()`` to avoid this scenario.
+  ##
+  ## ``nim -f`` is currently broken but will eventually allow forcing regeneration.
+
+  gStateCT.nocache = true
 
 macro cDefine*(name: static string, val: static string = ""): untyped =
   ## ``#define`` an identifer that is forwarded to the C/C++ compiler
@@ -282,9 +297,8 @@ macro cCompile*(path: static string, mode = "c"): untyped =
 
 macro cImport*(filename: static string, recurse: static bool = false): untyped =
   ## Import all supported definitions from specified header file. Generated
-  ## content is cached in ``nimcache`` until ``filename`` changes. If files
-  ## imported by ``filename`` change and affect the generated content, use
-  ## ``nim -f`` to force regeneration of Nim code.
+  ## content is cached in ``nimcache`` until ``filename`` changes unless
+  ## ``cDisableCaching()`` is set.
   ##
   ## ``recurse`` can be used to generate Nim wrappers from ``#include`` files
   ## referenced in ``filename``. This is only done for files in the same

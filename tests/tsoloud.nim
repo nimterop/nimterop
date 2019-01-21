@@ -3,6 +3,7 @@ import os, nimterop/[cimport, git]
 gitPull("https://github.com/jarikomppa/soloud", "soloud", "include/*\nsrc/*\n")
 
 cDebug()
+cDisableCaching()
 
 const
   inc = "soloud/include"

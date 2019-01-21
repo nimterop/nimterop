@@ -48,7 +48,7 @@ type
   State = object
     compile*, defines*, headers*, includeDirs*, searchDirs*: seq[string]
 
-    debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
+    nocache*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
     consts*, enums*, procs*, types*: HashSet[string]
 

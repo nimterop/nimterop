@@ -2,6 +2,7 @@ import std/unittest
 import nimterop/cimport
 
 cDebug()
+cDisableCaching()
 
 cDefine("FORCE")
 cIncludeDir "$projpath/include"

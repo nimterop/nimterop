@@ -7,6 +7,7 @@ type
   mingw_dbl_type_t = object
 
 cDebug()
+cDisableCaching()
 
 cAddStdDir()
 cImport cSearchPath("math.h")

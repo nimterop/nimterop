@@ -2,6 +2,7 @@ import nimterop/cimport
 import unittest
 
 cDebug()
+cDisableCaching()
 
 cIncludeDir "$projpath/include"
 cAddSearchDir "$projpath/include"
