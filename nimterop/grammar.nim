@@ -213,9 +213,9 @@ proc initGrammar() =
             i += 1
 
         fname = gStateRT.data[i].val.getIdentifier()
-        if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in ["identifier", "number_literal"]:
+        if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in gEnumVals:
           let
-            flen = gStateRT.data[i+1].val.getIdentifier()
+            flen = gStateRT.data[i+1].val.getNimExpression()
           gStateRT.typeStr &= &"    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]\n"
           i += 2
         elif i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name == "function_declarator":
@@ -265,7 +265,7 @@ proc initGrammar() =
        (pointer_declarator
         (field_identifier)
        )
-       (identifier|number_literal)
+       (^$1+)
       )
       (function_declarator+
        (pointer_declarator
@@ -273,7 +273,7 @@ proc initGrammar() =
        )
        {paramListGrammar}
       )
-    """
+    """ % gEnumVals.join("|")
 
     fieldListGrammar = &"""
       (field_declaration_list?
@@ -347,14 +347,7 @@ proc initGrammar() =
         if gStateRT.consts.addNewIdentifer(fname):
           if i+1 < gStateRT.data.len-fend and
             gStateRT.data[i+1].name in gEnumVals:
-            gStateRT.data[i+1].val = gStateRT.data[i+1].val.multiReplace([
-              (" ", ""),
-              ("<<", " shl "), (">>", " shr "),
-              ("^", " xor "), ("&", " and "), ("|", " or "),
-              ("~", " not ")
-            ])
-
-            gStateRT.constStr &= &"  {fname}* = ({gStateRT.data[i+1].val}).{nname}\n"
+            gStateRT.constStr &= &"  {fname}* = ({gStateRT.data[i+1].val.getNimExpression()}).{nname}\n"
             try:
               count = gStateRT.data[i+1].val.parseInt() + 1
             except:

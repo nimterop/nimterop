@@ -294,3 +294,11 @@ proc getPxName*(node: TSNode, offset: int): string =
 
   if count == offset and not np.tsNodeIsNull():
     return $np.tsNodeType()
+
+proc getNimExpression*(expr: string): string =
+  return expr.multiReplace([
+    (" ", ""),
+    ("<<", " shl "), (">>", " shr "),
+    ("^", " xor "), ("&", " and "), ("|", " or "),
+    ("~", " not ")
+  ])
