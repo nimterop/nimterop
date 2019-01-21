@@ -1,4 +1,4 @@
-import sets, strformat, strutils, tables
+import sequtils, sets, strformat, strutils, tables
 
 import regex
 
@@ -20,8 +20,9 @@ proc saveNodeData(node: TSNode): bool =
       val = val.getType()
 
     let
-      pname = node.getPName()
-      ppname = node.tsNodeParent().getPName()
+      pname = node.getPxName(1)
+      ppname = node.getPxName(2)
+      pppname = node.getPxName(3)
 
     if node.tsNodePrevNamedSibling().tsNodeIsNull():
       if pname == "pointer_declarator":
@@ -37,8 +38,9 @@ proc saveNodeData(node: TSNode): bool =
 
     if node.tsNodeType() == "field_identifier" and
       pname == "pointer_declarator" and
-      ppname == "function_declarator":
-      gStateRT.data.add(("function_declarator", ""))
+      ppname == "function_declarator" and
+      pppname == "pointer_declarator":
+        gStateRT.data.insert(("pointer_declarator", ""), gStateRT.data.len-1)
 
   elif name in gExpressions:
     if $node.tsNodeParent.tsNodeType() notin gExpressions:

@@ -137,7 +137,8 @@ proc initGrammar() =
 
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
-          if typ != "object":
+
+          if tptr == "ptr " or typ != "object":
             gStateRT.typeStr &= &"  {name}* = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}\n"
           else:
             gStateRT.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
@@ -232,7 +233,7 @@ proc initGrammar() =
 
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
-          if ftyp != "object":
+          if fptr == "ptr " or ftyp != "object":
             gStateRT.typeStr &= &"    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}\n"
           else:
             gStateRT.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
@@ -445,7 +446,7 @@ proc initGrammar() =
           pout = pout[0 .. ^2]
 
         if gStateRT.procs.addNewIdentifer(fnname):
-          if ftyp != "object":
+          if fptr == "ptr " or ftyp != "object":
             gStateRT.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
           else:
             gStateRT.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"

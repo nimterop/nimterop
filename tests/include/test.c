@@ -55,3 +55,7 @@ float test_call_param8(int *param1) {
 
 	return 1.0 * *param1;
 }
+
+void *test_call9() {
+	return NULL;
+}

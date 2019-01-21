@@ -283,16 +283,14 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
     if name in ast.children[i].name.split("|"):
       return ast.children[i]
 
-proc getPName*(node: TSNode): string =
-  if not node.tsNodeIsNull():
-    let
-      nparent = node.tsNodeParent()
-    if not nparent.tsNodeIsNull():
-      return $nparent.tsNodeType()
+proc getPxName*(node: TSNode, offset: int): string =
+  var
+    np = node
+    count = 0
 
-proc isPName*(node: TSNode, name: string): bool =
-  return node.getPName() == name
+  while not np.tsNodeIsNull() and count < offset:
+    np = np.tsNodeParent()
+    count += 1
 
-proc isPPName*(node: TSNode, name: string): bool =
-  if node.getPName().len != 0:
-    return node.tsNodeParent().isPName(name)
+  if count == offset and not np.tsNodeIsNull():
+    return $np.tsNodeType()

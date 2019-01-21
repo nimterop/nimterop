@@ -64,8 +64,10 @@ s5.tci = test_call_int
 s5.tcp = test_call_param
 s5.tcp8 = test_call_param8
 s51.tci = test_call_int
+s51.tcv = test_call9
 check s5.tci() == 5
 check s51.tci() == 5
+check s51.tcv() == nil
 
 e = enum1
 e2 = enum4
@@ -96,6 +98,8 @@ when defined(cpp):
 else:
   check test_call_param8(addr i) == 25.0
   check i == 25
+
+check test_call9() == nil
 
 check e3 == enum7
 check e4 == enum11
