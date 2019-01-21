@@ -249,7 +249,7 @@ proc initGrammar() =
           i += 1
 
       if node.tsNodeType() == "type_definition" and
-        gStateRT.data[^1].name == "type_identifier":
+        gStateRT.data[^1].name == "type_identifier" and gStateRT.data[^1].val.len != 0:
           let
             dname = gStateRT.data[^1].val
             ndname = gStateRT.data[^1].val.getIdentifier()

@@ -88,9 +88,10 @@ proc searchAst(root: TSNode) =
   var
     node = root
     nextnode: TSNode
+    depth = 0
 
   while true:
-    if not node.tsNodeIsNull():
+    if not node.tsNodeIsNull() and depth > -1:
       let
         name = $node.tsNodeType()
       if name in gStateRT.ast:
@@ -102,16 +103,20 @@ proc searchAst(root: TSNode) =
             break
         gStateRT.data = @[]
     else:
-      return
+      break
 
     if $node.tsNodeType() notin gStateRT.ast and node.tsNodeNamedChildCount() != 0:
       nextnode = node.tsNodeNamedChild(0)
+      depth += 1
     else:
       nextnode = node.tsNodeNextNamedSibling()
 
     if nextnode.tsNodeIsNull():
       while true:
         node = node.tsNodeParent()
+        depth -= 1
+        if depth == -1:
+          break
         if node == root:
           break
         if not node.tsNodeNextNamedSibling().tsNodeIsNull():

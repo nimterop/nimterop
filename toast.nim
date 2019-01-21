@@ -11,14 +11,14 @@ proc printLisp(root: TSNode) =
     depth = 0
 
   while true:
-    if not node.tsNodeIsNull():
+    if not node.tsNodeIsNull() and depth > -1:
       if gStateRT.pretty:
         stdout.write spaces(depth)
       let
         (line, col) = node.getLineCol()
       stdout.write &"({$node.tsNodeType()} {line} {col} {node.tsNodeEndByte() - node.tsNodeStartByte()}"
     else:
-      return
+      break
 
     if node.tsNodeNamedChildCount() != 0:
       if gStateRT.pretty:
