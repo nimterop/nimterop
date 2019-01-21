@@ -28,6 +28,8 @@ extern "C" {
 typedef uint8_t PRIMTYPE;
 typedef PRIMTYPE CUSTTYPE;
 
+struct STRUCT0;
+
 struct STRUCT1 {
 	int field1;
 };

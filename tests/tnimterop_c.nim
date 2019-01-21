@@ -29,7 +29,8 @@ var
   pt: PRIMTYPE
   ct: CUSTTYPE
 
-  s: STRUCT1
+  s0: STRUCT0
+  s1: STRUCT1
   s2: STRUCT2
   s3: STRUCT3
   s4: STRUCT4
@@ -52,7 +53,7 @@ var
 pt = 3
 ct = 4
 
-s.field1 = 5
+s1.field1 = 5
 s2.field1 = 6
 s3.field1 = 7
 s4.field2[2] = 5
@@ -80,7 +81,7 @@ i = 5
 check test_call_int() == 5
 check test_call_param(5).field1 == 5
 check test_call_param2(5, s2).field1 == 11
-check test_call_param3(5, s).field1 == 10
+check test_call_param3(5, s1).field1 == 10
 # error: assigning to 'enum ENUM' from incompatible type 'NI' (aka 'long long')
 when defined(cpp):
   discard # TODO

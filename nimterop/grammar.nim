@@ -183,7 +183,10 @@ proc initGrammar() =
               break
 
     if gStateRT.types.addNewIdentifer(nname):
-      gStateRT.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {gStateRT.currentHeader}, bycopy.}} = object{union}\n"
+      if gStateRT.data.len == 1:
+        gStateRT.typeStr &= &"  {nname}* {{.bycopy.}} = object{union}\n"
+      else:
+        gStateRT.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {gStateRT.currentHeader}, bycopy.}} = object{union}\n"
 
       var
         i = fstart
@@ -273,7 +276,7 @@ proc initGrammar() =
     """
 
     fieldListGrammar = &"""
-      (field_declaration_list
+      (field_declaration_list?
        (field_declaration+
         {typeGrammar}
         (pointer_declarator!
