@@ -38,9 +38,10 @@ proc saveNodeData(node: TSNode): bool =
 
     if node.tsNodeType() == "field_identifier" and
       pname == "pointer_declarator" and
-      ppname == "function_declarator" and
-      pppname == "pointer_declarator":
+      ppname == "function_declarator":
+      if pppname == "pointer_declarator":
         gStateRT.data.insert(("pointer_declarator", ""), gStateRT.data.len-1)
+      gStateRT.data.add(("function_declarator", ""))
 
   elif name in gExpressions:
     if $node.tsNodeParent.tsNodeType() notin gExpressions:
