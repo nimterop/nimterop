@@ -305,7 +305,10 @@ proc initGrammar() =
      (type_identifier?)
      {fieldListGrammar}
     )
-    (type_identifier)
+    (type_identifier!)
+    (pointer_declarator
+     (type_identifier)
+    )
    )
   """,
     proc (ast: ref Ast, node: TSNode) =
@@ -424,6 +427,8 @@ proc initGrammar() =
         if gStateRT.data[i].name == "pointer_declarator":
           fptr = "ptr "
           i += 1
+        else:
+          fptr = ""
 
         var
           fname = gStateRT.data[i].val

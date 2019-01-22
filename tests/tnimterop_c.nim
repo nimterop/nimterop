@@ -110,6 +110,11 @@ check enum13 == 4
 check enum14 == 9
 check enum15 == 2
 
+# Issue #58
+multiline1()
+let p = multiline2()
+multiline3()
+
 cAddStdDir()
 
 ## failing tests

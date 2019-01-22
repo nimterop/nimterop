@@ -109,6 +109,12 @@ int test_call_param7(union UNION1 param1);
 float test_call_param8(int *param1);
 void *test_call9();
 
+// Issue #58
+void
+  multiline1(void),
+  *multiline2(void),
+  multiline3(void);
+
 #ifdef __cplusplus
 }
 #endif

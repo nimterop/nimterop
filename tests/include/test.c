@@ -59,3 +59,11 @@ float test_call_param8(int *param1) {
 void *test_call9() {
 	return NULL;
 }
+
+void multiline1(void) {}
+
+void *multiline2(void) {
+	return NULL;
+}
+
+void multiline3(void) {}
