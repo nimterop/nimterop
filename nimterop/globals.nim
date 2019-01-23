@@ -46,7 +46,7 @@ type
     regex*: Regex
 
   State = object
-    compile*, defines*, headers*, includeDirs*, searchDirs*: seq[string]
+    compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
 
     nocache*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
