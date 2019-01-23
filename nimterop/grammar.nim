@@ -154,6 +154,25 @@ proc initGrammar() =
               gStateRT.typeStr &= &"  {name}* = {getPtrType(tptr&typ)}\n"
   ))
 
+  proc pDupTypeCommon(nname: string, fend: int, isEnum=false) =
+    var
+      dname = gStateRT.data[^1].val
+      ndname = gStateRT.data[^1].val.getIdentifier()
+      dptr =
+        if fend == 2:
+          "ptr "
+        else:
+          ""
+
+    if ndname != nname:
+      if isEnum:
+        if gStateRT.enums.addNewIdentifer(ndname):
+          gStateRT.enumStr &= &"type {ndname}* = {dptr}{nname}\n"
+      else:
+        if gStateRT.types.addNewIdentifer(ndname):
+          gStateRT.typeStr &=
+            &"  {ndname}* {{.importc: \"{dname}\", header: {gStateRT.currentHeader}, bycopy.}} = {dptr}{nname}\n"
+
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
     var
       nname = name.getIdentifier()
@@ -250,12 +269,7 @@ proc initGrammar() =
 
       if node.tsNodeType() == "type_definition" and
         gStateRT.data[^1].name == "type_identifier" and gStateRT.data[^1].val.len != 0:
-          let
-            dname = gStateRT.data[^1].val
-            ndname = gStateRT.data[^1].val.getIdentifier()
-
-          if gStateRT.types.addNewIdentifer(ndname):
-            gStateRT.typeStr &= &"  {ndname}* {{.importc: \"{dname}\", header: {gStateRT.currentHeader}, bycopy.}} = {nname}\n"
+          pDupTypeCommon(nname, fend, false)
 
   let
     fieldGrammar = &"""
@@ -313,16 +327,20 @@ proc initGrammar() =
   """,
     proc (ast: ref Ast, node: TSNode) =
       var
-        offset = 0
+        fstart = 0
+        fend = 1
+
+      if gStateRT.data[^2].name == "pointer_declarator":
+        fend = 2
 
       if gStateRT.data.len > 1 and
         gStateRT.data[0].name == "type_identifier" and
         gStateRT.data[1].name != "field_identifier":
 
-        offset = 1
-        pStructCommon(ast, node, gStateRT.data[0].val, offset, 1)
+        fstart = 1
+        pStructCommon(ast, node, gStateRT.data[0].val, fstart, fend)
       else:
-        pStructCommon(ast, node, gStateRT.data[^1].val, offset, 1)
+        pStructCommon(ast, node, gStateRT.data[^1].val, fstart, fend)
   ))
 
   proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
@@ -347,19 +365,24 @@ proc initGrammar() =
           i += 1
           continue
 
-        if gStateRT.consts.addNewIdentifer(fname):
-          if i+1 < gStateRT.data.len-fend and
-            gStateRT.data[i+1].name in gEnumVals:
+        if i+1 < gStateRT.data.len-fend and
+          gStateRT.data[i+1].name in gEnumVals:
+          if gStateRT.consts.addNewIdentifer(fname):
             gStateRT.constStr &= &"  {fname}* = ({gStateRT.data[i+1].val.getNimExpression()}).{nname}\n"
-            try:
-              count = gStateRT.data[i+1].val.parseInt() + 1
-            except:
-              count += 1
-            i += 2
-          else:
-            gStateRT.constStr &= &"  {fname}* = {count}.{nname}\n"
-            i += 1
+          try:
+            count = gStateRT.data[i+1].val.parseInt() + 1
+          except:
             count += 1
+          i += 2
+        else:
+          if gStateRT.consts.addNewIdentifer(fname):
+            gStateRT.constStr &= &"  {fname}* = {count}.{nname}\n"
+          i += 1
+          count += 1
+
+      if node.tsNodeType() == "type_definition" and
+        gStateRT.data[^1].name == "type_identifier" and gStateRT.data[^1].val.len != 0:
+          pDupTypeCommon(nname, fend, true)
 
   # enum X {}
   gStateRT.grammar.add(("""
@@ -389,17 +412,26 @@ proc initGrammar() =
   gStateRT.grammar.add((&"""
    (type_definition
     {gStateRT.grammar[^1].grammar}
-    (type_identifier)
+    (type_identifier!)
+    (pointer_declarator
+     (type_identifier)
+    )
    )
   """,
     proc (ast: ref Ast, node: TSNode) =
       var
-        offset = 0
+        fstart = 0
+        fend = 1
+
+      if gStateRT.data[^2].name == "pointer_declarator":
+        fend = 2
 
       if gStateRT.data[0].name == "type_identifier":
-        offset = 1
+        fstart = 1
 
-      pEnumCommon(ast, node, gStateRT.data[^1].val, offset, 1)
+        pEnumCommon(ast, node, gStateRT.data[0].val, fstart, fend)
+      else:
+        pEnumCommon(ast, node, gStateRT.data[^1].val, fstart, fend)
   ))
 
   # typ function(typ param1, ...)

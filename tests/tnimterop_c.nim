@@ -115,6 +115,15 @@ multiline1()
 let p = multiline2()
 multiline3()
 
+# Issue #52
+var
+  s6: struct6
+  s6p: STRUCT6
+  e6: enum6t
+  e6p: ENUM6
+  u3: union3
+  u3p: UNION3
+
 cAddStdDir()
 
 ## failing tests

@@ -115,6 +115,20 @@ void
   *multiline2(void),
   multiline3(void);
 
+// Issue #52
+typedef struct struct6 { char name; } *STRUCT6;
+typedef enum enum6t { enum16 } *ENUM6;
+typedef union union3 { char name; } *UNION3;
+
+struct struct6 test_call_stype6();
+STRUCT6 test_call_stype_ptr6();
+
+enum enum6t test_call_etype6();
+ENUM6 test_call_etype_ptr6();
+
+union union3 test_call_utype3();
+UNION3 test_call_etype_ptr3();
+
 #ifdef __cplusplus
 }
 #endif
