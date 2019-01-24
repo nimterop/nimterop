@@ -129,9 +129,7 @@ proc main(
     symOverride: symOverride
   )
 
-  when defined(Windows):
-    # Workaround https://github.com/c-blake/cligen/issues/87
-    gStateRT.symOverride = gStateRT.symOverride.getSplitComma()
+  gStateRT.symOverride = gStateRT.symOverride.getSplitComma()
 
   if pgrammar:
     parseGrammar()
