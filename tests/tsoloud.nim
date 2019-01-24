@@ -1,5 +1,9 @@
 import os, nimterop/[cimport, git]
 
+const
+  incl = "soloud/include"
+  src = "soloud/src"
+
 gitPull("https://github.com/jarikomppa/soloud", "soloud", "include/*\nsrc/*\n")
 
 cDebug()
@@ -10,15 +14,11 @@ cOverride:
     Soloud* = pointer
     AlignedFloatBuffer* = pointer
 
-  proc Soloud_destroy*(aSoloud: ptr Soloud) {.importc: "Soloud_destroy".}
+  proc Soloud_destroy*(aSoloud: ptr Soloud) {.importc: "Soloud_destroy", header: cSearchPath(incl/"soloud_c.h").}
 
 cSkipSymbol("WavStream_stop", "WavStream_setFilter")
 
-const
-  inc = "soloud/include"
-  src = "soloud/src"
-
-cIncludeDir(inc)
+cIncludeDir(incl)
 
 when defined(Linux):
   {.passL: "-lpthread".}
@@ -37,7 +37,7 @@ cCompile(src/"audiosource", "cpp")
 cCompile(src/"audiosource", "c")
 cCompile(src/"filter/*.cpp")
 
-cImport(inc/"soloud_c.h")
+cImport(incl/"soloud_c.h")
 
 var
   s = Soloud_create()
