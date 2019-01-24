@@ -1,4 +1,4 @@
-import macros, os, sets, strformat, strutils, tables
+import macros, os, sequtils, sets, strformat, strutils, tables
 
 import regex
 
@@ -303,3 +303,7 @@ proc getNimExpression*(expr: string): string =
     ("^", " xor "), ("&", " and "), ("|", " or "),
     ("~", " not ")
   ])
+
+proc getSplitComma*(joined: seq[string]): seq[string] =
+  for i in joined:
+    result = result.concat(i.split(","))
