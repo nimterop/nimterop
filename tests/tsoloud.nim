@@ -5,6 +5,15 @@ gitPull("https://github.com/jarikomppa/soloud", "soloud", "include/*\nsrc/*\n")
 cDebug()
 cDisableCaching()
 
+cOverride:
+  type
+    Soloud* = pointer
+    AlignedFloatBuffer* = pointer
+
+  proc Soloud_destroy*(aSoloud: ptr Soloud) {.importc: "Soloud_destroy".}
+
+cSkipSymbol("WavStream_stop", "WavStream_setFilter")
+
 const
   inc = "soloud/include"
   src = "soloud/src"
@@ -36,3 +45,9 @@ var
 echo s.Soloud_init()
 
 s.Soloud_destroy()
+
+when declared(WavStream_stop):
+  assert "WavStream_stop() not skipped"
+
+when declared(WavStream_setFilter):
+  assert "WavStream_setFilter not skipped"

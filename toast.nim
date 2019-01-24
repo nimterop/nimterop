@@ -112,6 +112,7 @@ proc main(
     debug = false,
     defines: seq[string] = @[],
     includeDirs: seq[string] = @[],
+    symOverride: seq[string] = @[],
     source: seq[string],
   ) =
 
@@ -125,6 +126,7 @@ proc main(
     debug: debug,
     defines: defines,
     includeDirs: includeDirs,
+    symOverride: symOverride
   )
 
   if pgrammar:
@@ -141,6 +143,7 @@ when isMainModule:
     "pnim": "print Nim output",
     "defines": "definitions to pass to preprocessor",
     "includeDirs": "include directory to pass to preprocessor",
+    "symOverride": "skip generating specified symbols",
     "preprocess": "run preprocessor on header",
     "pgrammar": "print grammar",
     "recurse": "process #include files",
@@ -151,6 +154,7 @@ when isMainModule:
     "pnim": 'n',
     "defines": 'D',
     "includeDirs": 'I',
+    "symOverride": 'O',
     "preprocess": 'p',
     "recurse": 'r',
     "debug": 'd',

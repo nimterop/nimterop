@@ -49,35 +49,7 @@ Refer to the ```tests``` directory for examples on how the library can be used.
 
 The `toast` binary can also be used directly on the CLI. The `--help` flag provides more details.
 
-__Documentation__
-
-Documentation can be found [here](https://genotrance.github.io/nimterop/cimport.html).
-
-`cDebug()` - enable debug messages
-
-`cDisableCaching()` - disable caching of generated Nim content from `cImport()`
-
-`cDefine("XXX")` - `#define` an identifer that is forwarded to the C/C++ compiler using `{.passC: "-DXXX".}`
-
-`cIncludeDir("XXX")` - add an include directory that is forwarded to the C/C++ compiler using `{.passC: "-IXXX".}`
-
-`cImport("header.h")` - Import all supported definitions from specified header file. Generated content is cached in `nimcache` until `header.h` changes
-
-`cImport("header.h", recurse=true)` - import all supported definitions from header file and #includes
-
-`cCompile("file.c")` - compile C/C++ implementation into binary
-
-`cCompile("path/to/*.c")` - compile in all files matching wildcard
-
-`cCompile("path/to/dir", "cpp")` - compile in all C++ files found recursively
-
-`cAddSearchDir("XXX")` - add directory XXX to the search path used in calls to `cSearchPath()`
-
-`cAddStdDir("XXX")` - add standard "c" [default] or "cpp" include paths to search path used in calls to `cSearchPath()`
-
-`cSearchPath("header.h")` - return a file or directory found in search path configured using `cSearchPath()` - can be used in `cCompile()`, `cIncludeDir()` and `cImport()` calls
-
-`gitPull()` - pull a git repository prior to C/C++ interop
+Detailed documentation is available for [cimport](https://genotrance.github.io/nimterop/cimport.html) and [git](https://genotrance.github.io/nimterop/git.html).
 
 __Implementation Details__
 
