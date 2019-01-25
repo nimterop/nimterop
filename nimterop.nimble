@@ -13,7 +13,7 @@ installDirs = @["nimterop"]
 requires "nim >= 0.19.0", "regex >= 0.10.0", "cligen >= 0.9.17"
 
 proc execCmd(cmd: string) =
-  echo cmd
+  echo "execCmd:" & cmd
   exec cmd
 
 proc tsoloud() =

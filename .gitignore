@@ -1,9 +1,13 @@
+# TODO: all generated stuff should go inside `build/`
+
 nimcache
 
 .DS_Store
 
 *.exe
 *.swp
-toast
+
+# Note: use absolute paths to refer to a path assumed to be at a fixed dir level
+/toast
+
 inc
-tests
