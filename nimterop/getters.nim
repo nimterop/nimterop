@@ -324,7 +324,7 @@ proc dll*(path: string): string =
   when defined(Linux):
     result = dir/"lib" & name.addFileExt("so")
   when defined(OSX):
-    result = dir/"lib" & name.addFileExt("dynlib")
+    result = dir/"lib" & name.addFileExt("dylib")
 
 proc loadPlugin*(fullpath: string) =
   doAssert fileExists(fullpath), "Plugin file does not exist: " & fullpath
