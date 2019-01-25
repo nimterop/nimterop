@@ -1,13 +1,16 @@
 # TODO: all generated stuff should go inside `build/`
 
+# Note: use absolute paths to refer to a path assumed to be at a fixed dir level
+
+## ignore all except files w extension (hack to avoid checking in exe on posix)
+/**/*
+!/**/*.*
+
 nimcache
 
 .DS_Store
 
 *.exe
 *.swp
-
-# Note: use absolute paths to refer to a path assumed to be at a fixed dir level
-/toast
 
 inc
