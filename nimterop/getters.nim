@@ -1,4 +1,4 @@
-import dynlib, macros, os, sequtils, sets, strformat, strutils, tables
+import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
@@ -87,15 +87,18 @@ proc getType*(str: string): string =
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
 
+template checkUnderscores(str, errmsg: string): untyped =
+  doAssert str[0] != '_' and str[^1] != '_', errmsg
+
 proc getIdentifier*(str: string): string =
   doAssert str.len != 0, "Blank identifier error"
 
   if gStateRT.onSymbol != nil:
     result = gStateRT.onSymbol(str)
+    checkUnderscores(result, &"Identifier '{str}' still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
   else:
     result = str
-
-  doAssert result[0] != '_' and result[^1] != '_', &"Identifier '{result}' with leading/trailing underscore '_' not supported: use cPlugin() to handle"
+    checkUnderscores(result, &"Identifier '{result}' contains unsupported leading/trailing underscores '_': use 'cPlugin:onSymbol()' to handle")
 
   if result in gReserved:
     result = &"`{result}`"
@@ -317,23 +320,22 @@ proc getSplitComma*(joined: seq[string]): seq[string] =
 
 proc dll*(path: string): string =
   let
-    (dir, name, ext) = path.splitFile()
+    (dir, name, _) = path.splitFile()
 
-  when defined(Windows):
-    result = dir/name.addFileExt("dll")
-  when defined(Linux):
-    result = dir/"lib" & name.addFileExt("so")
-  when defined(OSX):
-    result = dir/"lib" & name.addFileExt("dylib")
+  result = dir / (DynlibFormat % name)
 
 proc loadPlugin*(fullpath: string) =
   doAssert fileExists(fullpath), "Plugin file does not exist: " & fullpath
-  if not fileExists(fullpath.dll):
+
+  let
+    pdll = fullpath.dll
+  if not fileExists(pdll) or
+    fullpath.getLastModificationTime() > pdll.getLastModificationTime():
     discard execAction("nim c --app:lib " & fullpath)
-  doAssert fileExists(fullpath.dll), "No plugin binary generated for " & fullpath
+  doAssert fileExists(pdll), "No plugin binary generated for " & fullpath
 
-  let lib = loadLib(fullpath.dll)
-  doAssert lib != nil, "Plugin load failed"
+  let lib = loadLib(pdll)
+  doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [fullpath, pdll]
 
-  gStateRT.onSymbol = cast[proc(sym: string): string {.cdecl.}](lib.symAddr("onSymbol"))
-  doAssert gStateRT.onSymbol != nil, "onSymbol() load failed"
+  gStateRT.onSymbol = cast[typeof(gStateRT.onSymbol)](lib.symAddr("onSymbol"))
+  doAssert gStateRT.onSymbol != nil, "onSymbol() load failed from " & pdll

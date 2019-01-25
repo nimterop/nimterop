@@ -1,4 +1,4 @@
-import hashes, macros, os, ospaths, strformat, strutils
+import hashes, macros, os, strformat, strutils
 
 const CIMPORT {.used.} = 1
 
@@ -88,24 +88,24 @@ proc getToast(fullpath: string, recurse: bool = false): string =
     ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
 
-  cmd &= "toast --pnim --preprocess "
+  cmd &= "toast --pnim --preprocess"
 
   if recurse:
-    cmd.add "--recurse "
+    cmd.add " --recurse"
 
   for i in gStateCT.defines:
-    cmd.add &"--defines+={i.quoteShell} "
+    cmd.add &" --defines+={i.quoteShell}"
 
   for i in gStateCT.includeDirs:
-    cmd.add &"--includeDirs+={i.quoteShell} "
+    cmd.add &" --includeDirs+={i.quoteShell}"
 
   if gStateCT.symOverride.len != 0:
-    cmd.add &"--symOverride={gStateCT.symOverride.join(\",\")} "
+    cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
 
-  if gStateCT.pluginFile.nBl and gStateCT.pluginFile.fileExists():
-    cmd.add &"--pluginFile={gStateCT.pluginFile.quoteShell} "
+  if gStateCT.pluginFile.nBl:
+    cmd.add &" --pluginFile={gStateCT.pluginFile.quoteShell}"
 
-  cmd.add &"{fullpath.quoteShell}"
+  cmd.add &" {fullpath.quoteShell}"
   echo cmd
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
@@ -130,7 +130,7 @@ macro cOverride*(body): untyped =
   ##
   ##    int svGetCallerInfo(const char** fileName, int *lineNumber);
   ##
-  ## This could get mapped to:
+  ## This might mapped to:
   ##
   ## .. code-block:: nim
   ##
@@ -166,9 +166,8 @@ macro cSkipSymbol*(skips: varargs[string]): untyped =
   ## Similar to `cOverride() <cimport.html#cOverride.m,>`_, this macro allows
   ## filtering out symbols not of interest from the generated output.
   ##
-  ## .. code-block:: nim
-  ##
-  ##    cSkipSymbol "proc1", "Type2"
+  runnableExamples:
+    cSkipSymbol "proc1", "Type2"
 
   for skip in skips:
     gStateCT.symOverride.add skip.strVal
@@ -178,20 +177,23 @@ macro cPlugin*(body): untyped =
   ## are not adequate, the `cPlugin() <cimport.html#cPlugin.m,>`_ macro can be used to customize the generated Nim output.
   ## The following callbacks are available at this time.
   ##
-  ## .. code-block:: nim
-  ##
-  ##    cPlugin:
-  ##      import strutils
-  ##
-  ##      proc onSymbol*(sym: string): string {.exportc, dynlib.} =
-  ##        return sym.strip(chars={'_'})
+  runnableExamples:
+    cPlugin:
+      import strutils
+
+      proc onSymbol*(sym: string): string {.exportc, dynlib.} =
+        return sym.strip(chars={'_'})
 
   let
     data = body.repr
-    path = getTempDir() / "nimterop" & ($data.hash() & ".nim")
+    hash = data.hash()
+    phash = if hash<0: -hash else: hash
+    path = getTempDir() / "nimterop_" & $phash & ".nim"
 
-  if not fileExists(path):
+  if not fileExists(path) or gStateCT.nocache:
     writeFile(path, data)
+
+  doAssert fileExists(path), "Unable to write plugin file: " & path
 
   gStateCT.pluginFile = path
 
@@ -209,8 +211,8 @@ proc cSearchPath*(path: string): string {.compileTime.}=
   if result.len == 0:
     var found = false
     for inc in gStateCT.searchDirs:
-      result = (inc & "/" & path).replace("\\", "/")
-      if fileExists(result) or dirExists(result):
+      result = findPath(inc & "/" & path, fail = false)
+      if result.len != 0:
         found = true
         break
     doAssert found, "File or directory not found: " & path &
@@ -297,10 +299,9 @@ macro cAddStdDir*(mode = "c"): untyped =
   ##
   ## This allows something like this:
   ##
-  ## .. code-block:: nim
-  ##
-  ##    cAddStdDir()
-  ##    cImport cSearchPath("math.h")
+  runnableExamples:
+    cAddStdDir()
+    echo cSearchPath("math.h")
 
   result = newNimNode(nnkStmtList)
 

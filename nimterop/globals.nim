@@ -1,4 +1,4 @@
-import sequtils, sets, tables
+import macros, sequtils, sets, tables
 
 import regex
 
@@ -45,6 +45,10 @@ type
       tonim*: proc (ast: ref Ast, node: TSNode)
     regex*: Regex
 
+  Symbol = object
+    name: string
+    kind: NimSymKind
+
   State = object
     compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
 
@@ -75,4 +79,4 @@ type CompileMode = enum
 const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
 
 when not declared(CIMPORT):
-  export gAtoms, gExpressions, gEnumVals, Kind, Ast, State, gStateRT, nBl, CompileMode, modeDefault
+  export gAtoms, gExpressions, gEnumVals, Kind, Ast, Symbol, State, gStateRT, nBl, CompileMode, modeDefault
