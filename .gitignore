@@ -1,3 +1,8 @@
+## ignore all files wo extension
+*
+!/**/
+!*.*
+
 # TODO: all generated stuff should go inside `build/`
 
 nimcache
@@ -8,6 +13,5 @@ nimcache
 *.swp
 
 # Note: use absolute paths to refer to a path assumed to be at a fixed dir level
-/toast
 
 inc
