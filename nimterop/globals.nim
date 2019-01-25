@@ -51,15 +51,15 @@ type
     nocache*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
     consts*, enums*, procs*, types*: HashSet[string]
-
-    code*, constStr*, currentHeader*, debugStr*, enumStr*, mode*, procStr*, typeStr*: string
-    sourceFile*: string # eg, C or C++ source or header file
+    constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
+    code*, currentHeader*, mode*, pluginFile*, sourceFile*: string
 
     ast*: Table[string, seq[ref Ast]]
     data*: seq[tuple[name, val: string]]
     when not declared(CIMPORT):
       grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
+    onSymbol*: proc(sym: string): string {.cdecl.}
 var
   gStateCT {.compiletime, used.}: State
   gStateRT {.used.}: State

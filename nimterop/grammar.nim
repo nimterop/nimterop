@@ -344,11 +344,11 @@ proc initGrammar() =
   ))
 
   proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
-    var
-      nname = name.getIdentifier()
-
-    if nname.len == 0:
-      nname = getUniqueIdentifier(gStateRT.enums, "Enum")
+    let nname =
+      if name.len == 0:
+        getUniqueIdentifier(gStateRT.enums, "Enum")
+      else:
+        name.getIdentifier()
 
     if gStateRT.enums.addNewIdentifer(nname):
       gStateRT.enumStr &= &"\ntype {nname}* = distinct int"
@@ -358,12 +358,12 @@ proc initGrammar() =
         i = fstart
         count = 0
       while i < gStateRT.data.len-fend:
-        let
-          fname = gStateRT.data[i].val.getIdentifier()
-
         if gStateRT.data[i].name == "enumerator":
           i += 1
           continue
+
+        let
+          fname = gStateRT.data[i].val.getIdentifier()
 
         if i+1 < gStateRT.data.len-fend and
           gStateRT.data[i+1].name in gEnumVals:

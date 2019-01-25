@@ -1,4 +1,4 @@
-import macros, os, strformat, strutils
+import hashes, macros, os, ospaths, strformat, strutils
 
 const CIMPORT {.used.} = 1
 
@@ -102,6 +102,9 @@ proc getToast(fullpath: string, recurse: bool = false): string =
   if gStateCT.symOverride.len != 0:
     cmd.add &"--symOverride={gStateCT.symOverride.join(\",\")} "
 
+  if gStateCT.pluginFile.nBl and gStateCT.pluginFile.fileExists():
+    cmd.add &"--pluginFile={gStateCT.pluginFile.quoteShell} "
+
   cmd.add &"{fullpath.quoteShell}"
   echo cmd
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
@@ -169,6 +172,16 @@ macro cSkipSymbol*(skips: varargs[string]): untyped =
 
   for skip in skips:
     gStateCT.symOverride.add skip.strVal
+
+macro cPlugin*(body): untyped =
+  let
+    data = body.repr
+    path = getTempDir() / "nimterop" & ($data.hash() & ".nim")
+
+  if not fileExists(path):
+    writeFile(path, data)
+
+  gStateCT.pluginFile = path
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory ``path`` in search path configured

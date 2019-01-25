@@ -5,13 +5,11 @@ os:
 language: c
 
 env:
-  - BRANCH=0.19.0
   - BRANCH=0.19.2
   - BRANCH=devel
 
 cache:
   directories:
-    - "$HOME/.choosenim/toolchains/nim-0.19.0"
     - "$HOME/.choosenim/toolchains/nim-0.19.2"
 
 install:
