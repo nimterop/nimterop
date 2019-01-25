@@ -8,6 +8,13 @@ cDefine("FORCE")
 cIncludeDir "$projpath/include"
 cAddSearchDir "$projpath/include"
 cCompile cSearchPath("test.c")
+
+cPlugin:
+  import strutils
+
+  proc onSymbol*(sym: string): string {.exportc, dynlib.} =
+    return sym.strip(chars={'_'})
+
 cImport cSearchPath "test.h"
 
 check TEST_INT == 512

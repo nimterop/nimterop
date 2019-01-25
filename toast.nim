@@ -113,6 +113,7 @@ proc main(
     defines: seq[string] = @[],
     includeDirs: seq[string] = @[],
     symOverride: seq[string] = @[],
+    pluginFile: string = "",
     source: seq[string],
   ) =
 
@@ -126,10 +127,14 @@ proc main(
     debug: debug,
     defines: defines,
     includeDirs: includeDirs,
-    symOverride: symOverride
+    symOverride: symOverride,
+    pluginFile: pluginFile
   )
 
   gStateRT.symOverride = gStateRT.symOverride.getSplitComma()
+
+  if pluginFile.nBl:
+    loadPlugin(pluginFile)
 
   if pgrammar:
     parseGrammar()
@@ -146,6 +151,7 @@ when isMainModule:
     "defines": "definitions to pass to preprocessor",
     "includeDirs": "include directory to pass to preprocessor",
     "symOverride": "skip generating specified symbols",
+    "pluginFile": "Nim file to build and load as a plugin",
     "preprocess": "run preprocessor on header",
     "pgrammar": "print grammar",
     "recurse": "process #include files",

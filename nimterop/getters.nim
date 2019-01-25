@@ -1,4 +1,4 @@
-import macros, os, sequtils, sets, strformat, strutils, tables
+import dynlib, macros, os, sequtils, sets, strformat, strutils, tables
 
 import regex
 
@@ -88,7 +88,14 @@ proc getType*(str: string): string =
     result = gTypeMap[result]
 
 proc getIdentifier*(str: string): string =
-  result = str.strip(chars={'_'}).replace(re"_+", "_")
+  doAssert str.len != 0, "Blank identifier error"
+
+  if gStateRT.onSymbol != nil:
+    result = gStateRT.onSymbol(str)
+  else:
+    result = str
+
+  doAssert result[0] != '_' and result[^1] != '_', &"Identifier '{result}' with leading/trailing underscore '_' not supported: use cPlugin() to handle"
 
   if result in gReserved:
     result = &"`{result}`"
@@ -307,3 +314,26 @@ proc getNimExpression*(expr: string): string =
 proc getSplitComma*(joined: seq[string]): seq[string] =
   for i in joined:
     result = result.concat(i.split(","))
+
+proc dll*(path: string): string =
+  let
+    (dir, name, ext) = path.splitFile()
+
+  when defined(Windows):
+    result = dir/name.addFileExt("dll")
+  when defined(Linux):
+    result = dir/"lib" & name.addFileExt("so")
+  when defined(OSX):
+    result = dir/"lib" & name.addFileExt("dynlib")
+
+proc loadPlugin*(fullpath: string) =
+  doAssert fileExists(fullpath), "Plugin file does not exist: " & fullpath
+  if not fileExists(fullpath.dll):
+    discard execAction("nim c --app:lib " & fullpath)
+  doAssert fileExists(fullpath.dll), "No plugin binary generated for " & fullpath
+
+  let lib = loadLib(fullpath.dll)
+  doAssert lib != nil, "Plugin load failed"
+
+  gStateRT.onSymbol = cast[proc(sym: string): string {.cdecl.}](lib.symAddr("onSymbol"))
+  doAssert gStateRT.onSymbol != nil, "onSymbol() load failed"
