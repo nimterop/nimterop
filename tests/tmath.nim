@@ -10,6 +10,13 @@ cDebug()
 cDisableCaching()
 
 cAddStdDir()
+
+cPlugin:
+  import strutils
+
+  proc onSymbol*(sym: string): string {.exportc, dynlib.} =
+    return sym.strip(chars={'_'})
+
 cImport cSearchPath("math.h")
 
 check sin(5) == -0.9589242746631385

@@ -174,6 +174,18 @@ macro cSkipSymbol*(skips: varargs[string]): untyped =
     gStateCT.symOverride.add skip.strVal
 
 macro cPlugin*(body): untyped =
+  ## When `cOverride() <cimport.html#cOverride.m,>`_ and `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cvarargs[string]>`_
+  ## are not adequate, the `cPlugin() <cimport.html#cPlugin.m,>`_ macro can be used to customize the generated Nim output.
+  ## The following callbacks are available at this time.
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    cPlugin:
+  ##      import strutils
+  ##
+  ##      proc onSymbol*(sym: string): string {.exportc, dynlib.} =
+  ##        return sym.strip(chars={'_'})
+
   let
     data = body.repr
     path = getTempDir() / "nimterop" & ($data.hash() & ".nim")
