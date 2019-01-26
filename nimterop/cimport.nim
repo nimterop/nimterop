@@ -102,8 +102,8 @@ proc getToastExe(): string =
     let cmd = &"nim c -o:{result.quoteShell} {toastSrc.quoteShell}"
     when nimvm:
       echo ("getToastExe", cmd)
-      let (result, ret) = gorgeEx(cmd, cache=getCacheValue(toastSrc))
-      doAssert ret == 0, $(cmd, result, toastSrc)
+      let (output, ret) = gorgeEx(cmd, cache=getCacheValue(toastSrc))
+      doAssert ret == 0, $(cmd, ret, output, toastSrc)
     else:
       # todo: maybe support if it makes sense
       doAssert false # TODO
@@ -292,7 +292,7 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
 
   var str = name
   if val.nBl:
-    str &= &"=\"{val}\""
+    str &= &"={val.quoteShell}"
 
   if str notin gStateCT.defines:
     gStateCT.defines.add(str)
@@ -330,7 +330,7 @@ macro cIncludeDir*(dir: static string): untyped =
 
   let
     fullpath = findPath(dir)
-    str = &"-I\"{fullpath}\""
+    str = &"-I{fullpath.quoteShell}"
 
   if fullpath notin gStateCT.includeDirs:
     gStateCT.includeDirs.add(fullpath)
@@ -403,6 +403,12 @@ macro cCompile*(path: static string, mode = "c"): untyped =
 
     gStateCT.compile.add(ufn)
     if fn == ufn:
+      #[
+      # todo: use quoteShell everywhere relevant; adding `"` is not always correct and also read uglier eg:
+      {.passC: "-I\"/Users/foo/include\"".}
+      whereas quoteShell would, here, give simply
+      {.passC: "-I/Users/foo/include".}
+      ]#
       return "{.compile: \"$#\".}" % file.replace("\\", "/")
     else:
       return "{.compile: (\"../$#\", \"$#.o\").}" % [file.replace("\\", "/"), ufn]
