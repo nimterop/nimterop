@@ -83,12 +83,39 @@ proc getToastError(output: string): string =
   if result.len == 0:
     result = output
 
+proc nimteropTempDir(): string =
+  ## all nimterop generated files go under here
+  getTempDir() / "nimterop"
+
+proc getToastExe(): string =
+  # TODO: also allow user override (via -d:nimteropToast:path or
+  # see https://github.com/genotrance/nimterop/issues/68)
+  result = nimteropTempDir() / "toast"
+  #[
+  todo:
+  use same algo as shown here https://github.com/genotrance/nimterop/issues/69
+  but using nim deps instead of c deps; they can be obtained via:
+  `nim genDepend/--genDeps` or `https://github.com/nim-lang/RFCs/issues/123`
+  ]#
+  if not fileExists(result) or gStateCT.nocache:
+    let toastSrc = currentSourcePath.parentDir.parentDir / "toast.nim"
+    let cmd = &"nim c -o:{result.quoteShell} {toastSrc.quoteShell}"
+    when nimvm:
+      echo ("getToastExe", cmd)
+      let (result, ret) = gorgeEx(cmd, cache=getCacheValue(toastSrc))
+      doAssert ret == 0, $(cmd, result, toastSrc)
+    else:
+      # todo: maybe support if it makes sense
+      doAssert false # TODO
+  else:
+    echo ("getToastExe: using cache", result)
+
 proc getToast(fullpath: string, recurse: bool = false): string =
   var
     ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
 
-  cmd &= "toast --pnim --preprocess "
+  cmd &= &"{getToastExe()} --pnim --preprocess "
 
   if recurse:
     cmd.add "--recurse "
@@ -104,6 +131,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
 
   cmd.add &"{fullpath.quoteShell}"
   echo cmd
+  # see https://github.com/genotrance/nimterop/issues/69
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
 
