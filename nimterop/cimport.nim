@@ -103,7 +103,7 @@ proc getToastExe(): string =
     when nimvm:
       echo ("getToastExe", cmd)
       let (output, ret) = gorgeEx(cmd, cache=getCacheValue(toastSrc))
-      doAssert ret == 0, $(cmd, ret, output, toastSrc)
+      doAssert ret == 0, $(cmd, ret, toastSrc) & " output:\n" & output
     else:
       # todo: maybe support if it makes sense
       doAssert false # TODO

@@ -479,11 +479,17 @@ proc initGrammar() =
           pout = pout[0 .. ^2]
 
         if gStateRT.procs.addNewIdentifer(fnname):
-          if fptr == "ptr " or ftyp != "object":
-            gStateRT.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
-          else:
-            gStateRT.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
 
+          var returnTypeStr = ""
+          if fptr == "ptr " or ftyp != "object": returnTypeStr = &": {getPtrType(fptr&ftyp)}"
+          #[
+          3 possibilities
+          importc.             # name is same
+          importc: "origName". # when name differs
+          importc: "$1"        # this one could be used if prefixes are needed, eg "cv$1" (keeps it DRY)
+          ]#
+          let fname2 = if fname == fnname: "" else: &": \"{fname}\""
+          gStateRT.procStr &= &"proc {fnname}*({pout}){returnTypeStr} {{.importc{fname2}, header: {gStateRT.currentHeader}.}}\n"
   ))
 
 proc initRegex(ast: ref Ast) =
