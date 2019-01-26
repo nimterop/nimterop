@@ -337,5 +337,5 @@ proc loadPlugin*(fullpath: string) =
   let lib = loadLib(pdll)
   doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [fullpath, pdll]
 
-  gStateRT.onSymbol = cast[typeof(gStateRT.onSymbol)](lib.symAddr("onSymbol"))
+  gStateRT.onSymbol = cast[type(gStateRT.onSymbol)](lib.symAddr("onSymbol"))
   doAssert gStateRT.onSymbol != nil, "onSymbol() load failed from " & pdll
