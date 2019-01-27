@@ -12,8 +12,8 @@ cCompile cSearchPath("test.c")
 cPlugin:
   import strutils
 
-  proc onSymbol*(sym: string): string {.exportc, dynlib.} =
-    return sym.strip(chars={'_'})
+  proc onSymbol*(sym: var Symbol): Result {.exportc, dynlib.} =
+    sym.name = sym.name.strip(chars={'_'})
 
 cImport cSearchPath "test.h"
 

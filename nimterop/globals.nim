@@ -45,9 +45,13 @@ type
       tonim*: proc (ast: ref Ast, node: TSNode)
     regex*: Regex
 
-  Symbol = object
-    name: string
-    kind: NimSymKind
+  Symbol* = object
+    name*: string
+    kind*: NimSymKind
+
+  Result* = object
+    error*: int
+    message*: string
 
   State = object
     compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
@@ -63,7 +67,7 @@ type
     when not declared(CIMPORT):
       grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
-    onSymbol*: proc(sym: string): string {.cdecl.}
+    onSymbol*: proc(sym: var Symbol): Result {.cdecl.}
 var
   gStateCT {.compiletime, used.}: State
   gStateRT {.used.}: State
@@ -79,4 +83,4 @@ type CompileMode = enum
 const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
 
 when not declared(CIMPORT):
-  export gAtoms, gExpressions, gEnumVals, Kind, Ast, Symbol, State, gStateRT, nBl, CompileMode, modeDefault
+  export gAtoms, gExpressions, gEnumVals, Kind, Ast, State, gStateRT, nBl, CompileMode, modeDefault
