@@ -187,6 +187,9 @@ macro cPlugin*(body): untyped =
   ## insensitivity. It can also be used to remove prefixes and suffixes like `SDL_`. The symbol
   ## name and type is provided to the callback and the name can be modified.
   ##
+  ## Returning a blank name will result in the symbol being skipped. This will fail for `nskParam`
+  ## and `nskField` since the generated Nim code will be wrong.
+  ##
   ## Symbol types can be any of the following:
   ## - `nskConst` for constants
   ## - `nskType` for type identifiers, including primitive

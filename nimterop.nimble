@@ -20,7 +20,7 @@ proc tsoloud() =
   execCmd "nim c -r tests/tsoloud.nim"
   execCmd "nim cpp -r tests/tsoloud.nim"
 
-task test, "Test":
+proc testall() =
   execCmd "nim c -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
@@ -33,6 +33,13 @@ task test, "Test":
     else:
       if not existsEnv("TRAVIS"):
         tsoloud()
+
+task test, "Test":
+  execCmd "nim c toast"
+  testAll()
+
+  execCmd "nim c -d:release toast"
+  testAll()
 
 task docs, "Generate docs":
   # Uses: pip install ghp-import
