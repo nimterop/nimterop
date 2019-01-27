@@ -1,4 +1,4 @@
-import sets, strformat, strutils, tables
+import macros, sets, strformat, strutils, tables
 
 import regex
 
@@ -14,7 +14,7 @@ proc initGrammar() =
   """,
     proc (ast: ref Ast, node: TSNode) =
       let
-        name = gStateRT.data[0].val.getIdentifier()
+        name = gStateRT.data[0].val.getIdentifier(nskConst)
         val = gStateRT.data[1].val.getLit()
 
       if val.nBl and gStateRT.consts.addNewIdentifer(name):
@@ -67,7 +67,7 @@ proc initGrammar() =
     """
 
   template funcParamCommon(pname, ptyp, pptr, pout, count, i: untyped): untyped =
-    ptyp = gStateRT.data[i].val.getIdentifier()
+    ptyp = gStateRT.data[i].val.getIdentifier(nskType)
     if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "pointer_declarator":
       pptr = "ptr "
       i += 1
@@ -75,7 +75,7 @@ proc initGrammar() =
       pptr = ""
 
     if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "identifier":
-      pname = gStateRT.data[i+1].val.getIdentifier()
+      pname = gStateRT.data[i+1].val.getIdentifier(nskParam)
       i += 2
     else:
       pname = "a" & $count
@@ -104,7 +104,7 @@ proc initGrammar() =
     proc (ast: ref Ast, node: TSNode) =
       var
         i = 0
-        typ = gStateRT.data[i].val.getIdentifier()
+        typ = gStateRT.data[i].val.getIdentifier(nskType)
         name = ""
         tptr = ""
         aptr = ""
@@ -120,7 +120,7 @@ proc initGrammar() =
             i += 1
 
       if i < gStateRT.data.len:
-        name = gStateRT.data[i].val.getIdentifier()
+        name = gStateRT.data[i].val.getIdentifier(nskType)
         i += 1
 
       if gStateRT.types.addNewIdentifer(name):
@@ -144,8 +144,10 @@ proc initGrammar() =
             gStateRT.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
         else:
           if i < gStateRT.data.len and gStateRT.data[i].name in ["identifier", "number_literal"]:
-            let
-              flen = gStateRT.data[i].val.getIdentifier()
+            var
+              flen = gStateRT.data[i].val
+            if gStateRT.data[i].name == "identifier":
+              flen = flen.getIdentifier(nskConst)
             gStateRT.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
           else:
             if name == typ:
@@ -157,7 +159,7 @@ proc initGrammar() =
   proc pDupTypeCommon(nname: string, fend: int, isEnum=false) =
     var
       dname = gStateRT.data[^1].val
-      ndname = gStateRT.data[^1].val.getIdentifier()
+      ndname = gStateRT.data[^1].val.getIdentifier(nskType)
       dptr =
         if fend == 2:
           "ptr "
@@ -175,7 +177,7 @@ proc initGrammar() =
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
     var
-      nname = name.getIdentifier()
+      nname = name.getIdentifier(nskType)
       prefix = ""
       union = ""
 
@@ -231,7 +233,7 @@ proc initGrammar() =
             aptr = "ptr "
             i += 1
 
-        fname = gStateRT.data[i].val.getIdentifier()
+        fname = gStateRT.data[i].val.getIdentifier(nskField)
         if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in gEnumVals:
           let
             flen = gStateRT.data[i+1].val.getNimExpression()
@@ -348,7 +350,7 @@ proc initGrammar() =
       if name.len == 0:
         getUniqueIdentifier(gStateRT.enums, "Enum")
       else:
-        name.getIdentifier()
+        name.getIdentifier(nskType)
 
     if gStateRT.enums.addNewIdentifer(nname):
       gStateRT.enumStr &= &"\ntype {nname}* = distinct int"
@@ -363,7 +365,7 @@ proc initGrammar() =
           continue
 
         let
-          fname = gStateRT.data[i].val.getIdentifier()
+          fname = gStateRT.data[i].val.getIdentifier(nskEnumField)
 
         if i+1 < gStateRT.data.len-fend and
           gStateRT.data[i+1].name in gEnumVals:
@@ -447,7 +449,7 @@ proc initGrammar() =
   """,
     proc (ast: ref Ast, node: TSNode) =
       var
-        ftyp = gStateRT.data[0].val.getIdentifier()
+        ftyp = gStateRT.data[0].val.getIdentifier(nskType)
         fptr = ""
         i = 1
 
@@ -464,7 +466,7 @@ proc initGrammar() =
 
         var
           fname = gStateRT.data[i].val
-          fnname = fname.getIdentifier()
+          fnname = fname.getIdentifier(nskProc)
           pout, pname, ptyp, pptr = ""
           count = 1
 

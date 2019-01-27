@@ -90,11 +90,17 @@ proc getType*(str: string): string =
 template checkUnderscores(str, errmsg: string): untyped =
   doAssert str[0] != '_' and str[^1] != '_', errmsg
 
-proc getIdentifier*(str: string): string =
+proc getIdentifier*(str: string, kind: NimSymKind): string =
   doAssert str.len != 0, "Blank identifier error"
 
   if gStateRT.onSymbol != nil:
-    result = gStateRT.onSymbol(str)
+    var
+      sym = Symbol(name: str, kind: kind)
+      res = gStateRT.onSymbol(sym)
+
+    doAssert res.error == 0, res.message
+
+    result = sym.name
     checkUnderscores(result, &"Identifier '{str}' still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
   else:
     result = str

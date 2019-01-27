@@ -174,18 +174,33 @@ macro cSkipSymbol*(skips: varargs[string]): untyped =
 
 macro cPlugin*(body): untyped =
   ## When `cOverride() <cimport.html#cOverride.m,>`_ and `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cvarargs[string]>`_
-  ## are not adequate, the `cPlugin() <cimport.html#cPlugin.m,>`_ macro can be used to customize the generated Nim output.
-  ## The following callbacks are available at this time.
+  ## are not adequate, the `cPlugin() <cimport.html#cPlugin.m,>`_ macro can be used
+  ## to customize the generated Nim output. The following callbacks are available at
+  ## this time.
   ##
+  ## .. code-block:: nim
+  ##
+  ##     proc onSymbol(sym: var Symbol): Result {.exportc, dynlib.}
+  ##
+  ## `onSymbol()` can be used to handle symbol name modifications required due to invalid
+  ## characters like `_` or to rename duplicate types. It can also be used to remove prefixes
+  ## and suffixes. The symbol name and type is provided to the callback and the name can be
+  ## modified. Symbol types can be any of the following:
+  ## - `nskConst` for constants
+  ## - `nskType` for type identifiers, including primitive
+  ## - `nskParam` for param names
+  ## - `nskField` for struct field names
+  ## - `nskEnumField` for enum (field) names, though they are in the global namespace as `nskConst`
+  ## - `nskProc` - for proc names
   runnableExamples:
     cPlugin:
       import strutils
 
-      proc onSymbol*(sym: string): string {.exportc, dynlib.} =
-        return sym.strip(chars={'_'})
+      proc onSymbol*(sym: var Symbol): Result {.exportc, dynlib.} =
+        sym.name = sym.name.strip(chars={'_'})
 
   let
-    data = body.repr
+    data = "import nimterop/cimport\n\n" & body.repr
     hash = data.hash()
     phash = if hash<0: -hash else: hash
     path = getTempDir() / "nimterop_" & $phash & ".nim"
