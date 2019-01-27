@@ -54,14 +54,14 @@ type
 
     consts*, enums*, procs*, types*: HashSet[string]
     constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
-    code*, currentHeader*, mode*, pluginFile*, sourceFile*: string
+    code*, currentHeader*, mode*, pluginSourcePath*, sourceFile*: string
 
     ast*: Table[string, seq[ref Ast]]
     data*: seq[tuple[name, val: string]]
     when not declared(CIMPORT):
       grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
-    onSymbol*: onSymbolType
+    onSymbol*: OnSymbol
 
 var
   gStateCT {.compiletime, used.}: State

@@ -102,8 +102,8 @@ proc getToast(fullpath: string, recurse: bool = false): string =
   if gStateCT.symOverride.len != 0:
     cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
 
-  if gStateCT.pluginFile.nBl:
-    cmd.add &" --pluginFile={gStateCT.pluginFile.quoteShell}"
+  if gStateCT.pluginSourcePath.nBl:
+    cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.quoteShell}"
 
   cmd.add &" {fullpath.quoteShell}"
   echo cmd
@@ -130,7 +130,7 @@ macro cOverride*(body): untyped =
   ##
   ##    int svGetCallerInfo(const char** fileName, int *lineNumber);
   ##
-  ## This might mapped to:
+  ## This might map to:
   ##
   ## .. code-block:: nim
   ##
@@ -197,6 +197,8 @@ macro cPlugin*(body): untyped =
   ## - `nskField` for struct field names
   ## - `nskEnumField` for enum (field) names, though they are in the global namespace as `nskConst`
   ## - `nskProc` - for proc names
+  ##
+  ## `nimterop/plugins` is implicitly imported to provide access to standard plugin facilities.
   runnableExamples:
     cPlugin:
       import strutils
@@ -206,16 +208,15 @@ macro cPlugin*(body): untyped =
 
   let
     data = "import nimterop/plugin\n\n" & body.repr
-    hash = data.hash()
-    phash = if hash<0: -hash else: hash
-    path = getTempDir() / "nimterop_" & $phash & ".nim"
+    hash = data.hash().abs()
+    path = getTempDir() / "nimterop_" & $hash & ".nim"
 
   if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
     writeFile(path, data)
 
   doAssert fileExists(path), "Unable to write plugin file: " & path
 
-  gStateCT.pluginFile = path
+  gStateCT.pluginSourcePath = path
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory ``path`` in search path configured
@@ -231,7 +232,7 @@ proc cSearchPath*(path: string): string {.compileTime.}=
   if result.len == 0:
     var found = false
     for inc in gStateCT.searchDirs:
-      result = findPath(inc & "/" & path, fail = false)
+      result = findPath(inc / path, fail = false)
       if result.len != 0:
         found = true
         break
