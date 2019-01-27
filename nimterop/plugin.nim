@@ -5,4 +5,4 @@ type
     name*: string
     kind*: NimSymKind
 
-  onSymbolType* = proc(sym: var Symbol) {.cdecl.}
+  OnSymbol* = proc(sym: var Symbol) {.cdecl.}

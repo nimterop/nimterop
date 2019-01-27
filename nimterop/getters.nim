@@ -329,18 +329,18 @@ proc dll*(path: string): string =
 
   result = dir / (DynlibFormat % name)
 
-proc loadPlugin*(fullpath: string) =
-  doAssert fileExists(fullpath), "Plugin file does not exist: " & fullpath
+proc loadPlugin*(sourcePath: string) =
+  doAssert fileExists(sourcePath), "Plugin file does not exist: " & sourcePath
 
   let
-    pdll = fullpath.dll
+    pdll = sourcePath.dll
   if not fileExists(pdll) or
-    fullpath.getLastModificationTime() > pdll.getLastModificationTime():
-    discard execAction("nim c --app:lib " & fullpath)
-  doAssert fileExists(pdll), "No plugin binary generated for " & fullpath
+    sourcePath.getLastModificationTime() > pdll.getLastModificationTime():
+    discard execAction("nim c --app:lib " & sourcePath)
+  doAssert fileExists(pdll), "No plugin binary generated for " & sourcePath
 
   let lib = loadLib(pdll)
-  doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [fullpath, pdll]
+  doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [sourcePath, pdll]
 
-  gStateRT.onSymbol = cast[onSymbolType](lib.symAddr("onSymbol"))
+  gStateRT.onSymbol = cast[OnSymbol](lib.symAddr("onSymbol"))
   doAssert gStateRT.onSymbol != nil, "onSymbol() load failed from " & pdll
