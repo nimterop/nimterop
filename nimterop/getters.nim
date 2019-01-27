@@ -2,7 +2,7 @@ import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
-import "."/[git, globals, treesitter/runtime]
+import "."/[git, globals, plugin, treesitter/runtime]
 
 const gReserved = """
 addr and as asm
@@ -88,7 +88,8 @@ proc getType*(str: string): string =
     result = gTypeMap[result]
 
 template checkUnderscores(str, errmsg: string): untyped =
-  doAssert str[0] != '_' and str[^1] != '_', errmsg
+  if str.len != 0:
+    doAssert str[0] != '_' and str[^1] != '_', errmsg
 
 proc getIdentifier*(str: string, kind: NimSymKind): string =
   doAssert str.len != 0, "Blank identifier error"
@@ -96,9 +97,7 @@ proc getIdentifier*(str: string, kind: NimSymKind): string =
   if gStateRT.onSymbol != nil:
     var
       sym = Symbol(name: str, kind: kind)
-      res = gStateRT.onSymbol(sym)
-
-    doAssert res.error == 0, res.message
+    gStateRT.onSymbol(sym)
 
     result = sym.name
     checkUnderscores(result, &"Identifier '{str}' still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
@@ -343,5 +342,5 @@ proc loadPlugin*(fullpath: string) =
   let lib = loadLib(pdll)
   doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [fullpath, pdll]
 
-  gStateRT.onSymbol = cast[type(gStateRT.onSymbol)](lib.symAddr("onSymbol"))
+  gStateRT.onSymbol = cast[onSymbolType](lib.symAddr("onSymbol"))
   doAssert gStateRT.onSymbol != nil, "onSymbol() load failed from " & pdll

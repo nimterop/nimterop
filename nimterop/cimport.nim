@@ -180,12 +180,14 @@ macro cPlugin*(body): untyped =
   ##
   ## .. code-block:: nim
   ##
-  ##     proc onSymbol(sym: var Symbol): Result {.exportc, dynlib.}
+  ##     proc onSymbol(sym: var Symbol) {.exportc, dynlib.}
   ##
   ## `onSymbol()` can be used to handle symbol name modifications required due to invalid
-  ## characters like `_` or to rename duplicate types. It can also be used to remove prefixes
-  ## and suffixes. The symbol name and type is provided to the callback and the name can be
-  ## modified. Symbol types can be any of the following:
+  ## characters like leading/trailing `_` or rename symbols that would clash due to Nim's style
+  ## insensitivity. It can also be used to remove prefixes and suffixes like `SDL_`. The symbol
+  ## name and type is provided to the callback and the name can be modified.
+  ##
+  ## Symbol types can be any of the following:
   ## - `nskConst` for constants
   ## - `nskType` for type identifiers, including primitive
   ## - `nskParam` for param names
@@ -196,16 +198,16 @@ macro cPlugin*(body): untyped =
     cPlugin:
       import strutils
 
-      proc onSymbol*(sym: var Symbol): Result {.exportc, dynlib.} =
+      proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
         sym.name = sym.name.strip(chars={'_'})
 
   let
-    data = "import nimterop/cimport\n\n" & body.repr
+    data = "import nimterop/plugin\n\n" & body.repr
     hash = data.hash()
     phash = if hash<0: -hash else: hash
     path = getTempDir() / "nimterop_" & $phash & ".nim"
 
-  if not fileExists(path) or gStateCT.nocache:
+  if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
     writeFile(path, data)
 
   doAssert fileExists(path), "Unable to write plugin file: " & path
