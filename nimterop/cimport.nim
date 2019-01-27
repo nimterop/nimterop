@@ -83,9 +83,12 @@ proc getToastError(output: string): string =
   if result.len == 0:
     result = output
 
+proc nimteropRoot(): string =
+  currentSourcePath.parentDir.parentDir
+
 proc nimteropTempDir(): string =
-  ## all nimterop generated files go under here
-  getTempDir() / "nimterop"
+  ## all nimterop generated files go under here (gitignored)
+  nimteropRoot() / "build"
 
 proc getToastExe(): string =
   # TODO: also allow user override (via -d:nimteropToast:path or
@@ -98,7 +101,7 @@ proc getToastExe(): string =
   `nim genDepend/--genDeps` or `https://github.com/nim-lang/RFCs/issues/123`
   ]#
   if not fileExists(result) or gStateCT.nocache:
-    let toastSrc = currentSourcePath.parentDir.parentDir / "toast.nim"
+    let toastSrc = nimteropRoot() / "toast.nim"
     let cmd = &"nim c -o:{result.quoteShell} {toastSrc.quoteShell}"
     when nimvm:
       echo ("getToastExe", cmd)

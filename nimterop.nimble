@@ -5,7 +5,6 @@ author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
 
-bin = @["toast"]
 installDirs = @["nimterop"]
 
 # Dependencies
