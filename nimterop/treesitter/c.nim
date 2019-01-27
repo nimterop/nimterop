@@ -1,13 +1,12 @@
-import strutils
+import strutils, os
 
-import ".."/setup
+import ".."/[setup,paths]
 
 static:
   treesitterCSetup()
 
 import "."/runtime
 
-{.compile: ("../../inc/treesitter_c/src/parser.c", "parserc.o").}
+{.compile: incDir() / "treesitter_c/src/parser.c".}
 
-const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/")
-proc treeSitterC*(): ptr TSLanguage {.importc: "tree_sitter_c", header: sourcePath & "/inc/treesitter_c/src/parser.h".}
+proc treeSitterC*(): ptr TSLanguage {.importc: "tree_sitter_c", header: incDir() / "treesitter_c/src/parser.h".}

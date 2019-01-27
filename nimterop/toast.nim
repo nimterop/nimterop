@@ -1,8 +1,8 @@
 import os, strformat, strutils
 
-import nimterop/treesitter/[runtime, c, cpp]
+import "."/treesitter/[runtime, c, cpp]
 
-import nimterop/[ast, globals, getters, grammar]
+import "."/[ast, globals, getters, grammar]
 
 proc printLisp(root: TSNode) =
   var

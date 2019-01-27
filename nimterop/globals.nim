@@ -61,7 +61,7 @@ type
       grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
 var
-  gStateCT {.compiletime, used.}: State
+  gStateCT* {.compiletime, used.}: State
   gStateRT {.used.}: State
 
 template nBl(s: typed): untyped {.used.} =
