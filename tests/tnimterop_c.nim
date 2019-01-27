@@ -12,7 +12,7 @@ cCompile cSearchPath("test.c")
 cPlugin:
   import strutils
 
-  proc onSymbol*(sym: var Symbol): Result {.exportc, dynlib.} =
+  proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
     sym.name = sym.name.strip(chars={'_'})
 
 cImport cSearchPath "test.h"

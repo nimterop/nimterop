@@ -1,6 +1,8 @@
-import macros, sequtils, sets, tables
+import sequtils, sets, tables
 
 import regex
+
+import "."/plugin
 
 when not declared(CIMPORT):
   import "."/treesitter/runtime
@@ -45,14 +47,6 @@ type
       tonim*: proc (ast: ref Ast, node: TSNode)
     regex*: Regex
 
-  Symbol* = object
-    name*: string
-    kind*: NimSymKind
-
-  Result* = object
-    error*: int
-    message*: string
-
   State = object
     compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
 
@@ -67,7 +61,8 @@ type
     when not declared(CIMPORT):
       grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
 
-    onSymbol*: proc(sym: var Symbol): Result {.cdecl.}
+    onSymbol*: onSymbolType
+
 var
   gStateCT {.compiletime, used.}: State
   gStateRT {.used.}: State
