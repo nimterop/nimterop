@@ -17,7 +17,7 @@ proc initGrammar() =
         name = gStateRT.data[0].val.getIdentifier(nskConst)
         val = gStateRT.data[1].val.getLit()
 
-      if val.nBl and gStateRT.consts.addNewIdentifer(name):
+      if name.nBl and val.nBl and gStateRT.consts.addNewIdentifer(name):
         gStateRT.constStr &= &"  {name}* = {val}\n"
   ))
 
@@ -66,8 +66,10 @@ proc initGrammar() =
      )
     """
 
-  template funcParamCommon(pname, ptyp, pptr, pout, count, i: untyped): untyped =
+  template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i: untyped): untyped =
     ptyp = gStateRT.data[i].val.getIdentifier(nskType)
+    doAssert ptyp.nBl, &"Blank param type for '{fname}', originally '{gStateRT.data[i].val}'"
+
     if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "pointer_declarator":
       pptr = "ptr "
       i += 1
@@ -76,11 +78,13 @@ proc initGrammar() =
 
     if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "identifier":
       pname = gStateRT.data[i+1].val.getIdentifier(nskParam)
+      doAssert pname.nBl, &"Blank param name for '{fname}', originally '{gStateRT.data[i+1].val}'"
       i += 2
     else:
       pname = "a" & $count
       count += 1
       i += 1
+
     if pptr == "ptr " or ptyp != "object":
       pout &= &"{pname}: {getPtrType(pptr&ptyp)},"
 
@@ -123,9 +127,10 @@ proc initGrammar() =
         name = gStateRT.data[i].val.getIdentifier(nskType)
         i += 1
 
-      if gStateRT.types.addNewIdentifer(name):
+      if typ.nBl and name.nBl and gStateRT.types.addNewIdentifer(name):
         if i < gStateRT.data.len and gStateRT.data[^1].name == "function_declarator":
           var
+            fname = name
             pout, pname, ptyp, pptr = ""
             count = 1
 
@@ -133,7 +138,7 @@ proc initGrammar() =
             if gStateRT.data[i].name == "function_declarator":
               break
 
-            funcParamCommon(pname, ptyp, pptr, pout, count, i)
+            funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
 
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
@@ -148,6 +153,8 @@ proc initGrammar() =
               flen = gStateRT.data[i].val
             if gStateRT.data[i].name == "identifier":
               flen = flen.getIdentifier(nskConst)
+              doAssert flen.len != 0, &"Blank array length for '{name}', originally '{gStateRT.data[i].val}'"
+
             gStateRT.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
           else:
             if name == typ:
@@ -166,7 +173,7 @@ proc initGrammar() =
         else:
           ""
 
-    if ndname != nname:
+    if ndname.nBl and ndname != nname:
       if isEnum:
         if gStateRT.enums.addNewIdentifer(ndname):
           gStateRT.enumStr &= &"type {ndname}* = {dptr}{nname}\n"
@@ -203,7 +210,7 @@ proc initGrammar() =
                   union = " {.union.}"
               break
 
-    if gStateRT.types.addNewIdentifer(nname):
+    if nname.nBl and gStateRT.types.addNewIdentifer(nname):
       if gStateRT.data.len == 1:
         gStateRT.typeStr &= &"  {nname}* {{.bycopy.}} = object{union}\n"
       else:
@@ -234,6 +241,8 @@ proc initGrammar() =
             i += 1
 
         fname = gStateRT.data[i].val.getIdentifier(nskField)
+        doAssert fname.len != 0, &"Blank field name for '{nname}', originally '{gStateRT.data[i].val}'"
+
         if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in gEnumVals:
           let
             flen = gStateRT.data[i+1].val.getNimExpression()
@@ -253,7 +262,7 @@ proc initGrammar() =
             if gStateRT.data[i].name == "field_declaration":
               break
 
-            funcParamCommon(pname, ptyp, pptr, pout, count, i)
+            funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
 
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
@@ -352,7 +361,7 @@ proc initGrammar() =
       else:
         name.getIdentifier(nskType)
 
-    if gStateRT.enums.addNewIdentifer(nname):
+    if nname.nBl and gStateRT.enums.addNewIdentifer(nname):
       gStateRT.enumStr &= &"\ntype {nname}* = distinct int"
       gStateRT.enumStr &= &"\nconverter enumToInt(en: {nname}): int {{.used.}} = en.int\n"
 
@@ -369,7 +378,7 @@ proc initGrammar() =
 
         if i+1 < gStateRT.data.len-fend and
           gStateRT.data[i+1].name in gEnumVals:
-          if gStateRT.consts.addNewIdentifer(fname):
+          if fname.nBl and gStateRT.consts.addNewIdentifer(fname):
             gStateRT.constStr &= &"  {fname}* = ({gStateRT.data[i+1].val.getNimExpression()}).{nname}\n"
           try:
             count = gStateRT.data[i+1].val.parseInt() + 1
@@ -377,7 +386,7 @@ proc initGrammar() =
             count += 1
           i += 2
         else:
-          if gStateRT.consts.addNewIdentifer(fname):
+          if fname.nBl and gStateRT.consts.addNewIdentifer(fname):
             gStateRT.constStr &= &"  {fname}* = {count}.{nname}\n"
           i += 1
           count += 1
@@ -475,12 +484,12 @@ proc initGrammar() =
           if gStateRT.data[i].name == "function_declarator":
             break
 
-          funcParamCommon(pname, ptyp, pptr, pout, count, i)
+          funcParamCommon(fnname, pname, ptyp, pptr, pout, count, i)
 
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
-        if gStateRT.procs.addNewIdentifer(fnname):
+        if ftyp.nBl and fnname.nBl and gStateRT.procs.addNewIdentifer(fnname):
           if fptr == "ptr " or ftyp != "object":
             gStateRT.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
           else:
