@@ -1,10 +1,12 @@
-import os, nimterop/[cimport, git]
+import os, nimterop/[cimport, git, paths]
 
 const
-  incl = "soloud/include"
-  src = "soloud/src"
+  baseDir = nimteropBuildDir()/"soloud"
+  incl = baseDir/"include"
+  src = baseDir/"src"
 
-gitPull("https://github.com/jarikomppa/soloud", "soloud", "include/*\nsrc/*\n")
+static:
+  gitPull("https://github.com/jarikomppa/soloud", baseDir, "include/*\nsrc/*\n")
 
 cDebug()
 cDisableCaching()

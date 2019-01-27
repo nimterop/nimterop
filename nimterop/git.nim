@@ -1,4 +1,8 @@
+# TODO: most/all of these macros should be turned into regular proc
+
 import macros, os, osproc, regex, strformat, strutils
+
+import "."/paths
 
 proc execAction*(cmd: string, nostderr=false): string =
   var
@@ -65,9 +69,26 @@ macro gitCheckout*(file, outdir: static string): untyped =
     sleep(500)
     echo "  Retrying ..."
 
+<<<<<<< HEAD
 macro gitPull*(url: static string, outdirN: static string = "", plist: static string = "", checkout: static string = ""): untyped =
+||||||| merged common ancestors
+macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): untyped =
+=======
+proc gitPull*(url: string, outdirN = "", plistN = "", checkoutN = "") =
+  let outdir = outdirN
+  doAssert outdir.isAbsolute()
+>>>>>>> many fixes:
   let
+<<<<<<< HEAD
     outdir = if outdirN.isAbsolute(): outdirN else: getProjectPath()/outdirN
+||||||| merged common ancestors
+    outdir = if outdirN.strVal().isAbsolute(): outdirN.strVal() else: getProjectPath()/outdirN.strVal()
+    plist = plistN.strVal()
+    checkout = checkoutN.strVal()
+=======
+    plist = plistN
+    checkout = checkoutN
+>>>>>>> many fixes:
 
   if dirExists(outdir/".git"):
     discard quote do:
@@ -83,6 +104,7 @@ macro gitPull*(url: static string, outdirN: static string = "", plist: static st
   discard execAction(&"cd \"{outdir}\" && git remote add origin " & url)
 
   if plist.len != 0:
+    # TODO: document this, it's not clear
     let sparsefile = &"{outdir}/.git/info/sparse-checkout"
 
     discard execAction(&"cd \"{outdir}\" && git config core.sparsecheckout true")

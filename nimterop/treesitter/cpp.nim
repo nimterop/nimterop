@@ -1,14 +1,19 @@
-import strutils
+import strutils, os
 
-import ".."/setup
+import ".."/[setup,paths]
 
 static:
   treesitterCppSetup()
 
 import "."/runtime
 
-{.compile: ("../../inc/treesitter_cpp/src/parser.c", "parsercpp.o").}
-{.compile: ("../../inc/treesitter_cpp/src/scanner.cc", "scannercpp.o").}
+const srcDir = incDir() / "treesitter_cpp/src"
+const srcDirRel = srcDir.relativePath(currentSourcePath.parentDir)
 
-const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/") & "/inc/treesitter_cpp/src/"
-proc treeSitterCpp*(): ptr TSLanguage {.importc: "tree_sitter_cpp", header: sourcePath & "parser.h".}
+# pending https://github.com/nim-lang/Nim/issues/9370
+# use simply: {.compile: srcDir / "parser.c".}
+{.compile: (srcDirRel / "parser.c", "parser.c.cpp.o").}
+
+{.compile: srcDir / "scanner.cc".}
+
+proc treeSitterCpp*(): ptr TSLanguage {.importc: "tree_sitter_cpp", header: srcDir / "parser.h".}

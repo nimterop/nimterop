@@ -4,6 +4,7 @@
 !*.*
 
 # TODO: all generated stuff should go inside `build/`
+# Note: use absolute paths to refer to a path assumed to be at a fixed dir level
 
 nimcache
 
@@ -12,6 +13,3 @@ nimcache
 *.exe
 *.swp
 
-# Note: use absolute paths to refer to a path assumed to be at a fixed dir level
-
-inc

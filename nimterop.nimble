@@ -8,8 +8,10 @@ license     = "MIT"
 installDirs = @["nimterop"]
 
 # Dependencies
-
 requires "nim >= 0.19.2", "regex >= 0.10.0", "cligen >= 0.9.17"
+
+import os
+let ExeExt2 = when defined(Windows): "." & ExeExt else: ""
 
 proc execCmd(cmd: string) =
   echo "execCmd:" & cmd
@@ -19,19 +21,27 @@ proc tsoloud() =
   execCmd "nim c -r tests/tsoloud.nim"
   execCmd "nim cpp -r tests/tsoloud.nim"
 
-proc testall() =
+task rebuildToast, "rebuild toast":
+  # If need to manually rebuild (automatically built on 1st need)
+  # pending https://github.com/nim-lang/Nim/issues/9513
+  execCmd("nim c -r -o:build/toast" & ExeExt2 & " nimterop/toast.nim")
+
+proc testAll() =
   execCmd "nim c -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
-  when defined(windows):
+
+  ## platform specific tests
+  when defined(Windows):
     execCmd "nim c -r tests/tmath.nim"
     execCmd "nim cpp -r tests/tmath.nim"
-  when not defined(OSX):
-    when defined(Windows):
-      tsoloud()
-    else:
-      if not existsEnv("TRAVIS"):
-        tsoloud()
+    tsoloud()
+  elif defined(osx):
+    discard
+  elif existsEnv("TRAVIS"):
+    discard
+  else:
+    tsoloud()
 
 task test, "Test":
   execCmd "nim c toast"
