@@ -70,8 +70,7 @@ proc initGrammar(): Grammar =
     """
 
   template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i: untyped): untyped =
-    ptyp = nimState.data[i].val.getIdentifier(nskType)
-    doAssert ptyp.nBl, &"Blank param type for '{fname}', originally '{nimState.data[i].val}'"
+    ptyp = nimState.data[i].val.getIdentifier(nskType, fname)
 
     if i+1 < nimState.data.len and nimState.data[i+1].name == "pointer_declarator":
       pptr = "ptr "
@@ -80,8 +79,7 @@ proc initGrammar(): Grammar =
       pptr = ""
 
     if i+1 < nimState.data.len and nimState.data[i+1].name == "identifier":
-      pname = nimState.data[i+1].val.getIdentifier(nskParam)
-      doAssert pname.nBl, &"Blank param name for '{fname}', originally '{nimState.data[i+1].val}'"
+      pname = nimState.data[i+1].val.getIdentifier(nskParam, fname)
       i += 2
     else:
       pname = "a" & $count
@@ -155,8 +153,7 @@ proc initGrammar(): Grammar =
             var
               flen = nimState.data[i].val
             if nimState.data[i].name == "identifier":
-              flen = flen.getIdentifier(nskConst)
-              doAssert flen.len != 0, &"Blank array length for '{name}', originally '{nimState.data[i].val}'"
+              flen = flen.getIdentifier(nskConst, name)
 
             nimState.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
           else:
@@ -243,8 +240,7 @@ proc initGrammar(): Grammar =
             aptr = "ptr "
             i += 1
 
-        fname = nimState.data[i].val.getIdentifier(nskField)
-        doAssert fname.len != 0, &"Blank field name for '{nname}', originally '{nimState.data[i].val}'"
+        fname = nimState.data[i].val.getIdentifier(nskField, nname)
 
         if i+1 < nimState.data.len-fend and nimState.data[i+1].name in gEnumVals:
           let
@@ -461,7 +457,6 @@ proc initGrammar(): Grammar =
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       var
-        ftyp = nimState.data[0].val.getIdentifier(nskType)
         fptr = ""
         i = 1
 
@@ -492,7 +487,9 @@ proc initGrammar(): Grammar =
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
-        if ftyp.nBl and fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
+        if fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
+          let ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
+
           if fptr == "ptr " or ftyp != "object":
             nimState.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}\n"
           else:

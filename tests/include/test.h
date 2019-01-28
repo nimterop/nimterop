@@ -129,6 +129,8 @@ ENUM6 test_call_etype_ptr6();
 union union3 test_call_utype3();
 UNION3 test_call_etype_ptr3();
 
+typedef struct _Kernel { char name; } *Kernel;
+
 #ifdef __cplusplus
 }
 #endif

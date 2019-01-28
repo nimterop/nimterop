@@ -13,7 +13,10 @@ cPlugin:
   import strutils
 
   proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
-    sym.name = sym.name.strip(chars={'_'})
+    if sym.name == "_Kernel":
+      sym.name = "uKernel"
+    else:
+      sym.name = sym.name.strip(chars={'_'})
 
 cImport cSearchPath "test.h"
 
@@ -130,6 +133,8 @@ var
   e6p: ENUM6
   u3: union3
   u3p: UNION3
+  k: uKernel
+  kp: Kernel
 
 cAddStdDir()
 

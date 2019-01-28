@@ -91,17 +91,19 @@ template checkUnderscores(name, errmsg: string): untyped =
   if name.len != 0:
     doAssert name[0] != '_' and name[^1] != '_', errmsg
 
-proc getIdentifier*(name: string, kind: NimSymKind): string =
+proc getIdentifier*(name: string, kind: NimSymKind, parent=""): string =
   doAssert name.len != 0, "Blank identifier error"
 
-  if name notin gStateRT.symOverride:
+  if name notin gStateRT.symOverride or parent.nBl:
     if gStateRT.onSymbol != nil:
       var
-        sym = Symbol(name: name, kind: kind)
+        sym = Symbol(name: name, parent: parent, kind: kind)
       gStateRT.onSymbol(sym)
 
       result = sym.name
       checkUnderscores(result, &"Identifier '{name}' still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
+
+      doAssert result.nBl, &"Blank {kind} '{result}', originally '{name}', child of '{parent}' so cannot be empty"
     else:
       result = name
       checkUnderscores(result, &"Identifier '{result}' contains unsupported leading/trailing underscores '_': use 'cPlugin:onSymbol()' to remove")

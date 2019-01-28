@@ -49,7 +49,7 @@ Refer to the ```tests``` directory for examples on how the library can be used.
 
 The `toast` binary can also be used directly on the CLI. The `--help` flag provides more details.
 
-Detailed documentation is available for [cimport](https://genotrance.github.io/nimterop/cimport.html) and [git](https://genotrance.github.io/nimterop/git.html).
+Detailed documentation is available: [cimport](https://genotrance.github.io/nimterop/cimport.html), [plugin](https://genotrance.github.io/nimterop/plugin.html), [git](https://genotrance.github.io/nimterop/git.html)
 
 __Implementation Details__
 

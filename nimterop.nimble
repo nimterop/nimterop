@@ -45,4 +45,5 @@ task docs, "Generate docs":
   # Uses: pip install ghp-import
   execCmd "nim doc --project --index:on nimterop/cimport"
   execCmd "nim doc --project --index:on nimterop/git"
+  execCmd "nim doc --project --index:on nimterop/plugin"
   execCmd "ghp-import --no-jekyll -fp nimterop/htmldocs"
