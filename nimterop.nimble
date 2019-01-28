@@ -11,8 +11,7 @@ installFiles = @["config.nims"]
 # Dependencies
 requires "nim >= 0.19.2", "regex >= 0.10.0", "cligen >= 0.9.17"
 
-import os
-let ExeExt2 = when defined(Windows): "." & ExeExt else: ""
+import strformat
 
 proc execCmd(cmd: string) =
   echo "execCmd:" & cmd
@@ -23,8 +22,9 @@ proc tsoloud() =
   execCmd "nim cpp -r tests/tsoloud.nim"
 
 proc buildToast(options: string) =
-  # pending https://github.com/nim-lang/Nim/issues/9513
-  execCmd("nim c -o:build/toast" & ExeExt2 & " " & options & " nimterop/toast.nim")
+  # pending https://github.com/nim-lang/Nim/issues/9513 simplify this
+  let ExeExt2 = when defined(Windows): ".exe" else: ""
+  execCmd(&"nim c -o:build/toast{ExeExt2} {options} nimterop/toast.nim")
 
 task rebuildToast, "rebuild toast":
   # If need to manually rebuild (automatically built on 1st need)
