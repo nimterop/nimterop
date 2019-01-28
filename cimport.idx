@@ -1,5 +1,6 @@
 cOverride	cimport.html#cOverride.m,	cimport: cOverride(body): untyped	
 cSkipSymbol	cimport.html#cSkipSymbol.m,varargs[string]	cimport: cSkipSymbol(skips: varargs[string]): untyped	
+cPlugin	cimport.html#cPlugin.m,	cimport: cPlugin(body): untyped	
 cSearchPath	cimport.html#cSearchPath,string	cimport: cSearchPath(path: string): string	
 cDebug	cimport.html#cDebug.m,	cimport: cDebug(): untyped	
 cDisableCaching	cimport.html#cDisableCaching.m,	cimport: cDisableCaching(): untyped	
