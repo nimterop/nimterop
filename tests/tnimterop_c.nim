@@ -70,7 +70,7 @@ s4.field2[2] = 5
 
 # note: simplify with `defined(c)` for nim >= 0.19.9
 when defined(cpp):
-  discard # TODO
+  discard
 else:
   s4.field3[3] = enum1
 
@@ -96,7 +96,7 @@ check test_call_param2(5, s2).field1 == 11
 check test_call_param3(5, s1).field1 == 10
 when defined(cpp):
   # error: assigning to 'enum ENUM' from incompatible type 'NI' (aka 'long long')
-  discard # TODO
+  discard
 else:
   check test_call_param4(e) == e2
 check test_call_param5(5.0).field2 == 5.0
@@ -105,7 +105,6 @@ u.field1 = 4
 check test_call_param7(u) == 4
 
 when defined(cpp):
-  # TODO
    # note: candidate function not viable: no known conversion from 'NI *' (aka 'long long *') to 'int *' for 1st argument
   # check test_call_param8(cast[ptr int](addr i)) == 25.0
   discard
