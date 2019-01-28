@@ -1,5 +1,3 @@
-# TODO: most/all of these macros should be turned into regular proc
-
 import macros, os, osproc, regex, strformat, strutils
 
 import "."/paths

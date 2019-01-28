@@ -4,10 +4,11 @@
 !*.*
 
 
-# TODO: all generated stuff should go inside `build/`
+# Notes:
+# all generated files should go inside `build/`
+# use absolute paths to refer to a path assumed to be at a fixed level in the hierarchy
 /build
 
-# Note: use absolute paths to refer to a path assumed to be at a fixed dir level
 
 nimcache
 

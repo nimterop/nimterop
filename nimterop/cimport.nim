@@ -82,14 +82,14 @@ proc getToastError(output: string): string =
     result = output
 
 proc getToastExe(): string =
-  # TODO: also allow user override (via -d:nimteropToast:path or
-  # see https://github.com/genotrance/nimterop/issues/68)
+  # consider also allowing user override via -d:nimteropToast:path or
+  # via https://github.com/genotrance/nimterop/issues/68
   result = toastExePath()
   #[
-  todo:
-  use same algo as shown here https://github.com/genotrance/nimterop/issues/69
+  this can be made more robust using same algo as shown here
+  https://github.com/genotrance/nimterop/issues/69
   but using nim deps instead of c deps; they can be obtained via:
-  `nim genDepend/--genDeps` or `https://github.com/nim-lang/RFCs/issues/123`
+  `nim genDepend/--genDeps` or https://github.com/nim-lang/RFCs/issues/123
   ]#
   if not fileExists(result) or gStateCT.nocache:
     let toastSrc = nimteropSrcDir() / "toast.nim"
@@ -99,8 +99,7 @@ proc getToastExe(): string =
       let (output, ret) = gorgeEx(cmd, cache=getCacheValue(toastSrc))
       doAssert ret == 0, $(cmd, ret, toastSrc) & " output:\n" & output
     else:
-      # todo: maybe support if it makes sense
-      doAssert false # TODO
+      doAssert false # we can easily support if needed
   else:
     discard # uses cached toast
 
@@ -397,12 +396,6 @@ macro cCompile*(path: static string, mode = "c"): untyped =
 
     gStateCT.compile.add(ufn)
     if fn == ufn:
-      #[
-      # todo: use quoteShell everywhere relevant; adding `"` is not always correct and also read uglier eg:
-      {.passC: "-I\"/Users/foo/include\"".}
-      whereas quoteShell would, here, give simply
-      {.passC: "-I/Users/foo/include".}
-      ]#
       return "{.compile: \"$#\".}" % file.replace("\\", "/")
     else:
       return "{.compile: (\"../$#\", \"$#.o\").}" % [file.replace("\\", "/"), ufn]

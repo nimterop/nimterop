@@ -94,8 +94,8 @@ check test_call_int() == 5
 check test_call_param(5).field1 == 5
 check test_call_param2(5, s2).field1 == 11
 check test_call_param3(5, s1).field1 == 10
-# error: assigning to 'enum ENUM' from incompatible type 'NI' (aka 'long long')
 when defined(cpp):
+  # error: assigning to 'enum ENUM' from incompatible type 'NI' (aka 'long long')
   discard # TODO
 else:
   check test_call_param4(e) == e2
