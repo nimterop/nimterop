@@ -1,22 +1,4 @@
-#[
-note:
-this should pull as few dependencies as needed by the wrapper, one option is, for the types that carry a dependency, wrap the type declaration inside something like:
-```
-when defined(nimteropNeeds_va_list):
-  type
-    va_list* {.importc, header:"<stdarg.h>".} = object
-```
-
-note:
-nimterop should replace the generated wrappers with the nim-idiomatic version, eg:
-```
-proc mylib(a: ptrdiff_t) => proc mylib(a: ByteAddress)
-```
-
-note:
-as needed, provide (platform specific) nim aliases which can be used eg to compute sizeof, eg:
-type foo_t* {.importc, header: "<foo.h>".} = distinct int32
-]#
+# see https://github.com/genotrance/nimterop/issues/79
 
 when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
   # clean this up once upgraded; adapted from std/time_t
