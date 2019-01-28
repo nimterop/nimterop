@@ -87,26 +87,29 @@ proc getType*(str: string): string =
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
 
-template checkUnderscores(str, errmsg: string): untyped =
-  if str.len != 0:
-    doAssert str[0] != '_' and str[^1] != '_', errmsg
+template checkUnderscores(name, errmsg: string): untyped =
+  if name.len != 0:
+    doAssert name[0] != '_' and name[^1] != '_', errmsg
 
-proc getIdentifier*(str: string, kind: NimSymKind): string =
-  doAssert str.len != 0, "Blank identifier error"
+proc getIdentifier*(name: string, kind: NimSymKind): string =
+  doAssert name.len != 0, "Blank identifier error"
 
-  if gStateRT.onSymbol != nil:
-    var
-      sym = Symbol(name: str, kind: kind)
-    gStateRT.onSymbol(sym)
+  if name notin gStateRT.symOverride:
+    if gStateRT.onSymbol != nil:
+      var
+        sym = Symbol(name: name, kind: kind)
+      gStateRT.onSymbol(sym)
 
-    result = sym.name
-    checkUnderscores(result, &"Identifier '{str}' still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
+      result = sym.name
+      checkUnderscores(result, &"Identifier '{name}' still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
+    else:
+      result = name
+      checkUnderscores(result, &"Identifier '{result}' contains unsupported leading/trailing underscores '_': use 'cPlugin:onSymbol()' to remove")
+
+    if result in gReserved:
+      result = &"`{result}`"
   else:
-    result = str
-    checkUnderscores(result, &"Identifier '{result}' contains unsupported leading/trailing underscores '_': use 'cPlugin:onSymbol()' to remove")
-
-  if result in gReserved:
-    result = &"`{result}`"
+    result = ""
 
 proc getUniqueIdentifier*(existing: TableRef[string, string], prefix = ""): string =
   var
