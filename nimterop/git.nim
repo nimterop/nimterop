@@ -26,7 +26,7 @@ proc execAction*(cmd: string, nostderr=false): string =
     echo result
     quit(1)
 
-macro extractZip*(zipfile, outdir: static string): untyped =
+proc extractZip*(zipfile, outdir: string) =
   var cmd = "unzip -o $#"
   if defined(Windows):
     cmd = "powershell -nologo -noprofile -command \"& { Add-Type -A " &
@@ -34,9 +34,11 @@ macro extractZip*(zipfile, outdir: static string): untyped =
           "[IO.Compression.ZipFile]::ExtractToDirectory('$#', '.'); }\""
 
   echo "Extracting " & zipfile
-  discard execAction(&"cd \"{getProjectPath()/outdir}\" && " & cmd % zipfile)
+  let cmd2 = cmd % zipfile
+  discard execAction(&"cd {outdir} && {cmd2}")
 
-macro downloadUrl*(url, outdir: static string): untyped =
+proc downloadUrl*(url, outdir: string) =
+  doAssert outdir.isAbsolute
   let
     file = url.extractFilename()
     ext = file.splitFile().ext.toLowerAscii()
@@ -45,75 +47,63 @@ macro downloadUrl*(url, outdir: static string): untyped =
   if defined(Windows):
     cmd = "powershell wget $# -OutFile $#"
 
-  if not (ext == ".zip" and fileExists(getProjectPath()/outdir/file)):
+  if not (ext == ".zip" and fileExists(outdir/file)):
     echo "Downloading " & file
-    discard execAction(cmd % [url, getProjectPath()/outdir/file])
+    discard execAction(cmd % [url, outdir/file])
 
   if ext == ".zip":
-    discard quote do:
-      extractZip(`file`, `outdir`)
+    extractZip(`file`, `outdir`)
 
-macro gitReset*(outdir: static string): untyped =
+proc gitReset*(outdir: string) =
   echo "Resetting " & outdir
 
-  let cmd = &"cd \"{getProjectPath()/outdir}\" && git reset --hard"
+  let cmd = &"cd {outdir.quoteShell} && git reset --hard"
   while execAction(cmd).contains("Permission denied"):
     sleep(1000)
     echo "  Retrying ..."
 
-macro gitCheckout*(file, outdir: static string): untyped =
-  echo "Resetting " & file
+proc relativePathNaive*(file, base: string): string =
+  ## naive version of `os.relativePath` ; remove after nim >= 0.19.9
+  runnableExamples:
+    doAssert "/foo/bar/baz/log.txt".relativePathNaive("/foo/bar") == "baz/log.txt"
+  var base = base
+  if not base.endsWith "/": base.add "/"
+  doAssert file.startsWith base
+  result = file[base.len .. ^1]
 
-  let cmd = &"cd \"{getProjectPath()/outdir}\" && git checkout $#" % file.replace(outdir & "/", "")
+proc gitCheckout*(file, outdir: string) =
+  echo "Resetting " & file
+  let file2 = file.relativePathNaive outdir
+  let cmd = &"cd {outdir.quoteShell} && git checkout {file2}"
   while execAction(cmd).contains("Permission denied"):
     sleep(500)
     echo "  Retrying ..."
 
-<<<<<<< HEAD
-macro gitPull*(url: static string, outdirN: static string = "", plist: static string = "", checkout: static string = ""): untyped =
-||||||| merged common ancestors
-macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): untyped =
-=======
-proc gitPull*(url: string, outdirN = "", plistN = "", checkoutN = "") =
-  let outdir = outdirN
+proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
   doAssert outdir.isAbsolute()
->>>>>>> many fixes:
-  let
-<<<<<<< HEAD
-    outdir = if outdirN.isAbsolute(): outdirN else: getProjectPath()/outdirN
-||||||| merged common ancestors
-    outdir = if outdirN.strVal().isAbsolute(): outdirN.strVal() else: getProjectPath()/outdirN.strVal()
-    plist = plistN.strVal()
-    checkout = checkoutN.strVal()
-=======
-    plist = plistN
-    checkout = checkoutN
->>>>>>> many fixes:
-
   if dirExists(outdir/".git"):
-    discard quote do:
-      gitReset(`outdir`)
+    gitReset(outdir)
     return
-  else:
-    let
-      flag = when not defined(Windows): "-p" else: ""
-    echo execAction(&"mkdir {flag} \"{outdir}\"")
+  let
+    outdir2 = outdir.quoteShell
+    flag = when not defined(Windows): "-p" else: ""
+  echo execAction(&"mkdir {flag} {outdir2}")
 
   echo "Setting up Git repo: " & url
-  discard execAction(&"cd \"{outdir}\" && git init .")
-  discard execAction(&"cd \"{outdir}\" && git remote add origin " & url)
+  discard execAction(&"cd {outdir2} && git init .")
+  discard execAction(&"cd {outdir2} && git remote add origin {url}")
 
   if plist.len != 0:
     # TODO: document this, it's not clear
     let sparsefile = &"{outdir}/.git/info/sparse-checkout"
 
-    discard execAction(&"cd \"{outdir}\" && git config core.sparsecheckout true")
+    discard execAction(&"cd {outdir2} && git config core.sparsecheckout true")
     writeFile(sparsefile, plist)
 
   if checkout.len != 0:
     echo "Checking out " & checkout
-    discard execAction(&"cd \"{outdir}\" && git pull --tags origin master")
-    discard execAction(&"cd \"{outdir}\" && git checkout {checkout}")
+    discard execAction(&"cd {outdir2} && git pull --tags origin master")
+    discard execAction(&"cd {outdir2} && git checkout {checkout}")
   else:
     echo "Pulling repository"
-    discard execAction(&"cd \"{outdir}\" && git pull --depth=1 origin master")
+    discard execAction(&"cd {outdir2} && git pull --depth=1 origin master")
