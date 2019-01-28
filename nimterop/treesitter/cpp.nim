@@ -8,7 +8,11 @@ static:
 import "."/runtime
 
 const srcDir = incDir() / "treesitter_cpp/src"
-const srcDirRel = srcDir.relativePath(currentSourcePath.parentDir)
+
+when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
+  const srcDirRel = "../../build/inc/treesitter_cpp/src"
+else:
+  const srcDirRel = srcDir.relativePath(currentSourcePath.parentDir)
 
 # pending https://github.com/nim-lang/Nim/issues/9370 we need srcDirRel instead of srcDir
 {.compile: (srcDirRel / "parser.c", "nimtero_cpp_parser.c.o").}
