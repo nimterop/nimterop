@@ -13,6 +13,7 @@ cache:
     - "$HOME/.choosenim/toolchains/nim-0.19.2"
 
 install:
+  - set -ue
   - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
   - |
       curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
@@ -20,6 +21,7 @@ install:
   - export PATH=$HOME/.nimble/bin:$PATH
 
 script:
+  - set -e
   - nimble install -y
   - nimble test
-  - nimble --nimbleDir:`pwd`/test install nimterop -y
+  - nimble --nimbleDir:`pwd`/build/fakenimble install nimterop -y
