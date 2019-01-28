@@ -67,9 +67,11 @@ s1.field1 = 5
 s2.field1 = 6
 s3.field1 = 7
 s4.field2[2] = 5
+
+# note: simplify with `defined(c)` for nim >= 0.19.9
 when defined(cpp):
   discard # TODO
-else: # TODO: what's `defined(cpp)` for c ?
+else:
   s4.field3[3] = enum1
 
 s5.tci = test_call_int
