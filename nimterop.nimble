@@ -22,10 +22,13 @@ proc tsoloud() =
   execCmd "nim c -r tests/tsoloud.nim"
   execCmd "nim cpp -r tests/tsoloud.nim"
 
+proc buildToast(options: string) =
+  # pending https://github.com/nim-lang/Nim/issues/9513
+  execCmd("nim c -o:build/toast" & ExeExt2 & " " & options & " nimterop/toast.nim")
+
 task rebuildToast, "rebuild toast":
   # If need to manually rebuild (automatically built on 1st need)
-  # pending https://github.com/nim-lang/Nim/issues/9513
-  execCmd("nim c -r -o:build/toast" & ExeExt2 & " nimterop/toast.nim")
+  buildToast("-d:release")
 
 proc testAll() =
   execCmd "nim c -r tests/tnimterop_c.nim"
@@ -45,11 +48,9 @@ proc testAll() =
     tsoloud()
 
 task test, "Test":
-  execCmd "nim c toast"
-  testAll()
-
-  execCmd "nim c -d:release toast"
-  testAll()
+  for options in ["", "-d:release"]:
+    buildToast(options)
+    testAll()
 
 task docs, "Generate docs":
   # Uses: pip install ghp-import
