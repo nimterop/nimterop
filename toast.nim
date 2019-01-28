@@ -53,7 +53,7 @@ proc printLisp(root: TSNode) =
     if node == root:
       break
 
-proc process(path: string) =
+proc process(path: string, astTable: AstTable) =
   if not existsFile(path):
     echo "Invalid path " & path
     return
@@ -97,7 +97,7 @@ proc process(path: string) =
   if gStateRT.past:
     printLisp(root)
   elif gStateRT.pnim:
-    printNim(path, root)
+    printNim(path, root, astTable)
   elif gStateRT.preprocess:
     echo gStateRT.code
 
@@ -136,11 +136,12 @@ proc main(
   if pluginSourcePath.nBl:
     loadPlugin(pluginSourcePath)
 
+  let
+    astTable = parseGrammar()
   if pgrammar:
-    parseGrammar()
-    printGrammar()
+    astTable.printGrammar()
   elif source.len != 0:
-    process(source[0])
+    process(source[0], astTable)
 
 when isMainModule:
   import cligen

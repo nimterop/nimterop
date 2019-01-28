@@ -44,24 +44,28 @@ type
     recursive*: bool
     children*: seq[ref Ast]
     when not declared(CIMPORT):
-      tonim*: proc (ast: ref Ast, node: TSNode)
+      tonim*: proc (ast: ref Ast, node: TSNode, nimState: NimState)
     regex*: Regex
+
+  AstTable = TableRef[string, seq[ref Ast]]
 
   State = object
     compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
 
     nocache*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
-    consts*, enums*, procs*, types*: HashSet[string]
-    constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
-    code*, currentHeader*, mode*, pluginSourcePath*, sourceFile*: string
-
-    ast*: Table[string, seq[ref Ast]]
-    data*: seq[tuple[name, val: string]]
-    when not declared(CIMPORT):
-      grammar*: seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode) {.nimcall.}]]
+    code*, mode*, pluginSourcePath*, sourceFile*: string
 
     onSymbol*: OnSymbol
+
+  NimState = ref object
+    identifiers*: TableRef[string, string]
+
+    constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
+
+    currentHeader*: string
+
+    data*: seq[tuple[name, val: string]]
 
 var
   gStateCT {.compiletime, used.}: State
@@ -78,4 +82,4 @@ type CompileMode = enum
 const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
 
 when not declared(CIMPORT):
-  export gAtoms, gExpressions, gEnumVals, Kind, Ast, State, gStateRT, nBl, CompileMode, modeDefault
+  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState, gStateRT, nBl, CompileMode, modeDefault

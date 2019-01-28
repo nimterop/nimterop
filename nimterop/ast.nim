@@ -4,7 +4,7 @@ import regex
 
 import "."/[getters, globals, grammar, treesitter/runtime]
 
-proc saveNodeData(node: TSNode): bool =
+proc saveNodeData(node: TSNode, nimState: NimState): bool =
   let name = $node.tsNodeType()
   if name in gAtoms:
     var
@@ -27,32 +27,32 @@ proc saveNodeData(node: TSNode): bool =
     if node.tsNodePrevNamedSibling().tsNodeIsNull():
       if pname == "pointer_declarator":
         if ppname notin ["function_declarator", "array_declarator"]:
-          gStateRT.data.add(("pointer_declarator", ""))
+          nimState.data.add(("pointer_declarator", ""))
         elif ppname == "array_declarator":
-          gStateRT.data.add(("array_pointer_declarator", ""))
+          nimState.data.add(("array_pointer_declarator", ""))
       elif pname in ["function_declarator", "array_declarator"]:
         if ppname == "pointer_declarator":
-          gStateRT.data.add(("pointer_declarator", ""))
+          nimState.data.add(("pointer_declarator", ""))
 
-    gStateRT.data.add((name, val))
+    nimState.data.add((name, val))
 
     if node.tsNodeType() == "field_identifier" and
       pname == "pointer_declarator" and
       ppname == "function_declarator":
       if pppname == "pointer_declarator":
-        gStateRT.data.insert(("pointer_declarator", ""), gStateRT.data.len-1)
-      gStateRT.data.add(("function_declarator", ""))
+        nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
+      nimState.data.add(("function_declarator", ""))
 
   elif name in gExpressions:
     if $node.tsNodeParent.tsNodeType() notin gExpressions:
-      gStateRT.data.add((name, node.getNodeVal()))
+      nimState.data.add((name, node.getNodeVal()))
 
   elif name in ["abstract_pointer_declarator", "enumerator", "field_declaration", "function_declarator"]:
-    gStateRT.data.add((name.replace("abstract_", ""), ""))
+    nimState.data.add((name.replace("abstract_", ""), ""))
 
   return true
 
-proc searchAstForNode(ast: ref Ast, node: TSNode): bool =
+proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
   let
     childNames = node.getTSNodeNamedChildNames().join()
 
@@ -73,18 +73,18 @@ proc searchAstForNode(ast: ref Ast, node: TSNode): bool =
                   ast.getAstChildByName($nodeChild.tsNodeType())
                 else:
                   ast
-            if not searchAstForNode(astChild, nodeChild):
+            if not searchAstForNode(astChild, nodeChild, nimState):
               flag = false
               break
 
         if flag:
-          return node.saveNodeData()
+          return node.saveNodeData(nimState)
       else:
-        return node.saveNodeData()
+        return node.saveNodeData(nimState)
   elif node.getTSNodeNamedChildCountSansComments() == 0:
-    return node.saveNodeData()
+    return node.saveNodeData(nimState)
 
-proc searchAst(root: TSNode) =
+proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
   var
     node = root
     nextnode: TSNode
@@ -94,18 +94,18 @@ proc searchAst(root: TSNode) =
     if not node.tsNodeIsNull() and depth > -1:
       let
         name = $node.tsNodeType()
-      if name in gStateRT.ast:
-        for ast in gStateRT.ast[name]:
-          if searchAstForNode(ast, node):
-            ast.tonim(ast, node)
+      if name in astTable:
+        for ast in astTable[name]:
+          if searchAstForNode(ast, node, nimState):
+            ast.tonim(ast, node, nimState)
             if gStateRT.debug:
-              gStateRT.debugStr &= "\n\n# " & gStateRT.data.join("\n# ")
+              nimState.debugStr &= "\n\n# " & nimState.data.join("\n# ")
             break
-        gStateRT.data = @[]
+        nimState.data = @[]
     else:
       break
 
-    if $node.tsNodeType() notin gStateRT.ast and node.tsNodeNamedChildCount() != 0:
+    if $node.tsNodeType() notin astTable and node.tsNodeNamedChildCount() != 0:
       nextnode = node.tsNodeNamedChild(0)
       depth += 1
     else:
@@ -128,28 +128,30 @@ proc searchAst(root: TSNode) =
     if node == root:
       break
 
-proc printNim*(fullpath: string, root: TSNode) =
-  parseGrammar()
-
+proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
   echo "{.experimental: \"codeReordering\".}"
 
-  var fp = fullpath.replace("\\", "/")
-  gStateRT.currentHeader = getCurrentHeader(fullpath)
-  gStateRT.constStr &= &"  {gStateRT.currentHeader} = \"{fp}\"\n"
+  var
+    nimState = new(NimState)
+    fp = fullpath.replace("\\", "/")
+  nimState.identifiers = newTable[string, string]()
 
-  root.searchAst()
+  nimState.currentHeader = getCurrentHeader(fullpath)
+  nimState.constStr &= &"  {nimState.currentHeader} = \"{fp}\"\n"
 
-  if gStateRT.enumStr.nBl:
-    echo gStateRT.enumStr
+  root.searchAst(astTable, nimState)
 
-  if gStateRT.constStr.nBl:
-    echo "const\n" & gStateRT.constStr
+  if nimState.enumStr.nBl:
+    echo nimState.enumStr
 
-  if gStateRT.typeStr.nBl:
-    echo "type\n" & gStateRT.typeStr
+  if nimState.constStr.nBl:
+    echo "const\n" & nimState.constStr
 
-  if gStateRT.procStr.nBl:
-    echo gStateRT.procStr
+  if nimState.typeStr.nBl:
+    echo "type\n" & nimState.typeStr
 
-  if gStateRT.debug and gStateRT.debugStr.nBl:
-    echo gStateRT.debugStr
+  if nimState.procStr.nBl:
+    echo nimState.procStr
+
+  if gStateRT.debug and nimState.debugStr.nBl:
+    echo nimState.debugStr

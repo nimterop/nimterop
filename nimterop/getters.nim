@@ -103,15 +103,15 @@ proc getIdentifier*(str: string, kind: NimSymKind): string =
     checkUnderscores(result, &"Identifier '{str}' still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
   else:
     result = str
-    checkUnderscores(result, &"Identifier '{result}' contains unsupported leading/trailing underscores '_': use 'cPlugin:onSymbol()' to handle")
+    checkUnderscores(result, &"Identifier '{result}' contains unsupported leading/trailing underscores '_': use 'cPlugin:onSymbol()' to remove")
 
   if result in gReserved:
     result = &"`{result}`"
 
-proc getUniqueIdentifier*(existing: HashSet[string], prefix = ""): string =
+proc getUniqueIdentifier*(existing: TableRef[string, string], prefix = ""): string =
   var
     name = prefix & "_" & gStateRT.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
-    nimName = name.replace("_", "").toLowerAscii
+    nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
     count = 1
 
   while (nimName & $count) in existing:
@@ -119,16 +119,17 @@ proc getUniqueIdentifier*(existing: HashSet[string], prefix = ""): string =
 
   return name & $count
 
-proc addNewIdentifer*(existing: var HashSet[string], name: string): bool =
+proc addNewIdentifer*(existing: var TableRef[string, string], name: string): bool =
   if name notin gStateRT.symOverride:
     let
-      nimName =
-        if existing == gStateRT.types:
-          name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
-        else:
-          name.replace("_", "").toLowerAscii
+      nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
 
-    return not existing.containsOrIncl(nimName)
+    if existing.hasKey(nimName):
+      doAssert name == existing[nimName], &"Identifier '{name}' is a stylistic duplicate of identifier '{existing[nimName]}', use 'cPlugin:onSymbol()' to rename"
+      result = false
+    else:
+      existing[nimName] = name
+      result = true
 
 proc getPtrType*(str: string): string =
   result = case str:

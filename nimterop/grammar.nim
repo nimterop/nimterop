@@ -4,21 +4,24 @@ import regex
 
 import "."/[getters, globals, lisp, treesitter/runtime]
 
-proc initGrammar() =
+type
+  Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, nimState: NimState) {.nimcall.}]]
+
+proc initGrammar(): Grammar =
   # #define X Y
-  gStateRT.grammar.add(("""
+  result.add(("""
    (preproc_def
     (identifier)
     (preproc_arg)
    )
   """,
-    proc (ast: ref Ast, node: TSNode) =
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       let
-        name = gStateRT.data[0].val.getIdentifier(nskConst)
-        val = gStateRT.data[1].val.getLit()
+        name = nimState.data[0].val.getIdentifier(nskConst)
+        val = nimState.data[1].val.getLit()
 
-      if name.nBl and val.nBl and gStateRT.consts.addNewIdentifer(name):
-        gStateRT.constStr &= &"  {name}* = {val}\n"
+      if name.nBl and val.nBl and nimState.identifiers.addNewIdentifer(name):
+        nimState.constStr &= &"  {name}* = {val}\n"
   ))
 
   let
@@ -67,18 +70,18 @@ proc initGrammar() =
     """
 
   template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i: untyped): untyped =
-    ptyp = gStateRT.data[i].val.getIdentifier(nskType)
-    doAssert ptyp.nBl, &"Blank param type for '{fname}', originally '{gStateRT.data[i].val}'"
+    ptyp = nimState.data[i].val.getIdentifier(nskType)
+    doAssert ptyp.nBl, &"Blank param type for '{fname}', originally '{nimState.data[i].val}'"
 
-    if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "pointer_declarator":
+    if i+1 < nimState.data.len and nimState.data[i+1].name == "pointer_declarator":
       pptr = "ptr "
       i += 1
     else:
       pptr = ""
 
-    if i+1 < gStateRT.data.len and gStateRT.data[i+1].name == "identifier":
-      pname = gStateRT.data[i+1].val.getIdentifier(nskParam)
-      doAssert pname.nBl, &"Blank param name for '{fname}', originally '{gStateRT.data[i+1].val}'"
+    if i+1 < nimState.data.len and nimState.data[i+1].name == "identifier":
+      pname = nimState.data[i+1].val.getIdentifier(nskParam)
+      doAssert pname.nBl, &"Blank param name for '{fname}', originally '{nimState.data[i+1].val}'"
       i += 2
     else:
       pname = "a" & $count
@@ -92,7 +95,7 @@ proc initGrammar() =
   # typedef X Y
   # typedef struct X Y
   # typedef ?* Y
-  gStateRT.grammar.add((&"""
+  result.add((&"""
    (type_definition
     {typeGrammar}
     (type_identifier!)
@@ -105,17 +108,17 @@ proc initGrammar() =
     {funcGrammar}
    )
   """,
-    proc (ast: ref Ast, node: TSNode) =
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       var
         i = 0
-        typ = gStateRT.data[i].val.getIdentifier(nskType)
+        typ = nimState.data[i].val.getIdentifier(nskType)
         name = ""
         tptr = ""
         aptr = ""
 
       i += 1
-      if i < gStateRT.data.len:
-        case gStateRT.data[i].name:
+      if i < nimState.data.len:
+        case nimState.data[i].name:
           of "pointer_declarator":
             tptr = "ptr "
             i += 1
@@ -123,19 +126,19 @@ proc initGrammar() =
             aptr = "ptr "
             i += 1
 
-      if i < gStateRT.data.len:
-        name = gStateRT.data[i].val.getIdentifier(nskType)
+      if i < nimState.data.len:
+        name = nimState.data[i].val.getIdentifier(nskType)
         i += 1
 
-      if typ.nBl and name.nBl and gStateRT.types.addNewIdentifer(name):
-        if i < gStateRT.data.len and gStateRT.data[^1].name == "function_declarator":
+      if typ.nBl and name.nBl and nimState.identifiers.addNewIdentifer(name):
+        if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
           var
             fname = name
             pout, pname, ptyp, pptr = ""
             count = 1
 
-          while i < gStateRT.data.len:
-            if gStateRT.data[i].name == "function_declarator":
+          while i < nimState.data.len:
+            if nimState.data[i].name == "function_declarator":
               break
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
@@ -144,29 +147,29 @@ proc initGrammar() =
             pout = pout[0 .. ^2]
 
           if tptr == "ptr " or typ != "object":
-            gStateRT.typeStr &= &"  {name}* = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}\n"
+            nimState.typeStr &= &"  {name}* = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}\n"
           else:
-            gStateRT.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
+            nimState.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
         else:
-          if i < gStateRT.data.len and gStateRT.data[i].name in ["identifier", "number_literal"]:
+          if i < nimState.data.len and nimState.data[i].name in ["identifier", "number_literal"]:
             var
-              flen = gStateRT.data[i].val
-            if gStateRT.data[i].name == "identifier":
+              flen = nimState.data[i].val
+            if nimState.data[i].name == "identifier":
               flen = flen.getIdentifier(nskConst)
-              doAssert flen.len != 0, &"Blank array length for '{name}', originally '{gStateRT.data[i].val}'"
+              doAssert flen.len != 0, &"Blank array length for '{name}', originally '{nimState.data[i].val}'"
 
-            gStateRT.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
+            nimState.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
           else:
             if name == typ:
-              gStateRT.typeStr &= &"  {name}* = object\n"
+              nimState.typeStr &= &"  {name}* = object\n"
             else:
-              gStateRT.typeStr &= &"  {name}* = {getPtrType(tptr&typ)}\n"
+              nimState.typeStr &= &"  {name}* = {getPtrType(tptr&typ)}\n"
   ))
 
-  proc pDupTypeCommon(nname: string, fend: int, isEnum=false) =
+  proc pDupTypeCommon(nname: string, fend: int, nimState: NimState, isEnum=false) =
     var
-      dname = gStateRT.data[^1].val
-      ndname = gStateRT.data[^1].val.getIdentifier(nskType)
+      dname = nimState.data[^1].val
+      ndname = nimState.data[^1].val.getIdentifier(nskType)
       dptr =
         if fend == 2:
           "ptr "
@@ -175,14 +178,14 @@ proc initGrammar() =
 
     if ndname.nBl and ndname != nname:
       if isEnum:
-        if gStateRT.enums.addNewIdentifer(ndname):
-          gStateRT.enumStr &= &"type {ndname}* = {dptr}{nname}\n"
+        if nimState.identifiers.addNewIdentifer(ndname):
+          nimState.enumStr &= &"type {ndname}* = {dptr}{nname}\n"
       else:
-        if gStateRT.types.addNewIdentifer(ndname):
-          gStateRT.typeStr &=
-            &"  {ndname}* {{.importc: \"{dname}\", header: {gStateRT.currentHeader}, bycopy.}} = {dptr}{nname}\n"
+        if nimState.identifiers.addNewIdentifer(ndname):
+          nimState.typeStr &=
+            &"  {ndname}* {{.importc: \"{dname}\", header: {nimState.currentHeader}, bycopy.}} = {dptr}{nname}\n"
 
-  proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
+  proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
     var
       nname = name.getIdentifier(nskType)
       prefix = ""
@@ -210,29 +213,29 @@ proc initGrammar() =
                   union = " {.union.}"
               break
 
-    if nname.nBl and gStateRT.types.addNewIdentifer(nname):
-      if gStateRT.data.len == 1:
-        gStateRT.typeStr &= &"  {nname}* {{.bycopy.}} = object{union}\n"
+    if nname.nBl and nimState.identifiers.addNewIdentifer(nname):
+      if nimState.data.len == 1:
+        nimState.typeStr &= &"  {nname}* {{.bycopy.}} = object{union}\n"
       else:
-        gStateRT.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {gStateRT.currentHeader}, bycopy.}} = object{union}\n"
+        nimState.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {nimState.currentHeader}, bycopy.}} = object{union}\n"
 
       var
         i = fstart
         ftyp, fname: string
         fptr = ""
         aptr = ""
-      while i < gStateRT.data.len-fend:
+      while i < nimState.data.len-fend:
         fptr = ""
         aptr = ""
-        if gStateRT.data[i].name == "field_declaration":
+        if nimState.data[i].name == "field_declaration":
           i += 1
           continue
 
-        if gStateRT.data[i].name notin ["field_identifier", "pointer_declarator", "array_pointer_declarator"]:
-          ftyp = gStateRT.data[i].val.getType()
+        if nimState.data[i].name notin ["field_identifier", "pointer_declarator", "array_pointer_declarator"]:
+          ftyp = nimState.data[i].val.getType()
           i += 1
 
-        case gStateRT.data[i].name:
+        case nimState.data[i].name:
           of "pointer_declarator":
             fptr = "ptr "
             i += 1
@@ -240,26 +243,26 @@ proc initGrammar() =
             aptr = "ptr "
             i += 1
 
-        fname = gStateRT.data[i].val.getIdentifier(nskField)
-        doAssert fname.len != 0, &"Blank field name for '{nname}', originally '{gStateRT.data[i].val}'"
+        fname = nimState.data[i].val.getIdentifier(nskField)
+        doAssert fname.len != 0, &"Blank field name for '{nname}', originally '{nimState.data[i].val}'"
 
-        if i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name in gEnumVals:
+        if i+1 < nimState.data.len-fend and nimState.data[i+1].name in gEnumVals:
           let
-            flen = gStateRT.data[i+1].val.getNimExpression()
-          gStateRT.typeStr &= &"    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]\n"
+            flen = nimState.data[i+1].val.getNimExpression()
+          nimState.typeStr &= &"    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]\n"
           i += 2
-        elif i+1 < gStateRT.data.len-fend and gStateRT.data[i+1].name == "function_declarator":
+        elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "function_declarator":
           var
             pout, pname, ptyp, pptr = ""
             count = 1
 
           i += 2
-          while i < gStateRT.data.len-fend:
-            if gStateRT.data[i].name == "function_declarator":
+          while i < nimState.data.len-fend:
+            if nimState.data[i].name == "function_declarator":
               i += 1
               continue
 
-            if gStateRT.data[i].name == "field_declaration":
+            if nimState.data[i].name == "field_declaration":
               break
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
@@ -267,20 +270,20 @@ proc initGrammar() =
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
           if fptr == "ptr " or ftyp != "object":
-            gStateRT.typeStr &= &"    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}\n"
+            nimState.typeStr &= &"    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}\n"
           else:
-            gStateRT.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
+            nimState.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
             i += 1
         else:
           if ftyp == "object":
-            gStateRT.typeStr &= &"    {fname}*: pointer\n"
+            nimState.typeStr &= &"    {fname}*: pointer\n"
           else:
-            gStateRT.typeStr &= &"    {fname}*: {getPtrType(fptr&ftyp)}\n"
+            nimState.typeStr &= &"    {fname}*: {getPtrType(fptr&ftyp)}\n"
           i += 1
 
       if node.tsNodeType() == "type_definition" and
-        gStateRT.data[^1].name == "type_identifier" and gStateRT.data[^1].val.len != 0:
-          pDupTypeCommon(nname, fend, false)
+        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.len != 0:
+          pDupTypeCommon(nname, fend, nimState, false)
 
   let
     fieldGrammar = &"""
@@ -313,18 +316,18 @@ proc initGrammar() =
     """
 
   # struct X {}
-  gStateRT.grammar.add((&"""
+  result.add((&"""
    (struct_specifier|union_specifier
     (type_identifier)
     {fieldListGrammar}
    )
   """,
-    proc (ast: ref Ast, node: TSNode) =
-      pStructCommon(ast, node, gStateRT.data[0].val, 1, 1)
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      pStructCommon(ast, node, nimState.data[0].val, 1, 1, nimState)
   ))
 
   # typedef struct X {}
-  gStateRT.grammar.add((&"""
+  result.add((&"""
    (type_definition
     (struct_specifier|union_specifier
      (type_identifier?)
@@ -336,67 +339,67 @@ proc initGrammar() =
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode) =
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       var
         fstart = 0
         fend = 1
 
-      if gStateRT.data[^2].name == "pointer_declarator":
+      if nimState.data[^2].name == "pointer_declarator":
         fend = 2
 
-      if gStateRT.data.len > 1 and
-        gStateRT.data[0].name == "type_identifier" and
-        gStateRT.data[1].name != "field_identifier":
+      if nimState.data.len > 1 and
+        nimState.data[0].name == "type_identifier" and
+        nimState.data[1].name != "field_identifier":
 
         fstart = 1
-        pStructCommon(ast, node, gStateRT.data[0].val, fstart, fend)
+        pStructCommon(ast, node, nimState.data[0].val, fstart, fend, nimState)
       else:
-        pStructCommon(ast, node, gStateRT.data[^1].val, fstart, fend)
+        pStructCommon(ast, node, nimState.data[^1].val, fstart, fend, nimState)
   ))
 
-  proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int) =
+  proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
     let nname =
       if name.len == 0:
-        getUniqueIdentifier(gStateRT.enums, "Enum")
+        getUniqueIdentifier(nimState.identifiers, "Enum")
       else:
         name.getIdentifier(nskType)
 
-    if nname.nBl and gStateRT.enums.addNewIdentifer(nname):
-      gStateRT.enumStr &= &"\ntype {nname}* = distinct int"
-      gStateRT.enumStr &= &"\nconverter enumToInt(en: {nname}): int {{.used.}} = en.int\n"
+    if nname.nBl and nimState.identifiers.addNewIdentifer(nname):
+      nimState.enumStr &= &"\ntype {nname}* = distinct int"
+      nimState.enumStr &= &"\nconverter enumToInt(en: {nname}): int {{.used.}} = en.int\n"
 
       var
         i = fstart
         count = 0
-      while i < gStateRT.data.len-fend:
-        if gStateRT.data[i].name == "enumerator":
+      while i < nimState.data.len-fend:
+        if nimState.data[i].name == "enumerator":
           i += 1
           continue
 
         let
-          fname = gStateRT.data[i].val.getIdentifier(nskEnumField)
+          fname = nimState.data[i].val.getIdentifier(nskEnumField)
 
-        if i+1 < gStateRT.data.len-fend and
-          gStateRT.data[i+1].name in gEnumVals:
-          if fname.nBl and gStateRT.consts.addNewIdentifer(fname):
-            gStateRT.constStr &= &"  {fname}* = ({gStateRT.data[i+1].val.getNimExpression()}).{nname}\n"
+        if i+1 < nimState.data.len-fend and
+          nimState.data[i+1].name in gEnumVals:
+          if fname.nBl and nimState.identifiers.addNewIdentifer(fname):
+            nimState.constStr &= &"  {fname}* = ({nimState.data[i+1].val.getNimExpression()}).{nname}\n"
           try:
-            count = gStateRT.data[i+1].val.parseInt() + 1
+            count = nimState.data[i+1].val.parseInt() + 1
           except:
             count += 1
           i += 2
         else:
-          if fname.nBl and gStateRT.consts.addNewIdentifer(fname):
-            gStateRT.constStr &= &"  {fname}* = {count}.{nname}\n"
+          if fname.nBl and nimState.identifiers.addNewIdentifer(fname):
+            nimState.constStr &= &"  {fname}* = {count}.{nname}\n"
           i += 1
           count += 1
 
       if node.tsNodeType() == "type_definition" and
-        gStateRT.data[^1].name == "type_identifier" and gStateRT.data[^1].val.len != 0:
-          pDupTypeCommon(nname, fend, true)
+        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.len != 0:
+          pDupTypeCommon(nname, fend, nimState, true)
 
   # enum X {}
-  gStateRT.grammar.add(("""
+  result.add(("""
    (enum_specifier
     (type_identifier?)
     (enumerator_list
@@ -407,46 +410,46 @@ proc initGrammar() =
     )
    )
   """ % gEnumVals.join("|"),
-    proc (ast: ref Ast, node: TSNode) =
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       var
         name = ""
         offset = 0
 
-      if gStateRT.data[0].name == "type_identifier":
-        name = gStateRT.data[0].val
+      if nimState.data[0].name == "type_identifier":
+        name = nimState.data[0].val
         offset = 1
 
-      pEnumCommon(ast, node, name, offset, 0)
+      pEnumCommon(ast, node, name, offset, 0, nimState)
   ))
 
   # typedef enum {} X
-  gStateRT.grammar.add((&"""
+  result.add((&"""
    (type_definition
-    {gStateRT.grammar[^1].grammar}
+    {result[^1].grammar}
     (type_identifier!)
     (pointer_declarator
      (type_identifier)
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode) =
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       var
         fstart = 0
         fend = 1
 
-      if gStateRT.data[^2].name == "pointer_declarator":
+      if nimState.data[^2].name == "pointer_declarator":
         fend = 2
 
-      if gStateRT.data[0].name == "type_identifier":
+      if nimState.data[0].name == "type_identifier":
         fstart = 1
 
-        pEnumCommon(ast, node, gStateRT.data[0].val, fstart, fend)
+        pEnumCommon(ast, node, nimState.data[0].val, fstart, fend, nimState)
       else:
-        pEnumCommon(ast, node, gStateRT.data[^1].val, fstart, fend)
+        pEnumCommon(ast, node, nimState.data[^1].val, fstart, fend, nimState)
   ))
 
   # typ function(typ param1, ...)
-  gStateRT.grammar.add((&"""
+  result.add((&"""
    (declaration
     (storage_class_specifier?)
     {typeGrammar}
@@ -456,32 +459,32 @@ proc initGrammar() =
     {funcGrammar}
    )
   """,
-    proc (ast: ref Ast, node: TSNode) =
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       var
-        ftyp = gStateRT.data[0].val.getIdentifier(nskType)
+        ftyp = nimState.data[0].val.getIdentifier(nskType)
         fptr = ""
         i = 1
 
-      while i < gStateRT.data.len:
-        if gStateRT.data[i].name == "function_declarator":
+      while i < nimState.data.len:
+        if nimState.data[i].name == "function_declarator":
           i += 1
           continue
 
-        if gStateRT.data[i].name == "pointer_declarator":
+        if nimState.data[i].name == "pointer_declarator":
           fptr = "ptr "
           i += 1
         else:
           fptr = ""
 
         var
-          fname = gStateRT.data[i].val
+          fname = nimState.data[i].val
           fnname = fname.getIdentifier(nskProc)
           pout, pname, ptyp, pptr = ""
           count = 1
 
         i += 1
-        while i < gStateRT.data.len:
-          if gStateRT.data[i].name == "function_declarator":
+        while i < nimState.data.len:
+          if nimState.data[i].name == "function_declarator":
             break
 
           funcParamCommon(fnname, pname, ptyp, pptr, pout, count, i)
@@ -489,11 +492,11 @@ proc initGrammar() =
         if pout.len != 0 and pout[^1] == ',':
           pout = pout[0 .. ^2]
 
-        if ftyp.nBl and fnname.nBl and gStateRT.procs.addNewIdentifer(fnname):
+        if ftyp.nBl and fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
           if fptr == "ptr " or ftyp != "object":
-            gStateRT.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+            nimState.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}\n"
           else:
-            gStateRT.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {gStateRT.currentHeader}.}}\n"
+            nimState.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}\n"
 
   ))
 
@@ -512,28 +515,23 @@ proc initRegex(ast: ref Ast) =
       echo reg
       raise newException(Exception, getCurrentExceptionMsg())
 
-proc parseGrammar*() =
-  gStateRT.consts.init()
-  gStateRT.enums.init()
-  gStateRT.procs.init()
-  gStateRT.types.init()
+proc parseGrammar*(): AstTable =
+  let grammars = initGrammar()
 
-  initGrammar()
-
-  gStateRT.ast = initTable[string, seq[ref Ast]]()
-  for i in 0 .. gStateRT.grammar.len-1:
+  result = newTable[string, seq[ref Ast]]()
+  for i in 0 .. grammars.len-1:
     var
-      ast = gStateRT.grammar[i].grammar.parseLisp()
+      ast = grammars[i].grammar.parseLisp()
 
-    ast.tonim = gStateRT.grammar[i].call
+    ast.tonim = grammars[i].call
     ast.initRegex()
     for n in ast.name.split("|"):
-      if n notin gStateRT.ast:
-        gStateRT.ast[n] = @[ast]
+      if n notin result:
+        result[n] = @[ast]
       else:
-        gStateRT.ast[n].add(ast)
+        result[n].add(ast)
 
-proc printGrammar*() =
-  for name in gStateRT.ast.keys():
-    for ast in gStateRT.ast[name]:
+proc printGrammar*(astTable: AstTable) =
+  for name in astTable.keys():
+    for ast in astTable[name]:
       echo ast.printAst()
