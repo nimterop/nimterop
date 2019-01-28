@@ -1,4 +1,4 @@
-import sequtils, sets, strformat, strutils, tables
+import os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
@@ -128,9 +128,15 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
     if node == root:
       break
 
-proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
-  echo "{.experimental: \"codeReordering\".}"
+proc printNimHeader*() =
+  echo """# Generated at $1
+# Command line:
+#   $2 $3
 
+{.experimental: "codeReordering".}
+""" % [$now(), getAppFilename(), commandLineParams().join(" ")]
+
+proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
   var
     nimState = new(NimState)
     fp = fullpath.replace("\\", "/")

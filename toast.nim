@@ -54,9 +54,7 @@ proc printLisp(root: TSNode) =
       break
 
 proc process(path: string, astTable: AstTable) =
-  if not existsFile(path):
-    echo "Invalid path " & path
-    return
+  doAssert existsFile(path), "Invalid path " & path
 
   var
     parser = tsParserNew()
@@ -141,7 +139,10 @@ proc main(
   if pgrammar:
     astTable.printGrammar()
   elif source.len != 0:
-    process(source[0], astTable)
+    if gStateRT.pnim:
+      printNimHeader()
+    for src in source:
+      process(src, astTable)
 
 when isMainModule:
   import cligen
