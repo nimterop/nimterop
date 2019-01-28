@@ -47,7 +47,7 @@ type
       tonim*: proc (ast: ref Ast, node: TSNode, nimState: NimState)
     regex*: Regex
 
-  AstTable = TableRef[string, seq[ref Ast]]
+  AstTable {.used.} = TableRef[string, seq[ref Ast]]
 
   State = object
     compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
@@ -58,7 +58,7 @@ type
 
     onSymbol*: OnSymbol
 
-  NimState = ref object
+  NimState {.used.} = ref object
     identifiers*: TableRef[string, string]
 
     constStr*, debugStr*, enumStr*, procStr*, typeStr*: string

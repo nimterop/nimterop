@@ -65,15 +65,13 @@ macro gitCheckout*(file, outdir: static string): untyped =
     sleep(500)
     echo "  Retrying ..."
 
-macro gitPull*(url: static string, outdirN = "", plistN = "", checkoutN = ""): untyped =
+macro gitPull*(url: static string, outdirN: static string = "", plist: static string = "", checkout: static string = ""): untyped =
   let
-    outdir = if outdirN.strVal().isAbsolute(): outdirN.strVal() else: getProjectPath()/outdirN.strVal()
-    plist = plistN.strVal()
-    checkout = checkoutN.strVal()
+    outdir = if outdirN.isAbsolute(): outdirN else: getProjectPath()/outdirN
 
   if dirExists(outdir/".git"):
     discard quote do:
-      gitReset(`outdirN`)
+      gitReset(`outdir`)
     return
   else:
     let

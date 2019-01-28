@@ -17,11 +17,14 @@ proc initGrammar(): Grammar =
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
       let
-        name = nimState.data[0].val.getIdentifier(nskConst)
         val = nimState.data[1].val.getLit()
 
-      if name.nBl and val.nBl and nimState.identifiers.addNewIdentifer(name):
-        nimState.constStr &= &"  {name}* = {val}\n"
+      if val.nBl:
+        let
+          name = nimState.data[0].val.getIdentifier(nskConst)
+
+        if name.nBl and nimState.identifiers.addNewIdentifer(name):
+          nimState.constStr &= &"  {name}* = {val}\n"
   ))
 
   let
