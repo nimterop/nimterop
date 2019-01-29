@@ -88,7 +88,19 @@ proc getToast(fullpath: string, recurse: bool = false): string =
     ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
 
-  cmd &= "toast --pnim --preprocess"
+  let toast_temp = currentSourcePath.parentDir / ("toast_temp".addFileExt ExeExt)
+  block:
+    let toastSrcPath = currentSourcePath.parentDir.parentDir / "toast.nim"
+    let cmd2 = &"nim c -o:{toast_temp} {toastSrcPath}"
+    echo "getToast:"
+    echo cmd2
+    let (result2, ret2) = gorgeEx(cmd2)
+    echo result2
+    echo "ret2:" & $ret2
+    doAssert ret2 == 0
+    # (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
+
+  cmd &= &"{toast_temp} --pnim --preprocess"
 
   if recurse:
     cmd.add " --recurse"

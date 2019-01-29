@@ -7,6 +7,7 @@ license     = "MIT"
 
 bin = @["toast"]
 installDirs = @["nimterop"]
+installFiles = @["toast.nim", "config.nims"]
 
 # Dependencies
 
