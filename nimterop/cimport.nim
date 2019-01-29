@@ -90,8 +90,12 @@ proc getToastExe(): string =
   https://github.com/genotrance/nimterop/issues/69
   but using nim deps instead of c deps; they can be obtained via:
   `nim genDepend/--genDeps` or https://github.com/nim-lang/RFCs/issues/123
+  
+  BUG: this causes mysterious windows memory crash when using that binary
+  built at CT:
+  # if not fileExists(result) or gStateCT.nocache:
   ]#
-  if not fileExists(result) or gStateCT.nocache:
+  if not fileExists(result):
     let toastSrc = nimteropSrcDir() / "toast.nim"
     let cmd = &"nim c -o:{result.quoteShell} {toastSrc.quoteShell}"
     when nimvm:

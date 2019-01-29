@@ -13,7 +13,7 @@ proc nimteropSrcDir*(): string =
 proc toastExePath*(): string =
   # not sure how to make nimble install under here with `bin = @[...]`
   # nimteropBuildDir() / "toast"
-  nimteropSrcDir() / "nimterop" / "toast"
+  nimteropSrcDir() / ("toast".addFileExt ExeExt)
 
 proc incDir*(): string =
   nimteropBuildDir() / "inc"
