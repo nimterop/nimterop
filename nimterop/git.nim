@@ -33,7 +33,7 @@ proc extractZip*(zipfile, outdir: string) =
 
   echo "Extracting " & zipfile
   let cmd2 = cmd % zipfile
-  discard execAction(&"cd {outdir} && {cmd2}")
+  discard execAction(&"cd {outdir.quoteShell} && {cmd2}")
 
 proc downloadUrl*(url, outdir: string) =
   doAssert outdir.isAbsolute
@@ -41,16 +41,16 @@ proc downloadUrl*(url, outdir: string) =
     file = url.extractFilename()
     ext = file.splitFile().ext.toLowerAscii()
 
-  var cmd = "curl $# -o $#"
-  if defined(Windows):
-    cmd = "powershell wget $# -OutFile $#"
-
   if not (ext == ".zip" and fileExists(outdir/file)):
     echo "Downloading " & file
+    var cmd = if defined(Windows):
+      "powershell wget $# -OutFile $#"
+    else:
+      "curl $# -o $#"
     discard execAction(cmd % [url, outdir/file])
 
   if ext == ".zip":
-    extractZip(`file`, `outdir`)
+    extractZip(file, outdir)
 
 proc gitReset*(outdir: string) =
   echo "Resetting " & outdir
@@ -72,7 +72,7 @@ proc relativePathNaive*(file, base: string): string =
 proc gitCheckout*(file, outdir: string) =
   echo "Resetting " & file
   let file2 = file.relativePathNaive outdir
-  let cmd = &"cd {outdir.quoteShell} && git checkout {file2}"
+  let cmd = &"cd {outdir.quoteShell} && git checkout {file2.quoteShell}"
   while execAction(cmd).contains("Permission denied"):
     sleep(500)
     echo "  Retrying ..."
@@ -93,7 +93,7 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
 
   if plist.len != 0:
     # TODO: document this, it's not clear
-    let sparsefile = &"{outdir}/.git/info/sparse-checkout"
+    let sparsefile = outdir / ".git/info/sparse-checkout"
 
     discard execAction(&"cd {outdir2} && git config core.sparsecheckout true")
     writeFile(sparsefile, plist)
