@@ -5,6 +5,9 @@ author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
 
+# this gives Warning: Binary 'nimterop/toast' was already installed from source directory
+# when running `nimble install --verbose -y`
+bin = @["nimterop/toast"]
 installDirs = @["nimterop"]
 installFiles = @["config.nims"]
 
@@ -22,9 +25,7 @@ proc tsoloud() =
   execCmd "nim cpp -r tests/tsoloud.nim"
 
 proc buildToast(options: string) =
-  # pending https://github.com/nim-lang/Nim/issues/9513 simplify this
-  let ExeExt2 = when defined(Windows): ".exe" else: ""
-  execCmd(&"nim c -o:build/toast{ExeExt2} {options} nimterop/toast.nim")
+  execCmd(&"nim c {options} nimterop/toast.nim")
 
 task rebuildToast, "rebuild toast":
   # If need to manually rebuild (automatically built on 1st need)
