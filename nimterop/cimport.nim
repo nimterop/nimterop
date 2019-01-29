@@ -72,6 +72,7 @@ proc getCacheValue(fullpath: string): string =
     result = fullpath.getFileDate()
 
 proc getToastError(output: string): string =
+  echo "getToastError:\n" & output & "\nfiltered output:\n"
   # Filter out preprocessor errors
   for line in output.splitLines():
     if "fatal error:" in line.toLowerAscii:
