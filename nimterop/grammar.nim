@@ -492,16 +492,12 @@ proc initGrammar(): Grammar =
 
         if fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
           let ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
-          var returnTypeStr = ""
-          if fptr == "ptr " or ftyp != "object": returnTypeStr = &": {getPtrType(fptr&ftyp)}"
-          #[
-          3 possibilities
-          importc.             # name is same
-          importc: "origName". # when name differs
-          importc: "$1"        # this one could be used if prefixes are needed, eg "cv$1" (keeps it DRY)
-          ]#
-          let fname2 = if fname == fnname: "" else: &": \"{fname}\""
-          nimState.procStr &= &"proc {fnname}*({pout}){returnTypeStr} {{.importc{fname2}, header: {nimState.currentHeader}.}}\n"
+
+          if fptr == "ptr " or ftyp != "object":
+            nimState.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}\n"
+          else:
+            nimState.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}\n"
+
   ))
 
 proc initRegex(ast: ref Ast) =
