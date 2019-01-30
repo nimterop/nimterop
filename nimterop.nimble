@@ -44,7 +44,9 @@ proc testAll() =
     tsoloud() # requires some libraries on linux, need them installed in TRAVIS
 
 task test, "Test":
-  for options in ["", "-d:release"]:
+  # consider running each test under `nim c` and `nim cpp` modes; some additional
+  # c++ specific tests can also run for `nim cpp` mode.
+  for options in [""]:
     buildToast(options)
     testAll()
 
