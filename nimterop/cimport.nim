@@ -81,38 +81,14 @@ proc getToastError(output: string): string =
   if result.len == 0:
     result = output
 
-proc getToastExe(): string =
-  # consider also allowing user override via -d:nimteropToast:path or
-  # via https://github.com/genotrance/nimterop/issues/68
-  result = toastExePath()
-  #[
-  this can be made more robust using same algo as shown here
-  https://github.com/genotrance/nimterop/issues/69
-  but using nim deps instead of c deps; they can be obtained via:
-  `nim genDepend/--genDeps` or https://github.com/nim-lang/RFCs/issues/123
-  
-  BUG: this causes mysterious windows memory crash when using that binary
-  built at CT:
-  # if not fileExists(result) or gStateCT.nocache:
-  ]#
-  if not fileExists(result):
-    let toastSrc = nimteropSrcDir() / "toast.nim"
-    let cmd = &"nim c -o:{result.quoteShell} {toastSrc.quoteShell}"
-    when nimvm:
-      echo ("getToastExe", cmd)
-      let (output, ret) = gorgeEx(cmd, cache=getCacheValue(toastSrc))
-      doAssert ret == 0, $(cmd, ret, toastSrc) & " output:\n" & output
-    else:
-      doAssert false # we can easily support if needed
-  else:
-    discard # uses cached toast
-
 proc getToast(fullpath: string, recurse: bool = false): string =
   var
     ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
 
-  cmd &= &"{getToastExe()} --pnim --preprocess"
+  let toastExe = toastExePath()
+  doAssert fileExists(toastExe), "toast not compiled: ", fileExists
+  cmd &= &"{toastExe} --pnim --preprocess"
 
   if recurse:
     cmd.add " --recurse"
