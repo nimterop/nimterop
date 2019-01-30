@@ -25,13 +25,11 @@ proc tokenize(tree: string) =
 
 proc readFromTokens(): ref Ast =
   if idx == gTokens.len:
-    echo "Bad AST"
-    quit(1)
+    doAssert false, "Bad AST " & $(idx: idx)
 
   if gTokens[idx] == "(":
     if gTokens.len - idx < 2:
-      echo "Corrupt AST"
-      quit(1)
+      doAssert false, "Corrupt AST " & $(gTokensLen: gTokens.len, idx: idx)
     if gTokens[idx+1] != "comment":
       result = new(Ast)
       (result.name, result.kind, result.recursive) = gTokens[idx+1].getNameKind()
@@ -44,8 +42,7 @@ proc readFromTokens(): ref Ast =
       if not res.isNil():
         result.children.add(res)
   elif gTokens[idx] == ")":
-    echo "Poor AST"
-    quit(1)
+    doAssert false, "Poor AST " & $(idx: idx)
 
   idx += 1
 
