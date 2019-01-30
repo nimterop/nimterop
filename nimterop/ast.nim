@@ -134,6 +134,9 @@ proc printNimHeader*() =
 #   $2 $3
 
 {.experimental: "codeReordering".}
+{.hint[ConvFromXtoItselfNotNeeded]: off.}
+
+import nimterop/types
 """ % [$now(), getAppFilename(), commandLineParams().join(" ")]
 
 proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =

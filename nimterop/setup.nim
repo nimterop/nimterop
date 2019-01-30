@@ -1,6 +1,6 @@
 import os, strutils
 
-import "."/[git,paths]
+import "."/[git, paths]
 
 proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter/", incDir() / "treesitter", """
@@ -12,7 +12,7 @@ src/runtime/*
 *.c
 *.h
 """)
-  
+
   # TODO: does this work on windows? if not use `os.unixToNativePath`
   let
     stack = incDir() / "treesitter/src/runtime/stack.c"

@@ -2,7 +2,7 @@ import hashes, macros, os, strformat, strutils
 
 const CIMPORT {.used.} = 1
 
-import "." / [globals,types,paths]
+import "." / [globals, types, paths]
 export types
 
 proc interpPath(dir: string): string=
