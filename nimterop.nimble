@@ -40,13 +40,8 @@ proc testAll() =
   when defined(Windows):
     execCmd "nim c -r tests/tmath.nim"
     execCmd "nim cpp -r tests/tmath.nim"
-    tsoloud()
-  elif defined(osx):
-    discard
-  elif existsEnv("TRAVIS"):
-    discard
-  else:
-    tsoloud()
+  if defined(OSX) or defined(Windows) or not existsEnv("TRAVIS"):
+    tsoloud() # requires some libraries on linux, need them installed in TRAVIS
 
 task test, "Test":
   for options in ["", "-d:release"]:

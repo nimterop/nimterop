@@ -22,16 +22,21 @@ cSkipSymbol("WavStream_stop", "WavStream_setFilter")
 
 cIncludeDir(incl)
 
-when defined(Linux):
+when defined(osx):
+  cDefine("WITH_COREAUDIO")
+  {.passL: "-framework CoreAudio -framework AudioToolbox".}
+  cCompile(src/"backend/coreaudio/*.cpp")
+elif defined(Linux):
   {.passL: "-lpthread".}
   cDefine("WITH_OSS")
   cCompile(src/"backend/oss/*.cpp")
-
-when defined(Windows):
+elif defined(Windows):
   {.passC: "-msse".}
   {.passL: "-lwinmm".}
   cDefine("WITH_WINMM")
   cCompile(src/"backend/winmm/*.cpp")
+else:
+  static: doAssert false
 
 cCompile(src/"c_api/soloud_c.cpp")
 cCompile(src/"core/*.cpp")
