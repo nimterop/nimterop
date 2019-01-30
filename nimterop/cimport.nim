@@ -87,7 +87,8 @@ proc getToast(fullpath: string, recurse: bool = false): string =
     cmd = when defined(Windows): "cmd /c " else: ""
 
   let toastExe = toastExePath()
-  doAssert fileExists(toastExe), "toast not compiled: " & toastExe
+  doAssert fileExists(toastExe), "toast not compiled: " & toastExe.quoteShell
+    & " make sure 'nimble build' or 'nimble install' built it"
   cmd &= &"{toastExe} --pnim --preprocess"
 
   if recurse:
