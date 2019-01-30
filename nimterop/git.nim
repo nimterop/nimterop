@@ -32,8 +32,7 @@ proc extractZip*(zipfile, outdir: string) =
           "[IO.Compression.ZipFile]::ExtractToDirectory('$#', '.'); }\""
 
   echo "Extracting " & zipfile
-  let cmd2 = cmd % zipfile
-  discard execAction(&"cd {outdir.quoteShell} && {cmd2}")
+  discard execAction(&"cd {outdir.quoteShell} && {cmd % zipfile}")
 
 proc downloadUrl*(url, outdir: string) =
   let
