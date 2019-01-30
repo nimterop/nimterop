@@ -87,7 +87,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
     cmd = when defined(Windows): "cmd /c " else: ""
 
   let toastExe = toastExePath()
-  doAssert fileExists(toastExe), "toast not compiled: ", fileExists
+  doAssert fileExists(toastExe), "toast not compiled: " & toastExe
   cmd &= &"{toastExe} --pnim --preprocess"
 
   if recurse:

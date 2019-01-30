@@ -36,7 +36,6 @@ proc extractZip*(zipfile, outdir: string) =
   discard execAction(&"cd {outdir.quoteShell} && {cmd2}")
 
 proc downloadUrl*(url, outdir: string) =
-  doAssert outdir.isAbsolute
   let
     file = url.extractFilename()
     ext = file.splitFile().ext.toLowerAscii()
@@ -78,7 +77,6 @@ proc gitCheckout*(file, outdir: string) =
     echo "  Retrying ..."
 
 proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
-  doAssert outdir.isAbsolute()
   if dirExists(outdir/".git"):
     gitReset(outdir)
     return
