@@ -19,10 +19,8 @@ proc execAction*(cmd: string, nostderr=false): string =
     else:
       (result, ret) = execCmdEx(ccmd)
   if ret != 0:
-    echo "Command failed: " & $ret
-    echo ccmd
-    echo result
-    quit(1)
+    let msg = "Command failed: " & $ret & "\nccmd: " & ccmd & "\nresult:\n" & result
+    doAssert false, msg
 
 proc extractZip*(zipfile, outdir: string) =
   var cmd = "unzip -o $#"
