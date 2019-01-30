@@ -8,16 +8,9 @@ type
   Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, nimState: NimState) {.nimcall.}]]
 
 proc genImportC(origName, nimName: string): string =
-  #[
-  3 possibilities
-  importc.                  # name is same
-  importc: "origName".      # when name differs
-  importc: prefix"$1"suffix # keeps it DRY
-  ]#
   result = "importc"
   if nimName != origName:
-    # TODO: use $1suffix or suffix$1 after extracting common prefix / suffix
-    result.add &": \"{origName}\""
+    result.add &": \"{origName}\"" # used as {.importc: "foo".}
 
 proc initGrammar(): Grammar =
   # #define X Y
