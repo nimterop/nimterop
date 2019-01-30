@@ -76,5 +76,4 @@ template defineEnum*(typ: untyped) =
   proc `mod`*(x: int, y: typ): typ {.borrow.}
   proc `mod`*(x, y: typ): typ {.borrow.}
 
-
   proc `$` *(x: typ): string {.borrow.}
