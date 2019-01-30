@@ -99,7 +99,7 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
           if searchAstForNode(ast, node, nimState):
             ast.tonim(ast, node, nimState)
             if gStateRT.debug:
-              nimState.debugStr &= "\n\n# " & nimState.data.join("\n# ")
+              nimState.debugStr &= "\n# " & nimState.data.join("\n# ")
             break
         nimState.data = @[]
     else:
@@ -143,7 +143,7 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
   nimState.identifiers = newTable[string, string]()
 
   nimState.currentHeader = getCurrentHeader(fullpath)
-  nimState.constStr &= &"  {nimState.currentHeader} = \"{fp}\"\n"
+  nimState.constStr &= &"\n  {nimState.currentHeader} = \"{fp}\""
 
   root.searchAst(astTable, nimState)
 
@@ -151,13 +151,13 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
     echo nimState.enumStr
 
   if nimState.constStr.nBl:
-    echo "const\n" & nimState.constStr
+    echo &"const {nimState.constStr}\n"
 
   if nimState.typeStr.nBl:
-    echo "type\n" & nimState.typeStr
+    echo &"type {nimState.typeStr}\n"
 
   if nimState.procStr.nBl:
-    echo nimState.procStr
+    echo &"{nimState.procStr}\n"
 
   if gStateRT.debug and nimState.debugStr.nBl:
     echo nimState.debugStr

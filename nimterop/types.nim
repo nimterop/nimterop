@@ -31,3 +31,50 @@ when defined(c):
 elif defined(cpp):
   type
     wchar_t* {.importc.} = object
+
+template defineEnum*(typ: untyped) =
+  type
+    typ* = distinct int
+
+  proc `+`*(x: typ, y: int): typ {.borrow.}
+  proc `+`*(x: int, y: typ): typ {.borrow.}
+  proc `+`*(x, y: typ): typ {.borrow.}
+
+  proc `-`*(x: typ, y: int): typ {.borrow.}
+  proc `-`*(x: int, y: typ): typ {.borrow.}
+  proc `-`*(x, y: typ): typ {.borrow.}
+
+  proc `*`*(x: typ, y: int): typ {.borrow.}
+  proc `*`*(x: int, y: typ): typ {.borrow.}
+  proc `*`*(x, y: typ): typ {.borrow.}
+
+  proc `<`*(x: typ, y: int): bool {.borrow.}
+  proc `<`*(x: int, y: typ): bool {.borrow.}
+  proc `<`*(x, y: typ): bool {.borrow.}
+
+  proc `<=`*(x: typ, y: int): bool {.borrow.}
+  proc `<=`*(x: int, y: typ): bool {.borrow.}
+  proc `<=`*(x, y: typ): bool {.borrow.}
+
+  proc `==`*(x: typ, y: int): bool {.borrow.}
+  proc `==`*(x: int, y: typ): bool {.borrow.}
+  proc `==`*(x, y: typ): bool {.borrow.}
+
+  proc `shl`*(x: typ, y: int): typ {.borrow.}
+  proc `shl`*(x: int, y: typ): typ {.borrow.}
+  proc `shl`*(x, y: typ): typ {.borrow.}
+
+  proc `shr`*(x: typ, y: int): typ {.borrow.}
+  proc `shr`*(x: int, y: typ): typ {.borrow.}
+  proc `shr`*(x, y: typ): typ {.borrow.}
+
+  proc `div`*(x: typ, y: int): typ {.borrow.}
+  proc `div`*(x: int, y: typ): typ {.borrow.}
+  proc `div`*(x, y: typ): typ {.borrow.}
+
+  proc `mod`*(x: typ, y: int): typ {.borrow.}
+  proc `mod`*(x: int, y: typ): typ {.borrow.}
+  proc `mod`*(x, y: typ): typ {.borrow.}
+
+
+  proc `$` *(x: typ): string {.borrow.}
