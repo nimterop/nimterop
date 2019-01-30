@@ -2,9 +2,7 @@ import hashes, macros, os, strformat, strutils
 
 const CIMPORT {.used.} = 1
 
-include "."/globals
-
-import "."/types
+import "." / [globals,types,paths]
 export types
 
 proc interpPath(dir: string): string=
@@ -88,7 +86,10 @@ proc getToast(fullpath: string, recurse: bool = false): string =
     ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
 
-  cmd &= "toast --pnim --preprocess"
+  let toastExe = toastExePath()
+  doAssert fileExists(toastExe), "toast not compiled: " & toastExe.quoteShell &
+    " make sure 'nimble build' or 'nimble install' built it"
+  cmd &= &"{toastExe} --pnim --preprocess"
 
   if recurse:
     cmd.add " --recurse"
@@ -107,6 +108,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
 
   cmd.add &" {fullpath.quoteShell}"
   echo cmd
+  # see https://github.com/genotrance/nimterop/issues/69
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
 
@@ -264,7 +266,7 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
 
   var str = name
   if val.nBl:
-    str &= &"=\"{val}\""
+    str &= &"={val.quoteShell}"
 
   if str notin gStateCT.defines:
     gStateCT.defines.add(str)
@@ -302,7 +304,7 @@ macro cIncludeDir*(dir: static string): untyped =
 
   let
     fullpath = findPath(dir)
-    str = &"-I\"{fullpath}\""
+    str = &"-I{fullpath.quoteShell}"
 
   if fullpath notin gStateCT.includeDirs:
     gStateCT.includeDirs.add(fullpath)

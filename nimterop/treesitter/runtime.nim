@@ -1,13 +1,13 @@
 {.experimental: "codeReordering".}
 
-import strutils
+import strutils, os
 
-import ".."/setup
+import ".."/[setup,paths]
 
 static:
   treesitterSetup()
 
-const sourcePath = currentSourcePath().split({'\\', '/'})[0..^4].join("/") & "/inc/treesitter"
+const sourcePath = incDir() / "treesitter"
 
 when defined(Linux):
   {.passC: "-std=c11".}
@@ -15,7 +15,10 @@ when defined(Linux):
 {.passC: "-I$1/include" % sourcePath.}
 {.passC: "-I$1/src" % sourcePath.}
 {.passC: "-I$1/../utf8proc" % sourcePath.}
-{.compile: sourcePath & "/src/runtime/runtime.c".}
+# pending https://github.com/nim-lang/Nim/issues/10299 we need to rename the
+# object files (via compile:(foo,bar)) to avoid name collisions, here 
+# and everywhere `compile` is used
+{.compile: sourcePath / "src/runtime/runtime.c".}
 
 type TSInputEncoding* = distinct int
 converter enumToInt(en: TSInputEncoding): int {.used.} = en.int
@@ -27,7 +30,7 @@ type TSLogType* = distinct int
 converter enumToInt(en: TSLogType): int {.used.} = en.int
 
 const
-  headerruntime = sourcePath & "/include/tree_sitter/runtime.h"
+  headerruntime = sourcePath / "include/tree_sitter/runtime.h"
   TREE_SITTER_LANGUAGE_VERSION* = 9
   TSInputEncodingUTF8* = 0.TSInputEncoding
   TSInputEncodingUTF16* = 1.TSInputEncoding
