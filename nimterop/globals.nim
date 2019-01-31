@@ -68,7 +68,7 @@ type
     data*: seq[tuple[name, val: string]]
 
 var
-  gStateCT* {.compiletime, used.}: State
+  gStateCT {.compiletime, used.}: State
   gStateRT {.used.}: State
 
 template nBl(s: typed): untyped {.used.} =
