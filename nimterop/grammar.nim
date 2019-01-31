@@ -7,6 +7,11 @@ import "."/[getters, globals, lisp, treesitter/runtime]
 type
   Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, nimState: NimState) {.nimcall.}]]
 
+proc genImportC(origName, nimName: string): string =
+  result = "importc"
+  if nimName != origName:
+    result.add &": \"{origName}\"" # used as {.importc: "foo".}
+
 proc initGrammar(): Grammar =
   # #define X Y
   result.add(("""
@@ -166,6 +171,7 @@ proc initGrammar(): Grammar =
               nimState.typeStr &= &"\n  {name}* = {getPtrType(tptr&typ)}"
   ))
 
+
   proc pDupTypeCommon(nname: string, fend: int, nimState: NimState, isEnum=false) =
     var
       dname = nimState.data[^1].val
@@ -183,7 +189,7 @@ proc initGrammar(): Grammar =
       else:
         if nimState.identifiers.addNewIdentifer(ndname):
           nimState.typeStr &=
-            &"\n  {ndname}* {{.importc: \"{dname}\", header: {nimState.currentHeader}, bycopy.}} = {dptr}{nname}"
+            &"\n  {ndname}* {{.{genImportC(dname, ndname)}, header: {nimState.currentHeader}, bycopy.}} = {dptr}{nname}"
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
     var
@@ -217,7 +223,8 @@ proc initGrammar(): Grammar =
       if nimState.data.len == 1:
         nimState.typeStr &= &"\n  {nname}* {{.bycopy.}} = object{union}"
       else:
-        nimState.typeStr &= &"\n  {nname}* {{.importc: \"{prefix}{name}\", header: {nimState.currentHeader}, bycopy.}} = object{union}"
+        let importCDecl = genImportC(prefix & name, nname)
+        nimState.typeStr &= &"\n  {nname}* {{.{importCDecl}, header: {nimState.currentHeader}, bycopy.}} = object{union}"
 
       var
         i = fstart
@@ -491,12 +498,10 @@ proc initGrammar(): Grammar =
 
         if fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
           let ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
-
           if fptr == "ptr " or ftyp != "object":
-            nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}"
+            nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.{genImportC(fname, fnname)}, header: {nimState.currentHeader}.}}"
           else:
-            nimState.procStr &= &"\nproc {fnname}*({pout}) {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}"
-
+            nimState.procStr &= &"\nproc {fnname}*({pout}) {{.{genImportC(fname, fnname)}, header: {nimState.currentHeader}.}}"
   ))
 
 proc initRegex(ast: ref Ast) =
