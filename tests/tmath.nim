@@ -6,7 +6,8 @@ type
   mingw_ldbl_type_t = object
   mingw_dbl_type_t = object
 
-cDebug()
+static:
+  cDebug()
 cDisableCaching()
 
 cAddStdDir()

@@ -258,9 +258,8 @@ proc cSearchPath*(path: string): string {.compileTime.}=
     doAssert found, "File or directory not found: " & path &
       " gStateCT.searchDirs: " & $gStateCT.searchDirs
 
-macro cDebug*(): untyped =
+proc cDebug*() {.compileTime.} =
   ## Enable debug messages and display the generated Nim code
-
   gStateCT.debug = true
 
 macro cDisableCaching*(): untyped =

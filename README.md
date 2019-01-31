@@ -36,7 +36,8 @@ __Usage__
 ```nim
 import nimterop/cimport
 
-cDebug()
+static:
+  cDebug()
 cDefine("HAS_ABC")
 cDefine("HAS_ABC", "DEF")
 cIncludeDir("clib/include")

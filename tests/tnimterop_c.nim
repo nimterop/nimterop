@@ -1,7 +1,8 @@
 import std/unittest
 import nimterop/cimport
 
-cDebug()
+static:
+  cDebug()
 cDisableCaching()
 
 cDefine("FORCE")

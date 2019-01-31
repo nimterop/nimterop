@@ -1,7 +1,8 @@
 import nimterop/cimport
 import unittest
 
-cDebug()
+static:
+  cDebug()
 cDisableCaching()
 
 cIncludeDir "$projpath/include"
