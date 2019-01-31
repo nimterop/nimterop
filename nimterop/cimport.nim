@@ -239,7 +239,7 @@ macro cPlugin*(body): untyped =
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory ``path`` in search path configured
-  ## using `cAddSearchDir() <cimport.html#cAddSearchDir.m,>`_ and
+  ## using `cAddSearchDir() <cimport.html#cAddSearchDir,>`_ and
   ## `cAddStdDir() <cimport.html#cAddStdDir.m,string>`_.
   ##
   ## This can be used to locate files or directories that can be passed onto
@@ -299,17 +299,14 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
     if gStateCT.debug:
       echo result.repr
 
-macro cAddSearchDir*(dir: static string): untyped =
+proc cAddSearchDir*(dir: string) {.compileTime.} =
   ## Add directory ``dir`` to the search path used in calls to
   ## `cSearchPath() <cimport.html#cSearchPath,string>`_.
-  ##
-  ## This allows something like this:
-  ##
-  ## .. code-block:: nim
-  ##
-  ##    cAddSearchDir("path/to/includes")
-  ##    cImport cSearchPath("file.h")
-
+  runnableExamples:
+    import paths, os
+    static:
+      cAddSearchDir testsIncludeDir()
+    doAssert cSearchPath("test.h").existsFile
   var dir = interpPath(dir)
   if dir notin gStateCT.searchDirs:
     gStateCT.searchDirs.add(dir)
@@ -322,29 +319,22 @@ macro cIncludeDir*(dir: static string): untyped =
   var dir = interpPath(dir)
   result = newNimNode(nnkStmtList)
 
-  let
-    fullpath = findPath(dir)
-    str = &"-I{fullpath.quoteShell}"
-
+  let fullpath = findPath(dir)
   if fullpath notin gStateCT.includeDirs:
     gStateCT.includeDirs.add(fullpath)
-
-    result.add(quote do:
+    let str = &"-I{fullpath.quoteShell}"
+    result.add quote do:
       {.passC: `str`.}
-    )
-
-  if gStateCT.debug:
-    echo result.repr
+    if gStateCT.debug:
+      echo result.repr
 
 macro cAddStdDir*(mode = "c"): untyped =
   ## Add the standard ``c`` [default] or ``cpp`` include paths to search
   ## path used in calls to `cSearchPath() <cimport.html#cSearchPath,string>`_
-  ##
-  ## This allows something like this:
-  ##
   runnableExamples:
     cAddStdDir()
-    echo cSearchPath("math.h")
+    import os
+    doAssert cSearchPath("math.h").existsFile
 
   result = newNimNode(nnkStmtList)
 
@@ -361,7 +351,7 @@ macro cAddStdDir*(mode = "c"): untyped =
     if inc:
       let sline = line.strip()
       result.add quote do:
-        cAddSearchDir(`sline`)
+        static: cAddSearchDir(`sline`)
 
 macro cCompile*(path: static string, mode = "c"): untyped =
   ## Compile and link C/C++ implementation into resulting binary using ``{.compile.}``

@@ -15,3 +15,7 @@ proc toastExePath*(): string =
 
 proc incDir*(): string =
   nimteropBuildDir() / "inc"
+
+proc testsIncludeDir*(): string =
+  nimteropRoot() / "tests" / "include"
+
