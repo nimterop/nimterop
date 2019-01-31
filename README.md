@@ -1,6 +1,6 @@
 [![Chat on Gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/nimgen/Lobby)
-[![Build status](https://ci.appveyor.com/api/projects/status/nsaar5foexk9adan/branch/master?svg=true)](https://ci.appveyor.com/project/genotrance/nimterop/branch/master)
-[![Build Status](https://travis-ci.org/genotrance/nimterop.svg?branch=master)](https://travis-ci.org/genotrance/nimterop)
+[![Build status](https://ci.appveyor.com/api/projects/status/hol1yvqbp6hq4ao8/branch/master?svg=true)](https://ci.appveyor.com/project/genotrance/nimterop-8jcj7/branch/master)
+[![Build Status](https://travis-ci.org/nimterop/nimterop.svg?branch=master)](https://travis-ci.org/nimterop/nimterop)
 
 Nimterop is a [Nim](https://nim-lang.org/) package that aims to make C/C++ interop seamless
 
