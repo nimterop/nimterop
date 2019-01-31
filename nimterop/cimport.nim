@@ -262,12 +262,12 @@ proc cDebug*() {.compileTime.} =
   ## Enable debug messages and display the generated Nim code
   gStateCT.debug = true
 
-macro cDisableCaching*(): untyped =
+proc cDisableCaching*() {.compileTime.} =
   ## Disable caching of generated Nim code - useful during wrapper development
   ##
   ## If files included by header being processed by `cImport() <cimport.html#cImport.m,>`_
   ## change and affect the generated content, they will be ignored and the cached
-  ## value will continue to be used . Use `cDisableCaching() <cimport.html#cDisableCaching.m,>`_
+  ## value will continue to be used . Use `cDisableCaching() <cimport.html#cDisableCaching,>`_
   ## to avoid this scenario during development.
   ##
   ## ``nim -f`` was broken prior to 0.19.4 but can also be used to flush the cached content.
@@ -426,7 +426,7 @@ macro cCompile*(path: static string, mode = "c"): untyped =
 macro cImport*(filename: static string, recurse: static bool = false): untyped =
   ## Import all supported definitions from specified header file. Generated
   ## content is cached in ``nimcache`` until ``filename`` changes unless
-  ## `cDisableCaching() <cimport.html#cDisableCaching.m,>`_ is set. ``nim -f``
+  ## `cDisableCaching() <cimport.html#cDisableCaching,>`_ is set. ``nim -f``
   ## can also be used after Nim v0.19.4 to flush the cache.
   ##
   ## ``recurse`` can be used to generate Nim wrappers from ``#include`` files

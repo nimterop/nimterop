@@ -3,7 +3,7 @@ import nimterop/cimport
 
 static:
   cDebug()
-cDisableCaching()
+  cDisableCaching()
 
 cDefine("FORCE")
 cIncludeDir "$projpath/include"

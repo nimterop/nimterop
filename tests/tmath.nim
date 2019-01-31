@@ -8,7 +8,7 @@ type
 
 static:
   cDebug()
-cDisableCaching()
+  cDisableCaching()
 
 cAddStdDir()
 

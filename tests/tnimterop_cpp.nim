@@ -3,7 +3,7 @@ import unittest
 
 static:
   cDebug()
-cDisableCaching()
+  cDisableCaching()
 
 cIncludeDir "$projpath/include"
 cAddSearchDir "$projpath/include"

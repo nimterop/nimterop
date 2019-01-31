@@ -8,8 +8,7 @@ const
 static:
   gitPull("https://github.com/jarikomppa/soloud", baseDir, "include/*\nsrc/*\n")
   cDebug()
-
-cDisableCaching()
+  cDisableCaching()
 
 cOverride:
   type
