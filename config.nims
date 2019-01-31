@@ -9,6 +9,6 @@ when defined(MacOSX):
 else:
   switch("gcc.linkerexe", "g++")
 
-# Workaround for NilAccessError crash on Windows
+# Workaround for NilAccessError crash on Windows #98
 when defined(Windows):
   switch("gc", "markAndSweep")

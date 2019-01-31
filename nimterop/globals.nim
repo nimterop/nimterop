@@ -1,4 +1,4 @@
-import segfaults, sequtils, sets, tables
+import sequtils, sets, tables
 
 import regex
 

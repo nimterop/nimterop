@@ -37,7 +37,7 @@ template enumOp*(op, typ, typout) =
   proc op*(x: int, y: typ): typout {.borrow.}
   proc op*(x, y: typ): typout {.borrow.}
 
-template defineEnum*(typ: untyped) =
+template defineEnum*(typ) =
   type
     typ* = distinct int
 
