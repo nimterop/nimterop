@@ -274,6 +274,9 @@ proc cDisableCaching*() {.compileTime.} =
 
   gStateCT.nocache = true
 
+# TODO: `passC` should be delayed and inserted inside `cImport`, `cCompile`
+# and this should be made a proc:
+# proc cDefine*(name: string, val = "") {.compileTime.} =
 macro cDefine*(name: static string, val: static string = ""): untyped =
   ## ``#define`` an identifer that is forwarded to the C/C++ compiler
   ## using ``{.passC: "-DXXX".}``
@@ -281,6 +284,8 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
   result = newNimNode(nnkStmtList)
 
   var str = name
+  # todo: see https://github.com/genotrance/nimterop/issues/100 for
+  # edge case of empty strings
   if val.nBl:
     str &= &"={val.quoteShell}"
 
@@ -288,9 +293,8 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
     gStateCT.defines.add(str)
     str = "-D" & str
 
-    result.add(quote do:
+    result.add quote do:
       {.passC: `str`.}
-    )
 
     if gStateCT.debug:
       echo result.repr
