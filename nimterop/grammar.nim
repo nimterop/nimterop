@@ -498,9 +498,10 @@ proc initGrammar(): Grammar =
 
         if fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
           let ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
-          var returnTypeStr = ""
-          if fptr == "ptr " or ftyp != "object": returnTypeStr = &": {getPtrType(fptr&ftyp)}"
-          nimState.procStr &= &"\nproc {fnname}*({pout}){returnTypeStr} {{.{genImportC(fname, fnname)}, header: {nimState.currentHeader}.}}"
+          if fptr == "ptr " or ftyp != "object":
+            nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.{genImportC(fname, fnname)}, header: {nimState.currentHeader}.}}"
+          else:
+            nimState.procStr &= &"\nproc {fnname}*({pout}) {{.{genImportC(fname, fnname)}, header: {nimState.currentHeader}.}}"
   ))
 
 proc initRegex(ast: ref Ast) =
