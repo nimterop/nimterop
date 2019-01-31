@@ -149,15 +149,17 @@ macro cOverride*(body): untyped =
   ## can be instructed to skip over ``svGetCallerInfo()``. This works for procs,
   ## consts and types.
 
+  proc recFindIdent(node: NimNode): seq[string] =
+    if node.kind != nnkIdent:
+      for child in node:
+        result.add recFindIdent(child)
+        if result.len != 0 and node.kind notin [nnkTypeSection, nnkConstSection]:
+          break
+    elif $node != "*":
+      result.add $node
+
   for sym in body:
-    case sym.kind:
-      of nnkProcDef:
-        gStateCT.symOverride.add ($sym[0]).strip(chars={'*'})
-      of nnkConstSection, nnkTypeSection:
-        for ssym in sym:
-          gStateCT.symOverride.add ($ssym[0]).strip(chars={'*'})
-      else:
-        discard
+    gStateCT.symOverride.add recFindIdent(sym)
 
   result = body
 
