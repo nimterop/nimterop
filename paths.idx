@@ -1,0 +1,5 @@
+nimteropRoot	paths.html#nimteropRoot,	paths: nimteropRoot(): string	
+nimteropBuildDir	paths.html#nimteropBuildDir,	paths: nimteropBuildDir(): string	
+nimteropSrcDir	paths.html#nimteropSrcDir,	paths: nimteropSrcDir(): string	
+toastExePath	paths.html#toastExePath,	paths: toastExePath(): string	
+incDir	paths.html#incDir,	paths: incDir(): string	

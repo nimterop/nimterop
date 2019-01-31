@@ -1,6 +1,7 @@
 execAction	git.html#execAction,string	git: execAction(cmd: string; nostderr = false): string	
-extractZip	git.html#extractZip.m,,	git: extractZip(zipfile, outdir: static string): untyped	
-downloadUrl	git.html#downloadUrl.m,,	git: downloadUrl(url, outdir: static string): untyped	
-gitReset	git.html#gitReset.m,	git: gitReset(outdir: static string): untyped	
-gitCheckout	git.html#gitCheckout.m,,	git: gitCheckout(file, outdir: static string): untyped	
-gitPull	git.html#gitPull.m,,string,string,string	git: gitPull(url: static string; outdirN = &quot;&quot;; plistN = &quot;&quot;; checkoutN = &quot;&quot;): untyped	
+extractZip	git.html#extractZip,string,string	git: extractZip(zipfile, outdir: string)	
+downloadUrl	git.html#downloadUrl,string,string	git: downloadUrl(url, outdir: string)	
+gitReset	git.html#gitReset,string	git: gitReset(outdir: string)	
+relativePathNaive	git.html#relativePathNaive,string,string	git: relativePathNaive(file, base: string): string	
+gitCheckout	git.html#gitCheckout,string,string	git: gitCheckout(file, outdir: string)	
+gitPull	git.html#gitPull,string,string,string,string	git: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)	

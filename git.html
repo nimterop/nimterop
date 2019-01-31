@@ -1239,26 +1239,28 @@ function main() {
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li>
+  <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
+  <ul class="simple simple-toc-section">
+    
+  </ul>
+</li>
+<li>
   <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
       <li><a class="reference" href="#execAction%2Cstring"
     title="execAction(cmd: string; nostderr = false): string"><wbr />exec<wbr />Action<span class="attachedType" style="visibility:hidden"></span></a></li>
-
-  </ul>
-</li>
-<li>
-  <a class="reference reference-toplevel" href="#17" id="67">Macros</a>
-  <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#extractZip.m%2C%2C"
-    title="extractZip(zipfile, outdir: static string): untyped"><wbr />extract<wbr />Zip<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#downloadUrl.m%2C%2C"
-    title="downloadUrl(url, outdir: static string): untyped"><wbr />download<wbr />Url<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#gitReset.m%2C"
-    title="gitReset(outdir: static string): untyped"><wbr />git<wbr />Reset<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#gitCheckout.m%2C%2C"
-    title="gitCheckout(file, outdir: static string): untyped"><wbr />git<wbr />Checkout<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#gitPull.m%2C%2Cstring%2Cstring%2Cstring"
-    title="gitPull(url: static string; outdirN = &quot;&quot;; plistN = &quot;&quot;; checkoutN = &quot;&quot;): untyped"><wbr />git<wbr />Pull<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#extractZip%2Cstring%2Cstring"
+    title="extractZip(zipfile, outdir: string)"><wbr />extract<wbr />Zip<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#downloadUrl%2Cstring%2Cstring"
+    title="downloadUrl(url, outdir: string)"><wbr />download<wbr />Url<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#gitReset%2Cstring"
+    title="gitReset(outdir: string)"><wbr />git<wbr />Reset<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#relativePathNaive%2Cstring%2Cstring"
+    title="relativePathNaive(file, base: string): string"><wbr />relative<wbr />Path<wbr />Naive<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#gitCheckout%2Cstring%2Cstring"
+    title="gitCheckout(file, outdir: string)"><wbr />git<wbr />Checkout<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#gitPull%2Cstring%2Cstring%2Cstring%2Cstring"
+    title="gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)"><wbr />git<wbr />Pull<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
 </li>
@@ -1269,7 +1271,12 @@ function main() {
   <div class="nine columns" id="content">
   <div id="tocRoot"></div>
   <p class="module-desc"></p>
-  <div class="section" id="12">
+  <div class="section" id="6">
+<h1><a class="toc-backref" href="#6">Imports</a></h1>
+<dl class="item">
+<a class="reference external" href="paths.html">paths</a>
+</dl></div>
+<div class="section" id="12">
 <h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
 <a id="execAction,string"></a>
@@ -1279,37 +1286,46 @@ function main() {
 
 
 </dd>
-
-</dl></div>
-<div class="section" id="17">
-<h1><a class="toc-backref" href="#17">Macros</a></h1>
-<dl class="item">
-<a id="extractZip.m,,"></a>
-<dt><pre><span class="Keyword">macro</span> <span class="Identifier">extractZip</span><span class="Other">(</span><span class="Identifier">zipfile</span><span class="Other">,</span> <span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="extractZip,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">extractZip</span><span class="Other">(</span><span class="Identifier">zipfile</span><span class="Other">,</span> <span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+    <span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 
 </dd>
-<a id="downloadUrl.m,,"></a>
-<dt><pre><span class="Keyword">macro</span> <span class="Identifier">downloadUrl</span><span class="Other">(</span><span class="Identifier">url</span><span class="Other">,</span> <span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="downloadUrl,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">downloadUrl</span><span class="Other">(</span><span class="Identifier">url</span><span class="Other">,</span> <span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+    <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 
 </dd>
-<a id="gitReset.m,"></a>
-<dt><pre><span class="Keyword">macro</span> <span class="Identifier">gitReset</span><span class="Other">(</span><span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="gitReset,string"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">gitReset</span><span class="Other">(</span><span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ExecIOEffect</span><span class="Other">,</span>
+    <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 
 </dd>
-<a id="gitCheckout.m,,"></a>
-<dt><pre><span class="Keyword">macro</span> <span class="Identifier">gitCheckout</span><span class="Other">(</span><span class="Identifier">file</span><span class="Other">,</span> <span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="relativePathNaive,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">relativePathNaive</span><span class="Other">(</span><span class="Identifier">file</span><span class="Other">,</span> <span class="Identifier">base</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+naive version of <cite>os.relativePath</cite> ; remove after nim &gt;= 0.19.9
+<p><strong class="examples_text">Examples:</strong></p>
+<pre class="listing"><span class="Identifier">doAssert</span> <span class="StringLit">&quot;/foo/bar/baz/log.txt&quot;</span><span class="Other">.</span><span class="Identifier">relativePathNaive</span><span class="Other">(</span><span class="StringLit">&quot;/foo/bar&quot;</span><span class="Other">)</span> <span class="Operator">==</span> <span class="StringLit">&quot;baz/log.txt&quot;</span></pre>
+
+</dd>
+<a id="gitCheckout,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">gitCheckout</span><span class="Other">(</span><span class="Identifier">file</span><span class="Other">,</span> <span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+    <span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 
 </dd>
-<a id="gitPull.m,,string,string,string"></a>
-<dt><pre><span class="Keyword">macro</span> <span class="Identifier">gitPull</span><span class="Other">(</span><span class="Identifier">url</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">outdirN</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">plistN</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">checkoutN</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="gitPull,string,string,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">gitPull</span><span class="Other">(</span><span class="Identifier">url</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">outdir</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">plist</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">checkout</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma">
+    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ExecIOEffect</span><span class="Other">,</span>
+    <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 
@@ -1324,7 +1340,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-01-28 16:53:07 UTC</small>
+        <small>Made with Nim. Generated: 2019-01-31 15:20:56 UTC</small>
       </div>
     </div>
   </div>
