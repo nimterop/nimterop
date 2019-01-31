@@ -2,7 +2,7 @@
 
 import strutils, os
 
-import ".."/[setup,paths]
+import ".."/[setup, paths]
 
 static:
   treesitterSetup()
@@ -16,7 +16,7 @@ when defined(Linux):
 {.passC: "-I$1/src" % sourcePath.}
 {.passC: "-I$1/../utf8proc" % sourcePath.}
 # pending https://github.com/nim-lang/Nim/issues/10299 we need to rename the
-# object files (via compile:(foo,bar)) to avoid name collisions, here 
+# object files (via compile:(foo,bar)) to avoid name collisions, here
 # and everywhere `compile` is used
 {.compile: sourcePath / "src/runtime/runtime.c".}
 

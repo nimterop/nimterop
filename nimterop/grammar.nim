@@ -24,7 +24,7 @@ proc initGrammar(): Grammar =
           name = nimState.data[0].val.getIdentifier(nskConst)
 
         if name.nBl and nimState.identifiers.addNewIdentifer(name):
-          nimState.constStr &= &"  {name}* = {val}\n"
+          nimState.constStr &= &"\n  {name}* = {val}"
   ))
 
   let
@@ -148,9 +148,9 @@ proc initGrammar(): Grammar =
             pout = pout[0 .. ^2]
 
           if tptr == "ptr " or typ != "object":
-            nimState.typeStr &= &"  {name}* = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}\n"
+            nimState.typeStr &= &"\n  {name}* = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}"
           else:
-            nimState.typeStr &= &"  {name}* = proc({pout}) {{.nimcall.}}\n"
+            nimState.typeStr &= &"\n  {name}* = proc({pout}) {{.nimcall.}}"
         else:
           if i < nimState.data.len and nimState.data[i].name in ["identifier", "number_literal"]:
             var
@@ -158,12 +158,12 @@ proc initGrammar(): Grammar =
             if nimState.data[i].name == "identifier":
               flen = flen.getIdentifier(nskConst, name)
 
-            nimState.typeStr &= &"  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]\n"
+            nimState.typeStr &= &"\n  {name}* = {aptr}array[{flen}, {getPtrType(tptr&typ)}]"
           else:
             if name == typ:
-              nimState.typeStr &= &"  {name}* = object\n"
+              nimState.typeStr &= &"\n  {name}* = object"
             else:
-              nimState.typeStr &= &"  {name}* = {getPtrType(tptr&typ)}\n"
+              nimState.typeStr &= &"\n  {name}* = {getPtrType(tptr&typ)}"
   ))
 
   proc pDupTypeCommon(nname: string, fend: int, nimState: NimState, isEnum=false) =
@@ -179,11 +179,11 @@ proc initGrammar(): Grammar =
     if ndname.nBl and ndname != nname:
       if isEnum:
         if nimState.identifiers.addNewIdentifer(ndname):
-          nimState.enumStr &= &"type {ndname}* = {dptr}{nname}\n"
+          nimState.enumStr &= &"\ntype {ndname}* = {dptr}{nname}"
       else:
         if nimState.identifiers.addNewIdentifer(ndname):
           nimState.typeStr &=
-            &"  {ndname}* {{.importc: \"{dname}\", header: {nimState.currentHeader}, bycopy.}} = {dptr}{nname}\n"
+            &"\n  {ndname}* {{.importc: \"{dname}\", header: {nimState.currentHeader}, bycopy.}} = {dptr}{nname}"
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
     var
@@ -215,9 +215,9 @@ proc initGrammar(): Grammar =
 
     if nname.nBl and nimState.identifiers.addNewIdentifer(nname):
       if nimState.data.len == 1:
-        nimState.typeStr &= &"  {nname}* {{.bycopy.}} = object{union}\n"
+        nimState.typeStr &= &"\n  {nname}* {{.bycopy.}} = object{union}"
       else:
-        nimState.typeStr &= &"  {nname}* {{.importc: \"{prefix}{name}\", header: {nimState.currentHeader}, bycopy.}} = object{union}\n"
+        nimState.typeStr &= &"\n  {nname}* {{.importc: \"{prefix}{name}\", header: {nimState.currentHeader}, bycopy.}} = object{union}"
 
       var
         i = fstart
@@ -248,7 +248,7 @@ proc initGrammar(): Grammar =
         if i+1 < nimState.data.len-fend and nimState.data[i+1].name in gEnumVals:
           let
             flen = nimState.data[i+1].val.getNimExpression()
-          nimState.typeStr &= &"    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]\n"
+          nimState.typeStr &= &"\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
           i += 2
         elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "function_declarator":
           var
@@ -269,15 +269,15 @@ proc initGrammar(): Grammar =
           if pout.len != 0 and pout[^1] == ',':
             pout = pout[0 .. ^2]
           if fptr == "ptr " or ftyp != "object":
-            nimState.typeStr &= &"    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}\n"
+            nimState.typeStr &= &"\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}"
           else:
-            nimState.typeStr &= &"    {fname}*: proc({pout}) {{.nimcall.}}\n"
+            nimState.typeStr &= &"\n    {fname}*: proc({pout}) {{.nimcall.}}"
             i += 1
         else:
           if ftyp == "object":
-            nimState.typeStr &= &"    {fname}*: pointer\n"
+            nimState.typeStr &= &"\n    {fname}*: pointer"
           else:
-            nimState.typeStr &= &"    {fname}*: {getPtrType(fptr&ftyp)}\n"
+            nimState.typeStr &= &"\n    {fname}*: {getPtrType(fptr&ftyp)}"
           i += 1
 
       if node.tsNodeType() == "type_definition" and
@@ -364,8 +364,7 @@ proc initGrammar(): Grammar =
         name.getIdentifier(nskType)
 
     if nname.nBl and nimState.identifiers.addNewIdentifer(nname):
-      nimState.enumStr &= &"\ntype {nname}* = distinct int"
-      nimState.enumStr &= &"\nconverter enumToInt(en: {nname}): int {{.used.}} = en.int\n"
+      nimState.enumStr &= &"\ndefineEnum({nname})"
 
       var
         i = fstart
@@ -381,7 +380,7 @@ proc initGrammar(): Grammar =
         if i+1 < nimState.data.len-fend and
           nimState.data[i+1].name in gEnumVals:
           if fname.nBl and nimState.identifiers.addNewIdentifer(fname):
-            nimState.constStr &= &"  {fname}* = ({nimState.data[i+1].val.getNimExpression()}).{nname}\n"
+            nimState.constStr &= &"\n  {fname}* = ({nimState.data[i+1].val.getNimExpression()}).{nname}"
           try:
             count = nimState.data[i+1].val.parseInt() + 1
           except:
@@ -389,7 +388,7 @@ proc initGrammar(): Grammar =
           i += 2
         else:
           if fname.nBl and nimState.identifiers.addNewIdentifer(fname):
-            nimState.constStr &= &"  {fname}* = {count}.{nname}\n"
+            nimState.constStr &= &"\n  {fname}* = {count}.{nname}"
           i += 1
           count += 1
 
@@ -494,9 +493,9 @@ proc initGrammar(): Grammar =
           let ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
 
           if fptr == "ptr " or ftyp != "object":
-            nimState.procStr &= &"proc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}\n"
+            nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}"
           else:
-            nimState.procStr &= &"proc {fnname}*({pout}) {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}\n"
+            nimState.procStr &= &"\nproc {fnname}*({pout}) {{.importc: \"{fname}\", header: {nimState.currentHeader}.}}"
 
   ))
 

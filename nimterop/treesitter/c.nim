@@ -1,6 +1,6 @@
 import strutils, os
 
-import ".."/[setup,paths]
+import ".."/[setup, paths]
 
 static:
   treesitterCSetup()
