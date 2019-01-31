@@ -18,7 +18,7 @@ cOverride:
 
   proc Soloud_destroy*(aSoloud: ptr Soloud) {.importc: "Soloud_destroy", header: cSearchPath(incl/"soloud_c.h").}
 
-cSkipSymbol("WavStream_stop", "WavStream_setFilter")
+static: cSkipSymbol @["WavStream_stop", "WavStream_setFilter"]
 
 cIncludeDir(incl)
 

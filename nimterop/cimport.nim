@@ -184,18 +184,15 @@ macro cOverride*(body): untyped =
   if gStateCT.debug:
     echo "Overriding " & gStateCT.symOverride.join(" ")
 
-macro cSkipSymbol*(skips: varargs[string]): untyped =
+proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   ## Similar to `cOverride() <cimport.html#cOverride.m,>`_, this macro allows
   ## filtering out symbols not of interest from the generated output.
-  ##
   runnableExamples:
-    cSkipSymbol "proc1", "Type2"
-
-  for skip in skips:
-    gStateCT.symOverride.add skip.strVal
+    static: cSkipSymbol @["proc1", "Type2"]
+  for a in skips: gStateCT.symOverride.add a
 
 macro cPlugin*(body): untyped =
-  ## When `cOverride() <cimport.html#cOverride.m,>`_ and `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cvarargs[string]>`_
+  ## When `cOverride() <cimport.html#cOverride.m,>`_ and `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cseq[string]>`_
   ## are not adequate, the `cPlugin() <cimport.html#cPlugin.m,>`_ macro can be used
   ## to customize the generated Nim output. The following callbacks are available at
   ## this time.
