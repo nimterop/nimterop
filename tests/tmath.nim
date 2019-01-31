@@ -9,8 +9,7 @@ type
 static:
   cDebug()
   cDisableCaching()
-
-cAddStdDir()
+  cAddStdDir()
 
 cPlugin:
   import strutils

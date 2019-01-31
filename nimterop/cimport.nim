@@ -189,7 +189,7 @@ proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   ## filtering out symbols not of interest from the generated output.
   runnableExamples:
     static: cSkipSymbol @["proc1", "Type2"]
-  for a in skips: gStateCT.symOverride.add a
+  gStateCT.symOverride.add skips
 
 macro cPlugin*(body): untyped =
   ## When `cOverride() <cimport.html#cOverride.m,>`_ and `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cseq[string]>`_
@@ -240,7 +240,7 @@ macro cPlugin*(body): untyped =
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory ``path`` in search path configured
   ## using `cAddSearchDir() <cimport.html#cAddSearchDir,>`_ and
-  ## `cAddStdDir() <cimport.html#cAddStdDir.m,string>`_.
+  ## `cAddStdDir() <cimport.html#cAddStdDir,string>`_.
   ##
   ## This can be used to locate files or directories that can be passed onto
   ## `cCompile() <cimport.html#cCompile.m,,string>`_,
@@ -328,30 +328,23 @@ macro cIncludeDir*(dir: static string): untyped =
     if gStateCT.debug:
       echo result.repr
 
-macro cAddStdDir*(mode = "c"): untyped =
+proc cAddStdDir*(mode = "c") {.compileTime.} =
   ## Add the standard ``c`` [default] or ``cpp`` include paths to search
   ## path used in calls to `cSearchPath() <cimport.html#cSearchPath,string>`_
   runnableExamples:
-    cAddStdDir()
+    static: cAddStdDir()
     import os
     doAssert cSearchPath("math.h").existsFile
-
-  result = newNimNode(nnkStmtList)
-
   var
     inc = false
-
-  for line in getGccPaths(mode.strVal()).splitLines():
+  for line in getGccPaths(mode).splitLines():
     if "#include <...> search starts here" in line:
       inc = true
       continue
     elif "End of search list" in line:
       break
-
     if inc:
-      let sline = line.strip()
-      result.add quote do:
-        static: cAddSearchDir(`sline`)
+      cAddSearchDir line.strip()
 
 macro cCompile*(path: static string, mode = "c"): untyped =
   ## Compile and link C/C++ implementation into resulting binary using ``{.compile.}``

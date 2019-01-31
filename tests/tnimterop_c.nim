@@ -138,8 +138,6 @@ var
   k: uKernel
   kp: Kernel
 
-cAddStdDir()
-
 ## failing tests
 when false:
   static: # Error: undeclared identifier: 'foobar1'
