@@ -35,6 +35,8 @@ proc testAll() =
   execCmd "nim c -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
+  ## checks for failures
+  execCmd "nim c -r tests/tfail.nim"
 
   ## platform specific tests
   when defined(Windows):
