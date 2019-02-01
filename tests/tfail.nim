@@ -11,7 +11,7 @@ else:
     const input = currentSourcePath()
     let cmd = fmt"{nim} c -r -d:case_D20190123T230907 {input}"
     var (output, exitCode) = execCmdEx(cmd)
-    # echo "{" & output & "}"
     doAssert exitCode != 0
-    doAssert output.string.contains """`(not fail)` File or directory not found: nonexistant"""
+    doAssert output.string.contains "findPath", output
+    doAssert output.string.contains "File or directory not found: nonexistant", output
   main()
