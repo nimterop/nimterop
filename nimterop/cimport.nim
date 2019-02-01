@@ -424,8 +424,14 @@ macro cImport*(filename: static string, recurse: static bool = false): untyped =
 
   result = newNimNode(nnkStmtList)
 
-  let
+  var fullpath = ""
+  try:
     fullpath = findPath(filename)
+  except Exception: # can't use `except Exception as e` in VM
+    let msg = getCurrentExceptionMsg()
+    result.add quote do:
+      doAssert false, "findPath failed: " & $(msg: `msg`, filename: `filename`, recurse: `recurse`)
+    return
 
   echo "Importing " & fullpath
 

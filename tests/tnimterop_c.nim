@@ -20,6 +20,9 @@ cPlugin:
 
 cImport cSearchPath "test.h"
 
+doAssertRaises(AssertionError):
+  cImport "nonexistant"
+
 check TEST_INT == 512
 check TEST_FLOAT == 5.12
 check TEST_HEX == 0x512
