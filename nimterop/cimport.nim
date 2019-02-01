@@ -77,11 +77,27 @@ proc getToastError(output: string): string =
   # Filter out preprocessor errors
   for line in output.splitLines():
     if "fatal error:" in line.toLowerAscii:
-      result &= "\nERROR:$1\n" % line.split("fatal error:")[1]
+      result &= "\n\nERROR:$1\n" % line.split("fatal error:")[1]
 
   # Toast error
   if result.len == 0:
-    result = output
+    result = "\n\n" & output
+
+proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
+  let
+    hash = output.hash().abs()
+
+  result.tmpFile = getTempDir() / "nimterop_" & $hash & ".nim"
+
+  if not fileExists(result.tmpFile) or gStateCT.nocache or compileOption("forceBuild"):
+    writeFile(result.tmpFile, output)
+
+  doAssert fileExists(result.tmpFile), "Bad codegen - unable to write to TEMP: " & result.tmpFile
+
+  let
+    (check, ret) = gorgeEx("nim check " & result.tmpFile)
+
+  result.errors = "\n\n" & check
 
 proc getToast(fullpath: string, recurse: bool = false): string =
   var
@@ -433,11 +449,14 @@ macro cImport*(filename: static string, recurse: static bool = false): untyped =
     output = getToast(fullpath, recurse)
 
   try:
-    result.add parseStmt(output)
-  except:
-    echo output
-    echo "Failed to import generated nim"
-    result.add parseStmt(output)
+    let body = parseStmt(output)
 
-  if gStateCT.debug:
-    echo result.repr
+    result.add body
+
+    if gStateCT.debug:
+      echo result.repr
+  except:
+    let
+      (tmpFile, errors) = getNimCheckError(output)
+    doAssert false, errors & "Nimterop codegen limitation or error - review 'nim check' output above generated for " & tmpFile
+
