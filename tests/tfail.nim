@@ -4,7 +4,10 @@ when defined(case_D20190123T230907): # bad test case
 else:
   import os, osproc, strformat, strutils
   proc main() =
-    const nim = getCurrentCompilerExe()
+    when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
+      const nim = "nim"
+    else:
+      const nim = getCurrentCompilerExe()
     const input = currentSourcePath()
     let cmd = fmt"{nim} c -r -d:case_D20190123T230907 {input}"
     var (output, exitCode) = execCmdEx(cmd)
