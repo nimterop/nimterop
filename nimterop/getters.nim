@@ -87,15 +87,24 @@ proc getType*(str: string): string =
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
 
-template checkUnderscores(name, errmsg: string): untyped =
+proc checkIdentifier(name, kind, parent, origName: string) =
+  let
+    parentStr = if parent.nBl: parent & ":" else: ""
+
   if name.len != 0:
-    doAssert name[0] != '_' and name[^1] != '_', errmsg
+    let
+      origStr = if name != origName: ", originally '{origName}' before 'cPlugin:onSymbol()', still" else: ""
+      errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} contains"
+
+    doAssert name[0] != '_' and name[^1] != '_', errmsg & " leading/trailing underscores '_'"
+
+    doAssert (not name.contains(re"_[_]+")): errmsg & " more than one consecutive underscore '_'"
+
+  if parent.nBl:
+    doAssert name.nBl, &"Blank identifier, originally '{parentStr}{name}' ({kind}), cannot be empty"
 
 proc getIdentifier*(name: string, kind: NimSymKind, parent=""): string =
   doAssert name.len != 0, "Blank identifier error"
-
-  let
-    parentStr = if parent.nBl: parent & ":" else: ""
 
   if name notin gStateRT.symOverride or parent.nBl:
     if gStateRT.onSymbol != nil:
@@ -104,13 +113,10 @@ proc getIdentifier*(name: string, kind: NimSymKind, parent=""): string =
       gStateRT.onSymbol(sym)
 
       result = sym.name
-      checkUnderscores(result, &"Identifier '{parentStr}{name}' ({kind}) still contains leading/trailing underscores '_'  after 'cPlugin:onSymbol()': result '{result}'")
-
-      if parent.nBl:
-        doAssert result.nBl, &"Blank identifier, originally '{parentStr}{name}' ({kind}), cannot be empty"
     else:
       result = name
-      checkUnderscores(result, &"Identifier '{parentStr}{result}' ({kind}) contains unsupported leading/trailing underscores '_': use 'cPlugin:onSymbol()' to remove")
+
+    checkIdentifier(result, $kind, parent, name)
 
     if result in gReserved:
       result = &"`{result}`"
