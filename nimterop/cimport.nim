@@ -458,5 +458,5 @@ macro cImport*(filename: static string, recurse: static bool = false): untyped =
   except:
     let
       (tmpFile, errors) = getNimCheckError(output)
-    doAssert false, errors & "Nimterop codegen limitation or error - review 'nim check' output above generated for " & tmpFile
+    doAssert false, errors & "\n\nNimterop codegen limitation or error - review 'nim check' output above generated for " & tmpFile
 

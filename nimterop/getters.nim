@@ -81,6 +81,7 @@ proc getType*(str: string): string =
     return "object"
 
   result = str.strip(chars={'_'}).
+    replace(re"\s+", " ").
     replace(re"([u]?int[\d]+)_t", "$1").
     replace(re"([u]?int)ptr_t", "ptr $1")
 
@@ -232,8 +233,6 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
               if inc.absolutePath().sanitizePath in saniLine:
                 start = true
                 break
-          if start:
-            rdata.add(&"// {line}")
       else:
         if start:
           if "#undef" in line:
