@@ -22,6 +22,11 @@ proc execAction*(cmd: string, nostderr=false): string =
     let msg = "Command failed: " & $ret & "\nccmd: " & ccmd & "\nresult:\n" & result
     doAssert false, msg
 
+proc mkDir*(dir: string) =
+  let
+    flag = when not defined(Windows): "-p" else: ""
+  discard execAction(&"mkdir {flag} {dir.quoteShell}")
+
 proc extractZip*(zipfile, outdir: string) =
   var cmd = "unzip -o $#"
   if defined(Windows):
@@ -39,14 +44,15 @@ proc downloadUrl*(url, outdir: string) =
 
   if not (ext == ".zip" and fileExists(outdir/file)):
     echo "Downloading " & file
+    mkDir(outdir)
     var cmd = if defined(Windows):
       "powershell wget $# -OutFile $#"
     else:
       "curl $# -o $#"
     discard execAction(cmd % [url, outdir/file])
 
-  if ext == ".zip":
-    extractZip(file, outdir)
+    if ext == ".zip":
+      extractZip(file, outdir)
 
 proc gitReset*(outdir: string) =
   echo "Resetting " & outdir
@@ -77,10 +83,11 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
   if dirExists(outdir/".git"):
     gitReset(outdir)
     return
+
   let
     outdir2 = outdir.quoteShell
-    flag = when not defined(Windows): "-p" else: ""
-  echo execAction(&"mkdir {flag} {outdir2}")
+
+  mkDir(outdir2)
 
   echo "Setting up Git repo: " & url
   discard execAction(&"cd {outdir2} && git init .")
