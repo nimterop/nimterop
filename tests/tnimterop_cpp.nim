@@ -1,5 +1,6 @@
-import nimterop/cimport
 import unittest
+import nimterop/cimport
+import nimterop/paths
 
 static:
   cDebug()

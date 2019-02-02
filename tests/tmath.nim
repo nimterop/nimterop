@@ -1,5 +1,5 @@
-import nimterop/cimport
 import unittest
+import nimterop/cimport
 
 type
   locale_t = object

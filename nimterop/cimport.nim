@@ -6,7 +6,6 @@ Each `compileTime` proc must be used in a compile time context, eg using:
 static:
   cAddStdDir()
 ```
-
 ]##
 
 import hashes, macros, os, strformat, strutils
@@ -20,7 +19,10 @@ export types
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
-  result = dir.replace("$projpath", getProjectPath())
+  # disabling this interpolation as this is error prone, but other less
+  # interpolations can be added, eg see https://github.com/nim-lang/Nim/pull/10530
+  # result = dir.replace("$projpath", getProjectPath())
+  result = dir
 
 proc joinPathIfRel(path1: string, path2: string): string =
   if path2.isAbsolute:
