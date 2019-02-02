@@ -1,3 +1,14 @@
+##[
+Main import file to write wrappers.
+Each `compileTime` proc must be used in a compile time context, eg using:
+
+```
+static:
+  cAddStdDir()
+```
+
+]##
+
 import hashes, macros, os, strformat, strutils
 
 const CIMPORT {.used.} = 1

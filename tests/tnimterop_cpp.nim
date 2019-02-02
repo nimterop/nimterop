@@ -4,9 +4,9 @@ import unittest
 static:
   cDebug()
   cDisableCaching()
-  cAddSearchDir "$projpath/include"
+  cAddSearchDir testsIncludeDir()
 
-cIncludeDir "$projpath/include"
+cIncludeDir testsIncludeDir()
 cCompile  cSearchPath "test2.cpp"
 cImport cSearchPath "test2.hpp"
 

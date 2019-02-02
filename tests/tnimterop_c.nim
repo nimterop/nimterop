@@ -4,10 +4,10 @@ import nimterop/cimport
 static:
   cDebug()
   cDisableCaching()
-  cAddSearchDir "$projpath/include"
+  cAddSearchDir testsIncludeDir()
 
 cDefine("FORCE")
-cIncludeDir "$projpath/include"
+cIncludeDir testsIncludeDir()
 cCompile cSearchPath("test.c")
 
 cPlugin:
