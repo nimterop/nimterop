@@ -43,14 +43,18 @@ proc testAll() =
   if defined(OSX) or defined(Windows) or not existsEnv("TRAVIS"):
     tsoloud() # requires some libraries on linux, need them installed in TRAVIS
 
+const htmldocsDir = "build/htmldocs"
+
+proc runNimDoc() =
+  execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
+
 task test, "Test":
   for options in ["", "-d:release"]:
     buildToast(options)
     testAll()
+  runNimDoc()
 
 task docs, "Generate docs":
   # Uses: pip install ghp-import
-  execCmd "nim doc --project --index:on nimterop/cimport"
-  execCmd "nim doc --project --index:on nimterop/git"
-  execCmd "nim doc --project --index:on nimterop/plugin"
-  execCmd "ghp-import --no-jekyll -fp nimterop/htmldocs"
+  runNimDoc()
+  execCmd &"ghp-import --no-jekyll -fp {htmldocsDir}"
