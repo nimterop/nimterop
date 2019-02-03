@@ -2,10 +2,11 @@
 Main import file to write wrappers.
 Each `compileTime` proc must be used in a compile time context, eg using:
 
-```
-static:
-  cAddStdDir()
-```
+.. code-block:: nim
+  static:
+    cAddStdDir()
+
+`-d:nimteropForceRebuild` disables all caching (forcing rebuilds)
 ]##
 
 import hashes, macros, os, strformat, strutils
@@ -16,6 +17,11 @@ include "."/globals
 
 import "."/[git, paths, types]
 export types
+
+proc forceRebuild(): bool =
+  ## `-d:nimteropForceRebuild` can be temporarily put in user's config files
+  ## to guarantee rebuilds. See also #108.
+  gStateCT.nocache or compileOption("forceBuild") or defined(nimteropForceRebuild)
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
@@ -83,7 +89,7 @@ proc getFileDate(fullpath: string): string =
   doAssert ret == 0, "File date error: " & fullpath & "\n" & result
 
 proc getCacheValue(fullpath: string): string =
-  if not gStateCT.nocache:
+  if not forceRebuild():
     result = fullpath.getFileDate()
 
 proc getToastError(output: string): string =
@@ -102,7 +108,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
 
   result.tmpFile = getTempDir() / "nimterop_" & $hash & ".nim"
 
-  if not fileExists(result.tmpFile) or gStateCT.nocache or compileOption("forceBuild"):
+  if not fileExists(result.tmpFile) or forceRebuild():
     writeFile(result.tmpFile, output)
 
   doAssert fileExists(result.tmpFile), "Bad codegen - unable to write to TEMP: " & result.tmpFile
@@ -243,7 +249,7 @@ macro cPlugin*(body): untyped =
     hash = data.hash().abs()
     path = getTempDir() / "nimterop_" & $hash & ".nim"
 
-  if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
+  if not fileExists(path) or forceRebuild():
     writeFile(path, data)
 
   doAssert fileExists(path), "Unable to write plugin file: " & path
