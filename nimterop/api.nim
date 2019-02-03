@@ -12,7 +12,11 @@ when true:
     for ai in a: result.add quote do: from `ai` import nil
 
   const dir = nimteropSrcDir()
-  static: echo (dir:dir)
+  # proc nimteropRoot*(): string =
+  # currentSourcePath.parentDir.parentDir
+  const dir4 = currentSourcePath
+  const dir5 = currentSourcePath()
+  static: echo (dir:dir, dir2:nimteropRoot(), dir3:currentSourcePath, dir4: dir4, dir5: dir5)
   const files = block:
     var ret: seq[string]
     for path in walkDirRec(dir, yieldFilter = {pcFile}):
