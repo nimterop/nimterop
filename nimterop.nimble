@@ -59,7 +59,7 @@ when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
     fmt"{currentSourcePath}".parentDir.parentDir.parentDir
 
 proc runNimDoc() =
-  execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
+  execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/modules.nim"
   execCmd &"nim buildIndex -o:{htmldocsDir}/theindex.html {htmldocsDir}"
   when declared(getNimRootDir):
     #[

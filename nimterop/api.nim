@@ -1,5 +1,5 @@
 ##[
-Module that should import everything so that `nim doc --project nimtero/all` runs docs on everything.
+Module that should import everything so that `nim doc --project nimtero/api` runs docs on everything.
 ]##
 
 # TODO: make sure it does import everything.
