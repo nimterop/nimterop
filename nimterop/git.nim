@@ -9,7 +9,7 @@ proc execAction*(cmd: string, nostderr=false): string =
   when defined(Windows):
     ccmd = "cmd /c " & cmd
   when defined(Linux) or defined(MacOSX):
-    ccmd = "bash -c '" & cmd & "'"
+    ccmd = "bash -c \"" & cmd & "\""
 
   when nimvm:
     (result, ret) = gorgeEx(ccmd)
