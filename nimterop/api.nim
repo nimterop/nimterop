@@ -12,6 +12,7 @@ when true:
     for ai in a: result.add quote do: from `ai` import nil
 
   const dir = nimteropSrcDir()
+  static: echo (dir:dir)
   const files = block:
     var ret: seq[string]
     for path in walkDirRec(dir, yieldFilter = {pcFile}):
@@ -21,4 +22,6 @@ when true:
       ret.add path
     ret
   static: echo files
-  importPaths files
+  # importPaths files
+
+  doAssert false
