@@ -1,3 +1,13 @@
+##[
+Main import file to write wrappers.
+Each `compileTime` proc must be used in a compile time context, eg using:
+
+```
+static:
+  cAddStdDir()
+```
+]##
+
 import hashes, macros, os, strformat, strutils
 
 const CIMPORT {.used.} = 1
@@ -9,7 +19,10 @@ export types
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
-  result = dir.replace("$projpath", getProjectPath())
+  # disabling this interpolation as this is error prone, but other less
+  # interpolations can be added, eg see https://github.com/nim-lang/Nim/pull/10530
+  # result = dir.replace("$projpath", getProjectPath())
+  result = dir
 
 proc joinPathIfRel(path1: string, path2: string): string =
   if path2.isAbsolute:
@@ -184,18 +197,15 @@ macro cOverride*(body): untyped =
   if gStateCT.debug:
     echo "Overriding " & gStateCT.symOverride.join(" ")
 
-macro cSkipSymbol*(skips: varargs[string]): untyped =
+proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   ## Similar to `cOverride() <cimport.html#cOverride.m,>`_, this macro allows
   ## filtering out symbols not of interest from the generated output.
-  ##
   runnableExamples:
-    cSkipSymbol "proc1", "Type2"
-
-  for skip in skips:
-    gStateCT.symOverride.add skip.strVal
+    static: cSkipSymbol @["proc1", "Type2"]
+  gStateCT.symOverride.add skips
 
 macro cPlugin*(body): untyped =
-  ## When `cOverride() <cimport.html#cOverride.m,>`_ and `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cvarargs[string]>`_
+  ## When `cOverride() <cimport.html#cOverride.m,>`_ and `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cseq[string]>`_
   ## are not adequate, the `cPlugin() <cimport.html#cPlugin.m,>`_ macro can be used
   ## to customize the generated Nim output. The following callbacks are available at
   ## this time.
@@ -242,8 +252,8 @@ macro cPlugin*(body): untyped =
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory ``path`` in search path configured
-  ## using `cAddSearchDir() <cimport.html#cAddSearchDir.m,>`_ and
-  ## `cAddStdDir() <cimport.html#cAddStdDir.m,string>`_.
+  ## using `cAddSearchDir() <cimport.html#cAddSearchDir,>`_ and
+  ## `cAddStdDir() <cimport.html#cAddStdDir,string>`_.
   ##
   ## This can be used to locate files or directories that can be passed onto
   ## `cCompile() <cimport.html#cCompile.m,,string>`_,
@@ -261,23 +271,25 @@ proc cSearchPath*(path: string): string {.compileTime.}=
     doAssert found, "File or directory not found: " & path &
       " gStateCT.searchDirs: " & $gStateCT.searchDirs
 
-macro cDebug*(): untyped =
+proc cDebug*() {.compileTime.} =
   ## Enable debug messages and display the generated Nim code
-
   gStateCT.debug = true
 
-macro cDisableCaching*(): untyped =
+proc cDisableCaching*() {.compileTime.} =
   ## Disable caching of generated Nim code - useful during wrapper development
   ##
   ## If files included by header being processed by `cImport() <cimport.html#cImport.m,>`_
   ## change and affect the generated content, they will be ignored and the cached
-  ## value will continue to be used . Use `cDisableCaching() <cimport.html#cDisableCaching.m,>`_
+  ## value will continue to be used . Use `cDisableCaching() <cimport.html#cDisableCaching,>`_
   ## to avoid this scenario during development.
   ##
   ## ``nim -f`` was broken prior to 0.19.4 but can also be used to flush the cached content.
 
   gStateCT.nocache = true
 
+# TODO: `passC` should be delayed and inserted inside `cImport`, `cCompile`
+# and this should be made a proc:
+# proc cDefine*(name: string, val = "") {.compileTime.} =
 macro cDefine*(name: static string, val: static string = ""): untyped =
   ## ``#define`` an identifer that is forwarded to the C/C++ compiler
   ## using ``{.passC: "-DXXX".}``
@@ -285,6 +297,8 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
   result = newNimNode(nnkStmtList)
 
   var str = name
+  # todo: see https://github.com/genotrance/nimterop/issues/100 for
+  # edge case of empty strings
   if val.nBl:
     str &= &"={val.quoteShell}"
 
@@ -292,24 +306,20 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
     gStateCT.defines.add(str)
     str = "-D" & str
 
-    result.add(quote do:
+    result.add quote do:
       {.passC: `str`.}
-    )
 
     if gStateCT.debug:
       echo result.repr
 
-macro cAddSearchDir*(dir: static string): untyped =
+proc cAddSearchDir*(dir: string) {.compileTime.} =
   ## Add directory ``dir`` to the search path used in calls to
   ## `cSearchPath() <cimport.html#cSearchPath,string>`_.
-  ##
-  ## This allows something like this:
-  ##
-  ## .. code-block:: nim
-  ##
-  ##    cAddSearchDir("path/to/includes")
-  ##    cImport cSearchPath("file.h")
-
+  runnableExamples:
+    import paths, os
+    static:
+      cAddSearchDir testsIncludeDir()
+    doAssert cSearchPath("test.h").existsFile
   var dir = interpPath(dir)
   if dir notin gStateCT.searchDirs:
     gStateCT.searchDirs.add(dir)
@@ -322,46 +332,32 @@ macro cIncludeDir*(dir: static string): untyped =
   var dir = interpPath(dir)
   result = newNimNode(nnkStmtList)
 
-  let
-    fullpath = findPath(dir)
-    str = &"-I{fullpath.quoteShell}"
-
+  let fullpath = findPath(dir)
   if fullpath notin gStateCT.includeDirs:
     gStateCT.includeDirs.add(fullpath)
-
-    result.add(quote do:
+    let str = &"-I{fullpath.quoteShell}"
+    result.add quote do:
       {.passC: `str`.}
-    )
+    if gStateCT.debug:
+      echo result.repr
 
-  if gStateCT.debug:
-    echo result.repr
-
-macro cAddStdDir*(mode = "c"): untyped =
+proc cAddStdDir*(mode = "c") {.compileTime.} =
   ## Add the standard ``c`` [default] or ``cpp`` include paths to search
   ## path used in calls to `cSearchPath() <cimport.html#cSearchPath,string>`_
-  ##
-  ## This allows something like this:
-  ##
   runnableExamples:
-    cAddStdDir()
-    echo cSearchPath("math.h")
-
-  result = newNimNode(nnkStmtList)
-
+    static: cAddStdDir()
+    import os
+    doAssert cSearchPath("math.h").existsFile
   var
     inc = false
-
-  for line in getGccPaths(mode.strVal()).splitLines():
+  for line in getGccPaths(mode).splitLines():
     if "#include <...> search starts here" in line:
       inc = true
       continue
     elif "End of search list" in line:
       break
-
     if inc:
-      let sline = line.strip()
-      result.add quote do:
-        cAddSearchDir(`sline`)
+      cAddSearchDir line.strip()
 
 macro cCompile*(path: static string, mode = "c"): untyped =
   ## Compile and link C/C++ implementation into resulting binary using ``{.compile.}``
@@ -430,7 +426,7 @@ macro cCompile*(path: static string, mode = "c"): untyped =
 macro cImport*(filename: static string, recurse: static bool = false): untyped =
   ## Import all supported definitions from specified header file. Generated
   ## content is cached in ``nimcache`` until ``filename`` changes unless
-  ## `cDisableCaching() <cimport.html#cDisableCaching.m,>`_ is set. ``nim -f``
+  ## `cDisableCaching() <cimport.html#cDisableCaching,>`_ is set. ``nim -f``
   ## can also be used after Nim v0.19.4 to flush the cache.
   ##
   ## ``recurse`` can be used to generate Nim wrappers from ``#include`` files

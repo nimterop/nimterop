@@ -1,11 +1,13 @@
-import nimterop/cimport
 import unittest
+import nimterop/cimport
+import nimterop/paths
 
-cDebug()
-cDisableCaching()
+static:
+  cDebug()
+  cDisableCaching()
+  cAddSearchDir testsIncludeDir()
 
-cIncludeDir "$projpath/include"
-cAddSearchDir "$projpath/include"
+cIncludeDir testsIncludeDir()
 cCompile  cSearchPath "test2.cpp"
 cImport cSearchPath "test2.hpp"
 

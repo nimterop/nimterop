@@ -1,12 +1,14 @@
 import std/unittest
 import nimterop/cimport
+import nimterop/paths
 
-cDebug()
-cDisableCaching()
+static:
+  cDebug()
+  cDisableCaching()
+  cAddSearchDir testsIncludeDir()
 
 cDefine("FORCE")
-cIncludeDir "$projpath/include"
-cAddSearchDir "$projpath/include"
+cIncludeDir testsIncludeDir()
 cCompile cSearchPath("test.c")
 
 cPlugin:
@@ -136,8 +138,6 @@ var
   u3p: UNION3
   k: uKernel
   kp: Kernel
-
-cAddStdDir()
 
 ## failing tests
 when false:
