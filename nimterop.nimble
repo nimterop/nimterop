@@ -49,9 +49,9 @@ proc runNimDoc() =
   execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/api.nim"
 
 task test, "Test":
-  for options in ["", "-d:release"]:
-    buildToast(options)
-    testAll()
+  # for options in ["", "-d:release"]:
+  #   buildToast(options)
+  #   testAll()
   runNimDoc()
 
 task nimDoc, "run nim doc":
