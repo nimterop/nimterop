@@ -1,6 +1,6 @@
 # Package
 
-version     = "0.1.0"
+version     = "0.1.1"
 author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
@@ -12,7 +12,7 @@ installDirs = @["nimterop"]
 installFiles = @["config.nims"]
 
 # Dependencies
-requires "nim >= 0.19.2", "regex >= 0.10.0", "cligen >= 0.9.17"
+requires "nim >= 0.19.4", "regex >= 0.10.0", "cligen >= 0.9.17"
 
 import strformat
 
