@@ -46,7 +46,7 @@ proc testAll() =
 const htmldocsDir = "build/htmldocs"
 
 proc runNimDoc() =
-  execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
+  execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/api.nim"
 
 task test, "Test":
   for options in ["", "-d:release"]:
