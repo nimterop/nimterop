@@ -106,7 +106,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
   let
     hash = output.hash().abs()
 
-  result.tmpFile = getTempDir() / "nimterop_" & $hash & ".nim"
+  result.tmpFile = getTempDir() / "nimterop_getNimCheckError_" & $hash & ".nim"
 
   if not fileExists(result.tmpFile) or forceRebuild():
     writeFile(result.tmpFile, output)
@@ -247,7 +247,7 @@ macro cPlugin*(body): untyped =
   let
     data = "import nimterop/plugin\n\n" & body.repr
     hash = data.hash().abs()
-    path = getTempDir() / "nimterop_" & $hash & ".nim"
+  let path = getTempDir() / "nimterop_cPlugin_" & $hash & ".nim"
 
   if not fileExists(path) or forceRebuild():
     writeFile(path, data)

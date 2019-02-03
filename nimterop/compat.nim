@@ -3,13 +3,13 @@ module for backward compatibility
 put everything that requires `when (NimMajor, NimMinor, NimPatch)` here
 ]#
 
-import os
+import std/strutils
 
 when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-  export relativePath
+  import std/os
+  export os.relativePath
 else:
-  import std/[ospaths,strutils]
-
+  import std/os except relativePath
   proc relativePath*(file, base: string): string =
     ## naive version of `os.relativePath` ; remove after nim >= 0.19.9
     runnableExamples:
@@ -17,8 +17,8 @@ else:
       check:
         "/foo/bar/baz/log.txt".unixToNativePath.relativePath("/foo/bar".unixToNativePath) == "baz/log.txt".unixToNativePath
         "foo/bar/baz/log.txt".unixToNativePath.relativePath("foo/bar".unixToNativePath) == "baz/log.txt".unixToNativePath
-    var base = base.normalizedPath
-    var file = file.normalizedPath
-    if not base.endsWith DirSep: base.add DirSep
-    doAssert file.startsWith base
-    result = file[base.len .. ^1]
+    var base2 = base.normalizedPath
+    var file2 = file.normalizedPath
+    if not base2.endsWith DirSep: base2.add DirSep
+    doAssert file2.startsWith base2, $(file, base, file2, base2, $DirSep)
+    result = file2[base2.len .. ^1]

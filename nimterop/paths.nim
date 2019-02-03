@@ -1,7 +1,8 @@
 import os
 
 proc nimteropRoot*(): string =
-  currentSourcePath.parentDir.parentDir
+  result = currentSourcePath.parentDir.parentDir
+  doAssert: result.len > 0 # pending https://github.com/nim-lang/Nim/pull/10629
 
 proc nimteropBuildDir*(): string =
   ## all nimterop generated files go under here (gitignored)

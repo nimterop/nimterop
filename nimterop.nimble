@@ -62,10 +62,6 @@ proc runNimDoc() =
   execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/modules.nim"
   execCmd &"nim buildIndex -o:{htmldocsDir}/theindex.html {htmldocsDir}"
   when declared(getNimRootDir):
-    #[
-    this enables doc search, works at least locally with:
-    cd {htmldocsDir} && python -m SimpleHTTPServer 9009
-    ]#
     execCmd &"nim js -o:{htmldocsDir}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim"
 
 task test, "Test":
