@@ -23,9 +23,70 @@ proc execAction*(cmd: string, nostderr=false): string =
     doAssert false, msg
 
 proc mkDir*(dir: string) =
+  if not dirExists(dir):
+    let
+      flag = when not defined(Windows): "-p" else: ""
+    discard execAction(&"mkdir {flag} {dir.quoteShell}")
+
+proc cpFile*(source, dest: string, move=false) =
   let
-    flag = when not defined(Windows): "-p" else: ""
-  discard execAction(&"mkdir {flag} {dir.quoteShell}")
+    source = source.replace("/", $DirSep)
+    dest = dest.replace("/", $DirSep)
+    cmd =
+      when defined(Windows):
+        if move:
+          "move /y"
+        else:
+          "copy /y"
+      else:
+        if move:
+          "mv -f"
+        else:
+          "cp -f"
+
+  discard execAction(&"{cmd} {source.quoteShell} {dest.quoteShell}")
+
+proc mvFile*(source, dest: string) =
+  cpFile(source, dest, move=true)
+
+when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
+  proc relativePath*(path, base: string; sep = DirSep): string =
+    ## Copied from `os.relativePath` ; remove after nim >= 0.19.9
+    if path.len == 0: return ""
+    var f, b: PathIter
+    var ff = (0, -1)
+    var bb = (0, -1) # (int, int)
+    result = newStringOfCap(path.len)
+    while f.hasNext(path) and b.hasNext(base):
+      ff = next(f, path)
+      bb = next(b, base)
+      let diff = ff[1] - ff[0]
+      if diff != bb[1] - bb[0]: break
+      var same = true
+      for i in 0..diff:
+        if path[i + ff[0]] !=? base[i + bb[0]]:
+          same = false
+          break
+      if not same: break
+      ff = (0, -1)
+      bb = (0, -1)
+
+    while true:
+      if bb[1] >= bb[0]:
+        if result.len > 0 and result[^1] != sep:
+          result.add sep
+        result.add ".."
+      if not b.hasNext(base): break
+      bb = b.next(base)
+
+    while true:
+      if ff[1] >= ff[0]:
+        if result.len > 0 and result[^1] != sep:
+          result.add sep
+        for i in 0..ff[1] - ff[0]:
+          result.add path[i + ff[0]]
+      if not f.hasNext(path): break
+      ff = f.next(path)
 
 proc extractZip*(zipfile, outdir: string) =
   var cmd = "unzip -o $#"
@@ -62,18 +123,9 @@ proc gitReset*(outdir: string) =
     sleep(1000)
     echo "  Retrying ..."
 
-proc relativePathNaive*(file, base: string): string =
-  ## naive version of `os.relativePath` ; remove after nim >= 0.19.9
-  runnableExamples:
-    doAssert "/foo/bar/baz/log.txt".relativePathNaive("/foo/bar") == "baz/log.txt"
-  var base = base
-  if not base.endsWith "/": base.add "/"
-  doAssert file.startsWith base
-  result = file[base.len .. ^1]
-
 proc gitCheckout*(file, outdir: string) =
   echo "Resetting " & file
-  let file2 = file.relativePathNaive outdir
+  let file2 = file.relativePath outdir
   let cmd = &"cd {outdir.quoteShell} && git checkout {file2.quoteShell}"
   while execAction(cmd).contains("Permission denied"):
     sleep(500)

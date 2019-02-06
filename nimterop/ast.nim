@@ -146,7 +146,7 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
   nimState.identifiers = newTable[string, string]()
 
   nimState.currentHeader = getCurrentHeader(fullpath)
-  nimState.constStr &= &"\n  {nimState.currentHeader} = \"{fp}\""
+  nimState.constStr &= &"\n  {nimState.currentHeader} {{.used.}} = \"{fp}\""
 
   root.searchAst(astTable, nimState)
 

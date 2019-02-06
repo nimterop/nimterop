@@ -12,9 +12,9 @@ import hashes, macros, os, strformat, strutils
 
 const CIMPORT {.used.} = 1
 
-include "." / globals
+include "."/globals
 
-import "." / [types, paths]
+import "."/[git, paths, types]
 export types
 
 proc interpPath(dir: string): string=
@@ -359,7 +359,7 @@ proc cAddStdDir*(mode = "c") {.compileTime.} =
     if inc:
       cAddSearchDir line.strip()
 
-macro cCompile*(path: static string, mode = "c"): untyped =
+macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
   ## Compile and link C/C++ implementation into resulting binary using ``{.compile.}``
   ##
   ## ``path`` can be a specific file or contain wildcards:
@@ -376,6 +376,13 @@ macro cCompile*(path: static string, mode = "c"): untyped =
   ## .. code-block:: nim
   ##
   ##    cCompile("path/to/dir", "cpp")
+  ##
+  ## ``exclude`` can be used to exclude files by partial string match. Comma separated to
+  ## specify multiple exclude strings
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    cCompile("path/to/dir", exclude="test2.c")
 
   result = newNimNode(nnkStmtList)
 
@@ -383,7 +390,8 @@ macro cCompile*(path: static string, mode = "c"): untyped =
     stmt = ""
 
   proc fcompile(file: string): string =
-    let fn = file.splitFile().name
+    let
+      (_, fn, ext) = file.splitFile()
     var
       ufn = fn
       uniq = 1
@@ -391,32 +399,53 @@ macro cCompile*(path: static string, mode = "c"): untyped =
       ufn = fn & $uniq
       uniq += 1
 
+    # - https://github.com/nim-lang/Nim/issues/10299
+    # - https://github.com/nim-lang/Nim/issues/10486
     gStateCT.compile.add(ufn)
     if fn == ufn:
-      return "{.compile: \"$#\".}" % file.replace("\\", "/")
+      return "{.compile: \"$#\".}\n" % file.replace("\\", "/")
     else:
-      return "{.compile: (\"../$#\", \"$#.o\").}" % [file.replace("\\", "/"), ufn]
+      # - https://github.com/nim-lang/Nim/issues/9370
+      let
+        hash = file.hash().abs()
+        tmpFile = file.parentDir() / &"_nimterop_{$hash}_{ufn}{ext}"
+      if not tmpFile.fileExists() or file.getFileDate() > tmpFile.getFileDate():
+        cpFile(file, tmpFile)
+      return "{.compile: \"$#\".}\n" % tmpFile.replace("\\", "/")
 
-  proc dcompile(dir: string, ext=""): string =
+  # Due to https://github.com/nim-lang/Nim/issues/9863
+  # cannot use seq[string] for excludes
+  proc notExcluded(file, exclude: string): bool =
+    result = true
+    if "_nimterop_" in file:
+      result = false
+    elif exclude.len != 0:
+      for excl in exclude.split(","):
+        if excl in file:
+          result = false
+
+  proc dcompile(dir, exclude: string, ext=""): string =
     let
       files = walkDirImpl(dir, ext)
 
     for f in files:
-      if f.len != 0:
-        result &= fcompile(f) & "\n"
+      if f.len != 0 and f.notExcluded(exclude):
+        result &= fcompile(f)
 
   if path.contains("*") or path.contains("?"):
-    stmt &= dcompile(path)
+    stmt &= dcompile(path, exclude.strVal())
   else:
     let fpath = findPath(path)
-    if fileExists(fpath):
-      stmt &= fcompile(fpath) & "\n"
+    if fileExists(fpath) and fpath.notExcluded(exclude.strVal()):
+      stmt &= fcompile(fpath)
     elif dirExists(fpath):
       if mode.strVal().contains("cpp"):
-        for i in @["*.C", "*.cpp", "*.c++", "*.cc", "*.cxx"]:
-          stmt &= dcompile(fpath, i)
+        for i in @["*.cpp", "*.c++", "*.cc", "*.cxx"]:
+          stmt &= dcompile(fpath, exclude.strVal(), i)
+        when not defined(Windows):
+          stmt &= dcompile(fpath, exclude.strVal(), "*.C")
       else:
-        stmt &= dcompile(fpath, "*.c")
+        stmt &= dcompile(fpath, exclude.strVal(), "*.c")
 
   result.add stmt.parseStmt()
 
