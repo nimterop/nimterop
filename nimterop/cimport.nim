@@ -108,7 +108,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
   doAssert fileExists(result.tmpFile), "Bad codegen - unable to write to TEMP: " & result.tmpFile
 
   let
-    (check, ret) = gorgeEx("nim check " & result.tmpFile)
+    (check, _) = gorgeEx("nim check " & result.tmpFile)
 
   result.errors = "\n\n" & check
 

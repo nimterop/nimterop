@@ -4,8 +4,8 @@ import "."/[git, paths]
 
 proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter/", incDir() / "treesitter", """
-include/*
-src/runtime/*
+lib/include/*
+lib/src/*
 """)
 
   gitPull("https://github.com/JuliaStrings/utf8proc", incDir() / "utf8proc", """
@@ -15,7 +15,7 @@ src/runtime/*
 
   # TODO: does this work on windows? if not use `os.unixToNativePath`
   let
-    stack = incDir() / "treesitter/src/runtime/stack.c"
+    stack = incDir() / "treesitter/lib/src/stack.c"
 
   stack.writeFile(stack.readFile().replace("inline Stack", "Stack"))
 
