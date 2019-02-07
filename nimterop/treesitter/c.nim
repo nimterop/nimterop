@@ -5,7 +5,7 @@ import ".."/[setup, paths]
 static:
   treesitterCSetup()
 
-import "."/runtime
+import "."/api
 
 {.compile: incDir() / "treesitter_c/src/parser.c".}
 

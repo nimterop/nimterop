@@ -5,7 +5,7 @@ import regex
 import "."/plugin
 
 when not declared(CIMPORT):
-  import "."/treesitter/runtime
+  import "."/treesitter/api
 
 const
   gAtoms {.used.} = @[

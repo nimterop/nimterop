@@ -5,7 +5,7 @@ import ".."/[setup, paths]
 static:
   treesitterCppSetup()
 
-import "."/runtime
+import "."/api
 
 const srcDir = incDir() / "treesitter_cpp/src"
 

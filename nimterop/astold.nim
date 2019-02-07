@@ -1,6 +1,6 @@
 import macros, os, strformat, strutils
 
-import treesitter/runtime
+import treesitter/api
 
 import getters, globals
 

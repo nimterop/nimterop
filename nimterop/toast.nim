@@ -1,6 +1,6 @@
 import os, strformat, strutils
 
-import "."/treesitter/[runtime, c, cpp]
+import "."/treesitter/[api, c, cpp]
 
 import "."/[ast, globals, getters, grammar]
 

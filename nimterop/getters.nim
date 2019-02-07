@@ -2,7 +2,7 @@ import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
-import "."/[git, globals, plugin, treesitter/runtime]
+import "."/[git, globals, plugin, treesitter/api]
 
 const gReserved = """
 addr and as asm
