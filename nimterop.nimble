@@ -20,26 +20,27 @@ proc execCmd(cmd: string) =
   echo "execCmd:" & cmd
   exec cmd
 
-proc tsoloud() =
-  execCmd "nim c -r tests/tsoloud.nim"
-  execCmd "nim cpp -r tests/tsoloud.nim"
+proc execTest(test: string) =
+  execCmd "nim c -r " & test
+  execCmd "nim cpp -r " & test
 
-proc buildToast(options: string) =
-  execCmd(&"nim c {options} nimterop/toast.nim")
+proc tsoloud() =
+  execTest "tests/tsoloud.nim"
+
+proc buildToast() =
+  execCmd(&"nim c -d:release nimterop/toast.nim")
 
 task rebuildToast, "rebuild toast":
   # If need to manually rebuild (automatically built on 1st need)
-  buildToast("-d:release")
+  buildToast()
 
 proc testAll() =
-  execCmd "nim c -r tests/tnimterop_c.nim"
-  execCmd "nim cpp -r tests/tnimterop_c.nim"
+  execTest "tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
 
   ## platform specific tests
   when defined(Windows):
-    execCmd "nim c -r tests/tmath.nim"
-    execCmd "nim cpp -r tests/tmath.nim"
+    execTest "tests/tmath.nim"
   if defined(OSX) or defined(Windows) or not existsEnv("TRAVIS"):
     tsoloud() # requires some libraries on linux, need them installed in TRAVIS
 
@@ -49,9 +50,8 @@ proc runNimDoc() =
   execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
 
 task test, "Test":
-  for options in ["", "-d:release"]:
-    buildToast(options)
-    testAll()
+  buildToast()
+  testAll()
   runNimDoc()
 
 task docs, "Generate docs":
