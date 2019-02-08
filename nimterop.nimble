@@ -47,6 +47,7 @@ proc testAll() =
 const htmldocsDir = "build/htmldocs"
 
 proc runNimDoc() =
+  execCmd &"nim buildIndex -o:{htmldocsDir}/theindex.html {htmldocsDir}"
   execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
 
 task test, "Test":
@@ -55,6 +56,9 @@ task test, "Test":
   runNimDoc()
 
 task docs, "Generate docs":
+  runNimDoc()
+
+task docsPublish, "Generate and publish docs":
   # Uses: pip install ghp-import
   runNimDoc()
   execCmd &"ghp-import --no-jekyll -fp {htmldocsDir}"
