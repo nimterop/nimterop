@@ -59,8 +59,8 @@ when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
     fmt"{currentSourcePath}".parentDir.parentDir.parentDir
 
 proc runNimDoc() =
-  execCmd &"nim buildIndex -o:{htmldocsDir}/theindex.html {htmldocsDir}"
   execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
+  execCmd &"nim buildIndex -o:{htmldocsDir}/theindex.html {htmldocsDir}"
   when declared(getNimRootDir):
     #[
     this enables doc search, works at least locally with:
