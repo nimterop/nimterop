@@ -1,7 +1,9 @@
 execAction	git.html#execAction,string	git: execAction(cmd: string; nostderr = false): string	
+mkDir	git.html#mkDir,string	git: mkDir(dir: string)	
+cpFile	git.html#cpFile,string,string	git: cpFile(source, dest: string; move = false)	
+mvFile	git.html#mvFile,string,string	git: mvFile(source, dest: string)	
 extractZip	git.html#extractZip,string,string	git: extractZip(zipfile, outdir: string)	
 downloadUrl	git.html#downloadUrl,string,string	git: downloadUrl(url, outdir: string)	
 gitReset	git.html#gitReset,string	git: gitReset(outdir: string)	
-relativePathNaive	git.html#relativePathNaive,string,string	git: relativePathNaive(file, base: string): string	
 gitCheckout	git.html#gitCheckout,string,string	git: gitCheckout(file, outdir: string)	
 gitPull	git.html#gitPull,string,string,string,string	git: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)	
