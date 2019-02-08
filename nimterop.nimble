@@ -46,9 +46,27 @@ proc testAll() =
 
 const htmldocsDir = "build/htmldocs"
 
+when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
+  import os
+  proc getNimRootDir(): string =
+    #[
+    hack, but works
+    alternatively (but more complex), use (from a nim file, not nims otherwise
+    you get Error: ambiguous call; both system.fileExists):
+    import "$nim/testament/lib/stdtest/specialpaths.nim"
+    nimRootDir
+    ]#
+    fmt"{currentSourcePath}".parentDir.parentDir.parentDir
+
 proc runNimDoc() =
   execCmd &"nim buildIndex -o:{htmldocsDir}/theindex.html {htmldocsDir}"
   execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
+  when declared(getNimRootDir):
+    #[
+    this enables doc search, works at least locally with:
+    cd {htmldocsDir} && python -m SimpleHTTPServer 9009
+    ]#
+    execCmd &"nim js -o:{htmldocsDir}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim"
 
 task test, "Test":
   buildToast()
