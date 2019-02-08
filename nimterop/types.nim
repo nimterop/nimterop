@@ -58,4 +58,16 @@ template defineEnum*(typ) =
   proc `shr`*(x: int, y: typ): typ {.borrow.}
   proc `shr`*(x, y: typ): typ {.borrow.}
 
+  proc `or`*(x: typ, y: int): typ {.borrow.}
+  proc `or`*(x: int, y: typ): typ {.borrow.}
+  proc `or`*(x, y: typ): typ {.borrow.}
+
+  proc `and`*(x: typ, y: int): typ {.borrow.}
+  proc `and`*(x: int, y: typ): typ {.borrow.}
+  proc `and`*(x, y: typ): typ {.borrow.}
+
+  proc `xor`*(x: typ, y: int): typ {.borrow.}
+  proc `xor`*(x: int, y: typ): typ {.borrow.}
+  proc `xor`*(x, y: typ): typ {.borrow.}
+
   proc `$` *(x: typ): string {.borrow.}
