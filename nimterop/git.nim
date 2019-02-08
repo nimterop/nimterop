@@ -1,6 +1,6 @@
 import macros, os, osproc, regex, strformat, strutils
 
-import "."/paths
+import "."/[paths, compat]
 
 proc execAction*(cmd: string, nostderr=false): string =
   var
@@ -48,16 +48,6 @@ proc cpFile*(source, dest: string, move=false) =
 
 proc mvFile*(source, dest: string) =
   cpFile(source, dest, move=true)
-
-when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
-  proc relativePath*(file, base: string): string =
-    ## naive version of `os.relativePath` ; remove after nim >= 0.19.9
-    runnableExamples:
-      doAssert "/foo/bar/baz/log.txt".relativePath("/foo/bar") == "baz/log.txt"
-    var base = base
-    if not base.endsWith "/": base.add "/"
-    doAssert file.startsWith base
-    result = file[base.len .. ^1]
 
 proc extractZip*(zipfile, outdir: string) =
   var cmd = "unzip -o $#"
