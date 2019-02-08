@@ -139,7 +139,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
 
   cmd.add &" {fullpath.quoteShell}"
   echo cmd
-  # see https://github.com/genotrance/nimterop/issues/69
+  # see https://github.com/nimterop/nimterop/issues/69
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
 
@@ -297,7 +297,7 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
   result = newNimNode(nnkStmtList)
 
   var str = name
-  # todo: see https://github.com/genotrance/nimterop/issues/100 for
+  # todo: see https://github.com/nimterop/nimterop/issues/100 for
   # edge case of empty strings
   if val.nBl:
     str &= &"={val.quoteShell}"

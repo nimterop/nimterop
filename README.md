@@ -1,6 +1,8 @@
-[![Chat on Gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/nimgen/Lobby)
+[![Chat on Gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/nimterop/Lobby)
 [![Build status](https://ci.appveyor.com/api/projects/status/hol1yvqbp6hq4ao8/branch/master?svg=true)](https://ci.appveyor.com/project/genotrance/nimterop-8jcj7/branch/master)
 [![Build Status](https://travis-ci.org/nimterop/nimterop.svg?branch=master)](https://travis-ci.org/nimterop/nimterop)
+
+Detailed documentation [here](https://nimterop.github.io/nimterop/theindex.html).
 
 Nimterop is a [Nim](https://nim-lang.org/) package that aims to make C/C++ interop seamless
 
@@ -25,8 +27,9 @@ nimble install nimterop -y
 ```
 or:
 ```bash
-git clone http://github.com/genotrance/nimterop && cd nimterop
-nimble install -y
+git clone http://github.com/nimterop/nimterop && cd nimterop
+nimble develop -y
+nimble build
 ```
 
 This will download and install nimterop in the standard Nimble package location, typically `~/.nimble`. Once installed, it can be imported into any Nim program. Note that the `~/.nimble/bin` directory needs to be added to the `PATH` for nimterop to work.
@@ -50,8 +53,6 @@ Refer to the ```tests``` directory for examples on how the library can be used.
 
 The `toast` binary can also be used directly on the CLI. The `--help` flag provides more details.
 
-Detailed documentation is available: [cimport](https://genotrance.github.io/nimterop/cimport.html), [plugin](https://genotrance.github.io/nimterop/plugin.html), [git](https://genotrance.github.io/nimterop/git.html)
-
 __Implementation Details__
 
 In order to use the tree-sitter C library, it has to be compiled into a separate binary called `toast` (to AST) since the Nim VM doesn't yet support FFI. `toast` takes a C/C++ file and runs it through the tree-sitter API which returns an AST data structure. This can then be printed out to stdout in a Lisp S-Expression format or the relevant Nim wrapper output. This content can be saved to a `.nim` file and imported if so desired.
@@ -68,4 +69,4 @@ Nimterop depends on [tree-sitter](http://tree-sitter.github.io/tree-sitter/) and
 
 __Feedback__
 
-Nimterop is a work in progress and any feedback or suggestions are welcome. It is hosted on [GitHub](https://github.com/genotrance/nimterop) with an MIT license so issues, forks and PRs are most appreciated.
+Nimterop is a work in progress and any feedback or suggestions are welcome. It is hosted on [GitHub](https://github.com/nimterop/nimterop) with an MIT license so issues, forks and PRs are most appreciated.
