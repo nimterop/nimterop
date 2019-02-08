@@ -8,18 +8,18 @@ proc execAction*(cmd: string, nostderr=false): string =
     ret = 0
   when defined(Windows):
     ccmd = "cmd /c " & cmd
-  when defined(Linux) or defined(MacOSX):
-    ccmd = "bash -c \"" & cmd & "\""
+  elif defined(posix):
+    ccmd = cmd
+  else:
+    doAssert false
 
   when nimvm:
     (result, ret) = gorgeEx(ccmd)
   else:
-    if nostderr:
-      (result, ret) = execCmdEx(ccmd, {poUsePath})
-    else:
-      (result, ret) = execCmdEx(ccmd)
+    let opt = if nostderr: {poUsePath} else: {poStdErrToStdOut, poUsePath}
+    (result, ret) = execCmdEx(ccmd, opt)
   if ret != 0:
-    let msg = "Command failed: " & $ret & "\nccmd: " & ccmd & "\nresult:\n" & result
+    let msg = "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
     doAssert false, msg
 
 proc mkDir*(dir: string) =
