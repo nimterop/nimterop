@@ -68,7 +68,7 @@ proc downloadUrl*(url, outdir: string) =
     echo "Downloading " & file
     mkDir(outdir)
     var cmd = if defined(Windows):
-      "powershell wget $# -OutFile $#"
+      "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
     else:
       "curl $# -o $#"
     discard execAction(cmd % [url, outdir/file])
