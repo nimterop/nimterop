@@ -1,4 +1,4 @@
-# see https://github.com/genotrance/nimterop/issues/79
+# see https://github.com/nimterop/nimterop/issues/79
 
 when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
   # clean this up once upgraded; adapted from std/time_t
