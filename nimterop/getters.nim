@@ -226,7 +226,9 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
         elif not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
           start = true
         elif gStateRT.recurse:
-          if sfile.parentDir() in saniLine:
+          let
+            pDir = sfile.expandFilename().parentDir()
+          if pDir.len == 0 or pDir in saniLine:
             start = true
           else:
             for inc in gStateRT.includeDirs:
