@@ -119,7 +119,7 @@ proc getIdentifier*(name: string, kind: NimSymKind, parent=""): string =
 
     checkIdentifier(result, $kind, parent, name)
 
-    if result in gReserved:
+    if result in gReserved or (result == "object" and kind != nskType):
       result = &"`{result}`"
   else:
     result = ""
