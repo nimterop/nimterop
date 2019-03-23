@@ -5,12 +5,12 @@ os:
 language: c
 
 env:
-  - BRANCH=0.19.2
+  - BRANCH=0.19.4
   - BRANCH=devel
 
 cache:
   directories:
-    - "$HOME/.choosenim/toolchains/nim-0.19.2"
+    - "$HOME/.choosenim/toolchains/nim-0.19.4"
 
 install:
   # `set -u` failed for ubuntu: /home/travis/.travis/job_stages: line 107: secure: unbound variable
