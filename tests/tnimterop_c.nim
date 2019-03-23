@@ -145,3 +145,19 @@ when false:
     doAssert foobar1(3) == OSDEF * 3
 when false: # Error: undeclared identifier: 'foobar2'
     doAssert foobar2(3) == 3 + 1
+
+# Double pointer
+var
+  dv: DVOIDPTR
+  di: DINTPTR
+  ds: dstruct
+  cstr = "Hello".cstring
+  ds2: DSTRUCT2
+
+dv = addr vptr
+di = addr iptr
+
+ds.field1 = di
+ds2.field1 = addr cstr
+ds2.tcv = test_call10
+check ds2.tcv(di) == nil

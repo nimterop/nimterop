@@ -60,6 +60,10 @@ void *test_call9() {
 	return NULL;
 }
 
+void **test_call10(int **param1) {
+	return NULL;
+}
+
 void multiline1(void) {}
 
 void *multiline2(void) {

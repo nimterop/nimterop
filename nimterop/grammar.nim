@@ -50,6 +50,9 @@ proc initGrammar(): Grammar =
        {typeGrammar}
        (identifier|type_identifier?)
        (pointer_declarator?
+        (pointer_declarator!
+         (identifier|type_identifier)
+        )
         (identifier|type_identifier)
        )
        (abstract_pointer_declarator?)
@@ -61,6 +64,9 @@ proc initGrammar(): Grammar =
      (function_declarator*
       (identifier|type_identifier!)
       (pointer_declarator
+       (pointer_declarator!
+        (type_identifier)
+       )
        (type_identifier)
       )
       {paramListGrammar}
@@ -70,6 +76,9 @@ proc initGrammar(): Grammar =
     arrGrammar = &"""
      (array_declarator!
       (pointer_declarator!
+       (pointer_declarator!
+        (type_identifier)
+       )
        (type_identifier)
       )
       (type_identifier)
@@ -80,11 +89,10 @@ proc initGrammar(): Grammar =
   template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i: untyped): untyped =
     ptyp = nimState.data[i].val.getIdentifier(nskType, fname)
 
-    if i+1 < nimState.data.len and nimState.data[i+1].name == "pointer_declarator":
-      pptr = "ptr "
+    pptr = ""
+    while i+1 < nimState.data.len and nimState.data[i+1].name == "pointer_declarator":
+      pptr &= "ptr "
       i += 1
-    else:
-      pptr = ""
 
     if i+1 < nimState.data.len and nimState.data[i+1].name == "identifier":
       pname = nimState.data[i+1].val.getIdentifier(nskParam, fname)
@@ -94,8 +102,8 @@ proc initGrammar(): Grammar =
       count += 1
       i += 1
 
-    if pptr == "ptr " or ptyp != "object":
-      pout &= &"{pname}: {getPtrType(pptr&ptyp)},"
+    if pptr.len != 0 or ptyp != "object":
+      pout &= &"{pname}: {getPtrType(pptr&ptyp)}, "
 
   # typedef int X
   # typedef X Y
@@ -107,6 +115,11 @@ proc initGrammar(): Grammar =
     (type_identifier!)
     {arrGrammar}
     (pointer_declarator!
+     (pointer_declarator!
+      (type_identifier!)
+      {arrGrammar}
+      {funcGrammar}
+     )
      (type_identifier!)
      {arrGrammar}
      {funcGrammar}
@@ -123,13 +136,13 @@ proc initGrammar(): Grammar =
         aptr = ""
 
       i += 1
-      if i < nimState.data.len:
+      while i < nimState.data.len and "pointer" in nimState.data[i].name:
         case nimState.data[i].name:
           of "pointer_declarator":
-            tptr = "ptr "
+            tptr &= "ptr "
             i += 1
           of "array_pointer_declarator":
-            aptr = "ptr "
+            aptr &= "ptr "
             i += 1
 
       if i < nimState.data.len:
@@ -149,10 +162,10 @@ proc initGrammar(): Grammar =
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
 
-          if pout.len != 0 and pout[^1] == ',':
-            pout = pout[0 .. ^2]
+          if pout.len != 0 and pout[^2 .. ^1] == ", ":
+            pout = pout[0 .. ^3]
 
-          if tptr == "ptr " or typ != "object":
+          if tptr.len != 0 or typ != "object":
             nimState.typeStr &= &"\n  {name}* = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}"
           else:
             nimState.typeStr &= &"\n  {name}* = proc({pout}) {{.nimcall.}}"
@@ -242,13 +255,14 @@ proc initGrammar(): Grammar =
           ftyp = nimState.data[i].val.getType()
           i += 1
 
-        case nimState.data[i].name:
-          of "pointer_declarator":
-            fptr = "ptr "
-            i += 1
-          of "array_pointer_declarator":
-            aptr = "ptr "
-            i += 1
+        while i < nimState.data.len-fend and "pointer" in nimState.data[i].name:
+          case nimState.data[i].name:
+            of "pointer_declarator":
+              fptr &= "ptr "
+              i += 1
+            of "array_pointer_declarator":
+              aptr &= "ptr "
+              i += 1
 
         fname = nimState.data[i].val.getIdentifier(nskField, nname)
 
@@ -273,9 +287,9 @@ proc initGrammar(): Grammar =
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
 
-          if pout.len != 0 and pout[^1] == ',':
-            pout = pout[0 .. ^2]
-          if fptr == "ptr " or ftyp != "object":
+          if pout.len != 0 and pout[^2 .. ^1] == ", ":
+            pout = pout[0 .. ^3]
+          if fptr.len != 0 or ftyp != "object":
             nimState.typeStr &= &"\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}"
           else:
             nimState.typeStr &= &"\n    {fname}*: proc({pout}) {{.nimcall.}}"
@@ -297,12 +311,18 @@ proc initGrammar(): Grammar =
       (array_declarator!
        (field_identifier!)
        (pointer_declarator
+        (pointer_declarator!
+         (field_identifier)
+        )
         (field_identifier)
        )
        (^$1+)
       )
       (function_declarator+
        (pointer_declarator
+        (pointer_declarator!
+         (field_identifier)
+        )
         (field_identifier)
        )
        {paramListGrammar}
@@ -314,6 +334,9 @@ proc initGrammar(): Grammar =
        (field_declaration+
         {typeGrammar}
         (pointer_declarator!
+         (pointer_declarator!
+          {fieldGrammar}
+         )
          {fieldGrammar}
         )
         {fieldGrammar}
@@ -341,6 +364,9 @@ proc initGrammar(): Grammar =
     )
     (type_identifier!)
     (pointer_declarator
+     (pointer_declarator!
+      (type_identifier)
+     )
      (type_identifier)
     )
    )
@@ -433,6 +459,9 @@ proc initGrammar(): Grammar =
     {result[^1].grammar}
     (type_identifier!)
     (pointer_declarator
+     (pointer_declarator!
+      (type_identifier)
+     )
      (type_identifier)
     )
    )
@@ -459,6 +488,9 @@ proc initGrammar(): Grammar =
     (storage_class_specifier?)
     {typeGrammar}
     (pointer_declarator!
+     (pointer_declarator!
+      {funcGrammar}
+     )
      {funcGrammar}
     )
     {funcGrammar}
@@ -474,11 +506,10 @@ proc initGrammar(): Grammar =
           i += 1
           continue
 
-        if nimState.data[i].name == "pointer_declarator":
-          fptr = "ptr "
+        fptr = ""
+        while i < nimState.data.len and nimState.data[i].name == "pointer_declarator":
+          fptr &= "ptr "
           i += 1
-        else:
-          fptr = ""
 
         var
           fname = nimState.data[i].val
@@ -493,12 +524,12 @@ proc initGrammar(): Grammar =
 
           funcParamCommon(fnname, pname, ptyp, pptr, pout, count, i)
 
-        if pout.len != 0 and pout[^1] == ',':
-          pout = pout[0 .. ^2]
+        if pout.len != 0 and pout[^2 .. ^1] == ", ":
+          pout = pout[0 .. ^3]
 
         if fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
           let ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
-          if fptr == "ptr " or ftyp != "object":
+          if fptr.len != 0 or ftyp != "object":
             nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)} {{.{genImportC(fname, fnname)}, header: {nimState.currentHeader}.}}"
           else:
             nimState.procStr &= &"\nproc {fnname}*({pout}) {{.{genImportC(fname, fnname)}, header: {nimState.currentHeader}.}}"

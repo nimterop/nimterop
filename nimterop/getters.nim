@@ -24,7 +24,7 @@ using
 var
 when while
 xor
-yield""".split(Whitespace).toSet()
+yield""".split(Whitespace).toHashSet()
 
 const gTypeMap = {
   # char
@@ -151,8 +151,12 @@ proc getPtrType*(str: string): string =
   result = case str:
     of "ptr cchar":
       "cstring"
+    of "ptr ptr cchar":
+      "ptr cstring"
     of "ptr object":
       "pointer"
+    of "ptr ptr object":
+      "ptr pointer"
     else:
       str
 

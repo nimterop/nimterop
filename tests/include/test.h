@@ -108,6 +108,7 @@ unsigned char test_call_param6(UNION2 param1);
 int test_call_param7(union UNION1 param1);
 float test_call_param8(int *param1);
 void *test_call9();
+void **test_call10(int **param1);
 
 // Issue #58
 void
@@ -130,6 +131,20 @@ union union3 test_call_utype3();
 UNION3 test_call_etype_ptr3();
 
 typedef struct _Kernel { char name; } *Kernel;
+
+// Double pointers
+typedef void **DVOIDPTR;
+typedef int **DINTPTR;
+
+struct dstruct {
+  int **field1;
+};
+
+typedef struct dstruct2 {
+  char **field1;
+  float **field2;
+	void **(*tcv)(int **param1);
+} DSTRUCT2;
 
 #ifdef __cplusplus
 }

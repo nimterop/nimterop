@@ -23,6 +23,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
       pname = node.getPxName(1)
       ppname = node.getPxName(2)
       pppname = node.getPxName(3)
+      ppppname = node.getPxName(4)
 
     if node.tsNodePrevNamedSibling().tsNodeIsNull():
       if pname == "pointer_declarator":
@@ -30,9 +31,15 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
           nimState.data.add(("pointer_declarator", ""))
         elif ppname == "array_declarator":
           nimState.data.add(("array_pointer_declarator", ""))
+
+        # Double pointer
+        if ppname == "pointer_declarator":
+          nimState.data.add(("pointer_declarator", ""))
       elif pname in ["function_declarator", "array_declarator"]:
         if ppname == "pointer_declarator":
           nimState.data.add(("pointer_declarator", ""))
+          if pppname == "pointer_declarator":
+            nimState.data.add(("pointer_declarator", ""))
 
     nimState.data.add((name, val))
 
@@ -41,6 +48,8 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
       ppname == "function_declarator":
       if pppname == "pointer_declarator":
         nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
+        if ppppname == "pointer_declarator":
+          nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
       nimState.data.add(("function_declarator", ""))
 
   elif name in gExpressions:
