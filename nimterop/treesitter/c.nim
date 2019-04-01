@@ -7,9 +7,9 @@ static:
 
 const srcDir = incDir() / "treesitter_c/src"
 
-{.passC: "-I$1" % srcDir.}
-
 import "."/api
+
+{.passC: "-I$1" % srcDir.}
 
 {.compile: srcDir / "parser.c".}
 

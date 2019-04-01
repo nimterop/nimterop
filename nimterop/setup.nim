@@ -4,7 +4,7 @@ import "."/[git, paths]
 
 proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter/", incDir() / "treesitter", """
-lib/include/tree_sitter/api.h
+lib/include/*
 lib/src/*
 """)
 
@@ -13,11 +13,22 @@ lib/src/*
 *.h
 """)
 
-  # TODO: does this work on windows? if not use `os.unixToNativePath`
   let
-    stack = incDir() / "treesitter/lib/src/stack.c"
+    tbase = incDir() / "treesitter/lib"
+    stack = tbase / "src/stack.c"
+    parser = tbase / "include/tree_sitter/parser.h"
+    tparser = parser.replace("parser", "tparser")
+    language = tbase / "src/language.h"
+    lexer = tbase / "src/lexer.h"
+    subtree = tbase / "src/subtree.h"
 
   stack.writeFile(stack.readFile().replace("inline Stack", "Stack"))
+
+  # parser.h
+  mvFile(parser, tparser)
+  language.writeFile(language.readFile().replace("parser.h", "tparser.h"))
+  lexer.writeFile(lexer.readFile().replace("parser.h", "tparser.h"))
+  subtree.writeFile(subtree.readFile().replace("parser.h", "tparser.h"))
 
 proc treesitterCSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter-c", incDir() / "treesitter_c", """
