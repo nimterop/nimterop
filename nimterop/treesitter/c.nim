@@ -5,8 +5,12 @@ import ".."/[setup, paths]
 static:
   treesitterCSetup()
 
+const srcDir = incDir() / "treesitter_c/src"
+
+{.passC: "-I$1" % srcDir.}
+
 import "."/api
 
-{.compile: incDir() / "treesitter_c/src/parser.c".}
+{.compile: srcDir / "parser.c".}
 
-proc treeSitterC*(): ptr TSLanguage {.importc: "tree_sitter_c", header: incDir() / "treesitter_c/src/parser.h".}
+proc treeSitterC*(): ptr TSLanguage {.importc: "tree_sitter_c", header: srcDir / "api.h".}

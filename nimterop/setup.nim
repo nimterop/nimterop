@@ -4,7 +4,7 @@ import "."/[git, paths]
 
 proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter/", incDir() / "treesitter", """
-lib/include/*
+lib/include/tree_sitter/api.h
 lib/src/*
 """)
 
@@ -24,13 +24,13 @@ proc treesitterCSetup*() =
 src/*.h
 src/*.c
 src/*.cc
+src/tree_sitter/parser.h
 """)
 
   let
-    headerc = incDir() / "treesitter_c/src/parser.h"
+    headerc = incDir() / "treesitter_c/src/api.h"
 
   headerc.writeFile("""
-typedef struct TSLanguage TSLanguage;
 const TSLanguage *tree_sitter_c();
 """)
 
@@ -39,12 +39,12 @@ proc treesitterCppSetup*() =
 src/*.h
 src/*.c
 src/*.cc
+src/tree_sitter/parser.h
 """)
 
   let
-    headercpp = incDir() / "treesitter_cpp/src/parser.h"
+    headercpp = incDir() / "treesitter_cpp/src/api.h"
 
   headercpp.writeFile("""
-typedef struct TSLanguage TSLanguage;
 const TSLanguage *tree_sitter_cpp();
 """)

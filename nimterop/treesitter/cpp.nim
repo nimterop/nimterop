@@ -5,9 +5,11 @@ import ".."/[setup, paths]
 static:
   treesitterCppSetup()
 
-import "."/api
-
 const srcDir = incDir() / "treesitter_cpp/src"
+
+{.passC: "-I$1" % srcDir.}
+
+import "."/api
 
 when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
   const srcDirRel = "../../build/inc/treesitter_cpp/src"
@@ -31,4 +33,4 @@ that we link against, which avoids the linker hack.
 
 {.compile: srcDir / "scanner.cc".}
 
-proc treeSitterCpp*(): ptr TSLanguage {.importc: "tree_sitter_cpp", header: srcDir / "parser.h".}
+proc treeSitterCpp*(): ptr TSLanguage {.importc: "tree_sitter_cpp", header: srcDir / "api.h".}
