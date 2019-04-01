@@ -78,10 +78,10 @@ for:
   - /home/appveyor/binaries
 
 build_script:
-  - nimble install -y
+  - nimble --verbose install -y
 
 test_script:
-  - nimble test
-  - nimble --nimbleDir:test install nimterop -y
+  - nimble --verbose test
+  - nimble --verbose --nimbleDir:test install nimterop -y
 
 deploy: off

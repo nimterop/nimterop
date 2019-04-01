@@ -23,6 +23,6 @@ install:
 
 script:
   - set -e
-  - nimble install -y
-  - nimble test
-  - nimble --nimbleDir:`pwd`/build/fakenimble install nimterop -y
+  - nimble --verbose install -y
+  - nimble --verbose test
+  - nimble --verbose --nimbleDir:`pwd`/build/fakenimble install nimterop -y
