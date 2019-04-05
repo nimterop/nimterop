@@ -211,12 +211,12 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
     sfile = fullpath.sanitizePath
 
   for inc in gStateRT.includeDirs:
-    cmd &= &"-I\"{inc}\" "
+    cmd &= &"-I{inc.quoteShell} "
 
   for def in gStateRT.defines:
     cmd &= &"-D{def} "
 
-  cmd &= &"\"{fullpath}\""
+  cmd &= &"\"{fullpath.quoteShell}\""
 
   # Include content only from file
   for line in execAction(cmd).splitLines():
@@ -357,7 +357,7 @@ proc loadPlugin*(sourcePath: string) =
     pdll = sourcePath.dll
   if not fileExists(pdll) or
     sourcePath.getLastModificationTime() > pdll.getLastModificationTime():
-    discard execAction("nim c --app:lib " & sourcePath)
+    discard execAction("nim c --app:lib " & sourcePath.quoteShell)
   doAssert fileExists(pdll), "No plugin binary generated for " & sourcePath
 
   let lib = loadLib(pdll)

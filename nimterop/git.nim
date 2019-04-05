@@ -69,7 +69,7 @@ proc downloadUrl*(url, outdir: string) =
       "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
     else:
       "curl $# -o $#"
-    discard execAction(cmd % [url, outdir/file])
+    discard execAction(cmd % [url, (outdir/file).quoteShell])
 
     if ext == ".zip":
       extractZip(file, outdir)
@@ -101,20 +101,20 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
   mkDir(outdir2)
 
   echo "Setting up Git repo: " & url
-  discard execAction(&"cd {outdir2} && git init .")
-  discard execAction(&"cd {outdir2} && git remote add origin {url}")
+  discard execAction(&"cd {outdir2.quoteShell} && git init .")
+  discard execAction(&"cd {outdir2.quoteShell} && git remote add origin {url}")
 
   if plist.len != 0:
     # TODO: document this, it's not clear
     let sparsefile = outdir / ".git/info/sparse-checkout"
 
-    discard execAction(&"cd {outdir2} && git config core.sparsecheckout true")
+    discard execAction(&"cd {outdir2.quoteShell} && git config core.sparsecheckout true")
     writeFile(sparsefile, plist)
 
   if checkout.len != 0:
     echo "Checking out " & checkout
-    discard execAction(&"cd {outdir2} && git pull --tags origin master")
-    discard execAction(&"cd {outdir2} && git checkout {checkout}")
+    discard execAction(&"cd {outdir2.quoteShell} && git pull --tags origin master")
+    discard execAction(&"cd {outdir2.quoteShell} && git checkout {checkout}")
   else:
     echo "Pulling repository"
-    discard execAction(&"cd {outdir2} && git pull --depth=1 origin master")
+    discard execAction(&"cd {outdir2.quoteShell} && git pull --depth=1 origin master")
