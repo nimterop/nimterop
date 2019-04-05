@@ -74,6 +74,7 @@ typedef void * VOIDPTR;
 typedef int * INTPTR;
 
 typedef struct {
+  struct STRUCT1 *field0;
 	int *field;
 	int field2[TEST_INT];
 	enum ENUM field3[TEST_INT];

@@ -21,6 +21,9 @@ proc initGrammar(): Grammar =
    )
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      if nimState.debug:
+        nimState.debugStr &= "\n# define X Y"
+
       let
         val = nimState.data[1].val.getLit()
 
@@ -128,6 +131,9 @@ proc initGrammar(): Grammar =
    )
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      if nimState.debug:
+        nimState.debugStr &= "\n# typedef X Y"
+
       var
         i = 0
         typ = nimState.data[i].val.getIdentifier(nskType)
@@ -184,8 +190,10 @@ proc initGrammar(): Grammar =
               nimState.typeStr &= &"\n  {name}* = {getPtrType(tptr&typ)}"
   ))
 
-
   proc pDupTypeCommon(nname: string, fend: int, nimState: NimState, isEnum=false) =
+    if nimState.debug:
+      nimState.debugStr &= "\n#   pDupTypeCommon()"
+
     var
       dname = nimState.data[^1].val
       ndname = nimState.data[^1].val.getIdentifier(nskType)
@@ -205,6 +213,9 @@ proc initGrammar(): Grammar =
             &"\n  {ndname}* {{.{genImportC(dname, ndname)}, header: {nimState.currentHeader}, bycopy.}} = {dptr}{nname}"
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
+    if nimState.debug:
+      nimState.debugStr &= "\n#   pStructCommon"
+
     var
       nname = name.getIdentifier(nskType)
       prefix = ""
@@ -352,6 +363,9 @@ proc initGrammar(): Grammar =
    )
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      if nimState.debug:
+        nimState.debugStr &= "\n# struct X {}"
+
       pStructCommon(ast, node, nimState.data[0].val, 1, 1, nimState)
   ))
 
@@ -372,6 +386,9 @@ proc initGrammar(): Grammar =
    )
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      if nimState.debug:
+        nimState.debugStr &= "\n# typedef struct X {}"
+
       var
         fstart = 0
         fend = 1
@@ -381,7 +398,7 @@ proc initGrammar(): Grammar =
 
       if nimState.data.len > 1 and
         nimState.data[0].name == "type_identifier" and
-        nimState.data[1].name != "field_identifier":
+        nimState.data[1].name notin ["field_identifier", "pointer_declarator"]:
 
         fstart = 1
         pStructCommon(ast, node, nimState.data[0].val, fstart, fend, nimState)
@@ -390,6 +407,9 @@ proc initGrammar(): Grammar =
   ))
 
   proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
+    if nimState.debug:
+      nimState.debugStr &= "\n#   pEnumCommon()"
+
     let nname =
       if name.len == 0:
         getUniqueIdentifier(nimState.identifiers, "Enum")
@@ -442,6 +462,9 @@ proc initGrammar(): Grammar =
    )
   """ % gEnumVals.join("|"),
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      if nimState.debug:
+        nimState.debugStr &= "\n# enum X {}"
+
       var
         name = ""
         offset = 0
@@ -467,6 +490,9 @@ proc initGrammar(): Grammar =
    )
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      if nimState.debug:
+        nimState.debugStr &= "\n# typedef enum {}"
+
       var
         fstart = 0
         fend = 1
@@ -497,6 +523,9 @@ proc initGrammar(): Grammar =
    )
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      if nimState.debug:
+        nimState.debugStr &= "\n# typ function"
+
       var
         fptr = ""
         i = 1

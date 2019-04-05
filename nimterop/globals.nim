@@ -63,6 +63,8 @@ type
 
     constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
 
+    debug*: bool
+
     currentHeader*: string
 
     data*: seq[tuple[name, val: string]]
