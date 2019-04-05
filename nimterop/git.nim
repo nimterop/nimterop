@@ -18,9 +18,7 @@ proc execAction*(cmd: string, nostderr=false): string =
   else:
     let opt = if nostderr: {poUsePath} else: {poStdErrToStdOut, poUsePath}
     (result, ret) = execCmdEx(ccmd, opt)
-  if ret != 0:
-    let msg = "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
-    doAssert false, msg
+  doAssert ret == 0, "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
 
 proc mkDir*(dir: string) =
   if not dirExists(dir):
