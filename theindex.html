@@ -345,11 +345,11 @@ dl {
 
 dt {
   margin-bottom: -0.5em;
-  margin-left: 0.5em; }
+  margin-left: 0.0em; }
 
 dd {
-  margin-left: 0.5em;
-  margin-bottom: 2.5em;
+  margin-left: 2.0em;
+  margin-bottom: 3.0em;
   margin-top: 0.5em; }
 
 
@@ -761,6 +761,10 @@ span.pragmawrap {
   display: none;
 }
 
+span.attachedType {
+  display: none;
+  visibility: hidden;
+}
 </style>
 
 <script type="text/javascript" src="dochack.js"></script>
@@ -784,7 +788,7 @@ function main() {
 <div class="document" id="documentId">
   <div class="container">
     <h1 class="title">Index</h1>
-    Modules: <a href="cimport.html">cimport</a>, <a href="git.html">git</a>, <a href="paths.html">paths</a>, <a href="plugin.html">plugin</a>, <a href="types.html">types</a>.<br/><p /><h2>API symbols</h2>
+    Modules: <a href="cimport.html">cimport</a>, <a href="compat.html">compat</a>, <a href="git.html">git</a>, <a href="paths.html">paths</a>, <a href="plugin.html">plugin</a>, <a href="types.html">types</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="cAddSearchDir" href="#cAddSearchDir"><span>cAddSearchDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="cimport: cAddSearchDir(dir: string)" href="cimport.html#cAddSearchDir%2Cstring">cimport: cAddSearchDir(dir: string)</a></li>
@@ -835,7 +839,7 @@ function main() {
           </ul></dd>
 <dt><a name="cSkipSymbol" href="#cSkipSymbol"><span>cSkipSymbol:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="cimport: cSkipSymbol(skips: seq[string])" href="cimport.html#cSkipSymbol%2Cseq%5Bstring%5D">cimport: cSkipSymbol(skips: seq[string])</a></li>
+          data-doc-search-tag="cimport: cSkipSymbol(skips: seq[string])" href="cimport.html#cSkipSymbol%2Cseq%5BT%5D%5Bstring%5D">cimport: cSkipSymbol(skips: seq[string])</a></li>
           </ul></dd>
 <dt><a name="defineEnum" href="#defineEnum"><span>defineEnum:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -901,6 +905,10 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="types: ptrdiff_t" href="types.html#ptrdiff_t">types: ptrdiff_t</a></li>
           </ul></dd>
+<dt><a name="relativePath" href="#relativePath"><span>relativePath:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compat: relativePath(file, base: string): string" href="compat.html#relativePath%2Cstring%2Cstring">compat: relativePath(file, base: string): string</a></li>
+          </ul></dd>
 <dt><a name="Symbol" href="#Symbol"><span>Symbol:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="plugin: Symbol" href="plugin.html#Symbol">plugin: Symbol</a></li>
@@ -926,7 +934,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-02-08 22:35:14 UTC</small>
+        <small>Made with Nim. Generated: 2019-04-06 23:36:36 UTC</small>
       </div>
     </div>
   </div>

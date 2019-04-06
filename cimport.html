@@ -345,11 +345,11 @@ dl {
 
 dt {
   margin-bottom: -0.5em;
-  margin-left: 0.5em; }
+  margin-left: 0.0em; }
 
 dd {
-  margin-left: 0.5em;
-  margin-bottom: 2.5em;
+  margin-left: 2.0em;
+  margin-bottom: 3.0em;
   margin-top: 0.5em; }
 
 
@@ -761,6 +761,10 @@ span.pragmawrap {
   display: none;
 }
 
+span.attachedType {
+  display: none;
+  visibility: hidden;
+}
 </style>
 
 <script type="text/javascript" src="dochack.js"></script>
@@ -803,12 +807,6 @@ function main() {
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li>
-  <a class="reference reference-toplevel" href="#5" id="55">Exports</a>
-  <ul class="simple simple-toc-section">
-    
-  </ul>
-</li>
-<li>
   <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
   <ul class="simple simple-toc-section">
     
@@ -817,18 +815,18 @@ function main() {
 <li>
   <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#cSkipSymbol%2Cseq%5Bstring%5D"
-    title="cSkipSymbol(skips: seq[string])"><wbr />c<wbr />Skip<wbr />Symbol<span class="attachedType" style="visibility:hidden"></span></a></li>
+      <li><a class="reference" href="#cSkipSymbol%2Cseq%5BT%5D%5Bstring%5D"
+    title="cSkipSymbol(skips: seq[string])"><wbr />c<wbr />Skip<wbr />Symbol<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cSearchPath%2Cstring"
-    title="cSearchPath(path: string): string"><wbr />c<wbr />Search<wbr />Path<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cSearchPath(path: string): string"><wbr />c<wbr />Search<wbr />Path<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cDebug"
-    title="cDebug()"><wbr />c<wbr />Debug<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cDebug()"><wbr />c<wbr />Debug<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cDisableCaching"
-    title="cDisableCaching()"><wbr />c<wbr />Disable<wbr />Caching<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cDisableCaching()"><wbr />c<wbr />Disable<wbr />Caching<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cAddSearchDir%2Cstring"
-    title="cAddSearchDir(dir: string)"><wbr />c<wbr />Add<wbr />Search<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cAddSearchDir(dir: string)"><wbr />c<wbr />Add<wbr />Search<wbr />Dir<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cAddStdDir%2Cstring"
-    title="cAddStdDir(mode = &quot;c&quot;)"><wbr />c<wbr />Add<wbr />Std<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cAddStdDir(mode = &quot;c&quot;)"><wbr />c<wbr />Add<wbr />Std<wbr />Dir<span class="attachedType"></span></a></li>
 
   </ul>
 </li>
@@ -836,18 +834,24 @@ function main() {
   <a class="reference reference-toplevel" href="#17" id="67">Macros</a>
   <ul class="simple simple-toc-section">
       <li><a class="reference" href="#cOverride.m"
-    title="cOverride(body): untyped"><wbr />c<wbr />Override<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cOverride(body): untyped"><wbr />c<wbr />Override<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cPlugin.m"
-    title="cPlugin(body): untyped"><wbr />c<wbr />Plugin<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cPlugin(body): untyped"><wbr />c<wbr />Plugin<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cDefine.m%2C%2Cstring"
-    title="cDefine(name: static string; val: static string = &quot;&quot;): untyped"><wbr />c<wbr />Define<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cDefine(name: static string; val: static string = &quot;&quot;): untyped"><wbr />c<wbr />Define<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cIncludeDir.m"
-    title="cIncludeDir(dir: static string): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cIncludeDir(dir: static string): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cCompile.m%2C%2Cstring%2Cstring"
-    title="cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cImport.m"
-    title="cImport(filename: static string; recurse: static bool = false): untyped"><wbr />c<wbr />Import<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="cImport(filename: static string; recurse: static bool = false): untyped"><wbr />c<wbr />Import<span class="attachedType"></span></a></li>
 
+  </ul>
+</li>
+<li>
+  <a class="reference reference-toplevel" href="#19" id="69">Exports</a>
+  <ul class="simple simple-toc-section">
+    
   </ul>
 </li>
 
@@ -862,12 +866,7 @@ static:
   cAddStdDir()
 </pre> </p>
 </p>
-  <div class="section" id="5">
-<h1><a class="toc-backref" href="#5">Exports</a></h1>
-<dl class="item">
-<a class="reference external" href="types.html">types</a>, <a href="types.html#enumOp"><span class="Identifier">enumOp</span></a>, <a href="types.html#defineEnum"><span class="Identifier">defineEnum</span></a>, <a href="types.html#time_t"><span class="Identifier">time_t</span></a>, <a href="types.html#va_list"><span class="Identifier">va_list</span></a>, <a href="types.html#ptrdiff_t"><span class="Identifier">ptrdiff_t</span></a>
-</dl></div>
-<div class="section" id="6">
+  <div class="section" id="6">
 <h1><a class="toc-backref" href="#6">Imports</a></h1>
 <dl class="item">
 <a class="reference external" href="plugin.html">plugin</a>, <a class="reference external" href="git.html">git</a>, <a class="reference external" href="paths.html">paths</a>, <a class="reference external" href="types.html">types</a>
@@ -875,8 +874,8 @@ static:
 <div class="section" id="12">
 <h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
-<a id="cSkipSymbol,seq[string]"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cSkipSymbol%2Cseq%5Bstring%5D"><span class="Identifier">cSkipSymbol</span></a><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<a id="cSkipSymbol,seq[T][string]"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#cSkipSymbol%2Cseq%5BT%5D%5Bstring%5D"><span class="Identifier">cSkipSymbol</span></a><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 Similar to <a class="reference external" href="cimport.html#cOverride.m,">cOverride()</a>, this macro allows filtering out symbols not of interest from the generated output.
 <p><strong class="examples_text">Examples:</strong></p>
@@ -1009,6 +1008,11 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
 </dd>
 
 </dl></div>
+<div class="section" id="19">
+<h1><a class="toc-backref" href="#19">Exports</a></h1>
+<dl class="item">
+<a class="reference external" href="types.html">types</a>, <a href="types.html#enumOp"><span class="Identifier">enumOp</span></a>, <a href="types.html#defineEnum"><span class="Identifier">defineEnum</span></a>, <a href="types.html#time_t"><span class="Identifier">time_t</span></a>, <a href="types.html#va_list"><span class="Identifier">va_list</span></a>, <a href="types.html#ptrdiff_t"><span class="Identifier">ptrdiff_t</span></a>
+</dl></div>
 
   </div>
 </div>
@@ -1017,7 +1021,7 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-02-08 22:35:14 UTC</small>
+        <small>Made with Nim. Generated: 2019-04-06 23:36:36 UTC</small>
       </div>
     </div>
   </div>
