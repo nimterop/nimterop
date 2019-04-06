@@ -74,7 +74,7 @@ const gTypeMap = {
 }.toTable()
 
 proc sanitizePath*(path: string): string =
-  path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("//", $DirSep)])
+  path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("/", $DirSep)])
 
 proc getType*(str: string): string =
   if str == "void":
@@ -216,7 +216,7 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
   for def in gStateRT.defines:
     cmd &= &"-D{def} "
 
-  cmd &= &"\"{fullpath.quoteShell}\""
+  cmd &= &"{fullpath.quoteShell}"
 
   # Include content only from file
   for line in execAction(cmd).splitLines():
@@ -231,7 +231,7 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
           start = true
         elif gStateRT.recurse:
           let
-            pDir = sfile.expandFilename().parentDir()
+            pDir = sfile.expandFilename().parentDir().sanitizePath()
           if pDir.len == 0 or pDir in saniLine:
             start = true
           else:
