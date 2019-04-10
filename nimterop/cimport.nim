@@ -138,7 +138,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
     cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.quoteShell}"
 
   cmd.add &" {fullpath.quoteShell}"
-  echo cmd
+  echo "# " & cmd
   # see https://github.com/nimterop/nimterop/issues/69
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
@@ -468,7 +468,7 @@ macro cImport*(filename: static string, recurse: static bool = false): untyped =
   let
     fullpath = findPath(filename)
 
-  echo "Importing " & fullpath
+  echo "# Importing " & fullpath
 
   let
     output = getToast(fullpath, recurse)
