@@ -972,6 +972,15 @@ When <a class="reference external" href="cimport.html#cOverride.m,">cOverride()<
   <span class="Keyword">proc</span> <span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Other">(</span><span class="Identifier">sym</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Symbol</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">exportc</span><span class="Other">,</span> <span class="Identifier">dynlib</span></span><span class="Other">.}</span></span> <span class="Other">=</span>
     <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span> <span class="Other">=</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">strip</span><span class="Other">(</span><span class="Identifier">chars</span> <span class="Other">=</span> <span class="Other">{</span><span class="CharLit">'_'</span><span class="Other">}</span><span class="Other">)</span>
 </pre>
+<p><strong class="examples_text">Examples:</strong></p>
+<pre class="listing"><span class="Identifier">cPlugin</span><span class="Other">:</span>
+  <span class="Keyword">import</span>
+    <span class="Identifier">strutils</span>
+
+  <span class="Keyword">proc</span> <span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Other">(</span><span class="Identifier">sym</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Symbol</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">exportc</span><span class="Other">,</span> <span class="Identifier">dynlib</span></span><span class="Other">.}</span></span> <span class="Other">=</span>
+    <span class="Keyword">if</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">kind</span> <span class="Operator">==</span> <span class="Identifier">nskProc</span> <span class="Keyword">and</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">contains</span><span class="Other">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Other">)</span><span class="Other">:</span>
+      <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span> <span class="Other">=</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">replace</span><span class="Other">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span>
+</pre>
 
 </dd>
 <a id="cDefine.m,,string"></a>
@@ -1021,7 +1030,7 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-04-06 23:36:36 UTC</small>
+        <small>Made with Nim. Generated: 2019-04-11 03:27:51 UTC</small>
       </div>
     </div>
   </div>
