@@ -235,8 +235,18 @@ macro cPlugin*(body): untyped =
     cPlugin:
       import strutils
 
+      # Strip leading and trailing underscores
       proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
         sym.name = sym.name.strip(chars={'_'})
+
+  runnableExamples:
+    cPlugin:
+      import strutils
+
+      # Strip prefix from procs
+      proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
+        if sym.kind == nskProc and sym.name.contains("SDL_"):
+          sym.name = sym.name.replace("SDL_", "")
 
   let
     data = "import nimterop/plugin\n\n" & body.repr
