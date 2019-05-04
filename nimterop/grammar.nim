@@ -58,7 +58,9 @@ proc initGrammar(): Grammar =
         )
         (identifier|type_identifier)
        )
-       (abstract_pointer_declarator?)
+       (abstract_pointer_declarator?
+        (abstract_pointer_declarator?)
+       )
       )
      )
     """
