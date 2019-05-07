@@ -39,6 +39,7 @@ proc initGrammar(): Grammar =
     typeGrammar = """
      (type_qualifier?)
      (primitive_type|type_identifier?)
+     (type_qualifier?)
      (sized_type_specifier?
       (primitive_type?)
      )
