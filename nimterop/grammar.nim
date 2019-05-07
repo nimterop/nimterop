@@ -8,18 +8,20 @@ type
   Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, nimState: NimState) {.nimcall.}]]
 
 proc genImportC(nimState: NimState, origName, nimName: string): string =
-  result = "importc"
   if nimName != origName:
-    result.add &": \"{origName}\"" # used as {.importc: "foo".}
-  result.add &", header: {nimState.currentHeader}"
+    result = &"importc: \"{origName}\", header: {nimState.currentHeader}"
+  else:
+    result = nimState.impHeader
 
-proc genPragma(pragmas: varargs[string]): string =
+proc genPragma(nimState: NimState, pragmas: varargs[string]): string =
   result = ""
   for pragma in pragmas.items():
     if pragma.len != 0:
       result &= pragma & ", "
   if result.len != 0:
     result = " {." & result[0 .. ^2] & ".}"
+
+  result = result.replace(nimState.impHeader & ", cdecl", nimState.impHeader & "C")
 
 proc initGrammar(): Grammar =
   # #define X Y
@@ -170,7 +172,7 @@ proc initGrammar(): Grammar =
         i += 1
 
       let
-        pragma = genPragma(nimState.genImportC(name, nname))
+        pragma = nimState.genPragma(nimState.genImportC(name, nname))
 
       if typ.nBl and nname.nBl and nimState.identifiers.addNewIdentifer(nname):
         if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
@@ -227,7 +229,7 @@ proc initGrammar(): Grammar =
       else:
         if nimState.identifiers.addNewIdentifer(ndname):
           let
-            pragma = genPragma(nimState.genImportc(dname, ndname), "bycopy")
+            pragma = nimState.genPragma(nimState.genImportc(dname, ndname), "bycopy")
           nimState.typeStr &=
             &"\n  {ndname}*{pragma} = {dptr}{nname}"
 
@@ -267,7 +269,7 @@ proc initGrammar(): Grammar =
         nimState.typeStr &= &"\n  {nname}* {{.bycopy.}} = object{union}"
       else:
         let
-          pragma = genPragma(nimState.genImportC(prefix & name, nname), "bycopy")
+          pragma = nimState.genPragma(nimState.genImportC(prefix & name, nname), "bycopy")
         nimState.typeStr &= &"\n  {nname}*{pragma} = object{union}"
 
       var
@@ -579,7 +581,7 @@ proc initGrammar(): Grammar =
         if fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
           let
             ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
-            pragma = genPragma(nimState.genImportC(fname, fnname), "cdecl")
+            pragma = nimState.genPragma(nimState.genImportC(fname, fnname), "cdecl")
 
           if fptr.len != 0 or ftyp != "object":
             nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"

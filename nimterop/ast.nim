@@ -154,6 +154,7 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
   nimState.identifiers = newTable[string, string]()
 
   nimState.currentHeader = getCurrentHeader(fullpath)
+  nimState.impHeader = nimState.currentHeader.replace("header", "imp")
   nimState.constStr &= &"\n  {nimState.currentHeader} {{.used.}} = \"{fp}\""
 
   nimState.debug = gStateRT.debug
@@ -165,6 +166,11 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
 
   if nimState.constStr.nBl:
     echo &"const {nimState.constStr}\n"
+
+  echo &"""
+{{.pragma: {nimState.impHeader}, importc, header: {nimState.currentHeader}.}}
+{{.pragma: {nimState.impHeader}C, {nimState.impHeader}, cdecl.}}
+"""
 
   if nimState.typeStr.nBl:
     echo &"type {nimState.typeStr}\n"

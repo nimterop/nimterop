@@ -65,7 +65,7 @@ type
 
     debug*: bool
 
-    currentHeader*: string
+    currentHeader*, impHeader*: string
 
     data*: seq[tuple[name, val: string]]
 
