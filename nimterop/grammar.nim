@@ -189,9 +189,9 @@ proc initGrammar(): Grammar =
             pout = pout[0 .. ^3]
 
           if tptr.len != 0 or typ != "object":
-            nimState.typeStr &= &"\n  {nname}*{pragma} = proc({pout}): {getPtrType(tptr&typ)} {{.nimcall.}}"
+            nimState.typeStr &= &"\n  {nname}*{pragma} = proc({pout}): {getPtrType(tptr&typ)} {{.cdecl.}}"
           else:
-            nimState.typeStr &= &"\n  {nname}*{pragma} = proc({pout}) {{.nimcall.}}"
+            nimState.typeStr &= &"\n  {nname}*{pragma} = proc({pout}) {{.cdecl.}}"
         else:
           if i < nimState.data.len and nimState.data[i].name in ["identifier", "number_literal"]:
             var
@@ -321,9 +321,9 @@ proc initGrammar(): Grammar =
           if pout.len != 0 and pout[^2 .. ^1] == ", ":
             pout = pout[0 .. ^3]
           if fptr.len != 0 or ftyp != "object":
-            nimState.typeStr &= &"\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.nimcall.}}"
+            nimState.typeStr &= &"\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.cdecl.}}"
           else:
-            nimState.typeStr &= &"\n    {fname}*: proc({pout}) {{.nimcall.}}"
+            nimState.typeStr &= &"\n    {fname}*: proc({pout}) {{.cdecl.}}"
             i += 1
         else:
           if ftyp == "object":
@@ -579,7 +579,7 @@ proc initGrammar(): Grammar =
         if fnname.nBl and nimState.identifiers.addNewIdentifer(fnname):
           let
             ftyp = nimState.data[0].val.getIdentifier(nskType, fnname)
-            pragma = genPragma(nimState.genImportC(fname, fnname))
+            pragma = genPragma(nimState.genImportC(fname, fnname), "cdecl")
 
           if fptr.len != 0 or ftyp != "object":
             nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
