@@ -142,7 +142,6 @@ proc printNimHeader*() =
 # Command line:
 #   $2 $3
 
-{.experimental: "codeReordering".}
 {.hint[ConvFromXtoItselfNotNeeded]: off.}
 
 import nimterop/types

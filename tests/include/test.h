@@ -27,6 +27,7 @@ extern "C" {
 
 typedef uint8_t PRIMTYPE;
 typedef PRIMTYPE CUSTTYPE;
+typedef CUSTTYPE _CCUSTTYPE_;
 
 struct STRUCT0;
 

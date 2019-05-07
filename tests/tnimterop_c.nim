@@ -40,6 +40,7 @@ block:
 var
   pt: PRIMTYPE
   ct: CUSTTYPE
+  cct: CCUSTTYPE
 
   s0: STRUCT0
   s1: STRUCT1
@@ -64,6 +65,7 @@ var
 
 pt = 3
 ct = 4
+cct = 5
 
 s1.field1 = 5
 s2.field1 = 6
