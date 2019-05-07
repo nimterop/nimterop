@@ -49,7 +49,9 @@ enum ENUM {
 typedef enum {
 	enum4 = 3,
 	enum5,
-	enum6
+	enum6,
+	enum6a = enum5 & enum6,
+	enum6b = enum5 | enum6
 } ENUM2;
 
 enum {

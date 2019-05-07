@@ -116,6 +116,9 @@ else:
 
 check test_call9() == nil
 
+check enum6a == 4
+check enum6b == 5
+
 check e3 == enum7
 check e4 == enum11
 
