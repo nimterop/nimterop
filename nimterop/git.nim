@@ -118,3 +118,21 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
   else:
     echo "Pulling repository"
     discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master")
+
+proc configure*(path, check: string) =
+  if (path / check).fileExists():
+    return
+
+  echo "Configuring " & path
+
+  if not fileExists(path / "configure"):
+    if fileExists(path / "autogen.sh"):
+      echo "  Running autogen.sh"
+
+      discard execAction(&"cd {path.quoteShell} && bash autogen.sh")
+
+  if fileExists(path / "configure"):
+    echo "  Running configure"
+
+    discard execAction(&"cd {path.quoteShell} && bash configure")
+

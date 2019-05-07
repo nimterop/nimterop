@@ -13,7 +13,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
     if name == "primitive_type" and node.tsNodeParent.tsNodeType() == "sized_type_specifier":
       return true
 
-    if name == "number_literal" and $node.tsNodeParent.tsNodeType() in gExpressions:
+    if name in ["number_literal", "identifier"] and $node.tsNodeParent.tsNodeType() in gExpressions:
       return true
 
     if name in ["primitive_type", "sized_type_specifier"]:
