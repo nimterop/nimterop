@@ -197,11 +197,11 @@ proc initGrammar(): Grammar =
             var
               flen = nimState.data[i].val
             if nimState.data[i].name == "identifier":
-              flen = flen.getIdentifier(nskConst, name)
+              flen = flen.getIdentifier(nskConst, nname)
 
             nimState.typeStr &= &"\n  {nname}*{pragma} = {aptr}array[{flen}, {getPtrType(tptr&typ)}]"
           else:
-            if name == typ:
+            if nname == typ:
               nimState.typeStr &= &"\n  {nname}*{pragma} = object"
             else:
               nimState.typeStr &= &"\n  {nname}*{pragma} = {getPtrType(tptr&typ)}"
