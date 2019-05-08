@@ -127,6 +127,8 @@ check e4 == enum11
 check enum13 == 4
 check enum14 == 9
 check enum15 == 2
+check enum17 == '\0'.ENUM7
+check enum18 == 'A'.ENUM7
 
 # Issue #58
 multiline1()

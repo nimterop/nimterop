@@ -73,6 +73,11 @@ enum ENUM5 {
 	enum15 = (1 << (1 & 1))
 };
 
+enum ENUM7 {
+  enum17 = '\0',
+  enum18 = 'A'
+};
+
 typedef void * VOIDPTR;
 typedef int * INTPTR;
 

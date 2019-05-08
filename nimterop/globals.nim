@@ -12,6 +12,7 @@ const
     "field_identifier",
     "identifier",
     "number_literal",
+    "char_literal",
     "preproc_arg",
     "primitive_type",
     "sized_type_specifier",
@@ -22,12 +23,14 @@ const
     "parenthesized_expression",
     "bitwise_expression",
     "shift_expression",
-    "math_expression"
+    "math_expression",
+    "escape_sequence"
   ].toSet()
 
   gEnumVals {.used.} = @[
     "identifier",
-    "number_literal"
+    "number_literal",
+    "char_literal"
   ].concat(toSeq(gExpressions.items))
 
 type

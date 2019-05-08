@@ -52,7 +52,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
           nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
       nimState.data.add(("function_declarator", ""))
 
-  elif name in gExpressions:
+  elif name in gExpressions and name != "escape_sequence":
     if $node.tsNodeParent.tsNodeType() notin gExpressions:
       nimState.data.add((name, node.getNodeVal()))
 
