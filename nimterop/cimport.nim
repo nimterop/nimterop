@@ -138,7 +138,7 @@ proc getToast(fullpath: string, recurse: bool = false): string =
     cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.quoteShell}"
 
   cmd.add &" {fullpath.quoteShell}"
-  echo "# " & cmd
+
   # see https://github.com/nimterop/nimterop/issues/69
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
@@ -195,7 +195,7 @@ macro cOverride*(body): untyped =
   result = body
 
   if gStateCT.debug:
-    echo "Overriding " & gStateCT.symOverride.join(" ")
+    echo "# Overriding " & gStateCT.symOverride.join(" ")
 
 proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   ## Similar to `cOverride() <cimport.html#cOverride.m,>`_, this macro allows
@@ -320,7 +320,7 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
       {.passC: `str`.}
 
     if gStateCT.debug:
-      echo result.repr
+      echo result.repr & "\n"
 
 proc cAddSearchDir*(dir: string) {.compileTime.} =
   ## Add directory ``dir`` to the search path used in calls to
@@ -483,13 +483,13 @@ macro cImport*(filename: static string, recurse: static bool = false): untyped =
   let
     output = getToast(fullpath, recurse)
 
+  if gStateCT.debug:
+    echo output
+
   try:
     let body = parseStmt(output)
 
     result.add body
-
-    if gStateCT.debug:
-      echo result.repr
   except:
     let
       (tmpFile, errors) = getNimCheckError(output)

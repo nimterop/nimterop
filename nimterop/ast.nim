@@ -162,10 +162,10 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
   root.searchAst(astTable, nimState)
 
   if nimState.enumStr.nBl:
-    echo nimState.enumStr
+    echo &"{nimState.enumStr}\n"
 
   if nimState.constStr.nBl:
-    echo &"const {nimState.constStr}\n"
+    echo &"const{nimState.constStr}\n"
 
   echo &"""
 {{.pragma: {nimState.impHeader}, importc, header: {nimState.currentHeader}.}}
@@ -173,7 +173,7 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
 """
 
   if nimState.typeStr.nBl:
-    echo &"type {nimState.typeStr}\n"
+    echo &"type{nimState.typeStr}\n"
 
   if nimState.procStr.nBl:
     echo &"{nimState.procStr}\n"

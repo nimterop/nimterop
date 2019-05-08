@@ -23,6 +23,11 @@ proc genPragma(nimState: NimState, pragmas: varargs[string]): string =
 
   result = result.replace(nimState.impHeader & ", cdecl", nimState.impHeader & "C")
 
+proc getComments(nimState: NimState): string =
+  if nimState.commentStr.len != 0:
+    result = "\n" & nimState.commentStr
+    nimState.commentStr = ""
+
 proc initGrammar(): Grammar =
   # #define X Y
   result.add(("""
@@ -43,7 +48,7 @@ proc initGrammar(): Grammar =
           name = nimState.data[0].val.getIdentifier(nskConst)
 
         if name.nBl and nimState.identifiers.addNewIdentifer(name):
-          nimState.constStr &= &"\n  {name}* = {val}"
+          nimState.constStr &= &"{nimState.getComments()}\n  {name}* = {val}"
   ))
 
   let
@@ -191,9 +196,9 @@ proc initGrammar(): Grammar =
             pout = pout[0 .. ^3]
 
           if tptr.len != 0 or typ != "object":
-            nimState.typeStr &= &"\n  {nname}*{pragma} = proc({pout}): {getPtrType(tptr&typ)} {{.cdecl.}}"
+            nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = proc({pout}): {getPtrType(tptr&typ)} {{.cdecl.}}"
           else:
-            nimState.typeStr &= &"\n  {nname}*{pragma} = proc({pout}) {{.cdecl.}}"
+            nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = proc({pout}) {{.cdecl.}}"
         else:
           if i < nimState.data.len and nimState.data[i].name in ["identifier", "number_literal"]:
             var
@@ -201,12 +206,12 @@ proc initGrammar(): Grammar =
             if nimState.data[i].name == "identifier":
               flen = flen.getIdentifier(nskConst, nname)
 
-            nimState.typeStr &= &"\n  {nname}*{pragma} = {aptr}array[{flen}, {getPtrType(tptr&typ)}]"
+            nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = {aptr}array[{flen}, {getPtrType(tptr&typ)}]"
           else:
             if nname == typ:
-              nimState.typeStr &= &"\n  {nname}*{pragma} = object"
+              nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object"
             else:
-              nimState.typeStr &= &"\n  {nname}*{pragma} = {getPtrType(tptr&typ)}"
+              nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = {getPtrType(tptr&typ)}"
   ))
 
   proc pDupTypeCommon(nname: string, fend: int, nimState: NimState, isEnum=false) =
@@ -225,13 +230,13 @@ proc initGrammar(): Grammar =
     if ndname.nBl and ndname != nname:
       if isEnum:
         if nimState.identifiers.addNewIdentifer(ndname):
-          nimState.enumStr &= &"\ntype {ndname}* = {dptr}{nname}"
+          nimState.enumStr &= &"{nimState.getComments()}\ntype {ndname}* = {dptr}{nname}"
       else:
         if nimState.identifiers.addNewIdentifer(ndname):
           let
             pragma = nimState.genPragma(nimState.genImportc(dname, ndname), "bycopy")
           nimState.typeStr &=
-            &"\n  {ndname}*{pragma} = {dptr}{nname}"
+            &"{nimState.getComments()}\n  {ndname}*{pragma} = {dptr}{nname}"
 
   proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
     if nimState.debug:
@@ -266,11 +271,11 @@ proc initGrammar(): Grammar =
 
     if nname.nBl and nimState.identifiers.addNewIdentifer(nname):
       if nimState.data.len == 1:
-        nimState.typeStr &= &"\n  {nname}* {{.bycopy.}} = object{union}"
+        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}* {{.bycopy.}} = object{union}"
       else:
         let
           pragma = nimState.genPragma(nimState.genImportC(prefix & name, nname), "bycopy")
-        nimState.typeStr &= &"\n  {nname}*{pragma} = object{union}"
+        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object{union}"
 
       var
         i = fstart
@@ -302,7 +307,7 @@ proc initGrammar(): Grammar =
         if i+1 < nimState.data.len-fend and nimState.data[i+1].name in gEnumVals:
           let
             flen = nimState.data[i+1].val.getNimExpression()
-          nimState.typeStr &= &"\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
+          nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
           i += 2
         elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "function_declarator":
           var
@@ -323,15 +328,15 @@ proc initGrammar(): Grammar =
           if pout.len != 0 and pout[^2 .. ^1] == ", ":
             pout = pout[0 .. ^3]
           if fptr.len != 0 or ftyp != "object":
-            nimState.typeStr &= &"\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.cdecl.}}"
+            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.cdecl.}}"
           else:
-            nimState.typeStr &= &"\n    {fname}*: proc({pout}) {{.cdecl.}}"
+            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: proc({pout}) {{.cdecl.}}"
             i += 1
         else:
           if ftyp == "object":
-            nimState.typeStr &= &"\n    {fname}*: pointer"
+            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: pointer"
           else:
-            nimState.typeStr &= &"\n    {fname}*: {getPtrType(fptr&ftyp)}"
+            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: {getPtrType(fptr&ftyp)}"
           i += 1
 
       if node.tsNodeType() == "type_definition" and
@@ -439,7 +444,7 @@ proc initGrammar(): Grammar =
         name.getIdentifier(nskType)
 
     if nname.nBl and nimState.identifiers.addNewIdentifer(nname):
-      nimState.enumStr &= &"\ndefineEnum({nname})"
+      nimState.enumStr &= &"{nimState.getComments()}\ndefineEnum({nname})"
 
       var
         i = fstart
@@ -455,7 +460,7 @@ proc initGrammar(): Grammar =
         if i+1 < nimState.data.len-fend and
           nimState.data[i+1].name in gEnumVals:
           if fname.nBl and nimState.identifiers.addNewIdentifer(fname):
-            nimState.constStr &= &"\n  {fname}* = ({nimState.data[i+1].val.getNimExpression()}).{nname}"
+            nimState.constStr &= &"{nimState.getComments()}\n  {fname}* = ({nimState.data[i+1].val.getNimExpression()}).{nname}"
           try:
             count = nimState.data[i+1].val.parseInt() + 1
           except:
@@ -463,7 +468,7 @@ proc initGrammar(): Grammar =
           i += 2
         else:
           if fname.nBl and nimState.identifiers.addNewIdentifer(fname):
-            nimState.constStr &= &"\n  {fname}* = {count}.{nname}"
+            nimState.constStr &= &"{nimState.getComments()}\n  {fname}* = {count}.{nname}"
           i += 1
           count += 1
 
@@ -584,9 +589,25 @@ proc initGrammar(): Grammar =
             pragma = nimState.genPragma(nimState.genImportC(fname, fnname), "cdecl")
 
           if fptr.len != 0 or ftyp != "object":
-            nimState.procStr &= &"\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
+            nimState.procStr &= &"{nimState.getComments()}\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
           else:
-            nimState.procStr &= &"\nproc {fnname}*({pout}){pragma}"
+            nimState.procStr &= &"{nimState.getComments()}\nproc {fnname}*({pout}){pragma}"
+  ))
+
+  # // comment
+  result.add((&"""
+   (comment
+   )
+  """,
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      let
+        cmt = $node.getNodeVal()
+
+      for line in cmt.splitLines():
+        let
+          line = line.multiReplace([("//", ""), ("/*", ""), ("*/", "")])
+
+        nimState.commentStr &= &"\n#{line.strip(leading=false)}"
   ))
 
 proc initRegex(ast: ref Ast) =

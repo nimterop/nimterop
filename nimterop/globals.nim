@@ -64,7 +64,7 @@ type
   NimState {.used.} = ref object
     identifiers*: TableRef[string, string]
 
-    constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
+    constStr*, debugStr*, enumStr*, procStr*, typeStr*, commentStr*: string
 
     debug*: bool
 

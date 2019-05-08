@@ -54,7 +54,7 @@ proc extractZip*(zipfile, outdir: string) =
           "'System.IO.Compression.FileSystem'; " &
           "[IO.Compression.ZipFile]::ExtractToDirectory('$#', '.'); }\""
 
-  echo "Extracting " & zipfile
+  echo "# Extracting " & zipfile
   discard execAction(&"cd {outdir.quoteShell} && {cmd % zipfile}")
 
 proc downloadUrl*(url, outdir: string) =
@@ -63,7 +63,7 @@ proc downloadUrl*(url, outdir: string) =
     ext = file.splitFile().ext.toLowerAscii()
 
   if not (ext == ".zip" and fileExists(outdir/file)):
-    echo "Downloading " & file
+    echo "# Downloading " & file
     mkDir(outdir)
     var cmd = if defined(Windows):
       "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
@@ -75,20 +75,20 @@ proc downloadUrl*(url, outdir: string) =
       extractZip(file, outdir)
 
 proc gitReset*(outdir: string) =
-  echo "Resetting " & outdir
+  echo "# Resetting " & outdir
 
   let cmd = &"cd {outdir.quoteShell} && git reset --hard"
   while execAction(cmd).contains("Permission denied"):
     sleep(1000)
-    echo "  Retrying ..."
+    echo "#   Retrying ..."
 
 proc gitCheckout*(file, outdir: string) =
-  echo "Resetting " & file
+  echo "# Resetting " & file
   let file2 = file.relativePath outdir
   let cmd = &"cd {outdir.quoteShell} && git checkout {file2.quoteShell}"
   while execAction(cmd).contains("Permission denied"):
     sleep(500)
-    echo "  Retrying ..."
+    echo "#   Retrying ..."
 
 proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
   if dirExists(outdir/".git"):
@@ -100,7 +100,7 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
 
   mkDir(outdir)
 
-  echo "Setting up Git repo: " & url
+  echo "# Setting up Git repo: " & url
   discard execAction(&"cd {outdirQ} && git init .")
   discard execAction(&"cd {outdirQ} && git remote add origin {url}")
 
@@ -112,27 +112,27 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
     writeFile(sparsefile, plist)
 
   if checkout.len != 0:
-    echo "Checking out " & checkout
+    echo "# Checking out " & checkout
     discard execAction(&"cd {outdirQ} && git pull --tags origin master")
     discard execAction(&"cd {outdirQ} && git checkout {checkout}")
   else:
-    echo "Pulling repository"
+    echo "# Pulling repository"
     discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master")
 
 proc configure*(path, check: string) =
   if (path / check).fileExists():
     return
 
-  echo "Configuring " & path
+  echo "# Configuring " & path
 
   if not fileExists(path / "configure"):
     if fileExists(path / "autogen.sh"):
-      echo "  Running autogen.sh"
+      echo "#   Running autogen.sh"
 
       discard execAction(&"cd {path.quoteShell} && bash autogen.sh")
 
   if fileExists(path / "configure"):
-    echo "  Running configure"
+    echo "#   Running configure"
 
     discard execAction(&"cd {path.quoteShell} && bash configure")
 
