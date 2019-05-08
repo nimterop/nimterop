@@ -10,13 +10,14 @@ Nim has one of the best FFI you can find - importing C/C++ is supported out of t
 
 The goal of nimterop is to leverage the [tree-sitter](http://tree-sitter.github.io/tree-sitter/) engine to parse C/C++ code and then convert relevant portions of the AST into Nim definitions. [tree-sitter](https://github.com/tree-sitter) is a Github sponsored project that can parse a variety of languages into an AST which is then leveraged by the [Atom](https://atom.io/) editor for syntax highlighting and code folding. The advantages of this approach are multifold:
 - Benefit from the tree-sitter community's investment into language parsing
+- Wrap what is recognized in the AST rather than completely failing due to parsing errors
 - Avoid depending on Nim compiler API which is evolving constantly and makes backwards compatibility a bit challenging
 
 Most of the functionality is contained within the `toast` binary that is built when nimterop is installed and can be used standalone similar to how c2nim can be used today. In addition, nimterop also offers an API to pull in the generated Nim content directly into an application.
 
 The nimterop feature set is still limited to C but is expanding rapidly. C++ support will be added once most popular C libraries can be wrapped seamlessly.
 
-Given the simplicity and success of this approach so far, it seems feasible to continue on for more complex code. The goal is to make interop seamless so nimterop will focus on wrapping headers and not the outright conversion of C/C++ implementation.
+Nimterop has seen some adoption within the community and the simplicity and success of this approach justifies additional investment of time and effort. Regardless, the goal is to make interop seamless so nimterop will focus on wrapping headers and not the outright conversion of C/C++ implementation.
 
 __Installation__
 
@@ -57,15 +58,15 @@ __Implementation Details__
 
 In order to use the tree-sitter C library, it has to be compiled into a separate binary called `toast` (to AST) since the Nim VM doesn't yet support FFI. `toast` takes a C/C++ file and runs it through the tree-sitter API which returns an AST data structure. This can then be printed out to stdout in a Lisp S-Expression format or the relevant Nim wrapper output. This content can be saved to a `.nim` file and imported if so desired.
 
-Alternatively, the `cImport()` macro allows easier creation of wrappers in code. It runs `toast` on the specified header file and injects the generated wrapper content into the application at compile time. A few other helper procs are provided to influence this process.
+Alternatively, the `cImport()` macro allows easier creation of wrappers in code. It runs `toast` on the specified header file and injects the generated wrapper content into the application at compile time. A few other helper procs are provided to influence this process. Output is cached to save time on subsequent runs.
 
-`toast` can also be used to run the header through the preprocessor which cleans up the code considerably. Along with the recursion capability which runs through all #include files, one large simpler header file can be created which can then be processed with c2nim if so desired.
+`toast` can also be used to run the header through the preprocessor which cleans up the code considerably. Along with the recursion capability which runs through all #include files, one large simpler header file can be created which can then be processed with `toast` or even `c2nim` if so desired.
 
 The tree-sitter library is limited as well - it may fail on some advanced language constructs but is designed to handle them gracefully since it is expected to have bad code while actively typing in an editor. When an error is detected, tree-sitter includes an ERROR node at that location in the AST. At this time, `cImport()` will complain and continue if it encounters any errors. Depending on how severe the errors are, compilation may succeed or fail. Glaring issues will be communicated to the tree-sitter team but their goals may not always align with those of this project.
 
 __Credits__
 
-Nimterop depends on [tree-sitter](http://tree-sitter.github.io/tree-sitter/) and all licensing terms of [tree-sitter](https://github.com/tree-sitter/tree-sitter/blob/master/LICENSE) apply to the usage of this package. Interestingly, the tree-sitter functionality is [wrapped](https://github.com/genotrance/nimtreesitter) using c2nim and nimgen at this time. Depending on the success of this project, those could perhaps be bootstrapped using nimterop eventually.
+Nimterop depends on [tree-sitter](http://tree-sitter.github.io/tree-sitter/) and all licensing terms of [tree-sitter](https://github.com/tree-sitter/tree-sitter/blob/master/LICENSE) apply to the usage of this package. The tree-sitter functionality is pulled and wrapped using nimterop itself.
 
 __Feedback__
 
