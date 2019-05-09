@@ -1,11 +1,17 @@
 ##[
-Main import file to write wrappers.
-Each `compileTime` proc must be used in a compile time context, eg using:
+This is the main nimterop import file to help with wrapping C/C++ source code.
 
-```
-static:
-  cAddStdDir()
-```
+Check out `template.nim <https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim>`_
+as a starting point for wrapping a new library. The template can be copied and
+trimmed down and modified as required.
+
+All `compileTime` procs must be used in a compile time context, e.g. using:
+
+.. code-block:: c
+
+   static:
+     cAddStdDir()
+
 ]##
 
 import hashes, macros, os, strformat, strutils

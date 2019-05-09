@@ -50,9 +50,33 @@ cImport("clib.h")
 cCompile("clib/src/*.c")
 ```
 
+Check out [template.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim) as a starting point for wrapping a new library. The template can be copied and trimmed down and modified as required.
+
 Refer to the ```tests``` directory for examples on how the library can be used.
 
-The `toast` binary can also be used directly on the CLI. The `--help` flag provides more details.
+The `toast` binary can also be used directly on the CLI:
+
+```
+toast -h
+Usage:
+  main [optional-params] C/C++ source/header
+  Options(opt-arg sep :|=|spc):
+  -h, --help                           print this cligen-erated help
+  --help-syntax                        advanced: prepend, multi-val,..
+  -p, --preprocess     bool     false  run preprocessor on header
+  -a, --past           bool     false  print AST output
+  -n, --pnim           bool     false  print Nim output
+  -r, --recurse        bool     false  process #include files
+  -c, --nocomments     bool     false  exclude top-level comments from output
+  -D=, --defines=      strings  {}     definitions to pass to preprocessor
+  -I=, --includeDirs=  strings  {}     include directory to pass to preprocessor
+  -l=, --dynlib=       string   ""     Import symbols from library in specified Nim string
+  -O=, --symOverride=  strings  {}     skip generating specified symbols
+  --pluginSourcePath=  string   ""     Nim file to build and load as a plugin
+  -d, --debug          bool     false  enable debug output
+  -m=, --mode=         string   "cpp"  language parser: c or cpp
+  -g, --pgrammar       bool     false  print grammar
+```
 
 __Implementation Details__
 
