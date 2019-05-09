@@ -57,7 +57,7 @@ type
 
     nocache*, nocomments*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
-    code*, mode*, pluginSourcePath*: string
+    code*, dynlib*, mode*, pluginSourcePath*: string
 
     onSymbol*: OnSymbol
 
@@ -68,7 +68,7 @@ type
 
     gState*: State
 
-    currentHeader*, impHeader*, sourceFile*: string
+    currentHeader*, impShort*, sourceFile*: string
 
     data*: seq[tuple[name, val: string]]
 

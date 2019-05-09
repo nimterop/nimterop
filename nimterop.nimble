@@ -34,6 +34,7 @@ task buildToast, "build toast":
 proc testAll() =
   execTest "tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
+  execTest "tests/tpcre.nim"
 
   ## platform specific tests
   when defined(Windows):

@@ -338,6 +338,47 @@ proc getSplitComma*(joined: seq[string]): seq[string] =
   for i in joined:
     result = result.concat(i.split(","))
 
+proc getHeader*(nimState: NimState): string =
+  result =
+    if nimState.gState.dynlib.len == 0:
+      &", header: {nimState.currentHeader}"
+    else:
+      ""
+
+proc getDynlib*(nimState: NimState): string =
+  result =
+    if nimState.gState.dynlib.len != 0:
+      &", dynlib: {nimState.gState.dynlib}"
+    else:
+      ""
+
+proc getImportC*(nimState: NimState, origName, nimName: string): string =
+  if nimName != origName:
+    result = &"importc: \"{origName}\"{nimState.getHeader()}"
+  else:
+    result = nimState.impShort
+
+proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
+  result = ""
+  for pragma in pragmas.items():
+    if pragma.len != 0:
+      result &= pragma & ", "
+  if result.len != 0:
+    result = " {." & result[0 .. ^3] & ".}"
+
+  result = result.replace(nimState.impShort & ", cdecl", nimState.impShort & "C")
+
+  let
+    dy = nimState.getDynlib()
+
+  if ", cdecl" in result and dy.len != 0:
+    result = result.replace(".}", dy & ".}")
+
+proc getComments*(nimState: NimState): string =
+  if not nimState.gState.nocomments and nimState.commentStr.len != 0:
+    result = "\n" & nimState.commentStr
+    nimState.commentStr = ""
+
 proc dll*(path: string): string =
   let
     (dir, name, _) = path.splitFile()

@@ -112,7 +112,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
 
   result.errors = "\n\n" & check
 
-proc getToast(fullpath: string, recurse: bool = false): string =
+proc getToast(fullpath: string, recurse: bool = false, dynlib: string = ""): string =
   var
     ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
@@ -130,6 +130,9 @@ proc getToast(fullpath: string, recurse: bool = false): string =
 
   for i in gStateCT.includeDirs:
     cmd.add &" --includeDirs+={i.quoteShell}"
+
+  if dynlib.len != 0:
+    cmd.add &" --dynlib={dynlib}"
 
   if gStateCT.symOverride.len != 0:
     cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
@@ -297,9 +300,6 @@ proc cDisableCaching*() {.compileTime.} =
 
   gStateCT.nocache = true
 
-# TODO: `passC` should be delayed and inserted inside `cImport`, `cCompile`
-# and this should be made a proc:
-# proc cDefine*(name: string, val = "") {.compileTime.} =
 macro cDefine*(name: static string, val: static string = ""): untyped =
   ## ``#define`` an identifer that is forwarded to the C/C++ compiler
   ## using ``{.passC: "-DXXX".}``
@@ -462,7 +462,7 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
   if gStateCT.debug:
     echo result.repr
 
-macro cImport*(filename: static string, recurse: static bool = false): untyped =
+macro cImport*(filename: static string, recurse: static bool = false, dynlib: static string = ""): untyped =
   ## Import all supported definitions from specified header file. Generated
   ## content is cached in ``nimcache`` until ``filename`` changes unless
   ## `cDisableCaching() <cimport.html#cDisableCaching,>`_ is set. ``nim -f``
@@ -472,6 +472,29 @@ macro cImport*(filename: static string, recurse: static bool = false): untyped =
   ## referenced in ``filename``. This is only done for files in the same
   ## directory as ``filename`` or in a directory added using
   ## `cIncludeDir() <cimport.html#cIncludeDir.m,>`_
+  ##
+  ## ``dynlib`` can be used to specify the Nim string to use to specify the dynamic
+  ## library to load the imported symbols from. For example:
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    const
+  ##      dynpcre =
+  ##        when defined(windows):
+  ##          when defined(cpu64):
+  ##            "pcre64.dll"
+  ##          else:
+  ##            "pcre32.dll"
+  ##        elif hostOS == "macosx":
+  ##          "libpcre(.3|.1|).dylib"
+  ##        else:
+  ##          "libpcre.so(.3|.1|)"
+  ##
+  ##    cImport("pcre.h", dynlib="dynpcre")
+  ##
+  ## If ``dynlib`` is not specified, the C/C++ implementation files can be compiled in
+  ## with `cCompile() <cimport.html#cCompile.m,,string>`_, or the `{.passL.}` pragma
+  ## can be used to specify the static lib to link.
 
   result = newNimNode(nnkStmtList)
 
@@ -481,7 +504,7 @@ macro cImport*(filename: static string, recurse: static bool = false): untyped =
   echo "# Importing " & fullpath
 
   let
-    output = getToast(fullpath, recurse)
+    output = getToast(fullpath, recurse, dynlib)
 
   if gStateCT.debug:
     echo output
