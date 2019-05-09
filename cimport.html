@@ -1281,8 +1281,9 @@ function main() {
     title="cIncludeDir(dir: static string): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#cCompile.m%2C%2Cstring%2Cstring"
     title="cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#cImport.m%2C"
-    title="cImport(filename: static string; recurse: static bool = false): untyped"><wbr />c<wbr />Import<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#cImport.m%2C%2Cstring"
+    title="cImport(filename: static string; recurse: static bool = false;
+        dynlib: static string = &quot;&quot;): untyped"><wbr />c<wbr />Import<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
 </li>
@@ -1445,11 +1446,26 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
 <pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/dir&quot;</span><span class="Punctuation">,</span> <span class="Identifier">exclude</span><span class="Operator">=</span><span class="StringLit">&quot;test2.c&quot;</span><span class="Punctuation">)</span></pre>
 
 </dd>
-<a id="cImport.m,"></a>
-<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cImport</span><span class="Other">(</span><span class="Identifier">filename</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="cImport.m,,string"></a>
+<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cImport</span><span class="Other">(</span><span class="Identifier">filename</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span>
+             <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
 <p>Import all supported definitions from specified header file. Generated content is cached in <tt class="docutils literal"><span class="pre">nimcache</span></tt> until <tt class="docutils literal"><span class="pre">filename</span></tt> changes unless <a class="reference external" href="cimport.html#cDisableCaching,">cDisableCaching()</a> is set. <tt class="docutils literal"><span class="pre">nim -f</span></tt> can also be used after Nim v0.19.4 to flush the cache.</p>
 <p><tt class="docutils literal"><span class="pre">recurse</span></tt> can be used to generate Nim wrappers from <tt class="docutils literal"><span class="pre">#include</span></tt> files referenced in <tt class="docutils literal"><span class="pre">filename</span></tt>. This is only done for files in the same directory as <tt class="docutils literal"><span class="pre">filename</span></tt> or in a directory added using <a class="reference external" href="cimport.html#cIncludeDir.m,">cIncludeDir()</a></p>
+<p><tt class="docutils literal"><span class="pre">dynlib</span></tt> can be used to specify the Nim string to use to specify the dynamic library to load the imported symbols from. For example:</p>
+<pre class="listing"><span class="Keyword">const</span>
+  <span class="Identifier">dynpcre</span> <span class="Operator">=</span>
+    <span class="Keyword">when</span> <span class="Identifier">defined</span><span class="Punctuation">(</span><span class="Identifier">windows</span><span class="Punctuation">)</span><span class="Punctuation">:</span>
+      <span class="Keyword">when</span> <span class="Identifier">defined</span><span class="Punctuation">(</span><span class="Identifier">cpu64</span><span class="Punctuation">)</span><span class="Punctuation">:</span>
+        <span class="StringLit">&quot;pcre64.dll&quot;</span>
+      <span class="Keyword">else</span><span class="Punctuation">:</span>
+        <span class="StringLit">&quot;pcre32.dll&quot;</span>
+    <span class="Keyword">elif</span> <span class="Identifier">hostOS</span> <span class="Operator">==</span> <span class="StringLit">&quot;macosx&quot;</span><span class="Punctuation">:</span>
+      <span class="StringLit">&quot;libpcre(.3|.1|).dylib&quot;</span>
+    <span class="Keyword">else</span><span class="Punctuation">:</span>
+      <span class="StringLit">&quot;libpcre.so(.3|.1|)&quot;</span>
+
+<span class="Identifier">cImport</span><span class="Punctuation">(</span><span class="StringLit">&quot;pcre.h&quot;</span><span class="Punctuation">,</span> <span class="Identifier">dynlib</span><span class="Operator">=</span><span class="StringLit">&quot;dynpcre&quot;</span><span class="Punctuation">)</span></pre><p>If <tt class="docutils literal"><span class="pre">dynlib</span></tt> is not specified, the C/C++ implementation files can be compiled in with <a class="reference external" href="cimport.html#cCompile.m,,string">cCompile()</a>, or the <cite>{.passL.}</cite> pragma can be used to specify the static lib to link.</p>
 
 
 </dd>
@@ -1463,7 +1479,7 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-05-09 02:07:17 UTC</small>
+        <small>Made with Nim. Generated: 2019-05-09 04:53:00 UTC</small>
       </div>
     </div>
   </div>
