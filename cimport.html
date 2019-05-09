@@ -1295,7 +1295,7 @@ function main() {
   <div id="tocRoot"></div>
   <p class="module-desc"><p>This is the main nimterop import file to help with wrapping C/C++ source code.</p>
 <p>Check out <a class="reference external" href="https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim">template.nim</a> as a starting point for wrapping a new library. The template can be copied and trimmed down and modified as required.</p>
-<p>All <cite>compileTime</cite> procs must be used in a compile time context, e.g. using:</p>
+<p>All <tt class="docutils literal"><span class="pre">{.compileTime.}</span></tt> procs must be used in a compile time context, e.g. using:</p>
 <pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span>
   <span class="Identifier">cAddStdDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span></pre></p>
   <div class="section" id="5">
@@ -1463,7 +1463,7 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
     <span class="Keyword">else</span><span class="Punctuation">:</span>
       <span class="StringLit">&quot;libpcre.so(.3|.1|)&quot;</span>
 
-<span class="Identifier">cImport</span><span class="Punctuation">(</span><span class="StringLit">&quot;pcre.h&quot;</span><span class="Punctuation">,</span> <span class="Identifier">dynlib</span><span class="Operator">=</span><span class="StringLit">&quot;dynpcre&quot;</span><span class="Punctuation">)</span></pre><p>If <tt class="docutils literal"><span class="pre">dynlib</span></tt> is not specified, the C/C++ implementation files can be compiled in with <a class="reference external" href="cimport.html#cCompile.m,,string">cCompile()</a>, or the <cite>{.passL.}</cite> pragma can be used to specify the static lib to link.</p>
+<span class="Identifier">cImport</span><span class="Punctuation">(</span><span class="StringLit">&quot;pcre.h&quot;</span><span class="Punctuation">,</span> <span class="Identifier">dynlib</span><span class="Operator">=</span><span class="StringLit">&quot;dynpcre&quot;</span><span class="Punctuation">)</span></pre><p>If <tt class="docutils literal"><span class="pre">dynlib</span></tt> is not specified, the C/C++ implementation files can be compiled in with <a class="reference external" href="cimport.html#cCompile.m,,string">cCompile()</a>, or the <tt class="docutils literal"><span class="pre">{.passL.}</span></tt> pragma can be used to specify the static lib to link.</p>
 
 
 </dd>
@@ -1477,7 +1477,7 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-05-09 06:07:27 UTC</small>
+        <small>Made with Nim. Generated: 2019-05-09 06:10:00 UTC</small>
       </div>
     </div>
   </div>
