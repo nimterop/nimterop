@@ -7,3 +7,4 @@ downloadUrl	git.html#downloadUrl,string,string	git: downloadUrl(url, outdir: str
 gitReset	git.html#gitReset,string	git: gitReset(outdir: string)	
 gitCheckout	git.html#gitCheckout,string,string	git: gitCheckout(file, outdir: string)	
 gitPull	git.html#gitPull,string,string,string,string	git: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)	
+configure	git.html#configure,string,string	git: configure(path, check: string)	

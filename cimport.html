@@ -27,113 +27,232 @@ customize this style sheet.
 Modified from Chad Skeeters' rst2html-style
 https://bitbucket.org/cskeeters/rst2html-style/
 
-Modified by Boyd Greenfield and narimiran
+Modified by Boyd Greenfield
 */
-
+/* SCSS variables */
+/* Text weights */
+/* Body colors */
+/* Text colors */
+/* Link colors */
+/* Syntax highlighting colors */
+/* Pct changes */
+/* Mixins */
+/* Body/layout */
 html {
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%; }
 
+/* Where we want fancier font if available */
+h1, h2, h3, h4, h5, h6, p.module-desc, table.docinfo + blockquote p, table.docinfo blockquote p, h1 + blockquote p {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif !important; }
+
+h1.title {
+  font-weight: 900; }
+
 body {
   font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif;
   font-weight: 400;
-  font-size: 1.125em;
-  line-height: 1.5;
-  color: #222;
-  background-color: #FCFCFC; }
+  font-size: 16px;
+  line-height: 20px;
+  color: #444;
+  letter-spacing: 0.15px;
+  background-color: #FDFBFA; }
 
 /* Skeleton grid */
 .container {
   position: relative;
   width: 100%;
-  max-width: 1050px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 20px;
   box-sizing: border-box; }
 
 .column,
 .columns {
   width: 100%;
   float: left;
-  box-sizing: border-box;
-  margin-left: 1%;
-}
+  box-sizing: border-box; }
 
-.column:first-child,
-.columns:first-child {
-  margin-left: 0; }
+/* For devices larger than 400px */
+@media (min-width: 400px) {
+  .container {
+    width: 100%;
+    padding: 0; } }
+/* For devices larger than 650px */
+@media (min-width: 650px) {
+  .container {
+    width: 100%; }
 
-.three.columns {
-  width: 19%; }
+  .column,
+  .columns {
+    margin-left: 4%; }
 
-.nine.columns {
-  width: 80.0%; }
+  .column:first-child,
+  .columns:first-child {
+    margin-left: 0; }
 
-.twelve.columns {
-  width: 100%;
-  margin-left: 0; }
+  .one.column,
+  .one.columns {
+    width: 4.66666666667%; }
 
-@media screen and (max-width: 860px) {
+  .two.columns {
+    width: 13.3333333333%; }
+
   .three.columns {
-    display: none;
-  }
+    width: 22%; }
+
+  .four.columns {
+    width: 30.6666666667%; }
+
+  .five.columns {
+    width: 39.3333333333%; }
+
+  .six.columns {
+    width: 48%; }
+
+  .seven.columns {
+    width: 56.6666666667%; }
+
+  .eight.columns {
+    width: 65.3333333333%; }
+
   .nine.columns {
-    width: 98.0%;
-  }
-  body {
-    font-size: 1em;
-    line-height: 1.35;
-  }
-}
+    width: 74.0%; }
+
+  .ten.columns {
+    width: 82.6666666667%; }
+
+  .eleven.columns {
+    width: 91.3333333333%; }
+
+  .twelve.columns {
+    width: 100%;
+    margin-left: 0; }
+
+  .one-third.column {
+    width: 30.6666666667%; }
+
+  .two-thirds.column {
+    width: 65.3333333333%; } }
+/* Customer Overrides */
+.footer {
+  text-align: center;
+  color: #969696;
+  padding-top: 10%; }
+
+p.module-desc {
+  font-size: 1.1em;
+  color: #666666; }
+
+a.link-seesrc {
+  color: #aec7d2;
+  font-style: italic; }
+
+a.link-seesrc:hover {
+  color: #6c9aae; }
+
+#toc-list {
+  word-wrap: break-word; }
+
+ul.simple-toc {
+  list-style: none; }
+
+ul.simple-toc a.reference-toplevel {
+  font-weight: bold;
+  color: #0077b3; }
+
+ul.simple-toc-section {
+  list-style-type: circle;
+  color: #6c9aae; }
+
+ul.simple-toc-section a.reference {
+  color: #0077b3; }
 
 cite {
   font-style: italic !important; }
 
+dt > pre {
+  border-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.3);
+  margin: 15px 0px 5px; }
+
+dd > pre {
+  border-color: rgba(0, 0, 0, 0.1);
+  background-color: whitesmoke;
+  margin-top: 8px; }
+
+.item > dd {
+  margin-left: 10px;
+  margin-bottom: 30px; }
+
+/* Nim line-numbered tables */
+.line-nums-table {
+  width: 100%;
+  table-layout: fixed; }
 
 /* Nim search input */
 div#searchInputDiv {
-  margin-bottom: 1em;
+  margin-bottom: 8px;
 }
-input#searchInput {
-  width: 80%;
+div#searchInputDiv input#searchInput {
+  width: 10em;
+}
+div.search-groupby {
+  margin-bottom: 8px;
 }
 
+table.line-nums-table {
+  border-radius: 4px;
+  border: 1px solid #cccccc;
+  background-color: whitesmoke;
+  border-collapse: separate;
+  margin-top: 15px;
+  margin-bottom: 25px; }
+
+.line-nums-table tbody {
+  border: none; }
+
+.line-nums-table td pre {
+  border: none;
+  background-color: transparent; }
+
+.line-nums-table td.blob-line-nums {
+  width: 28px; }
+
+.line-nums-table td.blob-line-nums pre {
+  color: #b0b0b0;
+  -webkit-filter: opacity(75%);
+  text-align: right;
+  border-color: transparent;
+  background-color: transparent;
+  padding-left: 0px;
+  margin-left: 0px;
+  padding-right: 0px;
+  margin-right: 0px; }
 
 /* Docgen styles */
 /* Links */
 a {
-  color: #07b;
-  text-decoration: none;
-}
-
-a span.Identifier {
-  text-decoration: underline;
-  text-decoration-color: #aab;
-}
-
-a.reference-toplevel {
-  font-weight: bold;
-}
-
-a.toc-backref {
-  text-decoration: none;
-  color: #222; }
-
-a.link-seesrc {
-  color: #607c9f;
-  font-size: 0.9em;
-  font-style: italic; }
+  color: #0077b3;
+  text-decoration: none; }
 
 a:hover,
 a:focus {
-  color: #607c9f;
+  color: #00334d;
   text-decoration: underline; }
 
-a:hover span.Identifier {
-  color: #607c9f;
-}
+a:visited {
+  color: #00334d; }
 
+a:focus {
+  outline: thin dotted #2d2d2d;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px; }
+
+a:hover,
+a:active {
+  outline: 0; }
 
 sub,
 sup {
@@ -210,258 +329,379 @@ img {
 
   h2,
   h3 {
-    page-break-after: avoid; }
-}
+    page-break-after: avoid; } }
+.img-rounded {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
 
+.img-polaroid {
+  padding: 4px;
+  background-color: rgba(252, 248, 244, 0.75);
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
 
 p {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
+  margin: 0 0 8px; }
 
 small {
   font-size: 85%; }
 
 strong {
-  font-weight: 600;
-  font-size: 0.95em;
-  color: #3c3c3c;
-}
+  font-weight: 600; }
 
 em {
   font-style: italic; }
 
+cite {
+  font-style: normal; }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  line-height: 20px;
+  color: inherit;
+  text-rendering: optimizelegibility; }
+
 h1 {
-  font-size: 1.8em;
+  font-size: 2em;
   font-weight: 400;
-  padding-bottom: .25em;
-  border-bottom: 1px solid #aaa;
-  margin-top: 2.5em;
-  margin-bottom: 1em;
+  padding-bottom: .15em;
+  border-bottom: 1px solid #aaaaaa;
+  margin-top: 1.0em;
   line-height: 1.2em; }
 
 h1.title {
   padding-bottom: 1em;
   border-bottom: 0px;
-  font-size: 2.5em;
-  text-align: center;
-  font-weight: 900;
-  margin-top: 0.75em;
-  margin-bottom: 0em;
-}
+  font-size: 2.75em; }
 
 h2 {
-  font-size: 1.3em;
-  margin-top: 2em; }
-
-h2.subtitle {
-  text-align: center; }
-
-h3 {
-  font-size: 1.125em;
-  font-style: italic;
+  font-size: 1.5em;
   margin-top: 1.5em; }
 
+h3 {
+  font-size: 1.3em;
+  font-style: italic;
+  margin-top: 0.75em; }
+
 h4 {
-  font-size: 1.125em;
-  margin-top: 1em; }
+  font-size: 1.3em;
+  margin-top: 0.5em; }
 
 h5 {
-  font-size: 1.125em;
-  margin-top: 0.75em; }
+  font-size: 1.2em;
+  margin-top: 0.25em; }
 
 h6 {
   font-size: 1.1em; }
 
-
 ul,
 ol {
   padding: 0;
-  margin-top: 0.5em;
-  margin-left: 0.75em; }
+  margin: 0 0 0px 15px; }
 
 ul ul,
 ul ol,
 ol ol,
 ol ul {
-  margin-bottom: 0;
-  margin-left: 1.25em; }
+  margin-bottom: 0; }
 
 li {
-    list-style-type: circle;
-}
-
-ul.simple-boot li {
-    list-style-type: none;
-    margin-left: 0em;
-    margin-bottom: 0.5em;
-}
-
-ol.simple > li, ul.simple > li {
-  margin-bottom: 0.25em;
-  margin-left: 0.4em }
-
-ul.simple.simple-toc > li {
-    margin-top: 1em;
-}
-
-ul.simple-toc {
-  list-style: none;
-  font-size: 0.9em;
-  margin-left: -0.3em;
-  margin-top: 1em; }
-
-ul.simple-toc > li {
-    list-style-type: none;
-}
-
-ul.simple-toc-section {
-  list-style-type: circle;
-  margin-left: 1em;
-  color: #6c9aae; }
-
-
-ol.arabic {
-  list-style: decimal; }
-
-ol.loweralpha {
-  list-style: lower-alpha; }
-
-ol.upperalpha {
-  list-style: upper-alpha; }
-
-ol.lowerroman {
-  list-style: lower-roman; }
-
-ol.upperroman {
-  list-style: upper-roman; }
-
-ul.auto-toc {
-  list-style-type: none; }
-
+  line-height: 20px; }
 
 dl {
-  margin-bottom: 1.5em; }
+  margin-bottom: 20px; }
+
+dt,
+dd {
+  line-height: 20px; }
 
 dt {
-  margin-bottom: -0.5em;
-  margin-left: 0.0em; }
+  font-weight: bold; }
 
 dd {
-  margin-left: 2.0em;
-  margin-bottom: 3.0em;
-  margin-top: 0.5em; }
-
+  margin-left: 10px;
+  margin-bottom: 26px; }
 
 hr {
-  margin: 2em 0;
+  margin: 20px 0;
   border: 0;
-  border-top: 1px solid #aaa; }
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #ffffff; }
+
+abbr[title],
+abbr[data-original-title] {
+  cursor: help;
+  border-bottom: 1px dotted #999999; }
+
+abbr.initialism {
+  font-size: 90%;
+  text-transform: uppercase; }
 
 blockquote {
-  font-size: 0.9em;
-  font-style: italic;
-  padding-left: 0.5em;
-  margin-left: 0;
-  border-left: 5px solid #bbc;
+  padding: 0 0 0 15px;
+  margin: 0 0 20px;
+  border-left: 5px solid #EFEBE0; }
+
+table.docinfo + blockquote, table.docinfo blockquote, h1 + blockquote {
+  border-left: 5px solid #c9c9c9;
 }
+
+table.docinfo + blockquote p, table.docinfo blockquote p, h1 + blockquote p {
+  margin-bottom: 0;
+  font-size: 15px;
+  font-weight: 200;
+  line-height: 1.5;
+  font-style: italic; }
+
+q:before,
+q:after,
+blockquote:before,
+blockquote:after {
+  content: ""; }
+
+address {
+  display: block;
+  margin-bottom: 20px;
+  font-style: normal;
+  line-height: 20px; }
+
+code,
+pre {
+  font-family: "Source Code Pro", Monaco, Menlo, Consolas, "Courier New", monospace;
+  padding: 0 3px 2px;
+  font-weight: 500;
+  font-size: 12px;
+  color: #444444;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px; }
 
 .pre {
   font-family: "Source Code Pro", Monaco, Menlo, Consolas, "Courier New", monospace;
-  font-weight: 500;
-  font-size: 0.85em;
-  background-color: #f0f3ff;
-  padding-left: 3px;
-  padding-right: 3px;
-  border-radius: 4px;
+  font-weight: 600;
+  /*color: #504da6;*/
 }
 
+code {
+  padding: 2px 4px;
+  color: #444444;
+  white-space: nowrap;
+  background-color: white;
+  border: 1px solid #777777; }
+
 pre {
-  font-family: "Source Code Pro", Monaco, Menlo, Consolas, "Courier New", monospace;
-  color: #222;
-  font-weight: 500;
   display: inline-block;
   box-sizing: border-box;
-  min-width: 100%;
-  padding: 0.5em;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  font-size: 0.85em;
+  min-width: calc(100% - 19.5px);
+  padding: 9.5px;
+  margin: 0.25em 10px 10px 10px;
+  font-size: 15px;
+  line-height: 20px;
   white-space: pre !important;
   overflow-y: hidden;
   overflow-x: visible;
-  background-color: ghostwhite;
-  border: 1px solid #dde;
-  -webkit-border-radius: 6px;
-  -moz-border-radius: 6px;
-  border-radius: 6px; }
+  background-color: rgba(0, 0, 0, 0.01);
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px; }
+
+pre.prettyprint {
+  margin-bottom: 20px; }
+
+pre code {
+  padding: 0;
+  color: inherit;
+  white-space: pre;
+  overflow-x: visible;
+  background-color: transparent;
+  border: 0; }
 
 .pre-scrollable {
   max-height: 340px;
   overflow-y: scroll; }
 
-
-/* Nim line-numbered tables */
-.line-nums-table {
-  width: 100%;
-  table-layout: fixed; }
-
-table.line-nums-table {
-  border-radius: 4px;
-  border: 1px solid #cccccc;
-  background-color: ghostwhite;
-  border-collapse: separate;
-  margin-top: 15px;
-  margin-bottom: 25px; }
-
-.line-nums-table tbody {
-  border: none; }
-
-.line-nums-table td pre {
-  border: none;
-  background-color: transparent; }
-
-.line-nums-table td.blob-line-nums {
-  width: 28px; }
-
-.line-nums-table td.blob-line-nums pre {
-  color: #b0b0b0;
-  -webkit-filter: opacity(75%);
-  text-align: right;
-  border-color: transparent;
-  background-color: transparent;
-  padding-left: 0px;
-  margin-left: 0px;
-  padding-right: 0px;
-  margin-right: 0px; }
-
-
 table {
   max-width: 100%;
   background-color: transparent;
-  margin-top: 0.5em;
-  margin-bottom: 1.5em;
   border-collapse: collapse;
-  border-color: #ccc;
-  border-spacing: 0;
-  font-size: 0.9em;
-}
+  border-spacing: 0; }
 
 table th, table td {
-  padding: 0px 0.5em 0px;
+  padding: 0px 8px 0px;
 }
 
-table th {
-  background-color: #e8e8e8;
+.table {
+  width: 100%;
+  margin-bottom: 20px; }
+
+.table th,
+.table td {
+  padding: 8px;
+  line-height: 20px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #444444; }
+
+.table th {
   font-weight: bold; }
 
-table th.docinfo-name {
-    background-color: transparent;
-}
+.table thead th {
+  vertical-align: bottom; }
 
-table tr:hover {
-  background-color: ghostwhite; }
+.table caption + thead tr:first-child th,
+.table caption + thead tr:first-child td,
+.table colgroup + thead tr:first-child th,
+.table colgroup + thead tr:first-child td,
+.table thead:first-child tr:first-child th,
+.table thead:first-child tr:first-child td {
+  border-top: 0; }
 
+.table tbody + tbody {
+  border-top: 2px solid #444444; }
+
+.table .table {
+  background-color: rgba(252, 248, 244, 0.75); }
+
+.table-condensed th,
+.table-condensed td {
+  padding: 4px 5px; }
+
+.table-bordered {
+  border: 1px solid #444444;
+  border-collapse: separate;
+  *border-collapse: collapse;
+  border-left: 0;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px; }
+
+.table-bordered th,
+.table-bordered td {
+  border-left: 1px solid #444444; }
+
+.table-bordered caption + thead tr:first-child th,
+.table-bordered caption + tbody tr:first-child th,
+.table-bordered caption + tbody tr:first-child td,
+.table-bordered colgroup + thead tr:first-child th,
+.table-bordered colgroup + tbody tr:first-child th,
+.table-bordered colgroup + tbody tr:first-child td,
+.table-bordered thead:first-child tr:first-child th,
+.table-bordered tbody:first-child tr:first-child th,
+.table-bordered tbody:first-child tr:first-child td {
+  border-top: 0; }
+
+.table-bordered thead:first-child tr:first-child > th:first-child,
+.table-bordered tbody:first-child tr:first-child > td:first-child,
+.table-bordered tbody:first-child tr:first-child > th:first-child {
+  -webkit-border-top-left-radius: 4px;
+  border-top-left-radius: 4px;
+  -moz-border-radius-topleft: 4px; }
+
+.table-bordered thead:first-child tr:first-child > th:last-child,
+.table-bordered tbody:first-child tr:first-child > td:last-child,
+.table-bordered tbody:first-child tr:first-child > th:last-child {
+  -webkit-border-top-right-radius: 4px;
+  border-top-right-radius: 4px;
+  -moz-border-radius-topright: 4px; }
+
+.table-bordered thead:last-child tr:last-child > th:first-child,
+.table-bordered tbody:last-child tr:last-child > td:first-child,
+.table-bordered tbody:last-child tr:last-child > th:first-child,
+.table-bordered tfoot:last-child tr:last-child > td:first-child,
+.table-bordered tfoot:last-child tr:last-child > th:first-child {
+  -webkit-border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  -moz-border-radius-bottomleft: 4px; }
+
+.table-bordered thead:last-child tr:last-child > th:last-child,
+.table-bordered tbody:last-child tr:last-child > td:last-child,
+.table-bordered tbody:last-child tr:last-child > th:last-child,
+.table-bordered tfoot:last-child tr:last-child > td:last-child,
+.table-bordered tfoot:last-child tr:last-child > th:last-child {
+  -webkit-border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  -moz-border-radius-bottomright: 4px; }
+
+.table-bordered tfoot + tbody:last-child tr:last-child td:first-child {
+  -webkit-border-bottom-left-radius: 0;
+  border-bottom-left-radius: 0;
+  -moz-border-radius-bottomleft: 0; }
+
+.table-bordered tfoot + tbody:last-child tr:last-child td:last-child {
+  -webkit-border-bottom-right-radius: 0;
+  border-bottom-right-radius: 0;
+  -moz-border-radius-bottomright: 0; }
+
+.table-bordered caption + thead tr:first-child th:first-child,
+.table-bordered caption + tbody tr:first-child td:first-child,
+.table-bordered colgroup + thead tr:first-child th:first-child,
+.table-bordered colgroup + tbody tr:first-child td:first-child {
+  -webkit-border-top-left-radius: 4px;
+  border-top-left-radius: 4px;
+  -moz-border-radius-topleft: 4px; }
+
+.table-bordered caption + thead tr:first-child th:last-child,
+.table-bordered caption + tbody tr:first-child td:last-child,
+.table-bordered colgroup + thead tr:first-child th:last-child,
+.table-bordered colgroup + tbody tr:first-child td:last-child {
+  -webkit-border-top-right-radius: 4px;
+  border-top-right-radius: 4px;
+  -moz-border-radius-topright: 4px; }
+
+table.docutils th {
+  background-color: #e8e8e8; }
+
+table.docutils tr:hover {
+  background-color: whitesmoke; }
+
+.table-striped tbody > tr:nth-child(odd) > td,
+.table-striped tbody > tr:nth-child(odd) > th {
+  background-color: rgba(252, 248, 244, 0.75); }
+
+.table-hover tbody tr:hover > td,
+.table-hover tbody tr:hover > th {
+  background-color: rgba(241, 222, 204, 0.75); }
+
+table td[class*="span"],
+table th[class*="span"],
+.row-fluid table td[class*="span"],
+.row-fluid table th[class*="span"] {
+  display: table-cell;
+  float: none;
+  margin-left: 0; }
+
+.hero-unit {
+  padding: 60px;
+  margin-bottom: 30px;
+  font-size: 18px;
+  font-weight: 200;
+  line-height: 30px;
+  color: inherit;
+  background-color: rgba(230, 197, 164, 0.75);
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
+
+.hero-unit h1 {
+  margin-bottom: 0;
+  font-size: 60px;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: inherit; }
+
+.hero-unit li {
+  line-height: 30px; }
 
 /* rst2html default used to remove borders from tables and images */
 .borderless, table.borderless td, table.borderless th {
@@ -482,6 +722,10 @@ table.borderless td, table.borderless th {
 .hidden {
   display: none; }
 
+a.toc-backref {
+  text-decoration: none;
+  color: #444444; }
+
 blockquote.epigraph {
   margin: 2em 5em; }
 
@@ -491,6 +735,85 @@ dl.docutils dd {
 object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
   overflow: hidden; }
 
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+div.abstract {
+  margin: 2em 5em; }
+
+div.abstract p.topic-title {
+  font-weight: bold;
+  text-align: center; }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em;
+  border: medium outset;
+  padding: 1em; }
+
+div.note, div.warning {
+  margin: 1.5em 0px;
+  border: none; }
+
+div.note p.admonition-title,
+div.warning p.admonition-title {
+  display: none; }
+
+/* Clearfix
+ * http://css-tricks.com/snippets/css/clear-fix/
+ */
+div.note:after,
+div.warning:after {
+  content: "";
+  display: table;
+  clear: both; }
+
+div.note p:before,
+div.warning p:before {
+  display: block;
+  float: left;
+  font-size: 4em;
+  line-height: 1em;
+  margin-right: 20px;
+  margin-left: 0em;
+  margin-top: -10px;
+  content: '\0270D';
+  /*handwriting*/ }
+
+div.warning p:before {
+  content: '\026A0';
+  /*warning*/ }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold;
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif; }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title, .code .error {
+  color: #b30000;
+  font-weight: bold;
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif; }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+div.dedication {
+  margin: 2em 5em;
+  text-align: center;
+  font-style: italic; }
+
+div.dedication p.topic-title {
+  font-weight: bold;
+  font-style: normal; }
 
 div.figure {
   margin-left: 2em;
@@ -498,13 +821,7 @@ div.figure {
 
 div.footer, div.header {
   clear: both;
-  text-align: center;
-  color: #666;
   font-size: smaller; }
-
-div.footer {
-    padding-top: 5em;
-}
 
 div.line-block {
   display: block;
@@ -516,24 +833,45 @@ div.line-block div.line-block {
   margin-bottom: 0;
   margin-left: 1.5em; }
 
+div.sidebar {
+  margin: 0 0 0.5em 1em;
+  border: medium outset;
+  padding: 1em;
+  background-color: rgba(252, 248, 244, 0.75);
+  width: 40%;
+  float: right;
+  clear: right; }
+
+div.sidebar p.rubric {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif;
+  font-size: medium; }
+
+div.system-messages {
+  margin: 5em; }
+
+div.system-messages h1 {
+  color: #b30000; }
+
+div.system-message {
+  border: medium outset;
+  padding: 1em; }
+
+div.system-message p.system-message-title {
+  color: #b30000;
+  font-weight: bold; }
+
 div.topic {
   margin: 2em; }
 
-div.search_results {
-  background-color: antiquewhite;
-  margin: 3em;
-  padding: 1em;
-  border: 1px solid #4d4d4d;
-}
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em; }
 
-div#global-links ul {
-  margin-left: 0;
-  list-style-type: none;
-}
+h1.title {
+  text-align: center; }
 
-div#global-links > simple-boot {
-    margin-left: 3em;
-}
+h2.subtitle {
+  text-align: center; }
 
 hr.docutils {
   width: 75%; }
@@ -567,6 +905,30 @@ img.align-center, .figure.align-center, object.align-center {
 div.align-right {
   text-align: inherit; }
 
+/* div.align-center * { */
+/*   text-align: left } */
+
+ul.simple > li {
+  margin-bottom: 0.5em }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em; }
+
+ol.arabic {
+  list-style: decimal; }
+
+ol.loweralpha {
+  list-style: lower-alpha; }
+
+ol.upperalpha {
+  list-style: upper-alpha; }
+
+ol.lowerroman {
+  list-style: lower-roman; }
+
+ol.upperroman {
+  list-style: upper-roman; }
+
 p.attribution {
   text-align: right;
   margin-left: 50%; }
@@ -586,6 +948,15 @@ p.rubric {
   font-size: larger;
   color: maroon;
   text-align: center; }
+
+p.sidebar-title {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  font-size: larger; }
+
+p.sidebar-subtitle {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif;
+  font-weight: bold; }
 
 p.topic-title {
   font-weight: bold; }
@@ -626,13 +997,21 @@ pre.code .inserted, code .inserted {
   background-color: #A3D289; }
 
 span.classifier {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif;
   font-style: oblique; }
 
 span.classifier-delimiter {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif;
   font-weight: bold; }
+
+span.interpreted {
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif; }
 
 span.option {
   white-space: nowrap; }
+
+span.pre {
+  white-space: pre; }
 
 span.problematic {
   color: #b30000; }
@@ -640,6 +1019,44 @@ span.problematic {
 span.section-subtitle {
   /* font-size relative to parent (h1..h6 element) */
   font-size: 80%; }
+
+table.citation {
+  border-left: solid 1px #666666;
+  margin-left: 1px; }
+
+table.docinfo {
+  margin: 0em;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  font-family: "Lato", "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, sans-serif !important;
+  color: #444444; }
+
+table.docutils {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em; }
+
+table.footnote {
+  border-left: solid 1px #2d2d2d;
+  margin-left: 1px; }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  vertical-align: top; }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 0; }
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100%; }
+
+ul.auto-toc {
+  list-style-type: none; }
 
 span.DecNumber {
   color: #252dbe; }
@@ -657,7 +1074,7 @@ span.FloatNumber {
   color: #252dbe; }
 
 span.Identifier {
-  color: #222; }
+  color: #3b3b3b; }
 
 span.Keyword {
   font-weight: 600;
@@ -722,22 +1139,37 @@ dt pre > span.Identifier, dt pre > span.Operator {
   color: #155da4;
   font-weight: 700; }
 
-dt pre > span.Keyword ~ span.Identifier, dt pre > span.Identifier ~ span.Identifier,
-dt pre > span.Operator ~ span.Identifier, dt pre > span.Other ~ span.Identifier {
+dt pre > span.Identifier ~ span.Identifier, dt pre > span.Operator ~ span.Identifier {
+  color: inherit;
+  font-weight: inherit; }
+
+dt pre > span.Operator ~ span.Identifier {
   color: inherit;
   font-weight: inherit; }
 
 /* Nim sprite for the footer (taken from main page favicon) */
 .nim-sprite {
   display: inline-block;
-  height: 16px;
-  width: 16px;
+  height: 12px;
+  width: 12px;
   background-position: 0 0;
-  background-size: 16px 16px;
+  background-size: 12px 12px;
   -webkit-filter: opacity(50%);
   background-repeat: no-repeat;
   background-image: url("data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AAAAAAUAAAAF////AP///wD///8A////AP///wD///8A////AP///wD///8A////AAAAAAIAAABbAAAAlQAAAKIAAACbAAAAmwAAAKIAAACVAAAAWwAAAAL///8A////AP///wD///8A////AAAAABQAAADAAAAAYwAAAA3///8A////AP///wD///8AAAAADQAAAGMAAADAAAAAFP///wD///8A////AP///wAAAACdAAAAOv///wD///8A////AP///wD///8A////AP///wD///8AAAAAOgAAAJ3///8A////AP///wAAAAAnAAAAcP///wAAAAAoAAAASv///wD///8A////AP///wAAAABKAAAAKP///wAAAABwAAAAJ////wD///8AAAAAgQAAABwAAACIAAAAkAAAAJMAAACtAAAAFQAAABUAAACtAAAAkwAAAJAAAACIAAAAHAAAAIH///8A////AAAAAKQAAACrAAAAaP///wD///8AAAAARQAAANIAAADSAAAARf///wD///8AAAAAaAAAAKsAAACk////AAAAADMAAACcAAAAnQAAABj///8A////AP///wAAAAAYAAAAGP///wD///8A////AAAAABgAAACdAAAAnAAAADMAAAB1AAAAwwAAAP8AAADpAAAAsQAAAE4AAAAb////AP///wAAAAAbAAAATgAAALEAAADpAAAA/wAAAMMAAAB1AAAAtwAAAOkAAAD/AAAA/wAAAP8AAADvAAAA3gAAAN4AAADeAAAA3gAAAO8AAAD/AAAA/wAAAP8AAADpAAAAtwAAAGUAAAA/AAAA3wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAADfAAAAPwAAAGX///8A////AAAAAEgAAADtAAAAvwAAAL0AAADGAAAA7wAAAO8AAADGAAAAvQAAAL8AAADtAAAASP///wD///8A////AP///wD///8AAAAAO////wD///8A////AAAAAIcAAACH////AP///wD///8AAAAAO////wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A//8AAP//AAD4HwAA7/cAAN/7AAD//wAAoYUAAJ55AACf+QAAh+EAAAAAAADAAwAA4AcAAP5/AAD//wAA//8AAA==");
   margin-bottom: -5px; }
+
+div.search_results {
+  background-color: antiquewhite;
+  margin: 3em;
+  padding: 1em;
+  border: 1px solid #4d4d4d;
+}
+
+div#global-links ul {
+  margin-left: 0;
+  list-style-type: none;
+}
 
 span.pragmadots {
   /* Position: relative frees us up to make the dots
@@ -746,14 +1178,18 @@ span.pragmadots {
   position: relative;
   /* 1px down looks slightly nicer */
   top: 1px;
+
   padding: 2px;
-  background-color: #e8e8e8;
+  background-color: #D3D3D3;
   border-radius: 4px;
   margin: 0 2px;
   cursor: pointer;
-  font-size: 0.8em;
-}
 
+  /* For some reason on Chrome, making the font size
+  smaller than 1em is causing the parent container to
+  bulge slightly. So, we're stuck with inheriting 1em,
+  which is sad, because 0.8em looks better... */
+}
 span.pragmadots:hover {
   background-color: #DBDBDB;
 }
@@ -761,10 +1197,6 @@ span.pragmawrap {
   display: none;
 }
 
-span.attachedType {
-  display: none;
-  visibility: hidden;
-}
 </style>
 
 <script type="text/javascript" src="dochack.js"></script>
@@ -807,6 +1239,12 @@ function main() {
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li>
+  <a class="reference reference-toplevel" href="#5" id="55">Exports</a>
+  <ul class="simple simple-toc-section">
+    
+  </ul>
+</li>
+<li>
   <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
   <ul class="simple simple-toc-section">
     
@@ -815,43 +1253,37 @@ function main() {
 <li>
   <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#cSkipSymbol%2Cseq%5BT%5D%5Bstring%5D"
-    title="cSkipSymbol(skips: seq[string])"><wbr />c<wbr />Skip<wbr />Symbol<span class="attachedType"></span></a></li>
+      <li><a class="reference" href="#cSkipSymbol%2Cseq%5Bstring%5D"
+    title="cSkipSymbol(skips: seq[string])"><wbr />c<wbr />Skip<wbr />Symbol<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#cSearchPath%2Cstring"
-    title="cSearchPath(path: string): string"><wbr />c<wbr />Search<wbr />Path<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cDebug"
-    title="cDebug()"><wbr />c<wbr />Debug<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cDisableCaching"
-    title="cDisableCaching()"><wbr />c<wbr />Disable<wbr />Caching<span class="attachedType"></span></a></li>
+    title="cSearchPath(path: string): string"><wbr />c<wbr />Search<wbr />Path<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#cDebug%2C"
+    title="cDebug()"><wbr />c<wbr />Debug<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#cDisableCaching%2C"
+    title="cDisableCaching()"><wbr />c<wbr />Disable<wbr />Caching<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#cAddSearchDir%2Cstring"
-    title="cAddSearchDir(dir: string)"><wbr />c<wbr />Add<wbr />Search<wbr />Dir<span class="attachedType"></span></a></li>
+    title="cAddSearchDir(dir: string)"><wbr />c<wbr />Add<wbr />Search<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#cAddStdDir%2Cstring"
-    title="cAddStdDir(mode = &quot;c&quot;)"><wbr />c<wbr />Add<wbr />Std<wbr />Dir<span class="attachedType"></span></a></li>
+    title="cAddStdDir(mode = &quot;c&quot;)"><wbr />c<wbr />Add<wbr />Std<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
 </li>
 <li>
   <a class="reference reference-toplevel" href="#17" id="67">Macros</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#cOverride.m"
-    title="cOverride(body): untyped"><wbr />c<wbr />Override<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cPlugin.m"
-    title="cPlugin(body): untyped"><wbr />c<wbr />Plugin<span class="attachedType"></span></a></li>
+      <li><a class="reference" href="#cOverride.m%2C"
+    title="cOverride(body): untyped"><wbr />c<wbr />Override<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#cPlugin.m%2C"
+    title="cPlugin(body): untyped"><wbr />c<wbr />Plugin<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#cDefine.m%2C%2Cstring"
-    title="cDefine(name: static string; val: static string = &quot;&quot;): untyped"><wbr />c<wbr />Define<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cIncludeDir.m"
-    title="cIncludeDir(dir: static string): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType"></span></a></li>
+    title="cDefine(name: static string; val: static string = &quot;&quot;): untyped"><wbr />c<wbr />Define<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#cIncludeDir.m%2C"
+    title="cIncludeDir(dir: static string): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#cCompile.m%2C%2Cstring%2Cstring"
-    title="cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cImport.m"
-    title="cImport(filename: static string; recurse: static bool = false): untyped"><wbr />c<wbr />Import<span class="attachedType"></span></a></li>
+    title="cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#cImport.m%2C"
+    title="cImport(filename: static string; recurse: static bool = false): untyped"><wbr />c<wbr />Import<span class="attachedType" style="visibility:hidden"></span></a></li>
 
-  </ul>
-</li>
-<li>
-  <a class="reference reference-toplevel" href="#19" id="69">Exports</a>
-  <ul class="simple simple-toc-section">
-    
   </ul>
 </li>
 
@@ -860,13 +1292,19 @@ function main() {
   </div>
   <div class="nine columns" id="content">
   <div id="tocRoot"></div>
-  <p class="module-desc"><p>Main import file to write wrappers. Each <tt class="docutils literal"><span class="pre">compileTime</span></tt> proc must be used in a compile time context, eg using:</p>
-<p><pre class="listing">
-static:
-  cAddStdDir()
-</pre> </p>
+  <p class="module-desc"><p>Main import file to write wrappers. Each <cite>compileTime</cite> proc must be used in a compile time context, eg using:</p>
+<p>```</p>
+<dl class="docutils"><dt>static:</dt>
+<dd>cAddStdDir()</dd>
+</dl>
+<p>``` </p>
 </p>
-  <div class="section" id="6">
+  <div class="section" id="5">
+<h1><a class="toc-backref" href="#5">Exports</a></h1>
+<dl class="item">
+<a class="reference external" href="types.html">types</a>, <a href="types.html#enumOp"><span class="Identifier">enumOp</span></a>, <a href="types.html#defineEnum"><span class="Identifier">defineEnum</span></a>, <a href="types.html#time_t"><span class="Identifier">time_t</span></a>, <a href="types.html#va_list"><span class="Identifier">va_list</span></a>, <a href="types.html#ptrdiff_t"><span class="Identifier">ptrdiff_t</span></a>
+</dl></div>
+<div class="section" id="6">
 <h1><a class="toc-backref" href="#6">Imports</a></h1>
 <dl class="item">
 <a class="reference external" href="plugin.html">plugin</a>, <a class="reference external" href="git.html">git</a>, <a class="reference external" href="paths.html">paths</a>, <a class="reference external" href="types.html">types</a>
@@ -874,8 +1312,8 @@ static:
 <div class="section" id="12">
 <h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
-<a id="cSkipSymbol,seq[T][string]"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cSkipSymbol%2Cseq%5BT%5D%5Bstring%5D"><span class="Identifier">cSkipSymbol</span></a><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<a id="cSkipSymbol,seq[string]"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">cSkipSymbol</span><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 Similar to <a class="reference external" href="cimport.html#cOverride.m,">cOverride()</a>, this macro allows filtering out symbols not of interest from the generated output.
 <p><strong class="examples_text">Examples:</strong></p>
@@ -884,21 +1322,21 @@ Similar to <a class="reference external" href="cimport.html#cOverride.m,">cOverr
 
 </dd>
 <a id="cSearchPath,string"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cSearchPath%2Cstring"><span class="Identifier">cSearchPath</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadDirEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">cSearchPath</span><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadDirEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 <p>Get full path to file or directory <tt class="docutils literal"><span class="pre">path</span></tt> in search path configured using <a class="reference external" href="cimport.html#cAddSearchDir,">cAddSearchDir()</a> and <a class="reference external" href="cimport.html#cAddStdDir,string">cAddStdDir()</a>.</p>
 <p>This can be used to locate files or directories that can be passed onto <a class="reference external" href="cimport.html#cCompile.m,,string">cCompile()</a>, <a class="reference external" href="cimport.html#cIncludeDir.m,">cIncludeDir()</a> and <a class="reference external" href="cimport.html#cImport.m,">cImport()</a>.</p>
 
 
 </dd>
-<a id="cDebug"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cDebug"><span class="Identifier">cDebug</span></a><span class="Other">(</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<a id="cDebug,"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">cDebug</span><span class="Other">(</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 Enable debug messages and display the generated Nim code
 
 </dd>
-<a id="cDisableCaching"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cDisableCaching"><span class="Identifier">cDisableCaching</span></a><span class="Other">(</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<a id="cDisableCaching,"></a>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">cDisableCaching</span><span class="Other">(</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 <p>Disable caching of generated Nim code - useful during wrapper development</p>
 <p>If files included by header being processed by <a class="reference external" href="cimport.html#cImport.m,">cImport()</a> change and affect the generated content, they will be ignored and the cached value will continue to be used . Use <a class="reference external" href="cimport.html#cDisableCaching,">cDisableCaching()</a> to avoid this scenario during development.</p>
@@ -907,7 +1345,7 @@ Enable debug messages and display the generated Nim code
 
 </dd>
 <a id="cAddSearchDir,string"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cAddSearchDir%2Cstring"><span class="Identifier">cAddSearchDir</span></a><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">cAddSearchDir</span><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 Add directory <tt class="docutils literal"><span class="pre">dir</span></tt> to the search path used in calls to <a class="reference external" href="cimport.html#cSearchPath,string">cSearchPath()</a>.
 <p><strong class="examples_text">Examples:</strong></p>
@@ -920,7 +1358,7 @@ Add directory <tt class="docutils literal"><span class="pre">dir</span></tt> to 
 
 </dd>
 <a id="cAddStdDir,string"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cAddStdDir%2Cstring"><span class="Identifier">cAddStdDir</span></a><span class="Other">(</span><span class="Identifier">mode</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dt><pre><span class="Keyword">proc</span> <span class="Identifier">cAddStdDir</span><span class="Other">(</span><span class="Identifier">mode</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 Add the standard <tt class="docutils literal"><span class="pre">c</span></tt> [default] or <tt class="docutils literal"><span class="pre">cpp</span></tt> include paths to search path used in calls to <a class="reference external" href="cimport.html#cSearchPath,string">cSearchPath()</a>
 <p><strong class="examples_text">Examples:</strong></p>
@@ -937,8 +1375,8 @@ Add the standard <tt class="docutils literal"><span class="pre">c</span></tt> [d
 <div class="section" id="17">
 <h1><a class="toc-backref" href="#17">Macros</a></h1>
 <dl class="item">
-<a id="cOverride.m"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cOverride.m"><span class="Identifier">cOverride</span></a><span class="Other">(</span><span class="Identifier">body</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="cOverride.m,"></a>
+<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cOverride</span><span class="Other">(</span><span class="Identifier">body</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
 <p>When the wrapper code generated by nimterop is missing certain symbols or not accurate, it may be required to hand wrap them. Define them in a <a class="reference external" href="cimport.html#cOverride.m,">cOverride()</a> macro block so that Nimterop no longer defines these symbols.</p>
 <p>For example:</p>
@@ -949,20 +1387,20 @@ Add the standard <tt class="docutils literal"><span class="pre">c</span></tt> [d
 
 
 </dd>
-<a id="cPlugin.m"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cPlugin.m"><span class="Identifier">cPlugin</span></a><span class="Other">(</span><span class="Identifier">body</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="cPlugin.m,"></a>
+<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cPlugin</span><span class="Other">(</span><span class="Identifier">body</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
-When <a class="reference external" href="cimport.html#cOverride.m,">cOverride()</a> and <a class="reference external" href="cimport.html#cSkipSymbol.m%2Cseq[string]">cSkipSymbol()</a> are not adequate, the <a class="reference external" href="cimport.html#cPlugin.m,">cPlugin()</a> macro can be used to customize the generated Nim output. The following callbacks are available at this time.<pre class="listing"><span class="Keyword">proc</span> <span class="Identifier">onSymbol</span><span class="Punctuation">(</span><span class="Identifier">sym</span><span class="Punctuation">:</span> <span class="Keyword">var</span> <span class="Identifier">Symbol</span><span class="Punctuation">)</span> <span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">exportc</span><span class="Punctuation">,</span> <span class="Identifier">dynlib</span><span class="Operator">.</span><span class="Punctuation">}</span></pre><p><tt class="docutils literal"><span class="pre">onSymbol()</span></tt> can be used to handle symbol name modifications required due to invalid characters like leading/trailing <tt class="docutils literal"><span class="pre">_</span></tt> or rename symbols that would clash due to Nim's style insensitivity. It can also be used to remove prefixes and suffixes like <tt class="docutils literal"><span class="pre">SDL_</span></tt>. The symbol name and type is provided to the callback and the name can be modified.</p>
-<p>Returning a blank name will result in the symbol being skipped. This will fail for <tt class="docutils literal"><span class="pre">nskParam</span></tt> and <tt class="docutils literal"><span class="pre">nskField</span></tt> since the generated Nim code will be wrong.</p>
+When <a class="reference external" href="cimport.html#cOverride.m,">cOverride()</a> and <a class="reference external" href="cimport.html#cSkipSymbol.m%2Cseq[string]">cSkipSymbol()</a> are not adequate, the <a class="reference external" href="cimport.html#cPlugin.m,">cPlugin()</a> macro can be used to customize the generated Nim output. The following callbacks are available at this time.<pre class="listing"><span class="Keyword">proc</span> <span class="Identifier">onSymbol</span><span class="Punctuation">(</span><span class="Identifier">sym</span><span class="Punctuation">:</span> <span class="Keyword">var</span> <span class="Identifier">Symbol</span><span class="Punctuation">)</span> <span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">exportc</span><span class="Punctuation">,</span> <span class="Identifier">dynlib</span><span class="Operator">.</span><span class="Punctuation">}</span></pre><p><cite>onSymbol()</cite> can be used to handle symbol name modifications required due to invalid characters like leading/trailing <cite>_</cite> or rename symbols that would clash due to Nim's style insensitivity. It can also be used to remove prefixes and suffixes like <cite>SDL_</cite>. The symbol name and type is provided to the callback and the name can be modified.</p>
+<p>Returning a blank name will result in the symbol being skipped. This will fail for <cite>nskParam</cite> and <cite>nskField</cite> since the generated Nim code will be wrong.</p>
 <p>Symbol types can be any of the following:</p>
-<ul class="simple"><li><tt class="docutils literal"><span class="pre">nskConst</span></tt> for constants</li>
-<li><tt class="docutils literal"><span class="pre">nskType</span></tt> for type identifiers, including primitive</li>
-<li><tt class="docutils literal"><span class="pre">nskParam</span></tt> for param names</li>
-<li><tt class="docutils literal"><span class="pre">nskField</span></tt> for struct field names</li>
-<li><tt class="docutils literal"><span class="pre">nskEnumField</span></tt> for enum (field) names, though they are in the global namespace as <tt class="docutils literal"><span class="pre">nskConst</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">nskProc</span></tt> - for proc names</li>
+<ul class="simple"><li><cite>nskConst</cite> for constants</li>
+<li><cite>nskType</cite> for type identifiers, including primitive</li>
+<li><cite>nskParam</cite> for param names</li>
+<li><cite>nskField</cite> for struct field names</li>
+<li><cite>nskEnumField</cite> for enum (field) names, though they are in the global namespace as <cite>nskConst</cite></li>
+<li><cite>nskProc</cite> - for proc names</li>
 </ul>
-<p><tt class="docutils literal"><span class="pre">nimterop/plugins</span></tt> is implicitly imported to provide access to standard plugin facilities.</p>
+<p><cite>nimterop/plugins</cite> is implicitly imported to provide access to standard plugin facilities.</p>
 
 <p><strong class="examples_text">Examples:</strong></p>
 <pre class="listing"><span class="Identifier">cPlugin</span><span class="Other">:</span>
@@ -984,19 +1422,19 @@ When <a class="reference external" href="cimport.html#cOverride.m,">cOverride()<
 
 </dd>
 <a id="cDefine.m,,string"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cDefine.m%2C%2Cstring"><span class="Identifier">cDefine</span></a><span class="Other">(</span><span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cDefine</span><span class="Other">(</span><span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
 <tt class="docutils literal"><span class="pre">#define</span></tt> an identifer that is forwarded to the C/C++ compiler using <tt class="docutils literal"><span class="pre">{.passC: &quot;-DXXX&quot;.}</span></tt>
 
 </dd>
-<a id="cIncludeDir.m"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cIncludeDir.m"><span class="Identifier">cIncludeDir</span></a><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="cIncludeDir.m,"></a>
+<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cIncludeDir</span><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
 Add an include directory that is forwarded to the C/C++ compiler using <tt class="docutils literal"><span class="pre">{.passC: &quot;-IXXX&quot;.}</span></tt>. This is also provided to the preprocessor during Nim code generation.
 
 </dd>
 <a id="cCompile.m,,string,string"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cCompile.m%2C%2Cstring%2Cstring"><span class="Identifier">cCompile</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">mode</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">;</span> <span class="Identifier">exclude</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cCompile</span><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">mode</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">;</span> <span class="Identifier">exclude</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
 <p>Compile and link C/C++ implementation into resulting binary using <tt class="docutils literal"><span class="pre">{.compile.}</span></tt></p>
 <p><tt class="docutils literal"><span class="pre">path</span></tt> can be a specific file or contain wildcards:</p>
@@ -1007,8 +1445,8 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
 <pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/dir&quot;</span><span class="Punctuation">,</span> <span class="Identifier">exclude</span><span class="Operator">=</span><span class="StringLit">&quot;test2.c&quot;</span><span class="Punctuation">)</span></pre>
 
 </dd>
-<a id="cImport.m"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cImport.m"><span class="Identifier">cImport</span></a><span class="Other">(</span><span class="Identifier">filename</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<a id="cImport.m,"></a>
+<dt><pre><span class="Keyword">macro</span> <span class="Identifier">cImport</span><span class="Other">(</span><span class="Identifier">filename</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
 <p>Import all supported definitions from specified header file. Generated content is cached in <tt class="docutils literal"><span class="pre">nimcache</span></tt> until <tt class="docutils literal"><span class="pre">filename</span></tt> changes unless <a class="reference external" href="cimport.html#cDisableCaching,">cDisableCaching()</a> is set. <tt class="docutils literal"><span class="pre">nim -f</span></tt> can also be used after Nim v0.19.4 to flush the cache.</p>
 <p><tt class="docutils literal"><span class="pre">recurse</span></tt> can be used to generate Nim wrappers from <tt class="docutils literal"><span class="pre">#include</span></tt> files referenced in <tt class="docutils literal"><span class="pre">filename</span></tt>. This is only done for files in the same directory as <tt class="docutils literal"><span class="pre">filename</span></tt> or in a directory added using <a class="reference external" href="cimport.html#cIncludeDir.m,">cIncludeDir()</a></p>
@@ -1016,11 +1454,6 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
 
 </dd>
 
-</dl></div>
-<div class="section" id="19">
-<h1><a class="toc-backref" href="#19">Exports</a></h1>
-<dl class="item">
-<a class="reference external" href="types.html">types</a>, <a href="types.html#enumOp"><span class="Identifier">enumOp</span></a>, <a href="types.html#defineEnum"><span class="Identifier">defineEnum</span></a>, <a href="types.html#time_t"><span class="Identifier">time_t</span></a>, <a href="types.html#va_list"><span class="Identifier">va_list</span></a>, <a href="types.html#ptrdiff_t"><span class="Identifier">ptrdiff_t</span></a>
 </dl></div>
 
   </div>
@@ -1030,7 +1463,7 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-04-11 03:28:45 UTC</small>
+        <small>Made with Nim. Generated: 2019-05-09 02:07:17 UTC</small>
       </div>
     </div>
   </div>
