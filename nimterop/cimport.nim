@@ -5,7 +5,7 @@ Check out `template.nim <https://github.com/nimterop/nimterop/blob/master/nimter
 as a starting point for wrapping a new library. The template can be copied and
 trimmed down and modified as required.
 
-All `compileTime` procs must be used in a compile time context, e.g. using:
+All ``{.compileTime.}`` procs must be used in a compile time context, e.g. using:
 
 .. code-block:: c
 
@@ -499,7 +499,7 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   ##    cImport("pcre.h", dynlib="dynpcre")
   ##
   ## If ``dynlib`` is not specified, the C/C++ implementation files can be compiled in
-  ## with `cCompile() <cimport.html#cCompile.m,,string>`_, or the `{.passL.}` pragma
+  ## with `cCompile() <cimport.html#cCompile.m,,string>`_, or the ``{.passL.}`` pragma
   ## can be used to specify the static lib to link.
 
   result = newNimNode(nnkStmtList)
