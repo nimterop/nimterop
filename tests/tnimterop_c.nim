@@ -40,6 +40,7 @@ block:
 var
   pt: PRIMTYPE
   ct: CUSTTYPE
+  cct: CCUSTTYPE
 
   s0: STRUCT0
   s1: STRUCT1
@@ -64,6 +65,7 @@ var
 
 pt = 3
 ct = 4
+cct = 5
 
 s1.field1 = 5
 s2.field1 = 6
@@ -125,6 +127,8 @@ check e4 == enum11
 check enum13 == 4
 check enum14 == 9
 check enum15 == 2
+check enum17 == '\0'.ENUM7
+check enum18 == 'A'.ENUM7
 
 # Issue #58
 multiline1()

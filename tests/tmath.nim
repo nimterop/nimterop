@@ -6,6 +6,11 @@ type
   mingw_ldbl_type_t = object
   mingw_dbl_type_t = object
 
+when defined(windows):
+  cOverride:
+    type
+      complex = object
+
 static:
   cDebug()
   cDisableCaching()

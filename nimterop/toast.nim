@@ -4,7 +4,7 @@ import "."/treesitter/[api, c, cpp]
 
 import "."/[ast, globals, getters, grammar]
 
-proc printLisp(root: TSNode) =
+proc printLisp(gState: State, root: TSNode) =
   var
     node = root
     nextnode: TSNode
@@ -12,21 +12,21 @@ proc printLisp(root: TSNode) =
 
   while true:
     if not node.tsNodeIsNull() and depth > -1:
-      if gStateRT.pretty:
+      if gState.pretty:
         stdout.write spaces(depth)
       let
-        (line, col) = node.getLineCol()
+        (line, col) = gState.getLineCol(node)
       stdout.write &"({$node.tsNodeType()} {line} {col} {node.tsNodeEndByte() - node.tsNodeStartByte()}"
     else:
       break
 
     if node.tsNodeNamedChildCount() != 0:
-      if gStateRT.pretty:
+      if gState.pretty:
         echo ""
       nextnode = node.tsNodeNamedChild(0)
       depth += 1
     else:
-      if gStateRT.pretty:
+      if gState.pretty:
         echo ")"
       else:
         stdout.write ")"
@@ -38,7 +38,7 @@ proc printLisp(root: TSNode) =
         depth -= 1
         if depth == -1:
           break
-        if gStateRT.pretty:
+        if gState.pretty:
           echo spaces(depth) & ")"
         else:
           stdout.write ")"
@@ -53,7 +53,7 @@ proc printLisp(root: TSNode) =
     if node == root:
       break
 
-proc process(path: string, astTable: AstTable) =
+proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), "Invalid path " & path
 
   var
@@ -63,110 +63,111 @@ proc process(path: string, astTable: AstTable) =
   defer:
     parser.tsParserDelete()
 
-  gStateRT.sourceFile = path
-
-  if gStateRT.mode.len == 0:
+  if gState.mode.len == 0:
     if ext in [".h", ".c"]:
-      gStateRT.mode = "c"
+      gState.mode = "c"
     elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
-      gStateRT.mode = "cpp"
+      gState.mode = "cpp"
 
-  if gStateRT.preprocess:
-    gStateRT.code = getPreprocessor(path)
+  if gState.preprocess:
+    gState.code = gState.getPreprocessor(path)
   else:
-    gStateRT.code = readFile(path)
+    gState.code = readFile(path)
 
-  doAssert gStateRT.code.len != 0, "Empty file or preprocessor error"
+  doAssert gState.code.len != 0, "Empty file or preprocessor error"
 
-  if gStateRT.mode == "c":
+  if gState.mode == "c":
     doAssert parser.tsParserSetLanguage(treeSitterC()), "Failed to load C parser"
-  elif gStateRT.mode == "cpp":
+  elif gState.mode == "cpp":
     doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
   else:
-    doAssert false, "Invalid parser " & gStateRT.mode
+    doAssert false, "Invalid parser " & gState.mode
 
   var
-    tree = parser.tsParserParseString(nil, gStateRT.code.cstring, gStateRT.code.len.uint32)
+    tree = parser.tsParserParseString(nil, gState.code.cstring, gState.code.len.uint32)
     root = tree.tsTreeRootNode()
 
   defer:
     tree.tsTreeDelete()
 
-  if gStateRT.past:
-    printLisp(root)
-  elif gStateRT.pnim:
-    printNim(path, root, astTable)
-  elif gStateRT.preprocess:
-    echo gStateRT.code
+  if gState.past:
+    gState.printLisp(root)
+  elif gState.pnim:
+    gState.printNim(path, root, astTable)
+  elif gState.preprocess:
+    echo gState.code
 
 proc main(
-    mode = modeDefault,
+    preprocess = false,
     past = false,
     pnim = false,
-    pretty = true,
-    preprocess = false,
-    pgrammar = false,
     recurse = false,
-    debug = false,
+    nocomments = false,
     defines: seq[string] = @[],
     includeDirs: seq[string] = @[],
     symOverride: seq[string] = @[],
     pluginSourcePath: string = "",
-    source: seq[string],
+    debug = false,
+    mode = modeDefault,
+    pgrammar = false,
+    source: seq[string]
   ) =
 
-  gStateRT = State(
-    mode: mode,
+  var gState = State(
+    preprocess: preprocess,
     past: past,
     pnim: pnim,
-    pretty: pretty,
-    preprocess: preprocess,
     recurse: recurse,
-    debug: debug,
+    nocomments: nocomments,
     defines: defines,
     includeDirs: includeDirs,
     symOverride: symOverride,
-    pluginSourcePath: pluginSourcePath
+    pluginSourcePath: pluginSourcePath,
+    debug: debug,
+    mode: mode,
+    pretty: true
   )
 
-  gStateRT.symOverride = gStateRT.symOverride.getSplitComma()
+  gState.symOverride = gState.symOverride.getSplitComma()
 
   if pluginSourcePath.nBl:
-    loadPlugin(pluginSourcePath)
+    gState.loadPlugin(pluginSourcePath)
 
   let
     astTable = parseGrammar()
   if pgrammar:
     astTable.printGrammar()
   elif source.len != 0:
-    if gStateRT.pnim:
+    if gState.pnim:
       printNimHeader()
     for src in source:
-      process(src, astTable)
+      gState.process(src, astTable)
 
 when isMainModule:
   import cligen
   dispatch(main, help = {
+    "preprocess": "run preprocessor on header",
     "past": "print AST output",
-    "mode": "language; see CompileMode", # TODO: auto-generate valid choices
     "pnim": "print Nim output",
+    "recurse": "process #include files",
+    "nocomments": "exclude top-level comments from output",
     "defines": "definitions to pass to preprocessor",
     "includeDirs": "include directory to pass to preprocessor",
     "symOverride": "skip generating specified symbols",
     "pluginSourcePath": "Nim file to build and load as a plugin",
-    "preprocess": "run preprocessor on header",
-    "pgrammar": "print grammar",
-    "recurse": "process #include files",
     "debug": "enable debug output",
-    "source" : "C/C++ source/header",
+    "mode": "language parser: c or cpp",
+    "pgrammar": "print grammar",
+    "source" : "C/C++ source/header"
   }, short = {
+    "preprocess": 'p',
     "past": 'a',
     "pnim": 'n',
+    "recurse": 'r',
+    "nocomments": 'c',
     "defines": 'D',
     "includeDirs": 'I',
     "symOverride": 'O',
-    "preprocess": 'p',
-    "recurse": 'r',
     "debug": 'd',
     "pgrammar": 'g'
   })

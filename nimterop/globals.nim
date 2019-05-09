@@ -12,6 +12,7 @@ const
     "field_identifier",
     "identifier",
     "number_literal",
+    "char_literal",
     "preproc_arg",
     "primitive_type",
     "sized_type_specifier",
@@ -22,12 +23,14 @@ const
     "parenthesized_expression",
     "bitwise_expression",
     "shift_expression",
-    "math_expression"
+    "math_expression",
+    "escape_sequence"
   ].toSet()
 
   gEnumVals {.used.} = @[
     "identifier",
-    "number_literal"
+    "number_literal",
+    "char_literal"
   ].concat(toSeq(gExpressions.items))
 
 type
@@ -49,29 +52,28 @@ type
 
   AstTable {.used.} = TableRef[string, seq[ref Ast]]
 
-  State = object
+  State = ref object
     compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
 
-    nocache*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
+    nocache*, nocomments*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
-    code*, mode*, pluginSourcePath*, sourceFile*: string
+    code*, mode*, pluginSourcePath*: string
 
     onSymbol*: OnSymbol
 
   NimState {.used.} = ref object
     identifiers*: TableRef[string, string]
 
-    constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
+    commentStr*, constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
 
-    debug*: bool
+    gState*: State
 
-    currentHeader*: string
+    currentHeader*, impHeader*, sourceFile*: string
 
     data*: seq[tuple[name, val: string]]
 
 var
-  gStateCT {.compiletime, used.}: State
-  gStateRT {.used.}: State
+  gStateCT {.compiletime, used.} = new(State)
 
 template nBl(s: typed): untyped {.used.} =
   (s.len != 0)
@@ -84,4 +86,4 @@ type CompileMode = enum
 const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
 
 when not declared(CIMPORT):
-  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState, gStateRT, nBl, CompileMode, modeDefault
+  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState, nBl, CompileMode, modeDefault

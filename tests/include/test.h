@@ -27,6 +27,7 @@ extern "C" {
 
 typedef uint8_t PRIMTYPE;
 typedef PRIMTYPE CUSTTYPE;
+typedef CUSTTYPE _CCUSTTYPE_;
 
 struct STRUCT0;
 
@@ -70,6 +71,11 @@ enum ENUM5 {
 	enum13 = (1 << 2),
 	enum14 = ((1 << 3) | 1),
 	enum15 = (1 << (1 & 1))
+};
+
+enum ENUM7 {
+  enum17 = '\0',
+  enum18 = 'A'
 };
 
 typedef void * VOIDPTR;

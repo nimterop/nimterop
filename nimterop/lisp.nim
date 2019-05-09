@@ -30,12 +30,11 @@ proc readFromTokens(): ref Ast =
   if gTokens[idx] == "(":
     if gTokens.len - idx < 2:
       doAssert false, "Corrupt AST " & $(gTokensLen: gTokens.len, idx: idx)
-    if gTokens[idx+1] != "comment":
-      result = new(Ast)
-      (result.name, result.kind, result.recursive) = gTokens[idx+1].getNameKind()
-      result.children = @[]
-      if result.recursive:
-        result.children.add(result)
+    result = new(Ast)
+    (result.name, result.kind, result.recursive) = gTokens[idx+1].getNameKind()
+    result.children = @[]
+    if result.recursive:
+      result.children.add(result)
     idx += 2
     while gTokens[idx] != ")":
       var res = readFromTokens()
