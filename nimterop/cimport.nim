@@ -258,7 +258,7 @@ macro cPlugin*(body): untyped =
           sym.name = sym.name.replace("SDL_", "")
 
   let
-    data = "import nimterop/plugin\n\n" & body.repr
+    data = "import macros, nimterop/plugin\n\n" & body.repr
     hash = data.hash().abs()
     path = getTempDir() / "nimterop_" & $hash & ".nim"
 

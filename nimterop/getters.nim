@@ -94,7 +94,7 @@ proc checkIdentifier(name, kind, parent, origName: string) =
 
   if name.len != 0:
     let
-      origStr = if name != origName: ", originally '{origName}' before 'cPlugin:onSymbol()', still" else: ""
+      origStr = if name != origName: &", originally '{origName}' before 'cPlugin:onSymbol()', still" else: ""
       errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} contains"
 
     doAssert name[0] != '_' and name[^1] != '_', errmsg & " leading/trailing underscores '_'"
@@ -331,7 +331,7 @@ proc getNimExpression*(expr: string): string =
     (" ", ""),
     ("<<", " shl "), (">>", " shr "),
     ("^", " xor "), ("&", " and "), ("|", " or "),
-    ("~", " not ")
+    ("~", " not "), ("\n", " "), ("\r", "")
   ])
 
 proc getSplitComma*(joined: seq[string]): seq[string] =
