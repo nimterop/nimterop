@@ -98,33 +98,34 @@ proc process(gState: State, path: string, astTable: AstTable) =
     echo gState.code
 
 proc main(
-    mode = modeDefault,
+    preprocess = false,
     past = false,
     pnim = false,
-    pretty = true,
-    preprocess = false,
-    pgrammar = false,
     recurse = false,
-    debug = false,
+    nocomments = false,
     defines: seq[string] = @[],
     includeDirs: seq[string] = @[],
     symOverride: seq[string] = @[],
     pluginSourcePath: string = "",
-    source: seq[string],
+    debug = false,
+    mode = modeDefault,
+    pgrammar = false,
+    source: seq[string]
   ) =
 
   var gState = State(
-    mode: mode,
+    preprocess: preprocess,
     past: past,
     pnim: pnim,
-    pretty: pretty,
-    preprocess: preprocess,
     recurse: recurse,
-    debug: debug,
+    nocomments: nocomments,
     defines: defines,
     includeDirs: includeDirs,
     symOverride: symOverride,
-    pluginSourcePath: pluginSourcePath
+    pluginSourcePath: pluginSourcePath,
+    debug: debug,
+    mode: mode,
+    pretty: true
   )
 
   gState.symOverride = gState.symOverride.getSplitComma()
@@ -145,26 +146,28 @@ proc main(
 when isMainModule:
   import cligen
   dispatch(main, help = {
+    "preprocess": "run preprocessor on header",
     "past": "print AST output",
-    "mode": "language; see CompileMode", # TODO: auto-generate valid choices
     "pnim": "print Nim output",
+    "recurse": "process #include files",
+    "nocomments": "exclude top-level comments from output",
     "defines": "definitions to pass to preprocessor",
     "includeDirs": "include directory to pass to preprocessor",
     "symOverride": "skip generating specified symbols",
     "pluginSourcePath": "Nim file to build and load as a plugin",
-    "preprocess": "run preprocessor on header",
-    "pgrammar": "print grammar",
-    "recurse": "process #include files",
     "debug": "enable debug output",
-    "source" : "C/C++ source/header",
+    "mode": "language parser: c or cpp",
+    "pgrammar": "print grammar",
+    "source" : "C/C++ source/header"
   }, short = {
+    "preprocess": 'p',
     "past": 'a',
     "pnim": 'n',
+    "recurse": 'r',
+    "nocomments": 'c',
     "defines": 'D',
     "includeDirs": 'I',
     "symOverride": 'O',
-    "preprocess": 'p',
-    "recurse": 'r',
     "debug": 'd',
     "pgrammar": 'g'
   })

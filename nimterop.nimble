@@ -27,12 +27,9 @@ proc execTest(test: string) =
 proc tsoloud() =
   execTest "tests/tsoloud.nim"
 
-proc buildToast() =
-  execCmd(&"nim c -d:release nimterop/toast.nim")
-
-task rebuildToast, "rebuild toast":
+task buildToast, "build toast":
   # If need to manually rebuild (automatically built on 1st need)
-  buildToast()
+  execCmd(&"nim c -d:release nimterop/toast.nim")
 
 proc testAll() =
   execTest "tests/tnimterop_c.nim"
@@ -69,7 +66,7 @@ proc runNimDoc() =
     execCmd &"nim js -o:{htmldocsDir}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim"
 
 task test, "Test":
-  buildToast()
+  buildToastTask()
   testAll()
   runNimDoc()
 

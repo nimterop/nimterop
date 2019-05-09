@@ -55,7 +55,7 @@ type
   State = ref object
     compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
 
-    nocache*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
+    nocache*, nocomments*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
     code*, mode*, pluginSourcePath*: string
 
@@ -64,7 +64,7 @@ type
   NimState {.used.} = ref object
     identifiers*: TableRef[string, string]
 
-    constStr*, debugStr*, enumStr*, procStr*, typeStr*, commentStr*: string
+    commentStr*, constStr*, debugStr*, enumStr*, procStr*, typeStr*: string
 
     gState*: State
 

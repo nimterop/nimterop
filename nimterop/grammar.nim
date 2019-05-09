@@ -24,7 +24,7 @@ proc genPragma(nimState: NimState, pragmas: varargs[string]): string =
   result = result.replace(nimState.impHeader & ", cdecl", nimState.impHeader & "C")
 
 proc getComments(nimState: NimState): string =
-  if nimState.commentStr.len != 0:
+  if not nimState.gState.nocomments and nimState.commentStr.len != 0:
     result = "\n" & nimState.commentStr
     nimState.commentStr = ""
 
