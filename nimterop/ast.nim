@@ -8,7 +8,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
   let name = $node.tsNodeType()
   if name in gAtoms:
     var
-      val = node.getNodeVal()
+      val = nimState.getNodeVal(node)
 
     if name == "primitive_type" and node.tsNodeParent.tsNodeType() == "sized_type_specifier":
       return true
@@ -54,7 +54,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
 
   elif name in gExpressions and name != "escape_sequence":
     if $node.tsNodeParent.tsNodeType() notin gExpressions:
-      nimState.data.add((name, node.getNodeVal()))
+      nimState.data.add((name, nimState.getNodeVal(node)))
 
   elif name in ["abstract_pointer_declarator", "enumerator", "field_declaration", "function_declarator"]:
     nimState.data.add((name.replace("abstract_", ""), ""))
@@ -107,7 +107,7 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
         for ast in astTable[name]:
           if searchAstForNode(ast, node, nimState):
             ast.tonim(ast, node, nimState)
-            if gStateRT.debug:
+            if nimState.gState.debug:
               nimState.debugStr &= "\n# " & nimState.data.join("\n# ") & "\n"
             break
         nimState.data = @[]
@@ -147,7 +147,7 @@ proc printNimHeader*() =
 import nimterop/types
 """ % [$now(), getAppFilename(), commandLineParams().join(" ")]
 
-proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
+proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable) =
   var
     nimState = new(NimState)
     fp = fullpath.replace("\\", "/")
@@ -155,9 +155,10 @@ proc printNim*(fullpath: string, root: TSNode, astTable: AstTable) =
 
   nimState.currentHeader = getCurrentHeader(fullpath)
   nimState.impHeader = nimState.currentHeader.replace("header", "imp")
+  nimState.sourceFile = fullpath
   nimState.constStr &= &"\n  {nimState.currentHeader} {{.used.}} = \"{fp}\""
 
-  nimState.debug = gStateRT.debug
+  nimState.gState = gState
 
   root.searchAst(astTable, nimState)
 

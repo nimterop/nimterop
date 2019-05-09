@@ -104,14 +104,14 @@ proc checkIdentifier(name, kind, parent, origName: string) =
   if parent.nBl:
     doAssert name.nBl, &"Blank identifier, originally '{parentStr}{name}' ({kind}), cannot be empty"
 
-proc getIdentifier*(name: string, kind: NimSymKind, parent=""): string =
+proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent=""): string =
   doAssert name.len != 0, "Blank identifier error"
 
-  if name notin gStateRT.symOverride or parent.nBl:
-    if gStateRT.onSymbol != nil:
+  if name notin nimState.gState.symOverride or parent.nBl:
+    if nimState.gState.onSymbol != nil:
       var
         sym = Symbol(name: name, parent: parent, kind: kind)
-      gStateRT.onSymbol(sym)
+      nimState.gState.onSymbol(sym)
 
       result = sym.name
     else:
@@ -124,27 +124,27 @@ proc getIdentifier*(name: string, kind: NimSymKind, parent=""): string =
   else:
     result = ""
 
-proc getUniqueIdentifier*(existing: TableRef[string, string], prefix = ""): string =
+proc getUniqueIdentifier*(nimState: NimState, prefix = ""): string =
   var
-    name = prefix & "_" & gStateRT.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
+    name = prefix & "_" & nimState.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
     nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
     count = 1
 
-  while (nimName & $count) in existing:
+  while (nimName & $count) in nimState.identifiers:
     count += 1
 
   return name & $count
 
-proc addNewIdentifer*(existing: var TableRef[string, string], name: string): bool =
-  if name notin gStateRT.symOverride:
+proc addNewIdentifer*(nimState: NimState, name: string): bool =
+  if name notin nimState.gState.symOverride:
     let
       nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
 
-    if existing.hasKey(nimName):
-      doAssert name == existing[nimName], &"Identifier '{name}' is a stylistic duplicate of identifier '{existing[nimName]}', use 'cPlugin:onSymbol()' to rename"
+    if nimState.identifiers.hasKey(nimName):
+      doAssert name == nimState.identifiers[nimName], &"Identifier '{name}' is a stylistic duplicate of identifier '{nimState.identifiers[nimName]}', use 'cPlugin:onSymbol()' to rename"
       result = false
     else:
-      existing[nimName] = name
+      nimState.identifiers[nimName] = name
       result = true
 
 proc getPtrType*(str: string): string =
@@ -166,20 +166,14 @@ proc getLit*(str: string): string =
     str.contains(re"^0x[\d]+$"):
     return str
 
-proc getNodeVal*(node: TSNode): string =
-  return gStateRT.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
+proc getNodeVal*(nimState: NimState, node: TSNode): string =
+  return nimState.gState.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
 
-proc getNodeValIf*(node: TSNode, esym: string): string =
-  if esym != $node.tsNodeType():
-    return
-
-  return node.getNodeVal()
-
-proc getLineCol*(node: TSNode): tuple[line, col: int] =
+proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
   result.line = 1
   result.col = 1
   for i in 0 .. node.tsNodeStartByte().int-1:
-    if gStateRT.code[i] == '\n':
+    if gState.code[i] == '\n':
       result.col = 0
       result.line += 1
     result.col += 1
@@ -201,7 +195,7 @@ proc removeStatic(content: string): string =
       result.add(body.replace(re"(?m)^(.*\n?)", "//$1"))
   )
 
-proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
+proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
   var
     mmode = if mode == "cpp": "c++" else: mode
     cmd = &"gcc -E -CC -dD -x{mmode} -w "
@@ -210,10 +204,10 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
     start = false
     sfile = fullpath.sanitizePath
 
-  for inc in gStateRT.includeDirs:
+  for inc in gState.includeDirs:
     cmd &= &"-I{inc.quoteShell} "
 
-  for def in gStateRT.defines:
+  for def in gState.defines:
     cmd &= &"-D{def} "
 
   cmd &= &"{fullpath.quoteShell}"
@@ -229,13 +223,13 @@ proc getPreprocessor*(fullpath: string, mode = "cpp"): string =
           start = true
         elif not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
           start = true
-        elif gStateRT.recurse:
+        elif gState.recurse:
           let
             pDir = sfile.expandFilename().parentDir().sanitizePath()
           if pDir.len == 0 or pDir in saniLine:
             start = true
           else:
-            for inc in gStateRT.includeDirs:
+            for inc in gState.includeDirs:
               if inc.absolutePath().sanitizePath in saniLine:
                 start = true
                 break
@@ -350,7 +344,7 @@ proc dll*(path: string): string =
 
   result = dir / (DynlibFormat % name)
 
-proc loadPlugin*(sourcePath: string) =
+proc loadPlugin*(gState: State, sourcePath: string) =
   doAssert fileExists(sourcePath), "Plugin file does not exist: " & sourcePath
 
   let
@@ -363,5 +357,5 @@ proc loadPlugin*(sourcePath: string) =
   let lib = loadLib(pdll)
   doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [sourcePath, pdll]
 
-  gStateRT.onSymbol = cast[OnSymbol](lib.symAddr("onSymbol"))
-  doAssert gStateRT.onSymbol != nil, "onSymbol() load failed from " & pdll
+  gState.onSymbol = cast[OnSymbol](lib.symAddr("onSymbol"))
+  doAssert gState.onSymbol != nil, "onSymbol() load failed from " & pdll
