@@ -1293,13 +1293,11 @@ function main() {
   </div>
   <div class="nine columns" id="content">
   <div id="tocRoot"></div>
-  <p class="module-desc"><p>Main import file to write wrappers. Each <cite>compileTime</cite> proc must be used in a compile time context, eg using:</p>
-<p>```</p>
-<dl class="docutils"><dt>static:</dt>
-<dd>cAddStdDir()</dd>
-</dl>
-<p>``` </p>
-</p>
+  <p class="module-desc"><p>This is the main nimterop import file to help with wrapping C/C++ source code.</p>
+<p>Check out <a class="reference external" href="https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim">template.nim</a> as a starting point for wrapping a new library. The template can be copied and trimmed down and modified as required.</p>
+<p>All <cite>compileTime</cite> procs must be used in a compile time context, e.g. using:</p>
+<pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span>
+  <span class="Identifier">cAddStdDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span></pre></p>
   <div class="section" id="5">
 <h1><a class="toc-backref" href="#5">Exports</a></h1>
 <dl class="item">
@@ -1479,7 +1477,7 @@ Add an include directory that is forwarded to the C/C++ compiler using <tt class
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-05-09 04:53:00 UTC</small>
+        <small>Made with Nim. Generated: 2019-05-09 06:07:27 UTC</small>
       </div>
     </div>
   </div>
