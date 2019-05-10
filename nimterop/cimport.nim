@@ -3,7 +3,8 @@ This is the main nimterop import file to help with wrapping C/C++ source code.
 
 Check out `template.nim <https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim>`_
 as a starting point for wrapping a new library. The template can be copied and
-trimmed down and modified as required.
+trimmed down and modified as required. `templite.nim <https://github.com/nimterop/nimterop/blob/master/nimterop/templite.nim>`_ is a shorter
+version for more experienced users.
 
 All ``{.compileTime.}`` procs must be used in a compile time context, e.g. using:
 
@@ -188,6 +189,9 @@ macro cOverride*(body): untyped =
   ## Using the `cOverride() <cimport.html#cOverride.m,>`_ block, nimterop
   ## can be instructed to skip over ``svGetCallerInfo()``. This works for procs,
   ## consts and types.
+  ##
+  ## `cOverride() <cimport.html#cOverride.m,>`_ only affects calls to
+  ## `cImport() <cimport.html#cImport.m,>`_ that follow it.
 
   proc recFindIdent(node: NimNode): seq[string] =
     if node.kind != nnkIdent:
@@ -209,6 +213,9 @@ macro cOverride*(body): untyped =
 proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   ## Similar to `cOverride() <cimport.html#cOverride.m,>`_, this macro allows
   ## filtering out symbols not of interest from the generated output.
+  ##
+  ## `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cseq[string]>`_ only affects calls to
+  ## `cImport() <cimport.html#cImport.m,>`_ that follow it.
   runnableExamples:
     static: cSkipSymbol @["proc1", "Type2"]
   gStateCT.symOverride.add skips
@@ -239,7 +246,10 @@ macro cPlugin*(body): untyped =
   ## - `nskEnumField` for enum (field) names, though they are in the global namespace as `nskConst`
   ## - `nskProc` - for proc names
   ##
-  ## `nimterop/plugins` is implicitly imported to provide access to standard plugin facilities.
+  ## ``nimterop/plugins`` is implicitly imported to provide access to standard plugin facilities.
+  ##
+  ## `cPlugin() <cimport.html#cPlugin.m,>`_  only affects calls to
+  ## `cImport() <cimport.html#cImport.m,>`_ that follow it.
   runnableExamples:
     cPlugin:
       import strutils

@@ -52,7 +52,7 @@ cOverride:
     symbol = object
 
 # Specify include directories for gcc and Nim
-cInclude(srcDir/"include")
+cIncludeDir(srcDir/"include")
 
 # Define global symbols
 cDefine("SYMBOL", "value")
@@ -64,7 +64,7 @@ cDefine("SYMBOL", "value")
 {.passL: "flags".}
 
 # Compile in any common source code
-cCompile(srcDir/"windows/file.c")
+cCompile(srcDir/"file.c")
 
 # Perform OS specific tasks
 when defined(windows):

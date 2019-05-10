@@ -50,7 +50,7 @@ cImport("clib.h")
 cCompile("clib/src/*.c")
 ```
 
-Check out [template.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim) as a starting point for wrapping a new library. The template can be copied and trimmed down and modified as required.
+Check out [template.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim) as a starting point for wrapping a new library. The template can be copied and trimmed down and modified as required. [templite.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/templite.nim) is a shorter version for more experienced users.
 
 Refer to the ```tests``` directory for examples on how the library can be used.
 
