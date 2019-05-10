@@ -57,7 +57,7 @@ type
 
     nocache*, nocomments*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
-    code*, dynlib*, mode*, pluginSourcePath*: string
+    code*, dynlib*, mode*, nim*, pluginSourcePath*: string
 
     onSymbol*: OnSymbol
 

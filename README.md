@@ -72,6 +72,7 @@ Usage:
   -I=, --includeDirs=  strings  {}     include directory to pass to preprocessor
   -l=, --dynlib=       string   ""     Import symbols from library in specified Nim string
   -O=, --symOverride=  strings  {}     skip generating specified symbols
+  --nim=               string   "nim"  use a particular Nim executable (default: $PATH/nim)
   --pluginSourcePath=  string   ""     Nim file to build and load as a plugin
   -d, --debug          bool     false  enable debug output
   -m=, --mode=         string   "cpp"  language parser: c or cpp
@@ -84,7 +85,7 @@ In order to use the tree-sitter C library, it has to be compiled into a separate
 
 Alternatively, the `cImport()` macro allows easier creation of wrappers in code. It runs `toast` on the specified header file and injects the generated wrapper content into the application at compile time. A few other helper procs are provided to influence this process. Output is cached to save time on subsequent runs.
 
-`toast` can also be used to run the header through the preprocessor which cleans up the code considerably. Along with the recursion capability which runs through all #include files, one large simpler header file can be created which can then be processed with `toast` or even `c2nim` if so desired.
+`toast` can also be used to run the header through the preprocessor which cleans up the code considerably. Along with the recursion capability which runs through all #include files, one large simpler header file can be created which can then be processed with `toast` or even `c2nim` if so desired. By default, the `$CC` environment variable is used. If not found, `toast` defaults to `gcc`.
 
 The tree-sitter library is limited as well - it may fail on some advanced language constructs but is designed to handle them gracefully since it is expected to have bad code while actively typing in an editor. When an error is detected, tree-sitter includes an ERROR node at that location in the AST. At this time, `cImport()` will complain and continue if it encounters any errors. Depending on how severe the errors are, compilation may succeed or fail. Glaring issues will be communicated to the tree-sitter team but their goals may not always align with those of this project.
 
