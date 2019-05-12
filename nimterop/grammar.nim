@@ -49,7 +49,9 @@ proc initGrammar(): Grammar =
        {typeGrammar}
        (identifier|type_identifier?)
        (pointer_declarator?
+        (type_qualifier?)
         (pointer_declarator!
+         (type_qualifier?)
          (identifier|type_identifier)
         )
         (identifier|type_identifier)
