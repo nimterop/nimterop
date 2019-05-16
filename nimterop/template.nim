@@ -33,7 +33,7 @@ src/*.c
 
   # Run GNU configure on the source
   when defined(posix):
-    configure(srcDir)
+    configure(srcDir, fileThatShouldGetGenerated)
 
   # Run standard file/directory operations with mkDir(), cpFile(), mvFile()
 
