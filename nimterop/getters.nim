@@ -161,6 +161,9 @@ proc getPtrType*(str: string): string =
       str
 
 proc getLit*(str: string): string =
+  let
+    str = str.replace(re"//.*?$", "").replace(re"/\*.*?\*/", "").strip()
+
   if str.contains(re"^[\-]?[\d]+$") or
     str.contains(re"^[\-]?[\d]*\.[\d]+$") or
     str.contains(re"^0x[\d]+$"):
