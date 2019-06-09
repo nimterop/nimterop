@@ -7,23 +7,27 @@ import "."/[getters, globals, grammar, treesitter/api]
 proc saveNodeData(node: TSNode, nimState: NimState): bool =
   let name = $node.tsNodeType()
   if name in gAtoms:
-    var
-      val = nimState.getNodeVal(node)
-
-    if name == "primitive_type" and node.tsNodeParent.tsNodeType() == "sized_type_specifier":
-      return true
-
-    if name in ["number_literal", "identifier"] and $node.tsNodeParent.tsNodeType() in gExpressions:
-      return true
-
-    if name in ["primitive_type", "sized_type_specifier"]:
-      val = val.getType()
-
     let
       pname = node.getPxName(1)
       ppname = node.getPxName(2)
       pppname = node.getPxName(3)
       ppppname = node.getPxName(4)
+
+    var
+      val = nimState.getNodeVal(node)
+
+    if name == "primitive_type" and pname == "sized_type_specifier":
+      return true
+
+    if name in ["number_literal", "identifier"] and pname in gExpressions:
+      return true
+
+    if name in ["number_literal"] and pname == "bitfield_clause":
+      nimState.data.add(("bitfield_clause", val))
+      return true
+
+    if name in ["primitive_type", "sized_type_specifier"]:
+      val = val.getType()
 
     if node.tsNodePrevNamedSibling().tsNodeIsNull():
       if pname == "pointer_declarator":
@@ -43,7 +47,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
 
     nimState.data.add((name, val))
 
-    if node.tsNodeType() == "field_identifier" and
+    if name == "field_identifier" and
       pname == "pointer_declarator" and
       ppname == "function_declarator":
       if pppname == "pointer_declarator":

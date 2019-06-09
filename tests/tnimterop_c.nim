@@ -78,6 +78,10 @@ when defined(cpp):
 else:
   s4.field3[3] = enum1
 
+s4.field6 = 1
+s4.field6 += 1
+check s4.field6 == 0
+
 s5.tci = test_call_int
 s5.tcp = test_call_param
 s5.tcp8 = test_call_param8

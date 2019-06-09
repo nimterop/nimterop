@@ -290,6 +290,11 @@ proc initGrammar(): Grammar =
             flen = nimState.data[i+1].val.getNimExpression()
           nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
           i += 2
+        elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "bitfield_clause":
+          let
+            size = nimState.data[i+1].val
+          nimState.typeStr &= &"{nimState.getComments()}\n    {fname}* {{.bitsize: {size}.}} : {getPtrType(fptr&ftyp)} "
+          i += 2
         elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "function_declarator":
           var
             pout, pname, ptyp, pptr = ""
@@ -327,6 +332,9 @@ proc initGrammar(): Grammar =
   let
     fieldGrammar = &"""
       (field_identifier!)
+      (bitfield_clause!
+       (number_literal)
+      )
       (array_declarator!
        (field_identifier!)
        (pointer_declarator
@@ -588,7 +596,7 @@ proc initGrammar(): Grammar =
         let
           line = line.multiReplace([("//", ""), ("/*", ""), ("*/", "")])
 
-        nimState.commentStr &= &"\n#{line.strip(leading=false)}"
+        nimState.commentStr &= &"\n# {line.strip(leading=false)}"
   ))
 
 proc initRegex(ast: ref Ast) =
