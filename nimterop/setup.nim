@@ -6,7 +6,7 @@ proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter", incDir() / "treesitter", """
 lib/include/*
 lib/src/*
-""")
+""", "0.15.5")
 
   gitPull("https://github.com/JuliaStrings/utf8proc", incDir() / "utf8proc", """
 *.c
@@ -36,7 +36,7 @@ src/*.h
 src/*.c
 src/*.cc
 src/tree_sitter/parser.h
-""")
+""", "v0.15.0")
 
   let
     headerc = incDir() / "treesitter_c/src/api.h"
@@ -51,7 +51,7 @@ src/*.h
 src/*.c
 src/*.cc
 src/tree_sitter/parser.h
-""")
+""", "v0.15.0")
 
   let
     headercpp = incDir() / "treesitter_cpp/src/api.h"
