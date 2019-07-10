@@ -9,7 +9,8 @@ matrix:
 
 environment:
   matrix:
-    - NIM_VERSION: 0.19.4
+    - NIM_VERSION: 0.19.6
+    - NIM_VERSION: 0.20.0
 
 for:
 -
