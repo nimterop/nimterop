@@ -1,12 +1,13 @@
-cOverride	cimport.html#cOverride.m,	cimport: cOverride(body): untyped	
-cSkipSymbol	cimport.html#cSkipSymbol,seq[string]	cimport: cSkipSymbol(skips: seq[string])	
-cPlugin	cimport.html#cPlugin.m,	cimport: cPlugin(body): untyped	
+cOverride	cimport.html#cOverride.m	cimport: cOverride(body): untyped	
+cSkipSymbol	cimport.html#cSkipSymbol,seq[T][string]	cimport: cSkipSymbol(skips: seq[string])	
+cPlugin	cimport.html#cPlugin.m	cimport: cPlugin(body): untyped	
 cSearchPath	cimport.html#cSearchPath,string	cimport: cSearchPath(path: string): string	
-cDebug	cimport.html#cDebug,	cimport: cDebug()	
-cDisableCaching	cimport.html#cDisableCaching,	cimport: cDisableCaching()	
+cDebug	cimport.html#cDebug	cimport: cDebug()	
+cDisableCaching	cimport.html#cDisableCaching	cimport: cDisableCaching()	
 cDefine	cimport.html#cDefine.m,,string	cimport: cDefine(name: static string; val: static string = &quot;&quot;): untyped	
 cAddSearchDir	cimport.html#cAddSearchDir,string	cimport: cAddSearchDir(dir: string)	
-cIncludeDir	cimport.html#cIncludeDir.m,	cimport: cIncludeDir(dir: static string): untyped	
+cIncludeDir	cimport.html#cIncludeDir.m	cimport: cIncludeDir(dir: static string): untyped	
 cAddStdDir	cimport.html#cAddStdDir,string	cimport: cAddStdDir(mode = &quot;c&quot;)	
 cCompile	cimport.html#cCompile.m,,string,string	cimport: cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped	
 cImport	cimport.html#cImport.m,,string	cimport: cImport(filename: static string; recurse: static bool = false;\n        dynlib: static string = &quot;&quot;): untyped	
+c2nImport	cimport.html#c2nImport.m,,string,string,string	cimport: c2nImport(filename: static string; recurse: static bool = false;\n          dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped	
