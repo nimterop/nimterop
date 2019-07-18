@@ -124,7 +124,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
 
   result.errors = "\n\n" & check
 
-proc getToast(fullpath: string, recurse: bool = false, dynlib: string = ""): string =
+proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "", noNimout = false): string =
   var
     ret = 0
     cmd = when defined(Windows): "cmd /c " else: ""
@@ -132,7 +132,7 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = ""): str
   let toastExe = toastExePath()
   doAssert fileExists(toastExe), "toast not compiled: " & toastExe.quoteShell &
     " make sure 'nimble build' or 'nimble install' built it"
-  cmd &= &"{toastExe} --pnim --preprocess"
+  cmd &= &"{toastExe} --preprocess"
 
   if recurse:
     cmd.add " --recurse"
@@ -143,17 +143,20 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = ""): str
   for i in gStateCT.includeDirs:
     cmd.add &" --includeDirs+={i.quoteShell}"
 
-  if dynlib.len != 0:
-    cmd.add &" --dynlib={dynlib}"
+  if not noNimout:
+    cmd.add &" --pnim"
 
-  if gStateCT.symOverride.len != 0:
-    cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
+    if dynlib.len != 0:
+      cmd.add &" --dynlib={dynlib}"
 
-  when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-    cmd.add &" --nim:{getCurrentCompilerExe().quoteShell}"
+    if gStateCT.symOverride.len != 0:
+      cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
 
-  if gStateCT.pluginSourcePath.nBl:
-    cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.quoteShell}"
+    when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
+      cmd.add &" --nim:{getCurrentCompilerExe().quoteShell}"
+
+    if gStateCT.pluginSourcePath.nBl:
+      cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.quoteShell}"
 
   cmd.add &" {fullpath.quoteShell}"
 
@@ -542,3 +545,78 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
       (tmpFile, errors) = getNimCheckError(output)
     doAssert false, errors & "\n\nNimterop codegen limitation or error - review 'nim check' output above generated for " & tmpFile
 
+macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: static string = "",
+  mode: static string = "c", flags: static string = ""): untyped =
+  ## Import all supported definitions from specified header file using ``c2nim``
+  ##
+  ## Similar to `cImport() <cimport.html#cImport.m,>`_ but uses ``c2nim`` to generate
+  ## the Nim wrapper instead of ``toast``. Note that neither
+  ## `cOverride() <cimport.html#cOverride.m,>`_, `cSkipSymbol() <cimport.html#cSkipSymbol.m%2Cseq[string]>`_
+  ## nor `cPlugin() <cimport.html#cPlugin.m,>`_ have any impact on ``c2nim``.
+  ##
+  ## ``toast`` is only used to preprocess the header file and recurse
+  ## if specified.
+  ##
+  ## ``mode`` should be set to ``cpp`` for c2nim to wrap C++ headers.
+  ##
+  ## ``flags`` can be used to pass other command line arguments to ``c2nim``.
+  ##
+  ## ``nimterop`` does not depend on ``c2nim`` as a ``nimble`` dependency so it
+  ## does not get installed automatically. Any wrapper or library that requires this proc
+  ## needs to install ``c2nim`` with ``nimble install c2nim`` or add it as a dependency in
+  ## its own ``.nimble`` file.
+
+  result = newNimNode(nnkStmtList)
+
+  let
+    fullpath = findPath(filename)
+
+  echo "# Importing " & fullpath & " with c2nim"
+
+  let
+    output = getToast(fullpath, recurse, dynlib, noNimout = true)
+    hash = output.hash().abs()
+    hpath = getTempDir() / "nimterop_" & $hash & ".h"
+    npath = hpath[0 .. hpath.rfind('.')] & "nim"
+    header = ("header" & fullpath.splitFile().name.replace(re"[-.]+", ""))
+
+  if not fileExists(hpath) or gStateCT.nocache or compileOption("forceBuild"):
+    writeFile(hpath, output)
+
+  doAssert fileExists(hpath), "Unable to write temporary header file: " & hpath
+
+  var
+    cmd = &"c2nim {hpath} --header:{header}"
+
+  if dynlib.len != 0:
+    cmd.add &" --dynlib:{dynlib}"
+  if mode.contains("cpp"):
+    cmd.add " --cpp"
+  if flags.len != 0:
+    cmd.add &" {flags}"
+
+  for i in gStateCT.defines:
+    cmd.add &" --assumedef:{i.quoteShell}"
+
+  let
+    (c2nimout, ret) = gorgeEx(cmd, cache=getCacheValue(hpath))
+  doAssert ret == 0, c2nimout
+
+  var
+    nimout = &"const {header} = \"{fullpath}\"\n\n" & readFile(npath)
+
+  nimout = nimout.
+    replace(re"([u]?int[\d]+)_t", "$1").
+    replace(re"([u]?int)ptr_t", "ptr $1")
+
+  if gStateCT.debug:
+    echo nimout
+
+  try:
+    let body = parseStmt(nimout)
+
+    result.add body
+  except:
+    let
+      (tmpFile, errors) = getNimCheckError(nimout)
+    doAssert false, errors & "\n\nc2nim codegen limitation or error - review 'nim check' output above generated for " & tmpFile
