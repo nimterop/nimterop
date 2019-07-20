@@ -586,7 +586,8 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
   doAssert fileExists(hpath), "Unable to write temporary header file: " & hpath
 
   var
-    cmd = &"c2nim {hpath} --header:{header}"
+    cmd = when defined(Windows): "cmd /c " else: ""
+  cmd &= &"c2nim {hpath} --header:{header}"
 
   if dynlib.len != 0:
     cmd.add &" --dynlib:{dynlib}"
@@ -600,7 +601,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
 
   let
     (c2nimout, ret) = gorgeEx(cmd, cache=getCacheValue(hpath))
-  doAssert ret == 0, c2nimout
+  doAssert ret == 0, "Command failed:\n  " & cmd
 
   var
     nimout = &"const {header} = \"{fullpath}\"\n\n" & readFile(npath)
