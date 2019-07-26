@@ -37,6 +37,8 @@ This will download and install nimterop in the standard Nimble package location,
 
 __Usage__
 
+Check out the [wiki](https://github.com/nimterop/nimterop/wiki/Wrappers) for a list of all known wrappers that have been created using nimterop. Please do add your project once you are done so that others can benefit from your work.
+
 ```nim
 import nimterop/cimport
 
