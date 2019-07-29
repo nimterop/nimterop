@@ -103,7 +103,8 @@ proc gitCheckout*(file, outdir: string) =
   ## Checkout the specified file in the git repository specified
   ##
   ## This effectively resets all changes in the file and can be
-  ## used after `cImport()` if required.
+  ## used to undo any changes that were made to source files to enable
+  ## successful wrapping with `cImport()` or `c2nImport()`.
   echo "# Resetting " & file
   let file2 = file.relativePath outdir
   let cmd = &"cd {outdir.quoteShell} && git checkout {file2.quoteShell}"
@@ -115,7 +116,13 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
   ## Pull the specified git repository to the output directory
   ##
   ## `plist` is the list of specific files and directories or wildcards
-  ## to sparse checkout. Multiples can be specified one entry per line.
+  ## to sparsely checkout. Multiple values can be specified one entry per
+  ## line. It is optional and if omitted, the entire repository will be
+  ## checked out.
+  ##
+  ## `checkout` is the git tag, branch or commit hash to checkout once
+  ## the repository is downloaded. This allows for pinning to a specific
+  ## version of the code.
   if dirExists(outdir/".git"):
     gitReset(outdir)
     return
