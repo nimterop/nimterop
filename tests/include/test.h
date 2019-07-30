@@ -156,6 +156,16 @@ typedef struct dstruct2 {
 	void **(*tcv)(int **param1);
 } DSTRUCT2;
 
+// Issue #131
+enum
+{
+    TDEFL_LZ_CODE_BUF_SIZE = 64 * 1024,
+    TDEFL_OUT_BUF_SIZE = (TDEFL_LZ_CODE_BUF_SIZE * 13) / 10,
+    TDEFL_BOGUS_1 = (1024 * 128) / TDEFL_LZ_CODE_BUF_SIZE,
+    TDEFL_BOGUS_2 = TDEFL_LZ_CODE_BUF_SIZE / 64,
+    TDEFL_BOGUS_3 = TDEFL_OUT_BUF_SIZE / TDEFL_BOGUS_1
+};
+
 #ifdef __cplusplus
 }
 #endif

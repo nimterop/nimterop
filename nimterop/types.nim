@@ -70,4 +70,9 @@ template defineEnum*(typ) =
   proc `xor`*(x: int, y: typ): typ {.borrow.}
   proc `xor`*(x, y: typ): typ {.borrow.}
 
+  proc `/`(x, y: typ): typ =
+    return (x.float / y.float).int.typ
+  proc `/`*(x: typ, y: int): typ = `/`(x, y.typ)
+  proc `/`*(x: int, y: typ): typ = `/`(x.typ, y)
+
   proc `$` *(x: typ): string {.borrow.}

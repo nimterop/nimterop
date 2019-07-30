@@ -172,3 +172,9 @@ ds.field1 = di
 ds2.field1 = addr cstr
 ds2.tcv = test_call10
 check ds2.tcv(di) == nil
+
+# Issue #131
+check TDEFL_OUT_BUF_SIZE == 85196
+check TDEFL_BOGUS_1 == 2
+check TDEFL_BOGUS_2 == 1024
+check TDEFL_BOGUS_3 == (85196 / 2).int
