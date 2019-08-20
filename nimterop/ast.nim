@@ -1,8 +1,8 @@
-import os, sequtils, sets, strformat, strutils, tables, times
+import os, sets, strformat, strutils, tables, times
 
 import regex
 
-import "."/[getters, globals, grammar, treesitter/api]
+import "."/[getters, globals, treesitter/api]
 
 proc saveNodeData(node: TSNode, nimState: NimState): bool =
   let name = $node.tsNodeType()

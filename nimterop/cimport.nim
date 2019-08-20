@@ -614,7 +614,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
 
   let
     (c2nimout, ret) = gorgeEx(cmd, cache=getCacheValue(hpath))
-  doAssert ret == 0, "Command failed:\n  " & cmd
+  doAssert ret == 0, "Command failed:\n  " & cmd & "\n\n" & c2nimout
 
   var
     nimout = &"const {header} = \"{fullpath}\"\n\n" & readFile(npath)

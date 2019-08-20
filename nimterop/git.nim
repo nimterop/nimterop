@@ -1,6 +1,6 @@
-import macros, os, osproc, regex, strformat, strutils
+import os, osproc, strformat, strutils
 
-import "."/[paths, compat]
+import "."/[compat]
 
 proc execAction*(cmd: string, nostderr=false): string =
   ## Execute an external command - supported at compile time
@@ -23,6 +23,21 @@ proc execAction*(cmd: string, nostderr=false): string =
     let opt = if nostderr: {poUsePath} else: {poStdErrToStdOut, poUsePath}
     (result, ret) = execCmdEx(ccmd, opt)
   doAssert ret == 0, "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
+
+proc findExe*(exe: string): string =
+  ## Find the specified executable using the which/where command - supported
+  ## at compile time
+  var
+    cmd =
+      when defined(windows):
+        "where " & exe
+      else:
+        "which " & exe
+
+    (oup, code) = gorgeEx(cmd)
+
+  if code == 0:
+    return oup.strip()
 
 proc mkDir*(dir: string) =
   ## Create a directory at cmopile time
@@ -70,8 +85,7 @@ proc extractZip*(zipfile, outdir: string) =
   discard execAction(&"cd {outdir.quoteShell} && {cmd % zipfile}")
 
 proc downloadUrl*(url, outdir: string) =
-  ## Download a file using powershell on Windows and curl on other
-  ## systems to the specified output directory
+  ## Download a file using curl or wget (or powershell on Windows) to the specified directory
   ##
   ## If a zip file, it is automatically extracted after download.
   let
@@ -81,10 +95,17 @@ proc downloadUrl*(url, outdir: string) =
   if not (ext == ".zip" and fileExists(outdir/file)):
     echo "# Downloading " & file
     mkDir(outdir)
-    var cmd = if defined(Windows):
-      "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
+    var cmd = findExe("curl")
+    if cmd.len != 0:
+      cmd &= " -L $# -o $#"
     else:
-      "curl -L $# -o $#"
+      cmd = findExe("wget")
+      if cmd.len != 0:
+        cmd &= " $# -o $#"
+      elif defined(Windows):
+        cmd = "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
+      else:
+        doAssert false, "No download tool available - curl, wget"
     discard execAction(cmd % [url, (outdir/file).quoteShell])
 
     if ext == ".zip":
@@ -176,7 +197,7 @@ proc configure*(path, check: string, flags = "") =
       discard execAction(&"cd {path.quoteShell} && bash autogen.sh")
 
   if fileExists(path / "configure"):
-    echo "#   Running configure"
+    echo "#   Running configure " & flags
 
     var
       cmd = &"cd {path.quoteShell} && bash configure"
@@ -202,7 +223,8 @@ proc cmake*(path, check, flags: string) =
   if (path / check).fileExists():
     return
 
-  echo "# Running cmake " & path
+  echo "# Running cmake " & flags
+  echo "#   Path: " & path
 
   mkDir(path)
 
@@ -219,13 +241,25 @@ proc make*(path, check: string, flags = "") =
   ## is relative to the `path` and should not be an absolute path.
   ##
   ## `flags` are any flags that should be passed to the `make` command.
+  ##
+  ## If make.exe is missing and mingw32-make.exe is available, it will
+  ## be copied over to make.exe in the same location.
   if (path / check).fileExists():
     return
 
-  echo "# Running make " & path
+  echo "# Running make " & flags
+  echo "#   Path: " & path
 
   var
-    cmd = &"cd {path.quoteShell} && make"
+    cmd = findExe("make")
+
+  if cmd.len == 0:
+    cmd = findExe("mingw32-make")
+    if cmd.len != 0:
+      cpFile(cmd, cmd.replace("mingw32-make", "make"))
+  doAssert cmd.len != 0, "Make not found"
+
+  cmd = &"cd {path.quoteShell} && make"
   if flags.len != 0:
     cmd &= &" {flags}"
 

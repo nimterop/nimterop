@@ -1,6 +1,3 @@
-import strutils
-import strformat
-
 import "."/[getters, globals]
 
 var

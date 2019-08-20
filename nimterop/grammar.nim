@@ -1,4 +1,4 @@
-import macros, sets, strformat, strutils, tables
+import macros, strformat, strutils, tables
 
 import regex
 
