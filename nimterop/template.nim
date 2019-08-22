@@ -1,6 +1,6 @@
 import os, strutils
 
-import nimterop/[cimport, git, paths]
+import nimterop/[cimport, build, paths]
 
 # Documentation:
 #   https://github.com/nimterop/nimterop

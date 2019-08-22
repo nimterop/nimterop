@@ -4,4 +4,4 @@ Module that should import everything so that `nim doc --project nimtero/all` run
 
 # TODO: make sure it does import everything.
 
-import "."/[cimport, git, types, plugin, compat]
+import "."/[cimport, build, types, plugin, compat]

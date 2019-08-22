@@ -1,6 +1,6 @@
 import os, strutils
 
-import "."/[git, paths]
+import "."/[build, paths]
 
 proc treesitterSetup*() =
   gitPull("https://github.com/tree-sitter/tree-sitter", incDir() / "treesitter", """

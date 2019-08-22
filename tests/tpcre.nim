@@ -1,6 +1,6 @@
 import os
 
-import nimterop/[cimport, git, paths]
+import nimterop/[cimport, build, paths]
 
 const
   baseDir = nimteropBuildDir()/"pcre"
