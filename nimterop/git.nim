@@ -72,6 +72,25 @@ proc mvFile*(source, dest: string) =
   ## Move a file from source to destination at compile time
   cpFile(source, dest, move=true)
 
+proc rmFile*(source: string, dir = false) =
+  ## Remove a file or pattern at compile time
+  let
+    source = source.replace("/", $DirSep)
+    cmd =
+      when defined(Windows):
+        if dir:
+          "rd /s/q"
+        else:
+          "del /s/q/f"
+      else:
+        "rm -rf"
+
+  discard execAction(&"{cmd} {source.quoteShell}")
+
+proc rmDir*(source: string) =
+  ## Remove a directory or pattern at compile time
+  rmFile(source, dir = true)
+
 proc extractZip*(zipfile, outdir: string) =
   ## Extract a zip file using powershell on Windows and unzip on other
   ## systems to the specified output directory
@@ -191,10 +210,13 @@ proc configure*(path, check: string, flags = "") =
   echo "# Configuring " & path
 
   if not fileExists(path / "configure"):
-    if fileExists(path / "autogen.sh"):
-      echo "#   Running autogen.sh"
+    for i in @[path / "autogen.sh", path / "build" / "autogen.sh"]:
+      if fileExists(i):
+        echo "#   Running autogen.sh"
 
-      discard execAction(&"cd {path.quoteShell} && bash autogen.sh")
+        discard execAction(&"cd {i.parentDir().quoteShell} && bash autogen.sh")
+
+        break
 
   if fileExists(path / "configure"):
     echo "#   Running configure " & flags
@@ -205,6 +227,8 @@ proc configure*(path, check: string, flags = "") =
       cmd &= &" {flags}"
 
     echo execAction(cmd)
+
+  doAssert (path / check).fileExists(), "# Configure failed"
 
 proc cmake*(path, check, flags: string) =
   ## Run the `cmake` command to generate all Makefiles or other
@@ -232,6 +256,8 @@ proc cmake*(path, check, flags: string) =
     cmd = &"cd {path.quoteShell} && cmake {flags}"
 
   echo execAction(cmd)
+
+  doAssert (path / check).fileExists(), "# cmake failed"
 
 proc make*(path, check: string, flags = "") =
   ## Run the `make` command to build all binaries in the specified path
@@ -264,3 +290,5 @@ proc make*(path, check: string, flags = "") =
     cmd &= &" {flags}"
 
   echo execAction(cmd)
+
+  doAssert (path / check).fileExists(), "# make failed"
