@@ -36,11 +36,15 @@ proc testAll() =
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
   execTest "tests/tpcre.nim"
 
-  ## platform specific tests
+  # platform specific tests
   when defined(Windows):
     execTest "tests/tmath.nim"
   if defined(OSX) or defined(Windows) or not existsEnv("TRAVIS"):
     tsoloud() # requires some libraries on linux, need them installed in TRAVIS
+
+  # getHeader tests
+  withDir("tests"):
+    execCmd("nim e getheader.nims")
 
 const htmldocsDir = "build/htmldocs"
 

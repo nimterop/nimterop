@@ -73,6 +73,7 @@ proc initGrammar(): Grammar =
        (type_identifier)
       )
       {paramListGrammar}
+      (noexcept|throw_specifier?)
      )
     """
 
