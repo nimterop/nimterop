@@ -1,4 +1,6 @@
-import os, osproc, strformat, strutils
+import macros, osproc, sequtils, strformat, strutils
+
+import os except findExe
 
 import "."/[compat]
 
@@ -292,3 +294,196 @@ proc make*(path, check: string, flags = "") =
   echo execAction(cmd)
 
   doAssert (path / check).fileExists(), "# make failed"
+
+proc findFile*(file, dir: string): string =
+  ## Find the file in the specified directory
+  for f in walkDirRec(dir):
+    if f.extractFilename() == file:
+      if result.len == 0 or result.len > f.len:
+        result = f
+
+proc getGccPaths*(mode = "c"): seq[string] =
+  var
+    nul = when defined(Windows): "nul" else: "/dev/null"
+    mmode = if mode == "cpp": "c++" else: mode
+    inc = false
+
+    (outp, ret) = gorgeEx(&"""{getEnv("CC", "gcc")} -Wp,-v -x{mmode} {nul}""")
+
+  for line in outp.splitLines():
+    if "#include <...> search starts here" in line:
+      inc = true
+      continue
+    elif "End of search list" in line:
+      break
+    if inc:
+      result.add line.strip()
+
+proc getStdPath(header: string): string =
+  for inc in getGccPaths():
+    result = findFile(header, inc)
+    if result.len != 0:
+      break
+
+proc getGitPath(header, url, outdir, version: string): string =
+  doAssert url.len != 0, "No git url setup for " & header
+  doAssert findExe("git").len != 0, "git executable missing"
+
+  gitPull(url, outdir, checkout = version)
+
+  result = findFile(header, outdir)
+
+proc getDlPath(header, url, outdir, version: string): string =
+  doAssert url.len != 0, "No download url setup for " & header
+
+  var
+    dlurl = url
+  if "$#" in url or "$1" in url:
+    doAssert version.len != 0, "Need version for download url"
+    dlurl = url % version
+  else:
+    doAssert version.len == 0, "Download url does not contain version"
+
+  downloadUrl(dlurl, outdir)
+
+  var
+    dirname = ""
+  for kind, path in walkDir(outdir, relative = true):
+    if kind == pcFile and path != dlurl.extractFilename():
+        dirname = ""
+        break
+    elif kind == pcDir:
+      if dirname.len == 0:
+        dirname = path
+      else:
+        dirname = ""
+        break
+
+  if dirname.len != 0:
+    for kind, path in walkDir(outdir / dirname, relative = true):
+      mvFile(outdir / dirname / path, outdir / path)
+
+  result = findFile(header, outdir)
+
+proc getLocalPath(header, outdir: string): string =
+  if outdir.len != 0:
+    result = findFile(header, outdir)
+
+proc buildLibrary(outdir, conFlags, conStaticLib, conDynLib, cmakeFlags, cmakeStaticLib, cmakeDynLib, makeFlags: string) =
+  var
+    conDeps = false
+    conDepStr = ""
+    cmakeDeps = false
+    cmakeDepStr = ""
+
+  if fileExists(outdir / "CMakeLists.txt"):
+    if findExe("cmake").len != 0:
+      if cmakeStaticLib.len != 0 or cmakeDynLib.len != 0:
+        var
+          gen = ""
+        when defined(windows):
+          if findExe("sh").len != 0:
+            gen = "MSYS Makefiles"
+          else:
+            gen = "MinGW Makefiles"
+        else:
+          gen = "Unix Makefiles"
+        cmake(outdir / "build", "Makefile", &".. -G {gen.quoteShell} {cmakeFlags}")
+        cmakeDeps = true
+        let
+          check = if cmakeStaticLib.len != 0: cmakeStaticLib else: cmakeDynLib
+        make(outdir / "build", check, makeFlags)
+      else:
+        cmakeDepStr &= "cmakeStatibLib / cmakeDynLib not specified"
+    else:
+      cmakeDepStr &= "cmake executable missing"
+
+  template cfgCommon() {.dirty.} =
+    if (conStaticLib.len != 0 or conDynLib.len != 0):
+      configure(outdir, "Makefile", conFlags)
+      conDeps = true
+      let
+        check = if conStaticLib.len != 0: conStaticLib else: conDynLib
+      make(outdir, check, makeFlags)
+    else:
+      conDepStr &= "conStaticLib / conDynLib not specified"
+
+  if not cmakeDeps:
+    if not fileExists(outdir / "configure"):
+      if fileExists(outdir / "autogen.sh") or fileExists(outdir / "build" / "autogen.sh"):
+        if findExe("aclocal").len != 0:
+          if findExe("autoconf").len != 0:
+            if findExe("libtoolize").len != 0:
+              cfgCommon()
+            else:
+              conDepStr &= "libtoolize executable missing"
+          else:
+            conDepStr &= "autoconf executable missing"
+        else:
+          conDepStr &= "aclocal executable missing"
+    else:
+      if findExe("bash").len != 0:
+        cfgCommon()
+      else:
+        conDepStr &= "bash executable missing"
+
+  var
+    error = ""
+  if not cmakeDeps and cmakeDepStr.len != 0:
+    error &= &"cmake capable but {cmakeDepStr}\n"
+  if not conDeps and conDepStr.len != 0:
+    error &= &"configure capable but {conDepStr}\n"
+  if error.len == 0:
+    error = "No build files found in " & outdir
+  doAssert cmakeDeps or conDeps, &"\n# Build configuration failed - {error}\n"
+
+macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
+  conFlags: static[string] = "", conStaticLib: static[string] = "", conDynLib: static[string] = "",
+  cmakeFlags: static[string] = "", cmakeStaticLib: static[string] = "", cmakeDynLib: static[string] = "",
+  makeFlags: static[string] = ""): untyped =
+  ## Get the path to a header file for wrapping with
+  ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
+  ## `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
+  ##
+  ## Checks defines based on the header name (e.g. lzma from lzma.h), to use different
+  ## ways to obtain the source.
+  ##
+  ## ``-d:xxxStd`` - search standard system paths. E.g. ``/usr/include`` and ``/usr/lib`` on Linux
+  ## ``-d:xxxGit`` - clone source from a git repo specified in ``giturl``
+  ## ``-d:xxxDL`` - download source from ``dlurl`` and extract if required
+  ##
+  ## This allows a single wrapper to be used in different ways depending on the user's needs.
+  ## If no defines are specified, ``outdir`` will be searched for the header.
+  ##
+  ## The library is then configured (either with cmake or autotools if possible) and then built
+  ## using make.
+  var
+    name = header.split(".")[0]
+
+    stdName = newIdentNode(name & "Std")
+    gitName = newIdentNode(name & "Git")
+    dlName = newIdentNode(name & "DL")
+
+    path = newIdentNode(name & "Path")
+    version = newIdentNode(name & "Version")
+
+  result = newNimNode(nnkStmtList)
+  result.add(quote do:
+    const `version`* {.strdefine.} = ""
+
+    when defined(`stdName`):
+      const `path`* = getStdPath(`header`)
+    else:
+      const `path`* =
+        when defined(`gitName`):
+          getGitPath(`header`, `giturl`, `outdir`, `version`)
+        elif defined(`dlName`):
+          getDlPath(`header`, `dlurl`, `outdir`, `version`)
+        else:
+          getLocalPath(`header`, `outdir`)
+
+      static:
+        doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " & "missing/empty outdir or -d:$1Std -d:$1Git or -d:$1DL not specified" % `name`
+
+        buildLibrary(`outdir`, `conFlags`, `conStaticLib`, `conDynLib`, `cmakeFlags`, `cmakeStaticLib`, `cmakeDynLib`, `makeFlags`)
+  )
