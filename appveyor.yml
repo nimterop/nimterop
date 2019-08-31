@@ -10,7 +10,7 @@ matrix:
 environment:
   matrix:
     - NIM_VERSION: 0.19.6
-    - NIM_VERSION: 0.20.0
+    - NIM_VERSION: 0.20.2
 
 for:
 -
@@ -54,6 +54,8 @@ for:
       - image: Ubuntu
 
   install:
+    - sudo apt-get update
+    - sudo apt-get --yes --force-yes install liblzma-dev liblzma5 autopoint
     - if [ ! -e /home/appveyor/binaries ]; then
         echo $NIM_VERSION &&
         mkdir /home/appveyor/binaries &&

@@ -462,7 +462,10 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
         if findExe("aclocal").len != 0:
           if findExe("autoconf").len != 0:
             if findExe("libtoolize").len != 0:
-              cfgCommon()
+              if findExe("autopoint").len != 0:
+                cfgCommon()
+              else:
+                conDepStr &= "autopoint executable missing"
             else:
               conDepStr &= "libtoolize executable missing"
           else:

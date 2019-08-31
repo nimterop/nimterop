@@ -2,6 +2,11 @@ os:
   - linux
   - osx
 
+addons:
+  apt:
+    packages:
+    - autopoint
+
 language: c
 
 env:
@@ -15,7 +20,6 @@ cache:
     - "$HOME/.choosenim/toolchains/nim-0.20.2"
 
 install:
-  # `set -u` failed for ubuntu: /home/travis/.travis/job_stages: line 107: secure: unbound variable
   - set -e
   - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
   - |
