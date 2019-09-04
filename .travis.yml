@@ -25,7 +25,7 @@ install:
   - |
       curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
       sh init.sh -y
-  - export PATH=$HOME/.nimble/bin:$PATH
+  - export PATH="$HOME/.nimble/bin:/usr/local/opt/gettext/bin:$PATH"
 
 script:
   - set -e

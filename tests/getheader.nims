@@ -20,7 +20,7 @@ var
   rcmd = " -r lzma.nim"
   exp = "liblzma version = "
 
-when defined(linux):
+when defined(posix):
   testCall(cmd & rcmd, "No build files found", 1)
 
   # stdlib

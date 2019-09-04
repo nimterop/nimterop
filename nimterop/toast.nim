@@ -145,7 +145,7 @@ proc main(
     if gState.pnim:
       printNimHeader()
     for src in source:
-      gState.process(src, astTable)
+      gState.process(src.expandSymlinkAbs(), astTable)
 
 when isMainModule:
   import cligen

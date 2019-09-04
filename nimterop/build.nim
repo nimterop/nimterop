@@ -205,7 +205,8 @@ proc findFile*(file: string|Regex, dir: string, recurse = true, first = false): 
     var
       rm: RegexMatch
 
-  for f in walkDirRec(dir, followFilter = if recurse: {pcDir} else: {}):
+  for f in walkDirRec(dir, yieldFilter = {pcFile, pcLinkToFile},
+    followFilter = if recurse: {pcDir} else: {}):
     let
       fn = f.extractFilename()
     when file is string:
@@ -343,8 +344,9 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
   var
     nul = when defined(Windows): "nul" else: "/dev/null"
     mmode = if mode == "cpp": "c++" else: mode
+    linker = when defined(OSX): "-Xlinker" else: ""
 
-    (outp, _) = gorgeEx(&"""{getEnv("CC", "gcc")} -v -x{mmode} {nul}""")
+    (outp, _) = gorgeEx(&"""{getEnv("CC", "gcc")} {linker} -v -x{mmode} {nul}""")
 
   for line in outp.splitLines():
     if "LIBRARY_PATH=" in line:
@@ -355,6 +357,12 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
         if path notin result:
           result.add path
       break
+    elif '\t' in line:
+      var
+        path = line.strip()
+      path.normalizePath()
+      if path notin result:
+        result.add path
 
 proc getStdPath(header: string): string =
   for inc in getGccPaths():
@@ -461,7 +469,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
       if fileExists(outdir / "autogen.sh") or fileExists(outdir / "build" / "autogen.sh"):
         if findExe("aclocal").len != 0:
           if findExe("autoconf").len != 0:
-            if findExe("libtoolize").len != 0:
+            if findExe("libtoolize").len != 0 or findExe("glibtoolize").len != 0:
               if findExe("autopoint").len != 0:
                 cfgCommon()
               else:

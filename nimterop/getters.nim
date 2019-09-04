@@ -403,3 +403,9 @@ proc loadPlugin*(gState: State, sourcePath: string) =
 
   gState.onSymbol = cast[OnSymbol](lib.symAddr("onSymbol"))
   doAssert gState.onSymbol != nil, "onSymbol() load failed from " & pdll
+
+proc expandSymlinkAbs*(path: string): string =
+  try:
+    result = path.expandSymlink().absolutePath(path.parentDir())
+  except:
+    result = path
