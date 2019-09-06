@@ -36,7 +36,7 @@ when defined(posix):
   testCall(cmd & " -d:lzmaGit -d:lzmaStatic -d:lzmaVersion=v5.2.0" & rcmd, exp & "5.2.0", 0, delete = false)
   testCall("cd build/liblzma && git branch", "v5.2.0", 0, delete = false)
 
-  # dl
-  testCall(cmd & " -d:lzmaDL" & rcmd, "Need version", 1)
-  testCall(cmd & " -d:lzmaDL -d:lzmaVersion=v5.2.4" & rcmd, exp & "5.2.4", 0)
-  testCall(cmd & " -d:lzmaDL -d:lzmaStatic -d:lzmaVersion=v5.2.4" & rcmd, exp & "5.2.4", 0, delete = false)
+# dl
+testCall(cmd & " -d:lzmaDL" & rcmd, "Need version", 1)
+testCall(cmd & " -d:lzmaDL -d:lzmaVersion=5.2.4" & rcmd, exp & "5.2.4", 0)
+testCall(cmd & " -d:lzmaDL -d:lzmaStatic -d:lzmaVersion=5.2.4" & rcmd, exp & "5.2.4", 0, delete = false)

@@ -1,4 +1,4 @@
-import macros, osproc, regex, sequtils, strformat, strutils
+import macros, osproc, regex, strformat, strutils
 
 import os except findExe
 
@@ -105,6 +105,39 @@ proc extractZip*(zipfile, outdir: string) =
   echo "# Extracting " & zipfile
   discard execAction(&"cd {outdir.quoteShell} && {cmd % zipfile}")
 
+proc extractTar*(tarfile, outdir: string) =
+  ## Extract a tar file using tar, 7z or 7za to the specified output directory
+  var
+    cmd = ""
+    name = ""
+
+  if findExe("tar").len != 0:
+    let
+      ext = tarfile.splitFile().ext.toLowerAscii()
+      typ =
+        case ext
+        of ".gz", ".tgz": "z"
+        of ".xz": "J"
+        of ".bz2": "j"
+        else: ""
+
+    cmd = "tar xvf" & typ & " " & tarfile.quoteShell
+  else:
+    for i in ["7z", "7za"]:
+      if findExe(i).len != 0:
+        cmd = i & " x $#" % tarfile.quoteShell
+
+        name = tarfile.splitFile().name
+        if ".tar" in name.toLowerAscii():
+          cmd &= " && " & i & " x $#" % name.quoteShell
+
+        break
+
+  echo "# Extracting " & tarfile
+  discard execAction(&"cd {outdir.quoteShell} && {cmd}")
+  if name.len != 0:
+    rmFile(outdir / name)
+
 proc downloadUrl*(url, outdir: string) =
   ## Download a file using curl or wget (or powershell on Windows) to the specified directory
   ##
@@ -112,8 +145,9 @@ proc downloadUrl*(url, outdir: string) =
   let
     file = url.extractFilename()
     ext = file.splitFile().ext.toLowerAscii()
+    archives = @[".zip", ".xz", ".gz", ".bz2", ".tgz", ".tar"]
 
-  if not (ext == ".zip" and fileExists(outdir/file)):
+  if not (ext in archives and fileExists(outdir/file)):
     echo "# Downloading " & file
     mkDir(outdir)
     var cmd = findExe("curl")
@@ -131,6 +165,8 @@ proc downloadUrl*(url, outdir: string) =
 
     if ext == ".zip":
       extractZip(file, outdir)
+    elif ext in archives:
+      extractTar(file, outdir)
 
 proc gitReset*(outdir: string) =
   ## Hard reset the git repository at the specified directory
