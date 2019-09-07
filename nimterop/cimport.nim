@@ -79,11 +79,11 @@ proc getFileDate(fullpath: string): string =
     ret = 0
     cmd =
       when defined(Windows):
-        &"cmd /c for %a in ({fullpath.quoteShell}) do echo %~ta"
+        &"cmd /c for %a in ({fullpath.sanitizePath}) do echo %~ta"
       elif defined(Linux):
-        &"stat -c %y {fullpath.quoteShell}"
+        &"stat -c %y {fullpath.sanitizePath}"
       elif defined(OSX):
-        &"stat -f %m {fullpath.quoteShell}"
+        &"stat -f %m {fullpath.sanitizePath}"
 
   (result, ret) = gorgeEx(cmd)
 
@@ -120,7 +120,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
         getCurrentCompilerExe()
       else:
         "nim"
-    (check, _) = gorgeEx(&"{nim} check {result.tmpFile.quoteShell}")
+    (check, _) = gorgeEx(&"{nim} check {result.tmpFile.sanitizePath}")
 
   result.errors = "\n\n" & check
 
@@ -131,7 +131,7 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
     cmd = when defined(Windows): "cmd /c " else: ""
 
   let toastExe = toastExePath()
-  doAssert fileExists(toastExe), "toast not compiled: " & toastExe.quoteShell &
+  doAssert fileExists(toastExe), "toast not compiled: " & toastExe.sanitizePath &
     " make sure 'nimble build' or 'nimble install' built it"
   cmd &= &"{toastExe} --preprocess"
 
@@ -145,7 +145,7 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
     cmd.add &" --defines+={i.quoteShell}"
 
   for i in gStateCT.includeDirs:
-    cmd.add &" --includeDirs+={i.quoteShell}"
+    cmd.add &" --includeDirs+={i.sanitizePath}"
 
   if not noNimout:
     cmd.add &" --pnim"
@@ -157,12 +157,12 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
       cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
 
     when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-      cmd.add &" --nim:{getCurrentCompilerExe().quoteShell}"
+      cmd.add &" --nim:{getCurrentCompilerExe().sanitizePath}"
 
     if gStateCT.pluginSourcePath.nBl:
-      cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.quoteShell}"
+      cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.sanitizePath}"
 
-  cmd.add &" {fullpath.quoteShell}"
+  cmd.add &" {fullpath.sanitizePath}"
 
   # see https://github.com/nimterop/nimterop/issues/69
   (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
@@ -527,7 +527,7 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   let
     fullpath = findPath(filename)
 
-  echo "# Importing " & fullpath
+  echo "# Importing " & fullpath.sanitizePath
 
   let
     output = getToast(fullpath, recurse, dynlib, mode, flags)

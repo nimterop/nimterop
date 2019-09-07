@@ -5,7 +5,7 @@ import ".."/[setup, paths]
 static:
   treesitterCppSetup()
 
-const srcDir = incDir() / "treesitter_cpp/src"
+const srcDir = incDir() / "treesitter_cpp" / "src"
 
 {.passC: "-I$1" % srcDir.}
 

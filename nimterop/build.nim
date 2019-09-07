@@ -4,6 +4,11 @@ import os except findExe
 
 import "."/[compat]
 
+proc sanitizePath*(path: string, noQuote = false): string =
+  result = path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("/", $DirSep)])
+  if not noQuote:
+    result = result.quoteShell
+
 proc execAction*(cmd: string, nostderr=false): string =
   ## Execute an external command - supported at compile time
   ##
@@ -39,7 +44,7 @@ proc findExe*(exe: string): string =
     (oup, code) = gorgeEx(cmd)
 
   if code == 0:
-    return oup.strip()
+    return oup.splitLines()[0].strip()
 
 proc mkDir*(dir: string) =
   ## Create a directory at cmopile time
@@ -49,7 +54,7 @@ proc mkDir*(dir: string) =
   if not dirExists(dir):
     let
       flag = when not defined(Windows): "-p" else: ""
-    discard execAction(&"mkdir {flag} {dir.quoteShell}")
+    discard execAction(&"mkdir {flag} {dir.sanitizePath}")
 
 proc cpFile*(source, dest: string, move=false) =
   ## Copy a file from source to destination at compile time
@@ -68,7 +73,7 @@ proc cpFile*(source, dest: string, move=false) =
         else:
           "cp -f"
 
-  discard execAction(&"{cmd} {source.quoteShell} {dest.quoteShell}")
+  discard execAction(&"{cmd} {source.sanitizePath} {dest.sanitizePath}")
 
 proc mvFile*(source, dest: string) =
   ## Move a file from source to destination at compile time
@@ -87,7 +92,7 @@ proc rmFile*(source: string, dir = false) =
       else:
         "rm -rf"
 
-  discard execAction(&"{cmd} {source.quoteShell}")
+  discard execAction(&"{cmd} {source.sanitizePath}")
 
 proc rmDir*(source: string) =
   ## Remove a directory or pattern at compile time
@@ -103,7 +108,7 @@ proc extractZip*(zipfile, outdir: string) =
           "[IO.Compression.ZipFile]::ExtractToDirectory('$#', '.'); }\""
 
   echo "# Extracting " & zipfile
-  discard execAction(&"cd {outdir.quoteShell} && {cmd % zipfile}")
+  discard execAction(&"cd {outdir.sanitizePath} && {cmd % zipfile}")
 
 proc extractTar*(tarfile, outdir: string) =
   ## Extract a tar file using tar, 7z or 7za to the specified output directory
@@ -121,20 +126,22 @@ proc extractTar*(tarfile, outdir: string) =
         of ".bz2": "j"
         else: ""
 
-    cmd = "tar xvf" & typ & " " & tarfile.quoteShell
+    cmd = "tar xvf" & typ & " " & tarfile.sanitizePath
   else:
     for i in ["7z", "7za"]:
       if findExe(i).len != 0:
-        cmd = i & " x $#" % tarfile.quoteShell
+        cmd = i & " x $#" % tarfile.sanitizePath
 
         name = tarfile.splitFile().name
         if ".tar" in name.toLowerAscii():
-          cmd &= " && " & i & " x $#" % name.quoteShell
+          cmd &= " && " & i & " x $#" % name.sanitizePath
 
         break
 
+  doAssert cmd.len != 0, "No extraction tool - tar, 7z, 7za - available for " & tarfile.sanitizePath
+
   echo "# Extracting " & tarfile
-  discard execAction(&"cd {outdir.quoteShell} && {cmd}")
+  discard execAction(&"cd {outdir.sanitizePath} && {cmd}")
   if name.len != 0:
     rmFile(outdir / name)
 
@@ -152,7 +159,7 @@ proc downloadUrl*(url, outdir: string) =
     mkDir(outdir)
     var cmd = findExe("curl")
     if cmd.len != 0:
-      cmd &= " -L $# -o $#"
+      cmd &= " -Lk $# -o $#"
     else:
       cmd = findExe("wget")
       if cmd.len != 0:
@@ -161,7 +168,7 @@ proc downloadUrl*(url, outdir: string) =
         cmd = "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
       else:
         doAssert false, "No download tool available - curl, wget"
-    discard execAction(cmd % [url, (outdir/file).quoteShell])
+    discard execAction(cmd % [url, (outdir/file).sanitizePath])
 
     if ext == ".zip":
       extractZip(file, outdir)
@@ -172,7 +179,7 @@ proc gitReset*(outdir: string) =
   ## Hard reset the git repository at the specified directory
   echo "# Resetting " & outdir
 
-  let cmd = &"cd {outdir.quoteShell} && git reset --hard"
+  let cmd = &"cd {outdir.sanitizePath} && git reset --hard"
   while execAction(cmd).contains("Permission denied"):
     sleep(1000)
     echo "#   Retrying ..."
@@ -185,7 +192,7 @@ proc gitCheckout*(file, outdir: string) =
   ## successful wrapping with `cImport()` or `c2nImport()`.
   echo "# Resetting " & file
   let file2 = file.relativePath outdir
-  let cmd = &"cd {outdir.quoteShell} && git checkout {file2.quoteShell}"
+  let cmd = &"cd {outdir.sanitizePath} && git checkout {file2.sanitizePath}"
   while execAction(cmd).contains("Permission denied"):
     sleep(500)
     echo "#   Retrying ..."
@@ -206,7 +213,7 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
     return
 
   let
-    outdirQ = outdir.quoteShell
+    outdirQ = outdir.sanitizePath
 
   mkDir(outdir)
 
@@ -279,7 +286,7 @@ proc configure*(path, check: string, flags = "") =
       if fileExists(path / i):
         echo "#   Running autogen.sh"
 
-        echo execAction(&"cd {(path / i).parentDir().quoteShell} && bash autogen.sh")
+        echo execAction(&"cd {(path / i).parentDir().sanitizePath} && bash autogen.sh")
 
         break
 
@@ -288,7 +295,7 @@ proc configure*(path, check: string, flags = "") =
       if fileExists(path / i):
         echo "#   Running autoreconf"
 
-        echo execAction(&"cd {path.quoteShell} && autoreconf -fi")
+        echo execAction(&"cd {path.sanitizePath} && autoreconf -fi")
 
         break
 
@@ -296,7 +303,7 @@ proc configure*(path, check: string, flags = "") =
     echo "#   Running configure " & flags
 
     var
-      cmd = &"cd {path.quoteShell} && bash configure"
+      cmd = &"cd {path.sanitizePath} && bash configure"
     if flags.len != 0:
       cmd &= &" {flags}"
 
@@ -327,7 +334,7 @@ proc cmake*(path, check, flags: string) =
   mkDir(path)
 
   var
-    cmd = &"cd {path.quoteShell} && cmake {flags}"
+    cmd = &"cd {path.sanitizePath} && cmake {flags}"
 
   echo execAction(cmd)
 
@@ -359,7 +366,7 @@ proc make*(path, check: string|Regex, flags = "") =
       cpFile(cmd, cmd.replace("mingw32-make", "make"))
   doAssert cmd.len != 0, "Make not found"
 
-  cmd = &"cd {path.quoteShell} && make"
+  cmd = &"cd {path.sanitizePath} && make"
   if flags.len != 0:
     cmd &= &" {flags}"
 
@@ -383,8 +390,7 @@ proc getGccPaths*(mode = "c"): seq[string] =
       break
     if inc:
       var
-        path = line.strip()
-      path.normalizePath()
+        path = line.strip().myNormalizedPath()
       if path notin result:
         result.add path
 
@@ -400,15 +406,13 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
     if "LIBRARY_PATH=" in line:
       for path in line[13 .. ^1].split(PathSep):
         var
-          path = path.strip()
-        path.normalizePath()
+          path = path.strip().myNormalizedPath()
         if path notin result:
           result.add path
       break
     elif '\t' in line:
       var
-        path = line.strip()
-      path.normalizePath()
+        path = line.strip().myNormalizedPath()
       if path notin result:
         result.add path
 
@@ -504,7 +508,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
             gen = "MinGW Makefiles"
         else:
           gen = "Unix Makefiles"
-        cmake(outdir / "build", "Makefile", &".. -G {gen.quoteShell} {cmakeFlags}")
+        cmake(outdir / "build", "Makefile", &".. -G {gen.sanitizePath} {cmakeFlags}")
         cmakeDeps = true
         makePath = outdir / "build"
       else:

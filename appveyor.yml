@@ -1,8 +1,8 @@
 version: '{build}'
 
 image:
+  - Visual Studio 2015
   - Ubuntu
-  - Visual Studio 2017
 
 matrix:
   fast_finish: true
@@ -16,13 +16,12 @@ for:
 -
   matrix:
     only:
-      - image: Visual Studio 2017
+      - image: Visual Studio 2015
 
   environment:
-    ARCH: 32
-    MINGW_URL: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/8.1.0/threads-posix/dwarf
-    MINGW_ARCHIVE: i686-8.1.0-release-posix-dwarf-rt_v6-rev0.7z
-    SFNET_URL: https://sourceforge.net/projects/msys2/files/REPOS/MINGW/i686
+    ARCH: 64
+    GIT_URL: https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/
+    GIT_ARCHIVE: PortableGit-2.23.0-64-bit.7z.exe
 
   install:
     - CD c:\
@@ -30,20 +29,23 @@ for:
       echo %NIM_VERSION% &&
       MKDIR binaries &&
       CD binaries &&
-      appveyor DownloadFile "%MINGW_URL%/%MINGW_ARCHIVE%/download" -FileName "%MINGW_ARCHIVE%" &&
-      7z x -y "%MINGW_ARCHIVE%"> nul &&
-      del "%MINGW_ARCHIVE%" &&
+      MKDIR git &&
+      CD git &&
+      appveyor DownloadFile "%GIT_URL%/%GIT_ARCHIVE%" -FileName "%GIT_ARCHIVE%" &&
+      7z x -y -bd "%GIT_ARCHIVE%"> nul &&
+      del "%GIT_ARCHIVE%" &&
+      CD .. &&
       appveyor DownloadFile "https://nim-lang.org/download/nim-%NIM_VERSION%_x%ARCH%.zip" -FileName "nim-%NIM_VERSION%_x%ARCH%.zip" &&
       7z x -y "nim-%NIM_VERSION%_x%ARCH%.zip"> nul &&
       del "nim-%NIM_VERSION%_x%ARCH%.zip")
-    - SET PATH=c:\binaries\mingw%ARCH%\bin;c:\binaries\nim-%NIM_VERSION%\bin;%USERPROFILE%\.nimble\bin;%PATH%
+    - SET PATH=c:\binaries\git\bin;C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;c:\binaries\nim-%NIM_VERSION%\bin;%USERPROFILE%\.nimble\bin;%PATH%
     - CD %APPVEYOR_BUILD_FOLDER%
 
-  on_finish:
-    - 7z a -r buildlogs-win-pkgs.zip %USERPROFILE%\.nimble\pkgs
-    - appveyor PushArtifact buildlogs-win-pkgs.zip
-    - 7z a -r buildlogs-win-projects.zip c:\projects\*
-    - appveyor PushArtifact buildlogs-win-projects.zip
+# on_finish:
+#   - 7z a -r buildlogs-win-pkgs.zip %USERPROFILE%\.nimble\pkgs
+#   - appveyor PushArtifact buildlogs-win-pkgs.zip
+#   - 7z a -r buildlogs-win-projects.zip c:\projects\*
+#   - appveyor PushArtifact buildlogs-win-projects.zip
 
   cache:
     - c:\binaries
@@ -71,11 +73,11 @@ for:
     - export PATH=/home/appveyor/binaries/nim-$NIM_VERSION/bin:~/.nimble/bin:$PATH
     - cd $APPVEYOR_BUILD_FOLDER
 
-  on_finish:
-    - zip -r -q buildlogs-lin-pkgs.zip ~/.nimble/pkgs
-    - appveyor PushArtifact buildlogs-lin-pkgs.zip
-    - zip -r -q buildlogs-lin-projects.zip /home/appveyor/projects
-    - appveyor PushArtifact buildlogs-lin-projects.zip
+# on_finish:
+#   - zip -r -q buildlogs-lin-pkgs.zip ~/.nimble/pkgs
+#   - appveyor PushArtifact buildlogs-lin-pkgs.zip
+#   - zip -r -q buildlogs-lin-projects.zip /home/appveyor/projects
+#   - appveyor PushArtifact buildlogs-lin-projects.zip
 
   cache:
   - /home/appveyor/binaries
