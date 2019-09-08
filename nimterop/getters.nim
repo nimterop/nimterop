@@ -403,6 +403,6 @@ proc loadPlugin*(gState: State, sourcePath: string) =
 
 proc expandSymlinkAbs*(path: string): string =
   try:
-    result = path.expandSymlink().absolutePath(path.parentDir())
+    result = path.expandSymlink().absolutePath(path.parentDir()).normalizedPath()
   except:
     result = path
