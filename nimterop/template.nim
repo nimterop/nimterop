@@ -33,7 +33,10 @@ src/*.c
 
   # Run GNU configure on the source
   when defined(posix):
-    configure(srcDir, fileThatShouldGetGenerated)
+    configure(srcDir, fileThatShouldGetGenerated, flagsToConfigure)
+
+  # Run cmake on the source
+  cmake(srcDir/"build", fileThatShouldGetGenerated, flagsToCmake)
 
   # Run standard file/directory operations with mkDir(), cpFile(), mvFile()
 
