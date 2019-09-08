@@ -2,7 +2,7 @@ import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
-import "."/[build, globals, plugin, treesitter/api]
+import "."/[build, compat, globals, plugin, treesitter/api]
 
 const gReserved = """
 addr and as asm
@@ -403,6 +403,6 @@ proc loadPlugin*(gState: State, sourcePath: string) =
 
 proc expandSymlinkAbs*(path: string): string =
   try:
-    result = path.expandSymlink().absolutePath(path.parentDir()).normalizedPath()
+    result = path.expandSymlink().absolutePath(path.parentDir()).myNormalizedPath()
   except:
     result = path
