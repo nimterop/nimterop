@@ -6,7 +6,7 @@ as a starting point for wrapping a new library. The template can be copied and
 trimmed down and modified as required. `templite.nim <https://github.com/nimterop/nimterop/blob/master/nimterop/templite.nim>`_ is a shorter
 version for more experienced users.
 
-All ``{.compileTime.}`` procs must be used in a compile time context, e.g. using:
+All `{.compileTime.}` procs must be used in a compile time context, e.g. using:
 
 .. code-block:: c
 
@@ -194,7 +194,7 @@ macro cOverride*(body): untyped =
   ##      proc svGetCallerInfo(fileName: var cstring; lineNumber: var cint)
   ##
   ## Using the `cOverride() <cimport.html#cOverride.m>`_ block, nimterop
-  ## can be instructed to skip over ``svGetCallerInfo()``. This works for procs,
+  ## can be instructed to skip over `svGetCallerInfo()`. This works for procs,
   ## consts and types.
   ##
   ## `cOverride() <cimport.html#cOverride.m>`_ only affects calls to
@@ -254,7 +254,7 @@ macro cPlugin*(body): untyped =
   ## - `nskEnumField` for enum (field) names, though they are in the global namespace as `nskConst`
   ## - `nskProc` - for proc names
   ##
-  ## ``nimterop/plugins`` is implicitly imported to provide access to standard plugin facilities.
+  ## `nimterop/plugins` is implicitly imported to provide access to standard plugin facilities.
   ##
   ## `cPlugin() <cimport.html#cPlugin.m>`_  only affects calls to
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ that follow it.
@@ -288,7 +288,7 @@ macro cPlugin*(body): untyped =
   gStateCT.pluginSourcePath = path
 
 proc cSearchPath*(path: string): string {.compileTime.}=
-  ## Get full path to file or directory ``path`` in search path configured
+  ## Get full path to file or directory `path` in search path configured
   ## using `cAddSearchDir() <cimport.html#cAddSearchDir%2Cstring>`_ and
   ## `cAddStdDir() <cimport.html#cAddStdDir,string>`_.
   ##
@@ -321,15 +321,15 @@ proc cDisableCaching*() {.compileTime.} =
   ## value will continue to be used . Use `cDisableCaching() <cimport.html#cDisableCaching>`_
   ## to avoid this scenario during development.
   ##
-  ## ``nim -f`` was broken prior to 0.19.4 but can also be used to flush the cached content.
+  ## `nim -f` was broken prior to 0.19.4 but can also be used to flush the cached content.
 
   gStateCT.nocache = true
 
 macro cDefine*(name: static string, val: static string = ""): untyped =
-  ## ``#define`` an identifer that is forwarded to the C/C++ preprocessor if
+  ## `#define` an identifer that is forwarded to the C/C++ preprocessor if
   ## called within `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_
   ## or `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_
-  ## as well as to the C/C++ compiler during Nim compilation using ``{.passC: "-DXXX".}``
+  ## as well as to the C/C++ compiler during Nim compilation using `{.passC: "-DXXX".}`
 
   result = newNimNode(nnkStmtList)
 
@@ -350,7 +350,7 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
       echo result.repr & "\n"
 
 proc cAddSearchDir*(dir: string) {.compileTime.} =
-  ## Add directory ``dir`` to the search path used in calls to
+  ## Add directory `dir` to the search path used in calls to
   ## `cSearchPath() <cimport.html#cSearchPath,string>`_.
   runnableExamples:
     import paths, os
@@ -365,7 +365,7 @@ macro cIncludeDir*(dir: static string): untyped =
   ## Add an include directory that is forwarded to the C/C++ preprocessor if
   ## called within `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_
   ## or `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_
-  ## as well as to the C/C++ compiler during Nim compilation using ``{.passC: "-IXXX".}``.
+  ## as well as to the C/C++ compiler during Nim compilation using `{.passC: "-IXXX".}`.
 
   var dir = interpPath(dir)
   result = newNimNode(nnkStmtList)
@@ -380,7 +380,7 @@ macro cIncludeDir*(dir: static string): untyped =
       echo result.repr
 
 proc cAddStdDir*(mode = "c") {.compileTime.} =
-  ## Add the standard ``c`` [default] or ``cpp`` include paths to search
+  ## Add the standard `c` [default] or `cpp` include paths to search
   ## path used in calls to `cSearchPath() <cimport.html#cSearchPath,string>`_
   runnableExamples:
     static: cAddStdDir()
@@ -390,24 +390,24 @@ proc cAddStdDir*(mode = "c") {.compileTime.} =
     cAddSearchDir inc
 
 macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
-  ## Compile and link C/C++ implementation into resulting binary using ``{.compile.}``
+  ## Compile and link C/C++ implementation into resulting binary using `{.compile.}`
   ##
-  ## ``path`` can be a specific file or contain wildcards:
+  ## `path` can be a specific file or contain wildcards:
   ##
   ## .. code-block:: nim
   ##
   ##     cCompile("file.c")
   ##     cCompile("path/to/*.c")
   ##
-  ## ``mode`` recursively searches for code files in ``path``.
+  ## `mode` recursively searches for code files in `path`.
   ##
-  ## ``c`` searches for ``*.c`` whereas ``cpp`` searches for ``*.C *.cpp *.c++ *.cc *.cxx``
+  ## `c` searches for `*.c` whereas `cpp` searches for `*.C *.cpp *.c++ *.cc *.cxx`
   ##
   ## .. code-block:: nim
   ##
   ##    cCompile("path/to/dir", "cpp")
   ##
-  ## ``exclude`` can be used to exclude files by partial string match. Comma separated to
+  ## `exclude` can be used to exclude files by partial string match. Comma separated to
   ## specify multiple exclude strings
   ##
   ## .. code-block:: nim
@@ -485,16 +485,16 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
 macro cImport*(filename: static string, recurse: static bool = false, dynlib: static string = "",
   mode: static string = "c", flags: static string = ""): untyped =
   ## Import all supported definitions from specified header file. Generated
-  ## content is cached in ``nimcache`` until ``filename`` changes unless
-  ## `cDisableCaching() <cimport.html#cDisableCaching>`_ is set. ``nim -f``
+  ## content is cached in `nimcache` until `filename` changes unless
+  ## `cDisableCaching() <cimport.html#cDisableCaching>`_ is set. `nim -f`
   ## can also be used after Nim v0.19.4 to flush the cache.
   ##
-  ## ``recurse`` can be used to generate Nim wrappers from ``#include`` files
-  ## referenced in ``filename``. This is only done for files in the same
-  ## directory as ``filename`` or in a directory added using
+  ## `recurse` can be used to generate Nim wrappers from `#include` files
+  ## referenced in `filename`. This is only done for files in the same
+  ## directory as `filename` or in a directory added using
   ## `cIncludeDir() <cimport.html#cIncludeDir.m>`_
   ##
-  ## ``dynlib`` can be used to specify the Nim string to use to specify the dynamic
+  ## `dynlib` can be used to specify the Nim string to use to specify the dynamic
   ## library to load the imported symbols from. For example:
   ##
   ## .. code-block:: nim
@@ -513,14 +513,14 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   ##
   ##    cImport("pcre.h", dynlib="dynpcre")
   ##
-  ## If ``dynlib`` is not specified, the C/C++ implementation files can be compiled in
+  ## If `dynlib` is not specified, the C/C++ implementation files can be compiled in
   ## with `cCompile() <cimport.html#cCompile.m%2C%2Cstring%2Cstring>`_, or the
-  ## ``{.passL.}`` pragma can be used to specify the static lib to link.
+  ## `{.passL.}` pragma can be used to specify the static lib to link.
   ##
-  ## ``mode`` is purely for forward compatibility when toast adds C++ support. It can
+  ## `mode` is purely for forward compatibility when toast adds C++ support. It can
   ## be ignored for the foreseeable future.
   ##
-  ## ``flags`` can be used to pass any other command line arguments to ``toast``.
+  ## `flags` can be used to pass any other command line arguments to `toast`.
 
   result = newNimNode(nnkStmtList)
 
@@ -546,24 +546,24 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
 
 macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: static string = "",
   mode: static string = "c", flags: static string = ""): untyped =
-  ## Import all supported definitions from specified header file using ``c2nim``
+  ## Import all supported definitions from specified header file using `c2nim`
   ##
   ## Similar to `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_
-  ## but uses ``c2nim`` to generate the Nim wrapper instead of ``toast``. Note that neither
+  ## but uses `c2nim` to generate the Nim wrapper instead of `toast`. Note that neither
   ## `cOverride() <cimport.html#cOverride.m>`_, `cSkipSymbol() <cimport.html#cSkipSymbol%2Cseq[T][string]>`_
-  ## nor `cPlugin() <cimport.html#cPlugin.m>`_ have any impact on ``c2nim``.
+  ## nor `cPlugin() <cimport.html#cPlugin.m>`_ have any impact on `c2nim`.
   ##
-  ## ``toast`` is only used to preprocess the header file and recurse
+  ## `toast` is only used to preprocess the header file and recurse
   ## if specified.
   ##
-  ## ``mode`` should be set to ``cpp`` for c2nim to wrap C++ headers.
+  ## `mode` should be set to `cpp` for c2nim to wrap C++ headers.
   ##
-  ## ``flags`` can be used to pass other command line arguments to ``c2nim``.
+  ## `flags` can be used to pass other command line arguments to `c2nim`.
   ##
-  ## ``nimterop`` does not depend on ``c2nim`` as a ``nimble`` dependency so it
+  ## `nimterop` does not depend on `c2nim` as a `nimble` dependency so it
   ## does not get installed automatically. Any wrapper or library that requires this proc
-  ## needs to install ``c2nim`` with ``nimble install c2nim`` or add it as a dependency in
-  ## its own ``.nimble`` file.
+  ## needs to install `c2nim` with `nimble install c2nim` or add it as a dependency in
+  ## its own `.nimble` file.
 
   result = newNimNode(nnkStmtList)
 

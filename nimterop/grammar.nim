@@ -91,7 +91,7 @@ proc initGrammar(): Grammar =
     """
 
   template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i: untyped): untyped =
-    ptyp = nimState.getIdentifier(nimState.data[i].val, nskType, fname)
+    ptyp = nimState.getIdentifier(nimState.data[i].val, nskType, fname).getType()
 
     pptr = ""
     while i+1 < nimState.data.len and nimState.data[i+1].name == "pointer_declarator":
@@ -137,7 +137,7 @@ proc initGrammar(): Grammar =
 
       var
         i = 0
-        typ = nimState.getIdentifier(nimState.data[i].val, nskType)
+        typ = nimState.getIdentifier(nimState.data[i].val, nskType).getType()
         name = ""
         nname = ""
         tptr = ""
@@ -161,7 +161,7 @@ proc initGrammar(): Grammar =
       let
         pragma = nimState.getPragma(nimState.getImportC(name, nname))
 
-      if typ.nBl and nname.nBl and nimState.addNewIdentifer(nname):
+      if nname notin gTypeMap and typ.nBl and nname.nBl and nimState.addNewIdentifer(nname):
         if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
           var
             fname = nname
@@ -575,7 +575,7 @@ proc initGrammar(): Grammar =
 
         if fnname.nBl and nimState.addNewIdentifer(fnname):
           let
-            ftyp = nimState.getIdentifier(nimState.data[0].val, nskType, fnname)
+            ftyp = nimState.getIdentifier(nimState.data[0].val, nskType, fnname).getType()
             pragma = nimState.getPragma(nimState.getImportC(fname, fnname), "cdecl")
 
           if fptr.len != 0 or ftyp != "object":

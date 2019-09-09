@@ -3,6 +3,7 @@ import strutils
 proc testCall(cmd, output: string, exitCode: int, delete = true) =
   if delete:
     rmDir("build/liblzma")
+    rmDir("build/zlib")
   echo cmd
   var
     ccmd =
@@ -17,26 +18,45 @@ proc testCall(cmd, output: string, exitCode: int, delete = true) =
 
 var
   cmd = "nim c -f"
-  rcmd = " -r lzma.nim"
-  exp = "liblzma version = "
+  lrcmd = " -r lzma.nim"
+  zrcmd = " -r zlib.nim"
+  lexp = "liblzma version = "
+  zexp = "zlib version = "
+
+testCall(cmd & lrcmd, "No build files found", 1)
 
 when defined(posix):
-  testCall(cmd & rcmd, "No build files found", 1)
-
   # stdlib
-  testCall(cmd & " -d:lzmaStd" & rcmd, exp, 0)
-  testCall(cmd & " -d:lzmaStd -d:lzmaStatic" & rcmd, exp, 0)
+  testCall(cmd & " -d:lzmaStd" & lrcmd, lexp, 0)
+  testCall(cmd & " -d:lzmaStd -d:lzmaStatic" & lrcmd, lexp, 0)
+
+  when not defined(osx):
+    testCall(cmd & " -d:zlibStd" & zrcmd, zexp, 0)
+    testCall(cmd & " -d:zlibStd -d:zlibStatic" & zrcmd, zexp, 0)
 
   # git
-  testCall(cmd & " -d:lzmaGit" & rcmd, exp, 0)
-  testCall(cmd & " -d:lzmaGit -d:lzmaStatic" & rcmd, exp, 0, delete = false)
+  testCall(cmd & " -d:lzmaGit" & lrcmd, lexp, 0)
+  testCall(cmd & " -d:lzmaGit -d:lzmaStatic" & lrcmd, lexp, 0, delete = false)
 
   # git tag
-  testCall(cmd & " -d:lzmaGit -d:lzmaVersion=v5.2.0" & rcmd, exp & "5.2.0", 0)
-  testCall(cmd & " -d:lzmaGit -d:lzmaStatic -d:lzmaVersion=v5.2.0" & rcmd, exp & "5.2.0", 0, delete = false)
+  testCall(cmd & " -d:lzmaGit -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0)
+  testCall(cmd & " -d:lzmaGit -d:lzmaStatic -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0, delete = false)
   testCall("cd build/liblzma && git branch", "v5.2.0", 0, delete = false)
 
+# git
+testCall(cmd & " -d:zlibGit" & zrcmd, zexp, 0)
+testCall(cmd & " -d:zlibGit -d:zlibStatic" & zrcmd, zexp, 0, delete = false)
+
+# git tag
+testCall(cmd & " -d:zlibGit -d:zlibSetVer=v1.2.10" & zrcmd, zexp & "1.2.10", 0)
+testCall(cmd & " -d:zlibGit -d:zlibStatic -d:zlibSetVer=v1.2.10" & zrcmd, zexp & "1.2.10", 0, delete = false)
+testCall("cd build/zlib && git branch", "v1.2.10", 0, delete = false)
+
 # dl
-testCall(cmd & " -d:lzmaDL" & rcmd, "Need version", 1)
-testCall(cmd & " -d:lzmaDL -d:lzmaVersion=5.2.4" & rcmd, exp & "5.2.4", 0)
-testCall(cmd & " -d:lzmaDL -d:lzmaStatic -d:lzmaVersion=5.2.4" & rcmd, exp & "5.2.4", 0, delete = false)
+testCall(cmd & " -d:lzmaDL" & lrcmd, "Need version", 1)
+testCall(cmd & " -d:lzmaDL -d:lzmaSetVer=5.2.4" & lrcmd, lexp & "5.2.4", 0)
+testCall(cmd & " -d:lzmaDL -d:lzmaStatic -d:lzmaSetVer=5.2.4" & lrcmd, lexp & "5.2.4", 0, delete = false)
+
+# dl
+testCall(cmd & " -d:zlibDL -d:zlibSetVer=1.2.11" & zrcmd, zexp & "1.2.11", 0)
+testCall(cmd & " -d:zlibDL -d:zlibStatic -d:zlibSetVer=1.2.11" & zrcmd, zexp & "1.2.11", 0, delete = false)

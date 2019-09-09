@@ -62,7 +62,7 @@ when not defined(headerStatic):
 else:
   cImport(headerPath, recurse = true)
 ```
-This allows the user to control how the wrapper works - either pass `-d:headerStd` to search for `header.h` in the standard system path, `-d:headerGit` to clone the source from the specified git URL or `-d:headerDL` to get the source from download URL. Further, the `-d:headerVersion=X.Y.Z` flag can be used to specify which version to use. It is used as the tag name for Git whereas for DL, it replaces `$1` in the URL defined.
+This allows the user to control how the wrapper works - either pass `-d:headerStd` to search for `header.h` in the standard system path, `-d:headerGit` to clone the source from the specified git URL or `-d:headerDL` to get the source from download URL. Further, the `-d:headerSetVer=X.Y.Z` flag can be used to specify which version to use. It is used as the tag name for Git whereas for DL, it replaces `$1` in the URL defined.
 
 The `-d:headerStatic` attempts to statically link the library. If it is omitted, the library is dynamically linked instead.
 

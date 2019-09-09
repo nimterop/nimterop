@@ -32,7 +32,7 @@ proc execAction*(cmd: string, nostderr=false): string =
   doAssert ret == 0, "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
 
 proc findExe*(exe: string): string =
-  ## Find the specified executable using the which/where command - supported
+  ## Find the specified executable using the `which`/`where` command - supported
   ## at compile time
   var
     cmd =
@@ -47,7 +47,7 @@ proc findExe*(exe: string): string =
     return oup.splitLines()[0].strip()
 
 proc mkDir*(dir: string) =
-  ## Create a directory at cmopile time
+  ## Create a directory at compile time
   ##
   ## The `os` module is not available at compile time so a few
   ## crucial helper functions are included with nimterop.
@@ -57,7 +57,7 @@ proc mkDir*(dir: string) =
     discard execAction(&"mkdir {flag} {dir.sanitizePath}")
 
 proc cpFile*(source, dest: string, move=false) =
-  ## Copy a file from source to destination at compile time
+  ## Copy a file from `source` to `dest` at compile time
   let
     source = source.replace("/", $DirSep)
     dest = dest.replace("/", $DirSep)
@@ -76,7 +76,7 @@ proc cpFile*(source, dest: string, move=false) =
   discard execAction(&"{cmd} {source.sanitizePath} {dest.sanitizePath}")
 
 proc mvFile*(source, dest: string) =
-  ## Move a file from source to destination at compile time
+  ## Move a file from `source` to `dest` at compile time
   cpFile(source, dest, move=true)
 
 proc rmFile*(source: string, dir = false) =
@@ -99,7 +99,7 @@ proc rmDir*(source: string) =
   rmFile(source, dir = true)
 
 proc extractZip*(zipfile, outdir: string) =
-  ## Extract a zip file using powershell on Windows and unzip on other
+  ## Extract a zip file using `powershell` on Windows and `unzip` on other
   ## systems to the specified output directory
   var cmd = "unzip -o $#"
   if defined(Windows):
@@ -111,7 +111,7 @@ proc extractZip*(zipfile, outdir: string) =
   discard execAction(&"cd {outdir.sanitizePath} && {cmd % zipfile}")
 
 proc extractTar*(tarfile, outdir: string) =
-  ## Extract a tar file using tar, 7z or 7za to the specified output directory
+  ## Extract a tar file using `tar`, `7z` or `7za` to the specified output directory
   var
     cmd = ""
     name = ""
@@ -146,9 +146,9 @@ proc extractTar*(tarfile, outdir: string) =
     rmFile(outdir / name)
 
 proc downloadUrl*(url, outdir: string) =
-  ## Download a file using curl or wget (or powershell on Windows) to the specified directory
+  ## Download a file using `curl` or `wget` (or `powershell` on Windows) to the specified directory
   ##
-  ## If a zip file, it is automatically extracted after download.
+  ## If an archive file, it is automatically extracted after download.
   let
     file = url.extractFilename()
     ext = file.splitFile().ext.toLowerAscii()
@@ -185,7 +185,7 @@ proc gitReset*(outdir: string) =
     echo "#   Retrying ..."
 
 proc gitCheckout*(file, outdir: string) =
-  ## Checkout the specified file in the git repository specified
+  ## Checkout the specified `file` in the git repository at `outdir`
   ##
   ## This effectively resets all changes in the file and can be
   ## used to undo any changes that were made to source files to enable
@@ -240,13 +240,17 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
 proc findFile*(file: string|Regex, dir: string, recurse = true, first = false): string =
   ## Find the file in the specified directory
   ##
-  ## ``file`` can be a string or a regex object
+  ## `file` can be a string or a regex object
   ##
-  ## Turn off recursive search with ``recurse`` and stop on first match with
-  ## ``first``. Without it, the shortest match is returned.
+  ## Turn off recursive search with `recurse` and stop on first match with
+  ## `first`. Without it, the shortest match is returned.
   when file is Regex:
     var
       rm: RegexMatch
+  else:
+    let
+      dir = dir / file.parentDir()
+      file = file.extractFilename
 
   for f in walkDirRec(dir, yieldFilter = {pcFile, pcLinkToFile},
     followFilter = if recurse: {pcDir} else: {}):
@@ -311,6 +315,52 @@ proc configure*(path, check: string, flags = "") =
 
   doAssert (path / check).fileExists(), "# Configure failed"
 
+proc getCmakePropertyStr(name, property, value: string): string =
+  &"\nset_target_properties({name} PROPERTIES {property} \"{value}\")\n"
+
+proc setCmakeProperty*(outdir, name, property, value: string) =
+  ## Set a `cmake` property in `outdir / CMakeLists.txt` - usable in the `xxxPreBuild` hook
+  ## for `getHeader()`
+  ##
+  ## `set_target_properties(name PROPERTIES property "value")`
+  let
+    cm = outdir / "CMakeLists.txt"
+  if cm.fileExists():
+    cm.writeFile(
+      cm.readFile() & getCmakePropertyStr(name, property, value)
+    )
+
+proc setCmakeLibName*(outdir, name, prefix = "", oname = "", suffix = "") =
+  ## Set a `cmake` property in `outdir / CMakeLists.txt` to specify a custom library output
+  ## name - usable in the `xxxPreBuild` hook for `getHeader()`
+  ##
+  ## `prefix` is typically `lib`
+  ## `oname` is the library name
+  ## `suffix` is typically `.a`
+  ##
+  ## Sometimes, `cmake` generates non-standard library names - e.g. zlib compiles to
+  ## `libzlibstatic.a` on Windows. This proc can help rename it to `libzlib.a` so that `getHeader()`
+  ## can find it after the library is compiled.
+  ##
+  ## ```
+  ## set_target_properties(name PROPERTIES PREFIX "prefix")
+  ## set_target_properties(name PROPERTIES OUTPUT_NAME "oname")
+  ## set_target_properties(name PROPERTIES SUFFIX "suffix")
+  ## ```
+  let
+    cm = outdir / "CMakeLists.txt"
+  if cm.fileExists():
+    var
+      str = ""
+    if prefix.len != 0:
+      str &= getCmakePropertyStr(name, "PREFIX", prefix)
+    if oname.len != 0:
+      str &= getCmakePropertyStr(name, "OUTPUT_NAME", oname)
+    if suffix.len != 0:
+      str &= getCmakePropertyStr(name, "SUFFIX", suffix)
+    if str.len != 0:
+      cm.writeFile(cm.readFile() & str)
+
 proc cmake*(path, check, flags: string) =
   ## Run the `cmake` command to generate all Makefiles or other
   ## build scripts in the specified path
@@ -349,7 +399,7 @@ proc make*(path, check: string|Regex, flags = "") =
   ##
   ## `flags` are any flags that should be passed to the `make` command.
   ##
-  ## If make.exe is missing and mingw32-make.exe is available, it will
+  ## If `make.exe` is missing and `mingw32-make.exe` is available, it will
   ## be copied over to make.exe in the same location.
   if findFile(check, path).len != 0:
     return
@@ -394,6 +444,9 @@ proc getGccPaths*(mode = "c"): seq[string] =
       if path notin result:
         result.add path
 
+  when defined(osx):
+    result.add execAction("xcrun --show-sdk-path").strip() & "/usr/include"
+
 proc getGccLibPaths*(mode = "c"): seq[string] =
   var
     nul = when defined(Windows): "nul" else: "/dev/null"
@@ -415,6 +468,9 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
         path = line.strip().myNormalizedPath()
       if path notin result:
         result.add path
+
+  when defined(osx):
+    result.add "/usr/lib"
 
 proc getStdPath(header: string): string =
   for inc in getGccPaths():
@@ -503,12 +559,19 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
           gen = ""
         when defined(windows):
           if findExe("sh").len != 0:
-            gen = "MSYS Makefiles"
+            let
+              uname = execAction("sh -c uname -a").toLowerAscii()
+            if uname.contains("msys"):
+              gen = "MSYS Makefiles".quoteShell
+            elif uname.contains("mingw"):
+              gen = "MinGW Makefiles".quoteShell & " -DCMAKE_SH=\"CMAKE_SH-NOTFOUND\""
+            else:
+              echo "Unsupported system: " & uname
           else:
-            gen = "MinGW Makefiles"
+            gen = "MinGW Makefiles".quoteShell
         else:
-          gen = "Unix Makefiles"
-        cmake(outdir / "build", "Makefile", &".. -G {gen.sanitizePath} {cmakeFlags}")
+          gen = "Unix Makefiles".quoteShell
+        cmake(outdir / "build", "Makefile", &".. -G {gen} {cmakeFlags}")
         cmakeDeps = true
         makePath = outdir / "build"
       else:
@@ -550,33 +613,54 @@ proc getDynlibExt(): string =
     result = ".dylib[0-9.]*"
 
 macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
-  conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = ""): untyped =
+  conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
+  altNames: static[string] = ""): untyped =
   ## Get the path to a header file for wrapping with
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
   ## `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
   ##
-  ## This proc checks -d:xxx defines based on the header name (e.g. lzma from lzma.h),
+  ## This proc checks `-d:xxx` defines based on the header name (e.g. lzma from lzma.h),
   ## and accordingly employs different ways to obtain the source.
   ##
-  ## ``-d:xxxStd`` - search standard system paths. E.g. ``/usr/include`` and ``/usr/lib`` on Linux
-  ## ``-d:xxxGit`` - clone source from a git repo specified in ``giturl``
-  ## ``-d:xxxDL`` - download source from ``dlurl`` and extract if required
+  ## `-d:xxxStd` - search standard system paths. E.g. `/usr/include` and `/usr/lib` on Linux
+  ## `-d:xxxGit` - clone source from a git repo specified in `giturl`
+  ## `-d:xxxDL` - download source from `dlurl` and extract if required
   ##
   ## This allows a single wrapper to be used in different ways depending on the user's needs.
-  ## If no -d:xxx defines are specified, ``outdir`` will be searched for the header.
+  ## If no `-d:xxx` defines are specified, `outdir` will be searched for the header as is.
   ##
-  ## The library is then configured (with cmake or autotools if possible) and built
-  ## using make, unless using ``-d:xxxStd`` which presumes that the system package
+  ## `-d:xxxSetVer=x.y.z` can be used to specify which version to use. It is used as a tag
+  ## name for Git whereas for DL, it replaces `$1` in the URL defined.
+  ##
+  ## The library is then configured (with `cmake` or `autotools` if possible) and built
+  ## using `make`, unless using `-d:xxxStd` which presumes that the system package
   ## manager was used to install prebuilt headers and binaries.
   ##
-  ## The header path is stored in ``const xxxPath`` and can be used in a ``cImport()`` call
-  ## in the calling wrapper. The dynamic library path is stored in ``const xxxLPath`` and can
-  ## be used for the ``dynlib`` parameter (within quotes).
+  ## The header path is stored in `const xxxPath` and can be used in a `cImport()` call
+  ## in the calling wrapper. The dynamic library path is stored in `const xxxLPath` and can
+  ## be used for the `dynlib` parameter (within quotes) or with `{.passL.}`.
   ##
-  ## ``-d:xxxStatic`` can be specified to statically link with the library instead. This
-  ## will automatically add a ``{.passL.}`` call to the static library for convenience.
+  ## `-d:xxxStatic` can be specified to statically link with the library instead. This
+  ## will automatically add a `{.passL.}` call to the static library for convenience.
+  ##
+  ## `conFlags`, `cmakeFlags` and `makeFlags` allow sending custom parameters to `configure`,
+  ## `cmake` and `make` in case additional configuration is required as part of the build process.
+  ##
+  ## `altNames` is a list of alternate names for the library - e.g. zlib uses `zlib.h` for the header but
+  ## the typical lib name is `libz.so` and not `libzlib.so`. In this case, `altNames = "z"`. Comma
+  ## separate for multiple alternate names.
+  ##
+  ## `xxxPreBuild` is a hook that is called after the source code is pulled from Git or downloaded but
+  ## before the library is built. This might be needed if some initial prep needs to be done before
+  ## compilation. A few values are provided to the hook to help provide context:
+  ##
+  ## `outdir` is the same `outdir` passed in and `header` is the discovered header path in the
+  ## downloaded source code.
+  ##
+  ## Simply define `proc xxxPreBuild(outdir, header: string)` in the wrapper and it will get called
+  ## prior to the build process.
   var
-    name = header.split(".")[0]
+    name = header.extractFilename().split(".")[0]
 
     nameStd = newIdentNode(name & "Std")
     nameGit = newIdentNode(name & "Git")
@@ -586,10 +670,18 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
 
     path = newIdentNode(name & "Path")
     lpath = newIdentNode(name & "LPath")
-    version = newIdentNode(name & "Version")
+    version = newIdentNode(name & "SetVer")
     lname = newIdentNode(name & "LName")
+    preBuild = newIdentNode(name & "PreBuild")
 
-    lre = "(lib)?$1[0-9.\\-]*\\" % name
+    lre = "(lib)?$1[_]?(static)?[0-9.\\-]*\\"
+
+  if altNames.len != 0:
+    let
+      names = "(" & name & "|" & altNames.replace(",", "|") & ")"
+    lre = lre % names
+  else:
+    lre = lre % name
 
   result = newNimNode(nnkStmtList)
   result.add(quote do:
@@ -615,6 +707,11 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
           else:
             getLocalPath(`header`, `outdir`)
 
+      when declared(`preBuild`):
+        static:
+          `preBuild`(`outdir`, `path`)
+
+      const
         `lpath`* = buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`)
 
     static:

@@ -26,7 +26,7 @@ when while
 xor
 yield""".split(Whitespace).toSet()
 
-const gTypeMap = {
+const gTypeMap* = {
   # char
   "char": "cchar",
   "signed char": "cschar",
@@ -39,6 +39,8 @@ const gTypeMap = {
   "signed short int": "cshort",
   "unsigned short": "cushort",
   "unsigned short int": "cushort",
+  "uShort": "cushort",
+  "u_short": "cushort",
 
   # int
   "int": "cint",
@@ -47,6 +49,8 @@ const gTypeMap = {
   "ssize_t": "cint",
   "unsigned": "cuint",
   "unsigned int": "cuint",
+  "uInt": "cuint",
+  "u_int": "cuint",
   "size_t": "cuint",
 
   # long
@@ -57,6 +61,8 @@ const gTypeMap = {
   "off_t": "clong",
   "unsigned long": "culong",
   "unsigned long int": "culong",
+  "uLong": "culong",
+  "u_long": "culong",
 
   # long long
   "long long": "clonglong",
@@ -79,8 +85,8 @@ proc getType*(str: string): string =
 
   result = str.strip(chars={'_'}).
     replace(re"\s+", " ").
-    replace(re"([u]?int[\d]+)_t", "$1").
-    replace(re"([u]?int)ptr_t", "ptr $1")
+    replace(re"^([u]?int[\d]+)_t$", "$1").
+    replace(re"^([u]?int)ptr_t$", "ptr $1")
 
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]

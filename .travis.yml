@@ -20,7 +20,6 @@ cache:
     - "$HOME/.choosenim/toolchains/nim-0.20.2"
 
 install:
-  - set -e
   - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
   - |
       curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
@@ -28,7 +27,6 @@ install:
   - export PATH="$HOME/.nimble/bin:/usr/local/opt/gettext/bin:$PATH"
 
 script:
-  - set -e
   - nimble --verbose install -y
   - nimble --verbose test
   - nimble --verbose --nimbleDir:`pwd`/build/fakenimble install nimterop -y
