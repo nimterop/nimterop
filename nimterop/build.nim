@@ -571,9 +571,11 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
             gen = "MinGW Makefiles".quoteShell
         else:
           gen = "Unix Makefiles".quoteShell
-        cmake(outdir / "build", "Makefile", &".. -G {gen} {cmakeFlags}")
+        if findExe("ccache").len != 0:
+          gen &= " -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+        makePath = outdir / "buildcache"
+        cmake(makePath, "Makefile", &".. -G {gen} {cmakeFlags}")
         cmakeDeps = true
-        makePath = outdir / "build"
       else:
         cmakeDepStr &= "cmake executable missing"
 
