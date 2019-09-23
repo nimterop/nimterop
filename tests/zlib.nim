@@ -57,8 +57,8 @@ when defined(posix):
     cSkipSymbol(@["u_int8_t", "u_int16_t", "u_int32_t", "u_int64_t"])
 
 when defined(zlibGit) or defined(zlibDL):
-  when dirExists(baseDir / "build"):
-    cIncludeDir(baseDir / "build")
+  when dirExists(baseDir / "buildcache"):
+    cIncludeDir(baseDir / "buildcache")
 
 when not defined(zlibStatic):
   cImport(zlibPath, recurse = true, dynlib = "zlibLPath")

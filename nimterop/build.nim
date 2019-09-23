@@ -4,8 +4,8 @@ import os except findExe
 
 import "."/[compat]
 
-proc sanitizePath*(path: string, noQuote = false): string =
-  result = path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("/", $DirSep)])
+proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
+  result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
   if not noQuote:
     result = result.quoteShell
 
@@ -265,6 +265,20 @@ proc findFile*(file: string|Regex, dir: string, recurse = true, first = false): 
         result = f
         if first: break
 
+proc flagBuild*(base: string, flags: openArray[string]): string =
+  ## Simple helper proc to generate flags for `configure`, `cmake`, etc.
+  ##
+  ## Every entry in `flags` is replaced into the `base` string and
+  ## concatenated to the result.
+  ##
+  ## E.g.
+  ##   `base = "--disable-$#"`
+  ##   `flags = @["one", "two"]`
+  ##
+  ## `flagBuild(base, flags) => " --disable-one --disable-two"`
+  for i in flags:
+    result &= " " & base % i
+
 proc configure*(path, check: string, flags = "") =
   ## Run the GNU `configure` command to generate all Makefiles or other
   ## build scripts in the specified path
@@ -318,6 +332,15 @@ proc configure*(path, check: string, flags = "") =
 proc getCmakePropertyStr(name, property, value: string): string =
   &"\nset_target_properties({name} PROPERTIES {property} \"{value}\")\n"
 
+proc getCmakeIncludePath*(paths: openArray[string]): string =
+  ## Create a `cmake` flag to specify custom include paths
+  ##
+  ## Result can be included in the `flag` parameter for `cmake()` or
+  ## the `cmakeFlags` parameter for `getHeader()`.
+  for path in paths:
+    result &= path & ";"
+  result = " -DCMAKE_INCLUDE_PATH=" & result[0 .. ^2].sanitizePath(sep = "/")
+
 proc setCmakeProperty*(outdir, name, property, value: string) =
   ## Set a `cmake` property in `outdir / CMakeLists.txt` - usable in the `xxxPreBuild` hook
   ## for `getHeader()`
@@ -360,6 +383,19 @@ proc setCmakeLibName*(outdir, name, prefix = "", oname = "", suffix = "") =
       str &= getCmakePropertyStr(name, "SUFFIX", suffix)
     if str.len != 0:
       cm.writeFile(cm.readFile() & str)
+
+proc setCmakePositionIndependentCode*(outdir: string) =
+  ## Set a `cmake` directive to create libraries with -fPIC enabled
+  let
+    cm = outdir / "CMakeLists.txt"
+  if cm.fileExists():
+    let
+      pic = "set(CMAKE_POSITION_INDEPENDENT_CODE ON)"
+      cmd = cm.readFile()
+    if not cmd.contains(pic):
+      cm.writeFile(
+        pic & "\n" & cmd
+      )
 
 proc cmake*(path, check, flags: string) =
   ## Run the `cmake` command to generate all Makefiles or other
