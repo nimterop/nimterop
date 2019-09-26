@@ -19,6 +19,11 @@ proc zlibPreBuild(outdir, path: string) =
         # Fix static lib name on Windows
         setCmakeLibName(outdir, "zlibstatic", prefix = "lib", oname = "zlib", suffix = ".a")
 
+when defined(envTest):
+  setDefines(@["zlibGit"])
+elif defined(envTestStatic):
+  setDefines(@["zlibGit", "zlibStatic"])
+
 getHeader(
   "zlib.h",
   giturl = "https://github.com/madler/zlib",
@@ -56,11 +61,11 @@ when defined(posix):
   static:
     cSkipSymbol(@["u_int8_t", "u_int16_t", "u_int32_t", "u_int64_t"])
 
-when defined(zlibGit) or defined(zlibDL):
+when zlibGit or zlibDL:
   when dirExists(baseDir / "buildcache"):
     cIncludeDir(baseDir / "buildcache")
 
-when not defined(zlibStatic):
+when not zlibStatic:
   cImport(zlibPath, recurse = true, dynlib = "zlibLPath")
 else:
   cImport(zlibPath, recurse = true)

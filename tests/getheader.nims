@@ -27,8 +27,8 @@ testCall(cmd & lrcmd, "No build files found", 1)
 
 when defined(posix):
   # stdlib
-  testCall(cmd & " -d:lzmaStd" & lrcmd, lexp, 0)
-  testCall(cmd & " -d:lzmaStd -d:lzmaStatic" & lrcmd, lexp, 0)
+  testCall(cmd & " -d:envTest" & lrcmd, lexp, 0)
+  testCall(cmd & " -d:envTestStatic" & lrcmd, lexp, 0)
 
   when not defined(osx):
     testCall(cmd & " -d:zlibStd" & zrcmd, zexp, 0)
@@ -44,8 +44,8 @@ when defined(posix):
   testCall("cd build/liblzma && git branch", "v5.2.0", 0, delete = false)
 
 # git
-testCall(cmd & " -d:zlibGit" & zrcmd, zexp, 0)
-testCall(cmd & " -d:zlibGit -d:zlibStatic" & zrcmd, zexp, 0, delete = false)
+testCall(cmd & " -d:envTest" & zrcmd, zexp, 0)
+testCall(cmd & " -d:envTestStatic" & zrcmd, zexp, 0, delete = false)
 
 # git tag
 testCall(cmd & " -d:zlibGit -d:zlibSetVer=v1.2.10" & zrcmd, zexp & "1.2.10", 0)

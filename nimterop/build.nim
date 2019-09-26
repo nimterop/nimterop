@@ -1,4 +1,4 @@
-import macros, osproc, regex, strformat, strutils
+import macros, osproc, regex, strformat, strutils, tables
 
 import os except findExe
 
@@ -650,6 +650,48 @@ proc getDynlibExt(): string =
   elif defined(macosx):
     result = ".dylib[0-9.]*"
 
+var
+  gDefines {.compileTime.} = initTable[string, string]()
+
+macro setDefines*(defs: static openArray[string]): untyped =
+  ## Specify `-d:xxx` values in code instead of having to rely on the command
+  ## line or `cfg` or `nims` files.
+  ##
+  ## At this time, Nim does not allow creation of `-d:xxx` defines in code. In
+  ## addition, Nim only loads config files for the module being compiled but not
+  ## for imported packages. This becomes a challenge when wanting to ship a wrapper
+  ## library that wants to control `getHeader()` for an underlying package.
+  ##
+  ##   E.g. nimarchive wanting to set `-d:lzmaStatic`
+  ##
+  ## The consumer of nimarchive would need to set such defines as part of their
+  ## project, making it inconvenient.
+  ##
+  ## By calling this proc with the defines preferred before importing such a module,
+  ## the caller can set the behavior in code instead.
+  ##
+  ## .. code-block:: nim
+  ##
+  ##    setDefines(@["lzmaStatic", "lzmaDL", "lzmaSetVer=5.2.4"])
+  ##
+  ##    import lzma
+  for def in defs:
+    let
+      nv = def.strip().split("=", maxsplit = 1)
+    if nv.len != 0:
+      let
+        n = nv[0]
+        v =
+          if nv.len == 2:
+            nv[1]
+          else:
+            ""
+      gDefines[n] = v
+
+macro clearDefines*(): untyped =
+  ## Clear all defines set using `setDefines()`.
+  gDefines.clear()
+
 macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
   altNames: static[string] = ""): untyped =
@@ -669,6 +711,8 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   ##
   ## `-d:xxxSetVer=x.y.z` can be used to specify which version to use. It is used as a tag
   ## name for Git whereas for DL, it replaces `$1` in the URL defined.
+  ##
+  ## All defines can also be set in code using `setDefines()`.
   ##
   ## The library is then configured (with `cmake` or `autotools` if possible) and built
   ## using `make`, unless using `-d:xxxStd` which presumes that the system package
@@ -700,19 +744,36 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   var
     name = header.extractFilename().split(".")[0]
 
-    nameStd = newIdentNode(name & "Std")
-    nameGit = newIdentNode(name & "Git")
-    nameDL = newIdentNode(name & "DL")
+    stdStr = name & "Std"
+    gitStr = name & "Git"
+    dlStr = name & "DL"
 
-    nameStatic = newIdentNode(name & "Static")
+    staticStr = name & "Static"
+    verStr = name & "SetVer"
+
+    nameStd = newIdentNode(stdStr)
+    nameGit = newIdentNode(gitStr)
+    nameDL = newIdentNode(dlStr)
+
+    nameStatic = newIdentNode(staticStr)
 
     path = newIdentNode(name & "Path")
     lpath = newIdentNode(name & "LPath")
-    version = newIdentNode(name & "SetVer")
+    version = newIdentNode(verStr)
     lname = newIdentNode(name & "LName")
     preBuild = newIdentNode(name & "PreBuild")
 
     lre = "(lib)?$1[_]?(static)?[0-9.\\-]*\\"
+
+    stdVal = gDefines.hasKey(stdStr)
+    gitVal = gDefines.hasKey(gitStr)
+    dlVal = gDefines.hasKey(dlStr)
+    staticVal = gDefines.hasKey(staticStr)
+    verVal =
+      if gDefines.hasKey(verStr):
+        gDefines[verStr]
+      else:
+        ""
 
   if altNames.len != 0:
     let
@@ -724,23 +785,28 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   result = newNimNode(nnkStmtList)
   result.add(quote do:
     const
-      `version`* {.strdefine.} = ""
+      `nameStd`* = when defined(`nameStd`): true else: `stdVal` == 1
+      `nameGit`* = when defined(`nameGit`): true else: `gitVal` == 1
+      `nameDL`* = when defined(`nameDL`): true else: `dlVal` == 1
+      `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
+
+      `version`* {.strdefine.} = `verVal`
       `lname` =
-        when defined(`nameStatic`):
+        when `nameStatic`:
           `lre` & ".a"
         else:
           `lre` & getDynlibExt()
 
-    when defined(`nameStd`):
+    when `nameStd`:
       const
         `path`* = getStdPath(`header`)
         `lpath`* = getStdLibPath(`lname`)
     else:
       const
         `path`* =
-          when defined(`nameGit`):
+          when `nameGit`:
             getGitPath(`header`, `giturl`, `outdir`, `version`)
-          elif defined(`nameDL`):
+          elif `nameDL`:
             getDlPath(`header`, `dlurl`, `outdir`, `version`)
           else:
             getLocalPath(`header`, `outdir`)
@@ -757,6 +823,6 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
       doAssert `lpath`.len != 0, "\nLibrary " & `lname` & " not found"
       echo "# Including library " & `lpath`
 
-    when defined(`nameStatic`):
+    when `nameStatic`:
       {.passL: `lpath`.}
   )

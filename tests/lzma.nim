@@ -8,6 +8,11 @@ const
 static:
   cDebug()
 
+when defined(envTest):
+  setDefines(@["lzmaStd"])
+elif defined(envTestStatic):
+  setDefines(@["lzmaStd", "lzmaStatic"])
+
 getHeader(
   "lzma.h",
   giturl = "https://github.com/xz-mirror/xz",
@@ -33,7 +38,7 @@ cOverride:
     lzma_block = object
     lzma_index_iter = object
 
-when not defined(lzmaStatic):
+when not lzmaStatic:
   cImport(lzmaPath, recurse = true, dynlib = "lzmaLPath")
 else:
   cImport(lzmaPath, recurse = true)
