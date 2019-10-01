@@ -1,6 +1,6 @@
 import macros, osproc, regex, strformat, strutils, tables
 
-import os except findExe
+import os except findExe, sleep
 
 import "."/[compat]
 
@@ -8,6 +8,17 @@ proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
   if not noQuote:
     result = result.quoteShell
+
+proc sleep*(milsecs: int) =
+  ## Sleep at compile time
+  let
+    cmd =
+      when defined(windows):
+        "cmd /c timeout "
+      else:
+        "sleep "
+
+    (oup, ret) = gorgeEx(cmd & $(milsecs / 1000))
 
 proc execAction*(cmd: string, retry = 0, nostderr = false): string =
   ## Execute an external command - supported at compile time
