@@ -9,7 +9,7 @@ proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   if not noQuote:
     result = result.quoteShell
 
-proc execAction*(cmd: string, nostderr=false): string =
+proc execAction*(cmd: string, retry = 0, nostderr = false): string =
   ## Execute an external command - supported at compile time
   ##
   ## Checks if command exits successfully before returning. If not, an
@@ -29,7 +29,12 @@ proc execAction*(cmd: string, nostderr=false): string =
   else:
     let opt = if nostderr: {poUsePath} else: {poStdErrToStdOut, poUsePath}
     (result, ret) = execCmdEx(ccmd, opt)
-  doAssert ret == 0, "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
+  if ret != 0:
+    if retry > 0:
+      sleep(500)
+      result = execAction(cmd, retry = retry - 1)
+    else:
+      doAssert true, "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
 
 proc findExe*(exe: string): string =
   ## Find the specified executable using the `which`/`where` command - supported
@@ -54,7 +59,7 @@ proc mkDir*(dir: string) =
   if not dirExists(dir):
     let
       flag = when not defined(Windows): "-p" else: ""
-    discard execAction(&"mkdir {flag} {dir.sanitizePath}")
+    discard execAction(&"mkdir {flag} {dir.sanitizePath}", retry = 2)
 
 proc cpFile*(source, dest: string, move=false) =
   ## Copy a file from `source` to `dest` at compile time
@@ -73,7 +78,7 @@ proc cpFile*(source, dest: string, move=false) =
         else:
           "cp -f"
 
-  discard execAction(&"{cmd} {source.sanitizePath} {dest.sanitizePath}")
+  discard execAction(&"{cmd} {source.sanitizePath} {dest.sanitizePath}", retry = 2)
 
 proc mvFile*(source, dest: string) =
   ## Move a file from `source` to `dest` at compile time
@@ -92,7 +97,7 @@ proc rmFile*(source: string, dir = false) =
       else:
         "rm -rf"
 
-  discard execAction(&"{cmd} {source.sanitizePath}")
+  discard execAction(&"{cmd} {source.sanitizePath}", retry = 2)
 
 proc rmDir*(source: string) =
   ## Remove a directory or pattern at compile time
