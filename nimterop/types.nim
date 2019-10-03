@@ -20,7 +20,7 @@ else:
   import std/time_t as time_t_temp
   type time_t* = time_t_temp.Time
 
-  when defined(c):
+  when defined(c) or defined(nimdoc):
     # http://www.cplusplus.com/reference/cwchar/wchar_t/
     # In C++, wchar_t is a distinct fundamental type (and thus it is
     # not defined in <cwchar> nor any other header).
