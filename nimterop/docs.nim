@@ -24,6 +24,11 @@ proc buildDocs*(files: seq[string], path: string, baseDir = getProjectPath() & "
   ##
   ## WARNING: `--publish` will destroy any existing content in this branch.
   let
+    baseDir =
+      if baseDir == "/":
+        getCurrentDir() & "/"
+      else:
+        baseDir
     path = baseDir & path
   for file in files:
     echo gorge(&"nim doc -o:{path} --project --index:on {baseDir & file}")
