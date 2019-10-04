@@ -1,4 +1,5 @@
 time_t	types.html#time_t	types: time_t	
+wchar_t	types.html#wchar_t	types: wchar_t	
 ptrdiff_t	types.html#ptrdiff_t	types: ptrdiff_t	
 va_list	types.html#va_list	types: va_list	
 enumOp	types.html#enumOp.t,,,	types: enumOp(op, typ, typout)	

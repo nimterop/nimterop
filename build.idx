@@ -1,0 +1,29 @@
+sanitizePath	build.html#sanitizePath,string	build: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string	
+sleep	build.html#sleep,int	build: sleep(milsecs: int)	
+execAction	build.html#execAction,string,int	build: execAction(cmd: string; retry = 0; nostderr = false): string	
+findExe	build.html#findExe,string	build: findExe(exe: string): string	
+mkDir	build.html#mkDir,string	build: mkDir(dir: string)	
+cpFile	build.html#cpFile,string,string	build: cpFile(source, dest: string; move = false)	
+mvFile	build.html#mvFile,string,string	build: mvFile(source, dest: string)	
+rmFile	build.html#rmFile,string	build: rmFile(source: string; dir = false)	
+rmDir	build.html#rmDir,string	build: rmDir(source: string)	
+extractZip	build.html#extractZip,string,string	build: extractZip(zipfile, outdir: string)	
+extractTar	build.html#extractTar,string,string	build: extractTar(tarfile, outdir: string)	
+downloadUrl	build.html#downloadUrl,string,string	build: downloadUrl(url, outdir: string)	
+gitReset	build.html#gitReset,string	build: gitReset(outdir: string)	
+gitCheckout	build.html#gitCheckout,string,string	build: gitCheckout(file, outdir: string)	
+gitPull	build.html#gitPull,string,string,string,string	build: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)	
+findFile	build.html#findFile,,string	build: findFile(file: string | Regex; dir: string; recurse = true; first = false): string	
+flagBuild	build.html#flagBuild,string,openArray[string]	build: flagBuild(base: string; flags: openArray[string]): string	
+configure	build.html#configure,string,string,string	build: configure(path, check: string; flags = &quot;&quot;)	
+getCmakeIncludePath	build.html#getCmakeIncludePath,openArray[string]	build: getCmakeIncludePath(paths: openArray[string]): string	
+setCmakeProperty	build.html#setCmakeProperty,string,string,string,string	build: setCmakeProperty(outdir, name, property, value: string)	
+setCmakeLibName	build.html#setCmakeLibName,string,string,string,string,string	build: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)	
+setCmakePositionIndependentCode	build.html#setCmakePositionIndependentCode,string	build: setCmakePositionIndependentCode(outdir: string)	
+cmake	build.html#cmake,string,string,string	build: cmake(path, check, flags: string)	
+make	build.html#make,,,string	build: make(path, check: string | Regex; flags = &quot;&quot;)	
+getGccPaths	build.html#getGccPaths,string	build: getGccPaths(mode = &quot;c&quot;): seq[string]	
+getGccLibPaths	build.html#getGccLibPaths,string	build: getGccLibPaths(mode = &quot;c&quot;): seq[string]	
+setDefines	build.html#setDefines.m	build: setDefines(defs: static openArray[string]): untyped	
+clearDefines	build.html#clearDefines.m	build: clearDefines(): untyped	
+getHeader	build.html#getHeader.m,static[string],static[string],static[string],static[string],static[string],static[string],static[string],static[string]	build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;\n          dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;\n          conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;\n          makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;): untyped	

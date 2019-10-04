@@ -805,7 +805,7 @@ function main() {
 <div class="document" id="documentId">
   <div class="container">
     <h1 class="title">Index</h1>
-    Modules: <a href="cimport.html">cimport</a>, <a href="compat.html">compat</a>, <a href="git.html">git</a>, <a href="paths.html">paths</a>, <a href="plugin.html">plugin</a>, <a href="types.html">types</a>.<br/><p /><h2>API symbols</h2>
+    Modules: <a href="build.html">build</a>, <a href="cimport.html">cimport</a>, <a href="compat.html">compat</a>, <a href="git.html">git</a>, <a href="paths.html">paths</a>, <a href="plugin.html">plugin</a>, <a href="types.html">types</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="c2nImport" href="#c2nImport"><span>c2nImport:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="cimport: c2nImport(filename: static string; recurse: static bool = false;
@@ -846,12 +846,20 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="cimport: cIncludeDir(dir: static string): untyped" href="cimport.html#cIncludeDir.m">cimport: cIncludeDir(dir: static string): untyped</a></li>
           </ul></dd>
+<dt><a name="clearDefines" href="#clearDefines"><span>clearDefines:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: clearDefines(): untyped" href="build.html#clearDefines.m">build: clearDefines(): untyped</a></li>
+          </ul></dd>
 <dt><a name="cmake" href="#cmake"><span>cmake:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: cmake(path, check, flags: string)" href="build.html#cmake%2Cstring%2Cstring%2Cstring">build: cmake(path, check, flags: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: cmake(path, check, flags: string)" href="git.html#cmake%2Cstring%2Cstring%2Cstring">git: cmake(path, check, flags: string)</a></li>
           </ul></dd>
 <dt><a name="configure" href="#configure"><span>configure:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: configure(path, check: string; flags = &quot;&quot;)" href="build.html#configure%2Cstring%2Cstring%2Cstring">build: configure(path, check: string; flags = &quot;&quot;)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: configure(path, check: string; flags = &quot;&quot;)" href="git.html#configure%2Cstring%2Cstring%2Cstring">git: configure(path, check: string; flags = &quot;&quot;)</a></li>
           </ul></dd>
 <dt><a name="cOverride" href="#cOverride"><span>cOverride:</span></a></dt><dd><ul class="simple">
@@ -860,6 +868,8 @@ function main() {
           </ul></dd>
 <dt><a name="cpFile" href="#cpFile"><span>cpFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: cpFile(source, dest: string; move = false)" href="build.html#cpFile%2Cstring%2Cstring">build: cpFile(source, dest: string; move = false)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: cpFile(source, dest: string; move = false)" href="git.html#cpFile%2Cstring%2Cstring">git: cpFile(source, dest: string; move = false)</a></li>
           </ul></dd>
 <dt><a name="cPlugin" href="#cPlugin"><span>cPlugin:</span></a></dt><dd><ul class="simple">
@@ -880,6 +890,8 @@ function main() {
           </ul></dd>
 <dt><a name="downloadUrl" href="#downloadUrl"><span>downloadUrl:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: downloadUrl(url, outdir: string)" href="build.html#downloadUrl%2Cstring%2Cstring">build: downloadUrl(url, outdir: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: downloadUrl(url, outdir: string)" href="git.html#downloadUrl%2Cstring%2Cstring">git: downloadUrl(url, outdir: string)</a></li>
           </ul></dd>
 <dt><a name="enumOp" href="#enumOp"><span>enumOp:</span></a></dt><dd><ul class="simple">
@@ -888,22 +900,72 @@ function main() {
           </ul></dd>
 <dt><a name="execAction" href="#execAction"><span>execAction:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: execAction(cmd: string; retry = 0; nostderr = false): string" href="build.html#execAction%2Cstring%2Cint">build: execAction(cmd: string; retry = 0; nostderr = false): string</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: execAction(cmd: string; nostderr = false): string" href="git.html#execAction%2Cstring">git: execAction(cmd: string; nostderr = false): string</a></li>
+          </ul></dd>
+<dt><a name="extractTar" href="#extractTar"><span>extractTar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: extractTar(tarfile, outdir: string)" href="build.html#extractTar%2Cstring%2Cstring">build: extractTar(tarfile, outdir: string)</a></li>
           </ul></dd>
 <dt><a name="extractZip" href="#extractZip"><span>extractZip:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: extractZip(zipfile, outdir: string)" href="build.html#extractZip%2Cstring%2Cstring">build: extractZip(zipfile, outdir: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: extractZip(zipfile, outdir: string)" href="git.html#extractZip%2Cstring%2Cstring">git: extractZip(zipfile, outdir: string)</a></li>
+          </ul></dd>
+<dt><a name="findExe" href="#findExe"><span>findExe:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: findExe(exe: string): string" href="build.html#findExe%2Cstring">build: findExe(exe: string): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="git: findExe(exe: string): string" href="git.html#findExe%2Cstring">git: findExe(exe: string): string</a></li>
+          </ul></dd>
+<dt><a name="findFile" href="#findFile"><span>findFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: findFile(file: string | Regex; dir: string; recurse = true; first = false): string" href="build.html#findFile%2C%2Cstring">build: findFile(file: string | Regex; dir: string; recurse = true; first = false): string</a></li>
+          </ul></dd>
+<dt><a name="flagBuild" href="#flagBuild"><span>flagBuild:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: flagBuild(base: string; flags: openArray[string]): string" href="build.html#flagBuild%2Cstring%2CopenArray%5Bstring%5D">build: flagBuild(base: string; flags: openArray[string]): string</a></li>
+          </ul></dd>
+<dt><a name="getCmakeIncludePath" href="#getCmakeIncludePath"><span>getCmakeIncludePath:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getCmakeIncludePath(paths: openArray[string]): string" href="build.html#getCmakeIncludePath%2CopenArray%5Bstring%5D">build: getCmakeIncludePath(paths: openArray[string]): string</a></li>
+          </ul></dd>
+<dt><a name="getGccLibPaths" href="#getGccLibPaths"><span>getGccLibPaths:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getGccLibPaths(mode = &quot;c&quot;): seq[string]" href="build.html#getGccLibPaths%2Cstring">build: getGccLibPaths(mode = &quot;c&quot;): seq[string]</a></li>
+          </ul></dd>
+<dt><a name="getGccPaths" href="#getGccPaths"><span>getGccPaths:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getGccPaths(mode = &quot;c&quot;): seq[string]" href="build.html#getGccPaths%2Cstring">build: getGccPaths(mode = &quot;c&quot;): seq[string]</a></li>
+          </ul></dd>
+<dt><a name="getHeader" href="#getHeader"><span>getHeader:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
+          dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
+          conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;
+          makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;): untyped" href="build.html#getHeader.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D">build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
+          dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
+          conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;
+          makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;): untyped</a></li>
           </ul></dd>
 <dt><a name="gitCheckout" href="#gitCheckout"><span>gitCheckout:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: gitCheckout(file, outdir: string)" href="build.html#gitCheckout%2Cstring%2Cstring">build: gitCheckout(file, outdir: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: gitCheckout(file, outdir: string)" href="git.html#gitCheckout%2Cstring%2Cstring">git: gitCheckout(file, outdir: string)</a></li>
           </ul></dd>
 <dt><a name="gitPull" href="#gitPull"><span>gitPull:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)" href="build.html#gitPull%2Cstring%2Cstring%2Cstring%2Cstring">build: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)" href="git.html#gitPull%2Cstring%2Cstring%2Cstring%2Cstring">git: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)</a></li>
           </ul></dd>
 <dt><a name="gitReset" href="#gitReset"><span>gitReset:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: gitReset(outdir: string)" href="build.html#gitReset%2Cstring">build: gitReset(outdir: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: gitReset(outdir: string)" href="git.html#gitReset%2Cstring">git: gitReset(outdir: string)</a></li>
           </ul></dd>
 <dt><a name="incDir" href="#incDir"><span>incDir:</span></a></dt><dd><ul class="simple">
@@ -912,15 +974,25 @@ function main() {
           </ul></dd>
 <dt><a name="make" href="#make"><span>make:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: make(path, check: string | Regex; flags = &quot;&quot;)" href="build.html#make%2C%2C%2Cstring">build: make(path, check: string | Regex; flags = &quot;&quot;)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: make(path, check: string; flags = &quot;&quot;)" href="git.html#make%2Cstring%2Cstring%2Cstring">git: make(path, check: string; flags = &quot;&quot;)</a></li>
           </ul></dd>
 <dt><a name="mkDir" href="#mkDir"><span>mkDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: mkDir(dir: string)" href="build.html#mkDir%2Cstring">build: mkDir(dir: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: mkDir(dir: string)" href="git.html#mkDir%2Cstring">git: mkDir(dir: string)</a></li>
           </ul></dd>
 <dt><a name="mvFile" href="#mvFile"><span>mvFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="build: mvFile(source, dest: string)" href="build.html#mvFile%2Cstring%2Cstring">build: mvFile(source, dest: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="git: mvFile(source, dest: string)" href="git.html#mvFile%2Cstring%2Cstring">git: mvFile(source, dest: string)</a></li>
+          </ul></dd>
+<dt><a name="myNormalizedPath" href="#myNormalizedPath"><span>myNormalizedPath:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compat: myNormalizedPath(path: string): string" href="compat.html#myNormalizedPath%2Cstring">compat: myNormalizedPath(path: string): string</a></li>
           </ul></dd>
 <dt><a name="nimteropBuildDir" href="#nimteropBuildDir"><span>nimteropBuildDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -942,9 +1014,41 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="types: ptrdiff_t" href="types.html#ptrdiff_t">types: ptrdiff_t</a></li>
           </ul></dd>
-<dt><a name="relativePath" href="#relativePath"><span>relativePath:</span></a></dt><dd><ul class="simple">
+<dt><a name="rmDir" href="#rmDir"><span>rmDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="compat: relativePath(file, base: string): string" href="compat.html#relativePath%2Cstring%2Cstring">compat: relativePath(file, base: string): string</a></li>
+          data-doc-search-tag="build: rmDir(source: string)" href="build.html#rmDir%2Cstring">build: rmDir(source: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="git: rmDir(source: string)" href="git.html#rmDir%2Cstring">git: rmDir(source: string)</a></li>
+          </ul></dd>
+<dt><a name="rmFile" href="#rmFile"><span>rmFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: rmFile(source: string; dir = false)" href="build.html#rmFile%2Cstring">build: rmFile(source: string; dir = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="git: rmFile(source: string; dir = false)" href="git.html#rmFile%2Cstring">git: rmFile(source: string; dir = false)</a></li>
+          </ul></dd>
+<dt><a name="sanitizePath" href="#sanitizePath"><span>sanitizePath:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string" href="build.html#sanitizePath%2Cstring">build: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string</a></li>
+          </ul></dd>
+<dt><a name="setCmakeLibName" href="#setCmakeLibName"><span>setCmakeLibName:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)" href="build.html#setCmakeLibName%2Cstring%2Cstring%2Cstring%2Cstring%2Cstring">build: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)</a></li>
+          </ul></dd>
+<dt><a name="setCmakePositionIndependentCode" href="#setCmakePositionIndependentCode"><span>setCmakePositionIndependentCode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: setCmakePositionIndependentCode(outdir: string)" href="build.html#setCmakePositionIndependentCode%2Cstring">build: setCmakePositionIndependentCode(outdir: string)</a></li>
+          </ul></dd>
+<dt><a name="setCmakeProperty" href="#setCmakeProperty"><span>setCmakeProperty:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: setCmakeProperty(outdir, name, property, value: string)" href="build.html#setCmakeProperty%2Cstring%2Cstring%2Cstring%2Cstring">build: setCmakeProperty(outdir, name, property, value: string)</a></li>
+          </ul></dd>
+<dt><a name="setDefines" href="#setDefines"><span>setDefines:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: setDefines(defs: static openArray[string]): untyped" href="build.html#setDefines.m">build: setDefines(defs: static openArray[string]): untyped</a></li>
+          </ul></dd>
+<dt><a name="sleep" href="#sleep"><span>sleep:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: sleep(milsecs: int)" href="build.html#sleep%2Cint">build: sleep(milsecs: int)</a></li>
           </ul></dd>
 <dt><a name="Symbol" href="#Symbol"><span>Symbol:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -966,12 +1070,16 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="types: va_list" href="types.html#va_list">types: va_list</a></li>
           </ul></dd>
+<dt><a name="wchar_t" href="#wchar_t"><span>wchar_t:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: wchar_t" href="types.html#wchar_t">types: wchar_t</a></li>
+          </ul></dd>
 </dl>
     <div class="row">
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-07-30 00:08:28 UTC</small>
+        <small>Made with Nim. Generated: 2019-10-04 01:43:50 UTC</small>
       </div>
     </div>
   </div>

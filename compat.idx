@@ -1,1 +1,1 @@
-relativePath	compat.html#relativePath,string,string	compat: relativePath(file, base: string): string	
+myNormalizedPath	compat.html#myNormalizedPath,string	compat: myNormalizedPath(path: string): string	
