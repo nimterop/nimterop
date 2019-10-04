@@ -1,6 +1,6 @@
 # Package
 
-version     = "0.1.0"
+version     = "0.2.0"
 author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
@@ -14,7 +14,7 @@ installFiles = @["config.nims"]
 # Dependencies
 requires "nim >= 0.19.2", "regex >= 0.10.0", "cligen >= 0.9.17"
 
-import strformat
+import nimterop/docs
 
 proc execCmd(cmd: string) =
   echo "execCmd:" & cmd
@@ -24,57 +24,27 @@ proc execTest(test: string) =
   execCmd "nim c -r " & test
   execCmd "nim cpp -r " & test
 
-proc tsoloud() =
-  execTest "tests/tsoloud.nim"
-
 task buildToast, "build toast":
-  # If need to manually rebuild (automatically built on 1st need)
-  execCmd(&"nim c -d:release nimterop/toast.nim")
+  execCmd("nim c -d:danger nimterop/toast.nim")
 
-proc testAll() =
+task docs, "Generate docs":
+  buildDocs(@["nimterop/all.nim"], "build/htmldocs")
+
+task test, "Test":
+  buildToastTask()
+
   execTest "tests/tnimterop_c.nim"
   execCmd "nim cpp -r tests/tnimterop_cpp.nim"
   execTest "tests/tpcre.nim"
 
-  ## platform specific tests
+  # Platform specific tests
   when defined(Windows):
     execTest "tests/tmath.nim"
   if defined(OSX) or defined(Windows) or not existsEnv("TRAVIS"):
-    tsoloud() # requires some libraries on linux, need them installed in TRAVIS
+    execTest "tests/tsoloud.nim"
 
-const htmldocsDir = "build/htmldocs"
+  # getHeader tests
+  withDir("tests"):
+    execCmd("nim e getheader.nims")
 
-when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-  import os
-  proc getNimRootDir(): string =
-    #[
-    hack, but works
-    alternatively (but more complex), use (from a nim file, not nims otherwise
-    you get Error: ambiguous call; both system.fileExists):
-    import "$nim/testament/lib/stdtest/specialpaths.nim"
-    nimRootDir
-    ]#
-    fmt"{currentSourcePath}".parentDir.parentDir.parentDir
-
-proc runNimDoc() =
-  execCmd &"nim doc -o:{htmldocsDir} --project --index:on nimterop/all.nim"
-  execCmd &"nim buildIndex -o:{htmldocsDir}/theindex.html {htmldocsDir}"
-  when declared(getNimRootDir):
-    #[
-    this enables doc search, works at least locally with:
-    cd {htmldocsDir} && python -m SimpleHTTPServer 9009
-    ]#
-    execCmd &"nim js -o:{htmldocsDir}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim"
-
-task test, "Test":
-  buildToastTask()
-  testAll()
-  runNimDoc()
-
-task docs, "Generate docs":
-  runNimDoc()
-
-task docsPublish, "Generate and publish docs":
-  # Uses: pip install ghp-import
-  runNimDoc()
-  execCmd &"ghp-import --no-jekyll -fp {htmldocsDir}"
+  docsTask()

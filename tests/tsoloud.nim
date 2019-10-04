@@ -1,4 +1,4 @@
-import os, nimterop/[cimport, git, paths]
+import os, nimterop/[cimport, build, paths]
 
 const
   baseDir = nimteropBuildDir()/"soloud"

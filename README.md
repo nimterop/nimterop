@@ -11,13 +11,14 @@ Nim has one of the best FFI you can find - importing C/C++ is supported out of t
 The goal of nimterop is to leverage the [tree-sitter](http://tree-sitter.github.io/tree-sitter/) engine to parse C/C++ code and then convert relevant portions of the AST into Nim definitions. [tree-sitter](https://github.com/tree-sitter) is a Github sponsored project that can parse a variety of languages into an AST which is then leveraged by the [Atom](https://atom.io/) editor for syntax highlighting and code folding. The advantages of this approach are multifold:
 - Benefit from the tree-sitter community's investment into language parsing
 - Wrap what is recognized in the AST rather than completely failing due to parsing errors
-- Avoid depending on Nim compiler API which is evolving constantly and makes backwards compatibility a bit challenging
 
-Most of the functionality is contained within the `toast` binary that is built when nimterop is installed and can be used standalone similar to how c2nim can be used today. In addition, nimterop also offers an API to pull in the generated Nim content directly into an application.
+Most of the wrapping functionality is contained within the `toast` binary that is built when nimterop is installed and can be used standalone similar to how c2nim can be used today. In addition, nimterop also offers an API to pull in the generated Nim content directly into an application and other nimgen functionality that helps in automating the wrapping process. There is also support to statically or dynamically link to system installed libraries or downloading and building them with `autoconf` or `cmake` from a Git repo or source archive.
 
-The nimterop feature set is still limited to C but is expanding rapidly. C++ support will be added once most popular C libraries can be wrapped seamlessly.
+The nimterop wrapping functionality is still limited to C but is constantly expanding. C++ support will be added once most popular C libraries can be wrapped seamlessly. Meanwhile, `c2nim` can also be used in place of `toast` with the `c2nImport()` API call.
 
 Nimterop has seen some adoption within the community and the simplicity and success of this approach justifies additional investment of time and effort. Regardless, the goal is to make interop seamless so nimterop will focus on wrapping headers and not the outright conversion of C/C++ implementation.
+
+Also, given tree-sitter can parse a variety of other languages, there might also be value in investigating how to wrap Rust and Go libraries.
 
 __Installation__
 
@@ -37,8 +38,37 @@ This will download and install nimterop in the standard Nimble package location,
 
 __Usage__
 
+Detailed documentation can be found [here](https://nimterop.github.io/nimterop/theindex.html).
+
 Check out the [wiki](https://github.com/nimterop/nimterop/wiki/Wrappers) for a list of all known wrappers that have been created using nimterop. Please do add your project once you are done so that others can benefit from your work.
 
+Using the high-level `getHeader` API to perform all building and linking automatically:
+```nim
+import nimterop/[build, cimport]
+
+static:
+  cDebug()
+
+getHeader(
+  "header.h",
+  giturl = "https://github.com/username/repo",
+  dlurl = "https://website.org/download/repo-$1.tar.gz",
+  outdir = "build",
+  conFlags = "--disable-comp --enable-feature"
+)
+
+when not defined(headerStatic):
+  cImport(headerPath, recurse = true, dynlib = "headerLPath")
+else:
+  cImport(headerPath, recurse = true)
+```
+This allows the user to control how the wrapper works - either pass `-d:headerStd` to search for `header.h` in the standard system path, `-d:headerGit` to clone the source from the specified git URL or `-d:headerDL` to get the source from download URL. Further, the `-d:headerSetVer=X.Y.Z` flag can be used to specify which version to use. It is used as the tag name for Git whereas for DL, it replaces `$1` in the URL defined.
+
+The `-d:headerStatic` attempts to statically link the library. If it is omitted, the library is dynamically linked instead.
+
+[lzma.nim](https://github.com/nimterop/nimterop/blob/master/tests/lzma.nim) is an example of a library using this high-level API.
+
+The traditional approach is to manually compile in the code:
 ```nim
 import nimterop/cimport
 
@@ -52,9 +82,10 @@ cImport("clib.h")
 cCompile("clib/src/*.c")
 ```
 
-Check out [template.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim) as a starting point for wrapping a new library. The template can be copied and trimmed down and modified as required. [templite.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/templite.nim) is a shorter version for more experienced users.
+Check out [template.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim) as a starting point for wrapping a library using the traditional approach. The template can be copied and trimmed down and modified as required. [templite.nim](https://github.com/nimterop/nimterop/blob/master/nimterop/templite.nim) is a shorter version for more experienced users.
 
 Refer to the ```tests``` directory for examples on how the library can be used.
+
 
 The `toast` binary can also be used directly on the CLI:
 

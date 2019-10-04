@@ -2,7 +2,7 @@ import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
-import "."/[git, globals, plugin, treesitter/api]
+import "."/[build, compat, globals, plugin, treesitter/api]
 
 const gReserved = """
 addr and as asm
@@ -26,7 +26,7 @@ when while
 xor
 yield""".split(Whitespace).toSet()
 
-const gTypeMap = {
+const gTypeMap* = {
   # char
   "char": "cchar",
   "signed char": "cschar",
@@ -39,6 +39,8 @@ const gTypeMap = {
   "signed short int": "cshort",
   "unsigned short": "cushort",
   "unsigned short int": "cushort",
+  "uShort": "cushort",
+  "u_short": "cushort",
 
   # int
   "int": "cint",
@@ -47,6 +49,8 @@ const gTypeMap = {
   "ssize_t": "cint",
   "unsigned": "cuint",
   "unsigned int": "cuint",
+  "uInt": "cuint",
+  "u_int": "cuint",
   "size_t": "cuint",
 
   # long
@@ -57,6 +61,8 @@ const gTypeMap = {
   "off_t": "clong",
   "unsigned long": "culong",
   "unsigned long int": "culong",
+  "uLong": "culong",
+  "u_long": "culong",
 
   # long long
   "long long": "clonglong",
@@ -73,17 +79,14 @@ const gTypeMap = {
   "long double": "clongdouble"
 }.toTable()
 
-proc sanitizePath*(path: string): string =
-  path.multiReplace([("\\\\", $DirSep), ("\\", $DirSep), ("/", $DirSep)])
-
 proc getType*(str: string): string =
   if str == "void":
     return "object"
 
   result = str.strip(chars={'_'}).
     replace(re"\s+", " ").
-    replace(re"([u]?int[\d]+)_t", "$1").
-    replace(re"([u]?int)ptr_t", "ptr $1")
+    replace(re"^([u]?int[\d]+)_t$", "$1").
+    replace(re"^([u]?int)ptr_t$", "ptr $1")
 
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
@@ -205,15 +208,15 @@ proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
 
     rdata: seq[string] = @[]
     start = false
-    sfile = fullpath.sanitizePath
+    sfile = fullpath.sanitizePath(noQuote = true)
 
   for inc in gState.includeDirs:
-    cmd &= &"-I{inc.quoteShell} "
+    cmd &= &"-I{inc.sanitizePath} "
 
   for def in gState.defines:
     cmd &= &"-D{def} "
 
-  cmd &= &"{fullpath.quoteShell}"
+  cmd &= &"{fullpath.sanitizePath}"
 
   # Include content only from file
   for line in execAction(cmd).splitLines():
@@ -221,19 +224,19 @@ proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
       if line.len > 1 and line[0 .. 1] == "# ":
         start = false
         let
-          saniLine = line.sanitizePath
+          saniLine = line.sanitizePath(noQuote = true)
         if sfile in saniLine:
           start = true
         elif not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
           start = true
         elif gState.recurse:
           let
-            pDir = sfile.expandFilename().parentDir().sanitizePath()
+            pDir = sfile.expandFilename().parentDir().sanitizePath(noQuote = true)
           if pDir.len == 0 or pDir in saniLine:
             start = true
           else:
             for inc in gState.includeDirs:
-              if inc.absolutePath().sanitizePath in saniLine:
+              if inc.absolutePath().sanitizePath(noQuote = true) in saniLine:
                 start = true
                 break
       else:
@@ -395,7 +398,7 @@ proc loadPlugin*(gState: State, sourcePath: string) =
     pdll = sourcePath.dll
   if not fileExists(pdll) or
     sourcePath.getLastModificationTime() > pdll.getLastModificationTime():
-    discard execAction(&"{gState.nim.quoteShell} c --app:lib {sourcePath.quoteShell}")
+    discard execAction(&"{gState.nim.sanitizePath} c --app:lib {sourcePath.sanitizePath}")
   doAssert fileExists(pdll), "No plugin binary generated for " & sourcePath
 
   let lib = loadLib(pdll)
@@ -403,3 +406,9 @@ proc loadPlugin*(gState: State, sourcePath: string) =
 
   gState.onSymbol = cast[OnSymbol](lib.symAddr("onSymbol"))
   doAssert gState.onSymbol != nil, "onSymbol() load failed from " & pdll
+
+proc expandSymlinkAbs*(path: string): string =
+  try:
+    result = path.expandSymlink().absolutePath(path.parentDir()).myNormalizedPath()
+  except:
+    result = path

@@ -2,29 +2,33 @@ os:
   - linux
   - osx
 
+addons:
+  apt:
+    packages:
+    - autopoint
+
 language: c
 
 env:
   - BRANCH=0.19.6
-  - BRANCH=0.20.0
+  - BRANCH=0.20.2
+  - BRANCH=1.0.0
   - BRANCH=devel
 
 cache:
   directories:
     - "$HOME/.choosenim/toolchains/nim-0.19.6"
-    - "$HOME/.choosenim/toolchains/nim-0.20.0"
+    - "$HOME/.choosenim/toolchains/nim-0.20.2"
+    - "$HOME/.choosenim/toolchains/nim-1.0.0"
 
 install:
-  # `set -u` failed for ubuntu: /home/travis/.travis/job_stages: line 107: secure: unbound variable
-  - set -e
   - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
   - |
       curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
       sh init.sh -y
-  - export PATH=$HOME/.nimble/bin:$PATH
+  - export PATH="$HOME/.nimble/bin:/usr/local/opt/gettext/bin:$PATH"
 
 script:
-  - set -e
   - nimble --verbose install -y
   - nimble --verbose test
   - nimble --verbose --nimbleDir:`pwd`/build/fakenimble install nimterop -y

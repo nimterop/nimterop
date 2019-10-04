@@ -7,17 +7,17 @@ import ".."/[setup, paths, types]
 static:
   treesitterSetup()
 
-const sourcePath = incDir() / "treesitter/lib"
+const sourcePath = incDir() / "treesitter" / "lib"
 
 when defined(Linux):
   {.passC: "-std=c11".}
 
 {.passC: "-DUTF8PROC_STATIC".}
-{.passC: "-I$1/include" % sourcePath.}
-{.passC: "-I$1/src" % sourcePath.}
-{.passC: "-I$1/../../utf8proc" % sourcePath.}
+{.passC: "-I$1" % (sourcePath / "include").}
+{.passC: "-I$1" % (sourcePath / "src").}
+{.passC: "-I$1" % (sourcePath / ".." / ".." / "utf8proc").}
 
-{.compile: sourcePath / "src/lib.c".}
+{.compile: sourcePath / "src" / "lib.c".}
 
 ### Generated below
 
@@ -27,7 +27,7 @@ defineEnum(TSInputEncoding)
 defineEnum(TSSymbolType)
 defineEnum(TSLogType)
 const
-  headerapi {.used.} = sourcePath / "include/tree_sitter/api.h"
+  headerapi {.used.} = sourcePath / "include" / "tree_sitter" / "api.h"
   TREE_SITTER_LANGUAGE_VERSION* = 9
   TSInputEncodingUTF8* = 0.TSInputEncoding
   TSInputEncodingUTF16* = 1.TSInputEncoding
