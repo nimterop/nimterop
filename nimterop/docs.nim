@@ -1,7 +1,7 @@
 import macros, strformat
 
 when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-  from os import parentDir
+  from os import parentDir, getCurrentCompilerExe
   proc getNimRootDir(): string =
     #[
     hack, but works
@@ -11,8 +11,12 @@ when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
     nimRootDir
     ]#
     fmt"{currentSourcePath}".parentDir.parentDir.parentDir
+else:
+  proc getCurrentCompilerExe*(): string =
+    "nim"
 
-proc buildDocs*(files: seq[string], path: string, baseDir = getProjectPath() & "/") =
+proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath() & "/",
+                defines: openArray[string] = @[]) =
   ## Generate docs for all specified nim `files` to the specified `path`
   ##
   ## `baseDir` is the project path by default and `files` and `path` are relative
@@ -30,16 +34,22 @@ proc buildDocs*(files: seq[string], path: string, baseDir = getProjectPath() & "
       else:
         baseDir
     path = baseDir & path
+    defStr = block:
+      var defStr = ""
+      for def in defines:
+        defStr &= " -d:" & def
+      defStr
+    nim = getCurrentCompilerExe()
   for file in files:
-    echo gorge(&"nim doc -o:{path} --project --index:on {baseDir & file}")
+    echo gorge(&"{nim} doc {defStr} -o:{path} --project --index:on {baseDir & file}")
 
-  echo gorge(&"nim buildIndex -o:{path}/theindex.html {path}")
+  echo gorge(&"{nim} buildIndex -o:{path}/theindex.html {path}")
   when declared(getNimRootDir):
     #[
     this enables doc search, works at least locally with:
     cd {path} && python -m SimpleHTTPServer 9009
     ]#
-    echo gorge(&"nim js -o:{path}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim")
+    echo gorge(&"{nim} js -o:{path}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim")
 
   for i in 0 .. paramCount():
     if paramStr(i) == "--publish":

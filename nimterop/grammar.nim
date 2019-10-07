@@ -212,7 +212,7 @@ proc initGrammar(): Grammar =
     if ndname.nBl and ndname != nname:
       if isEnum:
         if nimState.addNewIdentifer(ndname):
-          nimState.enumStr &= &"{nimState.getComments()}\ntype {ndname}* = {dptr}{nname}"
+          nimState.enumStr &= &"{nimState.getComments(true)}\ntype {ndname}* = {dptr}{nname}"
       else:
         if nimState.addNewIdentifer(ndname):
           let
@@ -434,7 +434,7 @@ proc initGrammar(): Grammar =
         nimState.getIdentifier(name, nskType)
 
     if nname.nBl and nimState.addNewIdentifer(nname):
-      nimState.enumStr &= &"{nimState.getComments()}\ndefineEnum({nname})"
+      nimState.enumStr &= &"{nimState.getComments(true)}\ndefineEnum({nname})"
 
       var
         i = fstart
@@ -579,9 +579,9 @@ proc initGrammar(): Grammar =
             pragma = nimState.getPragma(nimState.getImportC(fname, fnname), "cdecl")
 
           if fptr.len != 0 or ftyp != "object":
-            nimState.procStr &= &"{nimState.getComments()}\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
+            nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
           else:
-            nimState.procStr &= &"{nimState.getComments()}\nproc {fnname}*({pout}){pragma}"
+            nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}){pragma}"
   ))
 
   # // comment
@@ -597,7 +597,7 @@ proc initGrammar(): Grammar =
         let
           line = line.multiReplace([("//", ""), ("/*", ""), ("*/", "")])
 
-        nimState.commentStr &= &"\n# {line.strip(leading=false)}"
+        nimState.commentStr &= &"\n  # {line.strip(leading=false)}"
   ))
 
 proc initRegex(ast: ref Ast) =

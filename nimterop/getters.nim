@@ -380,9 +380,11 @@ proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
   if ", cdecl" in result and dy.len != 0:
     result = result.replace(".}", dy & ".}")
 
-proc getComments*(nimState: NimState): string =
+proc getComments*(nimState: NimState, strip = false): string =
   if not nimState.gState.nocomments and nimState.commentStr.len != 0:
     result = "\n" & nimState.commentStr
+    if strip:
+      result = result.replace("\n  ", "\n")
     nimState.commentStr = ""
 
 proc dll*(path: string): string =
