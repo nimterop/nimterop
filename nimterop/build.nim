@@ -1,4 +1,4 @@
-import macros, osproc, strformat, strutils, tables
+import macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
 
@@ -321,6 +321,28 @@ proc flagBuild*(base: string, flags: openArray[string]): string =
   ## `flagBuild(base, flags) => " --disable-one --disable-two"`
   for i in flags:
     result &= " " & base % i
+
+proc linkLibs*(names: openArray[string], staticLink = true): string =
+  ## Create linker flags for specified libraries
+  ##
+  ## Prepends `lib` to the name so you only need `ssl` for `libssl`.
+  var
+    stat = if staticLink: "--static" else: ""
+    resSet: OrderedSet[string]
+  resSet.init()
+
+  for name in names:
+    let
+      cmd = &"pkg-config --libs --silence-errors {stat} lib{name}"
+      libs = gorge(cmd)
+    for lib in libs.split(" "):
+      resSet.incl lib
+
+  if staticLink:
+    resSet.incl "--static"
+
+  for res in resSet:
+    result &= " " & res
 
 proc configure*(path, check: string, flags = "") =
   ## Run the GNU `configure` command to generate all Makefiles or other
@@ -736,6 +758,18 @@ macro setDefines*(defs: static openArray[string]): untyped =
 macro clearDefines*(): untyped =
   ## Clear all defines set using `setDefines()`.
   gDefines.clear()
+
+macro isDefined*(def: untyped): untyped =
+  ## Check if `-d:xxx` is set globally or via `setDefines()`
+  let
+    sdef = gDefines.hasKey(def.strVal())
+  result = newNimNode(nnkStmtList)
+  result.add(quote do:
+    when defined(`def`) or `sdef` != 0:
+      true
+    else:
+      false
+  )
 
 macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
