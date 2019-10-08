@@ -142,6 +142,7 @@ proc initGrammar(): Grammar =
         nname = ""
         tptr = ""
         aptr = ""
+        pragmas: seq[string] = @[]
 
       i += 1
       while i < nimState.data.len and "pointer" in nimState.data[i].name:
@@ -158,8 +159,11 @@ proc initGrammar(): Grammar =
         nname = nimState.getIdentifier(name, nskType)
         i += 1
 
+      if nimState.gState.dynlib.len == 0:
+        pragmas.add nimState.getImportC(name, nname)
+
       let
-        pragma = nimState.getPragma(nimState.getImportC(name, nname))
+        pragma = nimState.getPragma(pragmas)
 
       if nname notin gTypeMap and typ.nBl and nname.nBl and nimState.addNewIdentifer(nname):
         if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
@@ -255,8 +259,15 @@ proc initGrammar(): Grammar =
       if nimState.data.len == 1:
         nimState.typeStr &= &"{nimState.getComments()}\n  {nname}* {{.bycopy.}} = object{union}"
       else:
+        var
+          pragmas: seq[string] = @[]
+        if nimState.gState.dynlib.len == 0:
+          pragmas.add nimState.getImportC(prefix & name, nname)
+        pragmas.add "bycopy"
+
         let
-          pragma = nimState.getPragma(nimState.getImportC(prefix & name, nname), "bycopy")
+          pragma = nimState.getPragma(pragmas)
+
         nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object{union}"
 
       var

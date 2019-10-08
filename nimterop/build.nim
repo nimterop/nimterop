@@ -45,7 +45,7 @@ proc execAction*(cmd: string, retry = 0, nostderr = false): string =
       sleep(500)
       result = execAction(cmd, retry = retry - 1)
     else:
-      doAssert true, "Command failed: " & $(ret, nostderr) & "\nccmd: " & ccmd & "\nresult:\n" & result
+      doAssert true, "Command failed: " & $(ret, nostderr) & "\ncmd: " & ccmd & "\nresult:\n" & result
 
 proc findExe*(exe: string): string =
   ## Find the specified executable using the `which`/`where` command - supported
@@ -278,10 +278,16 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
     when not defined(windows):
       recursive = "-maxdepth 1"
 
-  if not regex:
+  var
+    dir = dir
+    file = file
+  if not recurse:
     let
-      dir = dir / file.parentDir()
-      file = file.extractFilename
+      pdir = file.parentDir()
+    if pdir.len != 0:
+      dir = dir / pdir
+
+    file = file.extractFilename
 
   cmd = cmd % [recursive, (".*[\\\\/]" & file & "$").quoteShell, dir.sanitizePath]
 

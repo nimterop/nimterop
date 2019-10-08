@@ -15,10 +15,13 @@ when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
     import posix
   type
     time_t* = Time
+    time64_t* = Time
     wchar_t* {.importc.} = object
 else:
   import std/time_t as time_t_temp
-  type time_t* = time_t_temp.Time
+  type
+    time_t* = time_t_temp.Time
+    time64_t* = time_t_temp.Time
 
   when defined(c) or defined(nimdoc):
     # http://www.cplusplus.com/reference/cwchar/wchar_t/
