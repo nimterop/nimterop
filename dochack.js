@@ -601,7 +601,6 @@ function nimMin(a_65203, b_65204) {
 	return result_65205;
 
 }
-var nimvm_49710 = false;
 var nim_program_result = 0;
 var global_raise_hook_59618 = [null];
 var local_raise_hook_59623 = [null];

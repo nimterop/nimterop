@@ -849,7 +849,9 @@ function main() {
   <li><a class="reference" href="#rmFile%2Cstring"
     title="rmFile(source: string; dir = false)"><wbr />rm<wbr />File<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#rmDir%2Cstring"
-    title="rmDir(source: string)"><wbr />rm<wbr />Dir<span class="attachedType"></span></a></li>
+    title="rmDir(dir: string)"><wbr />rm<wbr />Dir<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#getProjectCacheDir%2Cstring"
+    title="getProjectCacheDir(name: string; forceClean = true): string"><wbr />get<wbr />Project<wbr />Cache<wbr />Dir<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#extractZip%2Cstring%2Cstring"
     title="extractZip(zipfile, outdir: string)"><wbr />extract<wbr />Zip<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#extractTar%2Cstring%2Cstring"
@@ -862,10 +864,12 @@ function main() {
     title="gitCheckout(file, outdir: string)"><wbr />git<wbr />Checkout<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#gitPull%2Cstring%2Cstring%2Cstring%2Cstring"
     title="gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)"><wbr />git<wbr />Pull<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#findFile%2C%2Cstring"
-    title="findFile(file: string | Regex; dir: string; recurse = true; first = false): string"><wbr />find<wbr />File<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#findFile%2Cstring%2Cstring"
+    title="findFile(file: string; dir: string; recurse = true; first = false; regex = false): string"><wbr />find<wbr />File<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#flagBuild%2Cstring%2CopenArray%5Bstring%5D"
     title="flagBuild(base: string; flags: openArray[string]): string"><wbr />flag<wbr />Build<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#linkLibs%2CopenArray%5Bstring%5D"
+    title="linkLibs(names: openArray[string]; staticLink = true): string"><wbr />link<wbr />Libs<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#configure%2Cstring%2Cstring%2Cstring"
     title="configure(path, check: string; flags = &quot;&quot;)"><wbr />configure<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#getCmakeIncludePath%2CopenArray%5Bstring%5D"
@@ -878,8 +882,8 @@ function main() {
     title="setCmakePositionIndependentCode(outdir: string)"><wbr />set<wbr />Cmake<wbr />Position<wbr />Independent<wbr />Code<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cmake%2Cstring%2Cstring%2Cstring"
     title="cmake(path, check, flags: string)"><wbr />cmake<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#make%2C%2C%2Cstring"
-    title="make(path, check: string | Regex; flags = &quot;&quot;)"><wbr />make<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#make%2Cstring%2Cstring%2Cstring"
+    title="make(path, check: string; flags = &quot;&quot;; regex = false)"><wbr />make<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#getGccPaths%2Cstring"
     title="getGccPaths(mode = &quot;c&quot;): seq[string]"><wbr />get<wbr />Gcc<wbr />Paths<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#getGccLibPaths%2Cstring"
@@ -894,6 +898,8 @@ function main() {
     title="setDefines(defs: static openArray[string]): untyped"><wbr />set<wbr />Defines<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#clearDefines.m"
     title="clearDefines(): untyped"><wbr />clear<wbr />Defines<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#isDefined.m%2Cuntyped"
+    title="isDefined(def: untyped): untyped"><wbr />is<wbr />Defined<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#getHeader.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D"
     title="getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
           dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
@@ -987,11 +993,30 @@ Remove a file or pattern at compile time
 
 </dd>
 <a id="rmDir,string"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#rmDir%2Cstring"><span class="Identifier">rmDir</span></a><span class="Other">(</span><span class="Identifier">source</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Defect</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
-                          <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dt><pre><span class="Keyword">proc</span> <a href="#rmDir%2Cstring"><span class="Identifier">rmDir</span></a><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Defect</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
+                       <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 Remove a directory or pattern at compile time
+
+</dd>
+<a id="getProjectCacheDir,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#getProjectCacheDir%2Cstring"><span class="Identifier">getProjectCacheDir</span></a><span class="Other">(</span><span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">forceClean</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma">
+    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Defect</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+
+<p>Get a cache directory where all nimterop artifacts can be stored</p>
+<p>Projects can use this location to download source code and build binaries that can be then accessed by multiple apps. This is created under the per-user Nim cache directory.</p>
+<p>Use <tt class="docutils literal"><span class="pre">name</span></tt> to specify the subdirectory name for a project.</p>
+<p><tt class="docutils literal"><span class="pre">forceClean</span></tt> is enabled by default and effectively deletes the folder if Nim is compiled with the <tt class="docutils literal"><span class="pre">-f</span></tt> or <tt class="docutils literal"><span class="pre">--forceBuild</span></tt> flag. This allows any project to start out with a clean cache dir on a forced build.</p>
+<p>NOTE: avoid calling <tt class="docutils literal"><span class="pre">getProjectCacheDir()</span></tt> multiple times on the same <tt class="docutils literal"><span class="pre">name</span></tt> when <tt class="docutils literal"><span class="pre">forceClean = true</span></tt> else checked out source might get deleted at the wrong time during build.</p>
+<dl class="docutils"><dt>E.g.</dt>
+<dd><p><tt class="docutils literal"><span class="pre">nimgit2</span></tt> downloads <tt class="docutils literal"><span class="pre">libgit2</span></tt> source so <tt class="docutils literal"><span class="pre">name = &quot;libgit2&quot;</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">nimarchive</span></tt> downloads <tt class="docutils literal"><span class="pre">libarchive</span></tt>, <tt class="docutils literal"><span class="pre">bzlib</span></tt>, <tt class="docutils literal"><span class="pre">liblzma</span></tt> and <tt class="docutils literal"><span class="pre">zlib</span></tt> so <tt class="docutils literal"><span class="pre">name = &quot;nimarchive&quot; / &quot;libarchive&quot;</span></tt> for <tt class="docutils literal"><span class="pre">libarchive</span></tt>, etc.</p>
+</dd>
+</dl>
+
 
 </dd>
 <a id="extractZip,string,string"></a>
@@ -1050,12 +1075,13 @@ Hard reset the git repository at the specified directory
 
 
 </dd>
-<a id="findFile,,string"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#findFile%2C%2Cstring"><span class="Identifier">findFile</span></a><span class="Other">(</span><span class="Identifier">file</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Regex</span><span class="Other">;</span> <span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">first</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<a id="findFile,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#findFile%2Cstring%2Cstring"><span class="Identifier">findFile</span></a><span class="Other">(</span><span class="Identifier">file</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">first</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">regex</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma">
+    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 <p>Find the file in the specified directory</p>
-<p><tt class="docutils literal"><span class="pre">file</span></tt> can be a string or a regex object</p>
+<p><tt class="docutils literal"><span class="pre">file</span></tt> is a regular expression if <tt class="docutils literal"><span class="pre">regex</span></tt> is true</p>
 <p>Turn off recursive search with <tt class="docutils literal"><span class="pre">recurse</span></tt> and stop on first match with <tt class="docutils literal"><span class="pre">first</span></tt>. Without it, the shortest match is returned.</p>
 
 
@@ -1071,6 +1097,16 @@ Hard reset the git repository at the specified directory
 <dd><tt class="docutils literal"><span class="pre">base = &quot;--disable-$#&quot;</span></tt> <tt class="docutils literal"><span class="pre">flags = @[&quot;one&quot;, &quot;two&quot;]</span></tt></dd>
 </dl>
 <p><tt class="docutils literal"><span class="pre">flagBuild(base, flags) =&gt; &quot; --disable-one --disable-two&quot;</span></tt></p>
+
+
+</dd>
+<a id="linkLibs,openArray[string]"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#linkLibs%2CopenArray%5Bstring%5D"><span class="Identifier">linkLibs</span></a><span class="Other">(</span><span class="Identifier">names</span><span class="Other">:</span> <span class="Identifier">openArray</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">staticLink</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma">
+    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+
+<p>Create linker flags for specified libraries</p>
+<p>Prepends <tt class="docutils literal"><span class="pre">lib</span></tt> to the name so you only need <tt class="docutils literal"><span class="pre">ssl</span></tt> for <tt class="docutils literal"><span class="pre">libssl</span></tt>.</p>
 
 
 </dd>
@@ -1145,13 +1181,16 @@ Set a <tt class="docutils literal"><span class="pre">cmake</span></tt> directive
 
 
 </dd>
-<a id="make,,,string"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#make%2C%2C%2Cstring"><span class="Identifier">make</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">,</span> <span class="Identifier">check</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Regex</span><span class="Other">;</span> <span class="Identifier">flags</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span></pre></dt>
+<a id="make,string,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#make%2Cstring%2Cstring%2Cstring"><span class="Identifier">make</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">,</span> <span class="Identifier">check</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">flags</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">regex</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma">
+    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Defect</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 <p>Run the <tt class="docutils literal"><span class="pre">make</span></tt> command to build all binaries in the specified path</p>
 <p><tt class="docutils literal"><span class="pre">check</span></tt> is a file that will be generated by the <tt class="docutils literal"><span class="pre">make</span></tt> command. This is required to prevent <tt class="docutils literal"><span class="pre">make</span></tt> from running on every build. It is relative to the <tt class="docutils literal"><span class="pre">path</span></tt> and should not be an absolute path.</p>
 <p><tt class="docutils literal"><span class="pre">flags</span></tt> are any flags that should be passed to the <tt class="docutils literal"><span class="pre">make</span></tt> command.</p>
+<p><tt class="docutils literal"><span class="pre">regex</span></tt> can be set to true if <tt class="docutils literal"><span class="pre">check</span></tt> is a regular expression.</p>
 <p>If <tt class="docutils literal"><span class="pre">make.exe</span></tt> is missing and <tt class="docutils literal"><span class="pre">mingw32-make.exe</span></tt> is available, it will be copied over to make.exe in the same location.</p>
 
 
@@ -1197,6 +1236,13 @@ Set a <tt class="docutils literal"><span class="pre">cmake</span></tt> directive
 Clear all defines set using <tt class="docutils literal"><span class="pre">setDefines()</span></tt>.
 
 </dd>
+<a id="isDefined.m,untyped"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#isDefined.m%2Cuntyped"><span class="Identifier">isDefined</span></a><span class="Other">(</span><span class="Identifier">def</span><span class="Other">:</span> <span class="Identifier">untyped</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+Check if <tt class="docutils literal"><span class="pre">-d:xxx</span></tt> is set globally or via <tt class="docutils literal"><span class="pre">setDefines()</span></tt>
+
+</dd>
 <a id="getHeader.m,static[string],static[string],static[string],static[string],static[string],static[string],static[string],static[string]"></a>
 <dt><pre><span class="Keyword">macro</span> <a href="#getHeader.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D"><span class="Identifier">getHeader</span></a><span class="Other">(</span><span class="Identifier">header</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">giturl</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span>
                <span class="Identifier">dlurl</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">outdir</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span>
@@ -1208,6 +1254,7 @@ Clear all defines set using <tt class="docutils literal"><span class="pre">setDe
 <p>This proc checks <tt class="docutils literal"><span class="pre">-d:xxx</span></tt> defines based on the header name (e.g. lzma from lzma.h), and accordingly employs different ways to obtain the source.</p>
 <p><tt class="docutils literal"><span class="pre">-d:xxxStd</span></tt> - search standard system paths. E.g. <tt class="docutils literal"><span class="pre">/usr/include</span></tt> and <tt class="docutils literal"><span class="pre">/usr/lib</span></tt> on Linux <tt class="docutils literal"><span class="pre">-d:xxxGit</span></tt> - clone source from a git repo specified in <tt class="docutils literal"><span class="pre">giturl</span></tt> <tt class="docutils literal"><span class="pre">-d:xxxDL</span></tt> - download source from <tt class="docutils literal"><span class="pre">dlurl</span></tt> and extract if required</p>
 <p>This allows a single wrapper to be used in different ways depending on the user's needs. If no <tt class="docutils literal"><span class="pre">-d:xxx</span></tt> defines are specified, <tt class="docutils literal"><span class="pre">outdir</span></tt> will be searched for the header as is.</p>
+<p>If multiple <tt class="docutils literal"><span class="pre">-d:xxx</span></tt> defines are specified, precedence is <tt class="docutils literal"><span class="pre">Std</span></tt> and then <tt class="docutils literal"><span class="pre">Git</span></tt> or <tt class="docutils literal"><span class="pre">DL</span></tt>. This allows using a system installed library if available before falling back to manual building.</p>
 <p><tt class="docutils literal"><span class="pre">-d:xxxSetVer=x.y.z</span></tt> can be used to specify which version to use. It is used as a tag name for Git whereas for DL, it replaces <tt class="docutils literal"><span class="pre">$1</span></tt> in the URL defined.</p>
 <p>All defines can also be set in code using <tt class="docutils literal"><span class="pre">setDefines()</span></tt>.</p>
 <p>The library is then configured (with <tt class="docutils literal"><span class="pre">cmake</span></tt> or <tt class="docutils literal"><span class="pre">autotools</span></tt> if possible) and built using <tt class="docutils literal"><span class="pre">make</span></tt>, unless using <tt class="docutils literal"><span class="pre">-d:xxxStd</span></tt> which presumes that the system package manager was used to install prebuilt headers and binaries.</p>
@@ -1231,7 +1278,7 @@ Clear all defines set using <tt class="docutils literal"><span class="pre">setDe
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-10-04 01:43:48 UTC</small>
+        <small>Made with Nim. Generated: 2019-10-10 23:38:15 UTC</small>
       </div>
     </div>
   </div>
