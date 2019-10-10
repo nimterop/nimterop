@@ -824,6 +824,10 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   ## This allows a single wrapper to be used in different ways depending on the user's needs.
   ## If no `-d:xxx` defines are specified, `outdir` will be searched for the header as is.
   ##
+  ## If multiple `-d:xxx` defines are specified, precedence is `Std` and then `Git` or `DL`.
+  ## This allows using a system installed library if available before falling back to manual
+  ## building.
+  ##
   ## `-d:xxxSetVer=x.y.z` can be used to specify which version to use. It is used as a tag
   ## name for Git whereas for DL, it replaces `$1` in the URL defined.
   ##
@@ -912,26 +916,31 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         else:
           `lre` & getDynlibExt()
 
-    when `nameStd`:
-      const
-        `path`* = getStdPath(`header`)
-        `lpath`* = getStdLibPath(`lname`)
-    else:
-      const
-        `path`* =
-          when `nameGit`:
-            getGitPath(`header`, `giturl`, `outdir`, `version`)
-          elif `nameDL`:
-            getDlPath(`header`, `dlurl`, `outdir`, `version`)
-          else:
-            getLocalPath(`header`, `outdir`)
+      stdPath =
+        when `nameStd`: getStdPath(`header`) else: ""
+      stdLPath =
+        when `nameStd`: getStdLibPath(`lname`) else: ""
 
-      when declared(`preBuild`):
-        static:
-          `preBuild`(`outdir`, `path`)
+      `path`* =
+        when stdPath.len != 0:
+          stdPath
+        elif `nameGit`:
+          getGitPath(`header`, `giturl`, `outdir`, `version`)
+        elif `nameDL`:
+          getDlPath(`header`, `dlurl`, `outdir`, `version`)
+        else:
+          getLocalPath(`header`, `outdir`)
 
-      const
-        `lpath`* = buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`)
+    when stdPath.len == 0 and declared(`preBuild`):
+      static:
+        `preBuild`(`outdir`, `path`)
+
+    const
+      `lpath`* =
+        when stdPath.len != 0 and stdLPath.len != 0:
+          stdLPath
+        else:
+          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`)
 
     static:
       doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " & "missing/empty outdir or -d:$1Std -d:$1Git or -d:$1DL not specified" % `name`

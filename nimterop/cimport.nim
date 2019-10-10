@@ -107,9 +107,10 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
   let
     hash = output.hash().abs()
 
-  result.tmpFile = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
+  result.tmpFile = getProjectCacheDir("failed", forceClean = false) / "nimterop_" & $hash & ".nim"
 
   if not fileExists(result.tmpFile) or gStateCT.nocache or compileOption("forceBuild"):
+    mkDir(result.tmpFile.parentDir())
     writeFile(result.tmpFile, output)
 
   doAssert fileExists(result.tmpFile), "Failed to write to cache dir: " & result.tmpFile
@@ -278,9 +279,10 @@ macro cPlugin*(body): untyped =
   let
     data = "import macros, nimterop/plugin\n\n" & body.repr
     hash = data.hash().abs()
-    path = getTempDir() / "nimterop_" & $hash & ".nim"
+    path = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
 
   if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
+    mkDir(path.parentDir())
     writeFile(path, data)
 
   doAssert fileExists(path), "Unable to write plugin file: " & path
@@ -575,11 +577,12 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
   let
     output = getToast(fullpath, recurse, dynlib, noNimout = true)
     hash = output.hash().abs()
-    hpath = getTempDir() / "nimterop_" & $hash & ".h"
+    hpath = getProjectCacheDir("c2nimCache", forceClean = false) / "nimterop_" & $hash & ".h"
     npath = hpath[0 .. hpath.rfind('.')] & "nim"
     header = ("header" & fullpath.splitFile().name.replace(re"[-.]+", ""))
 
   if not fileExists(hpath) or gStateCT.nocache or compileOption("forceBuild"):
+    mkDir(hpath.parentDir())
     writeFile(hpath, output)
 
   doAssert fileExists(hpath), "Unable to write temporary header file: " & hpath
