@@ -79,5 +79,5 @@ proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath
 
     for i in 0 .. paramCount():
       if paramStr(i) == "--publish":
-        echo execAction(&"ghp-import --no-jekyll -fp {path}")
+        echo execAction(&"cd {path} && ghp-import --no-jekyll -fp {path}")
         break

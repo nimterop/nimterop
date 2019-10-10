@@ -922,7 +922,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         when `nameStd`: getStdLibPath(`lname`) else: ""
 
       `path`* =
-        when stdPath.len != 0:
+        when stdPath.len != 0 and stdLPath.len != 0:
           stdPath
         elif `nameGit`:
           getGitPath(`header`, `giturl`, `outdir`, `version`)
@@ -931,7 +931,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         else:
           getLocalPath(`header`, `outdir`)
 
-    when stdPath.len == 0 and declared(`preBuild`):
+    when `path` != stdPath and declared(`preBuild`):
       static:
         `preBuild`(`outdir`, `path`)
 
