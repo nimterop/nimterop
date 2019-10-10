@@ -3,7 +3,7 @@ import os, strutils
 import nimterop/[build, cimport]
 
 const
-  baseDir = currentSourcePath.parentDir()/"build"/"liblzma"
+  baseDir = getProjectCacheDir("nimterop" / "tests" / "liblzma")
 
 static:
   cDebug()

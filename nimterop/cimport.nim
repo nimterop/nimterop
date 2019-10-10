@@ -107,12 +107,12 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
   let
     hash = output.hash().abs()
 
-  result.tmpFile = getTempDir() / "nimterop_" & $hash & ".nim"
+  result.tmpFile = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
 
   if not fileExists(result.tmpFile) or gStateCT.nocache or compileOption("forceBuild"):
     writeFile(result.tmpFile, output)
 
-  doAssert fileExists(result.tmpFile), "Bad codegen - unable to write to TEMP: " & result.tmpFile
+  doAssert fileExists(result.tmpFile), "Failed to write to cache dir: " & result.tmpFile
 
   let
     nim =

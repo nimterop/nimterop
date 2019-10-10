@@ -5,7 +5,7 @@ import ".."/[setup, paths]
 static:
   treesitterCSetup()
 
-const srcDir = incDir() / "treesitter_c" / "src"
+const srcDir = cacheDir / "treesitter_c" / "src"
 
 import "."/api
 

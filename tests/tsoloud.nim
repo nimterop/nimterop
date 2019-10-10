@@ -1,7 +1,7 @@
 import os, nimterop/[cimport, build, paths]
 
 const
-  baseDir = nimteropBuildDir()/"soloud"
+  baseDir = getProjectCacheDir("nimterop" / "tests" / "soloud")
   incl = baseDir/"include"
   src = baseDir/"src"
 

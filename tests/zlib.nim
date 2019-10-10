@@ -3,7 +3,7 @@ import os, strutils
 import nimterop/[build, cimport]
 
 const
-  baseDir = currentSourcePath.parentDir()/"build"/"zlib"
+  baseDir = getProjectCacheDir("nimterop" / "tests" / "zlib")
 
 static:
   cDebug()

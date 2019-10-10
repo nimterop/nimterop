@@ -15,4 +15,4 @@ cPlugin:
 static:
   cDebug()
 
-cImport(incDir()/"treesitter/lib/include/tree_sitter/api.h")
+cImport(cacheDir / "treesitter" /"lib" / "include" / "tree_sitter" / "api.h")

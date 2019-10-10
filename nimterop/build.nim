@@ -110,9 +110,45 @@ proc rmFile*(source: string, dir = false) =
 
   discard execAction(&"{cmd} {source.sanitizePath}", retry = 2)
 
-proc rmDir*(source: string) =
+proc rmDir*(dir: string) =
   ## Remove a directory or pattern at compile time
-  rmFile(source, dir = true)
+  rmFile(dir, dir = true)
+
+proc getOsCacheDir(): string =
+  when defined(posix):
+    result = getEnv("XDG_CACHE_HOME", getHomeDir() / ".cache") / "nim"
+  else:
+    result = getHomeDir() / "nimcache"
+
+proc getNimteropCacheDir(): string =
+  result = getOsCacheDir() / "nimterop"
+
+proc getProjectCacheDir*(name: string, forceClean = true): string =
+  ## Get a cache directory where all nimterop artifacts can be stored
+  ##
+  ## Projects can use this location to download source code and build binaries
+  ## that can be then accessed by multiple apps. This is created under the
+  ## per-user Nim cache directory.
+  ##
+  ## Use `name` to specify the subdirectory name for a project.
+  ##
+  ## `forceClean` is enabled by default and effectively deletes the folder
+  ## if Nim is compiled with the `-f` or `--forceBuild` flag. This allows
+  ## any project to start out with a clean cache dir on a forced build.
+  ##
+  ## NOTE: avoid calling `getProjectCacheDir()` multiple times on the same
+  ## `name` when `forceClean = true` else checked out source might get deleted
+  ## at the wrong time during build.
+  ##
+  ## E.g.
+  ##   `nimgit2` downloads `libgit2` source so `name = "libgit2"`
+  ##
+  ##   `nimarchive` downloads `libarchive`, `bzlib`, `liblzma` and `zlib` so
+  ##   `name = "nimarchive" / "libarchive"` for `libarchive`, etc.
+  result = getNimteropCacheDir() / name
+
+  if forceClean and compileOption("forceBuild"):
+    rmDir(result)
 
 proc extractZip*(zipfile, outdir: string) =
   ## Extract a zip file using `powershell` on Windows and `unzip` on other

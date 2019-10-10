@@ -21,10 +21,13 @@ proc execCmd(cmd: string) =
   exec cmd
 
 proc execTest(test: string) =
-  execCmd "nim c -r " & test
+  execCmd "nim c -f -r " & test
   execCmd "nim cpp -r " & test
 
 task buildToast, "build toast":
+  execCmd("nim c -f -d:danger nimterop/toast.nim")
+
+task bt, "build toast":
   execCmd("nim c -d:danger nimterop/toast.nim")
 
 task docs, "Generate docs":
@@ -34,7 +37,7 @@ task test, "Test":
   buildToastTask()
 
   execTest "tests/tnimterop_c.nim"
-  execCmd "nim cpp -r tests/tnimterop_cpp.nim"
+  execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
   execTest "tests/tpcre.nim"
 
   # Platform specific tests

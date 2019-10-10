@@ -7,7 +7,7 @@ import ".."/[setup, paths, types]
 static:
   treesitterSetup()
 
-const sourcePath = incDir() / "treesitter" / "lib"
+const sourcePath = cacheDir / "treesitter" / "lib"
 
 when defined(Linux):
   {.passC: "-std=c11".}

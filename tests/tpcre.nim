@@ -3,7 +3,7 @@ import os
 import nimterop/[cimport, build, paths]
 
 const
-  baseDir = nimteropBuildDir()/"pcre"
+  baseDir = getProjectCacheDir("nimterop" / "tests" / "pcre")
   pcreH = baseDir/"pcre.h.in"
 
 static:

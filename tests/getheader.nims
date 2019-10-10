@@ -1,16 +1,17 @@
 import strutils
 
 proc testCall(cmd, output: string, exitCode: int, delete = true) =
-  if delete:
-    rmDir("build/liblzma")
-    rmDir("build/zlib")
-  echo cmd
   var
     ccmd =
       when defined(windows):
         "cmd /c " & cmd
       else:
         cmd
+
+  if not delete:
+    ccmd = ccmd.replace(" -f ", " ")
+
+  var
     (outp, exitC) = gorgeEx(ccmd)
   echo outp
   doAssert exitC == exitCode, $exitC
@@ -41,7 +42,6 @@ when defined(posix):
   # git tag
   testCall(cmd & " -d:lzmaGit -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0)
   testCall(cmd & " -d:lzmaGit -d:lzmaStatic -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0, delete = false)
-  testCall("cd build/liblzma && git branch", "v5.2.0", 0, delete = false)
 
 # git
 testCall(cmd & " -d:envTest" & zrcmd, zexp, 0)
@@ -50,7 +50,6 @@ testCall(cmd & " -d:envTestStatic" & zrcmd, zexp, 0, delete = false)
 # git tag
 testCall(cmd & " -d:zlibGit -d:zlibSetVer=v1.2.10" & zrcmd, zexp & "1.2.10", 0)
 testCall(cmd & " -d:zlibGit -d:zlibStatic -d:zlibSetVer=v1.2.10" & zrcmd, zexp & "1.2.10", 0, delete = false)
-testCall("cd build/zlib && git branch", "v1.2.10", 0, delete = false)
 
 # dl
 testCall(cmd & " -d:lzmaDL" & lrcmd, "Need version", 1)
