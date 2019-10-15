@@ -45,7 +45,7 @@ proc execAction*(cmd: string, retry = 0, nostderr = false): string =
       sleep(500)
       result = execAction(cmd, retry = retry - 1)
     else:
-      doAssert true, "Command failed: " & $(ret, nostderr) & "\ncmd: " & ccmd & "\nresult:\n" & result
+      doAssert false, "Command failed: " & $(ret, nostderr) & "\ncmd: " & ccmd & "\nresult:\n" & result
 
 proc findExe*(exe: string): string =
   ## Find the specified executable using the `which`/`where` command - supported
@@ -148,6 +148,7 @@ proc getProjectCacheDir*(name: string, forceClean = true): string =
   result = getNimteropCacheDir() / name
 
   if forceClean and compileOption("forceBuild"):
+    echo "# Removing " & result
     rmDir(result)
 
 proc extractZip*(zipfile, outdir: string) =

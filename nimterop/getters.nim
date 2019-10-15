@@ -332,12 +332,54 @@ proc getPxName*(node: TSNode, offset: int): string =
   if count == offset and not np.tsNodeIsNull():
     return $np.tsNodeType()
 
-proc getNimExpression*(expr: string): string =
-  return expr.multiReplace([
-    (" ", ""),
-    ("<<", " shl "), (">>", " shr "),
-    ("^", " xor "), ("&", " and "), ("|", " or "),
-    ("~", " not "), ("\n", " "), ("\r", "")
+proc getNimExpression*(nimState: NimState, expr: string): string =
+  var
+    clean = expr.multiReplace([("\n", " "), ("\r", "")])
+    ident = ""
+    gen = ""
+    hex = false
+
+  for i in 0 .. clean.len:
+    if i != clean.len:
+      if clean[i] == '_' and ident.len == 0:
+        gen = $clean[i]
+      elif clean[i] in IdentChars:
+        if clean[i] in Digits and ident.len == 0:
+          gen = $clean[i]
+        elif clean[i] in HexDigits and hex == true:
+          gen = $clean[i]
+        elif i > 0 and i < clean.len-1 and clean[i] in ['x', 'X'] and
+              clean[i-1] == '0' and clean[i+1] in HexDigits:
+          gen = $clean[i]
+          hex = true
+        else:
+          ident &= clean[i]
+          hex = false
+      else:
+        gen = (block:
+          if (i == 0 or clean[i-1] != '\'') or
+            (i == clean.len - 1 or clean[i+1] != '\''):
+              case clean[i]
+              of '^': " xor "
+              of '&': " and "
+              of '|': " or "
+              of '~': " not "
+              else: $clean[i]
+          else:
+            $clean[i]
+        )
+        hex = false
+
+    if i == clean.len or gen.len != 0:
+      if ident.len != 0:
+        ident = nimState.getIdentifier(ident, nskConst)
+        result &= ident
+        ident = ""
+      result &= gen
+      gen = ""
+
+  result = result.multiReplace([
+    ("<<", " shl "), (">>", " shr ")
   ])
 
 proc getSplitComma*(joined: seq[string]): seq[string] =

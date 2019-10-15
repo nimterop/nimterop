@@ -3,7 +3,7 @@ import os
 import "."/build
 
 const
-  cacheDir* = getProjectCacheDir("nimterop")
+  cacheDir* = getProjectCacheDir("nimterop", forceClean = false)
 
 proc nimteropRoot*(): string =
   currentSourcePath.parentDir.parentDir

@@ -238,7 +238,7 @@ proc initGrammar(): Grammar =
         prefix = "struct "
       of "union_specifier":
         prefix = "union "
-        union = " {.union.}"
+        union = ", union"
       of "type_definition":
         if node.getTSNodeNamedChildCountSansComments() != 0:
           for i in 0 .. node.tsNodeNamedChildCount()-1:
@@ -252,23 +252,25 @@ proc initGrammar(): Grammar =
                 of "union_specifier":
                   if fstart == 1:
                     prefix = "union "
-                  union = " {.union.}"
+                  union = ", union"
               break
 
     if nname.nBl and nimState.addNewIdentifer(nname):
       if nimState.data.len == 1:
-        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}* {{.bycopy.}} = object{union}"
+        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}* {{.bycopy{union}.}} = object"
       else:
         var
           pragmas: seq[string] = @[]
         if nimState.gState.dynlib.len == 0:
           pragmas.add nimState.getImportC(prefix & name, nname)
         pragmas.add "bycopy"
+        if union.len != 0:
+          pragmas.add "union"
 
         let
           pragma = nimState.getPragma(pragmas)
 
-        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object{union}"
+        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object"
 
       var
         i = fstart
@@ -283,7 +285,7 @@ proc initGrammar(): Grammar =
           continue
 
         if nimState.data[i].name notin ["field_identifier", "pointer_declarator", "array_pointer_declarator"]:
-          ftyp = nimState.data[i].val.getType()
+          ftyp = nimState.getIdentifier(nimState.data[i].val, nskType, nname).getType()
           i += 1
 
         while i < nimState.data.len-fend and "pointer" in nimState.data[i].name:
@@ -299,7 +301,7 @@ proc initGrammar(): Grammar =
 
         if i+1 < nimState.data.len-fend and nimState.data[i+1].name in gEnumVals:
           let
-            flen = nimState.data[i+1].val.getNimExpression()
+            flen = nimState.getNimExpression(nimState.data[i+1].val)
           nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
           i += 2
         elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "bitfield_clause":
@@ -461,7 +463,7 @@ proc initGrammar(): Grammar =
         if i+1 < nimState.data.len-fend and
           nimState.data[i+1].name in gEnumVals:
           if fname.nBl and nimState.addNewIdentifer(fname):
-            nimState.constStr &= &"{nimState.getComments()}\n  {fname}* = ({nimState.data[i+1].val.getNimExpression()}).{nname}"
+            nimState.constStr &= &"{nimState.getComments()}\n  {fname}* = ({nimState.getNimExpression(nimState.data[i+1].val)}).{nname}"
           try:
             count = nimState.data[i+1].val.parseInt() + 1
           except:
