@@ -855,8 +855,13 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   ## `cmake` and `make` in case additional configuration is required as part of the build process.
   ##
   ## `altNames` is a list of alternate names for the library - e.g. zlib uses `zlib.h` for the header but
-  ## the typical lib name is `libz.so` and not `libzlib.so`. In this case, `altNames = "z"`. Comma
-  ## separate for multiple alternate names.
+  ## the typical lib name is `libz.so` and not `libzlib.so`. However, it is libzlib.dll on Windows if built
+  ## with cmake. In this case, `altNames = "z,zlib"`. Comma separate for multiple alternate names without
+  ## spaces.
+  ##
+  ## The original header name is not included by default if `altNames` is set since it could cause the
+  ## wrong lib to be selected. E.g. `SDL2/SDL.h` could pick `libSDL.so` even if `altNames = "SDL2"`.
+  ## Explicitly include it in `altNames` like the `zlib` example when required.
   ##
   ## `xxxPreBuild` is a hook that is called after the source code is pulled from Git or downloaded but
   ## before the library is built. This might be needed if some initial prep needs to be done before
@@ -902,9 +907,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         ""
 
   if altNames.len != 0:
-    let
-      names = "(" & name & "|" & altNames.replace(",", "|") & ")"
-    lre = lre % names
+    lre = lre % ("(" & altNames.replace(",", "|") & ")")
   else:
     lre = lre % name
 

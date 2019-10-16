@@ -29,7 +29,7 @@ getHeader(
   giturl = "https://github.com/madler/zlib",
   dlurl = "http://zlib.net/zlib-$1.tar.gz",
   outdir = baseDir,
-  altNames = "z"
+  altNames = "z,zlib"
 )
 
 cPlugin:
