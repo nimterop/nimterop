@@ -86,15 +86,30 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
                   ast.getAstChildByName($nodeChild.tsNodeType())
                 else:
                   ast
+
+            if nimState.gState.debug:
+              nimState.nodeBranch.add $node.tsNodeType()
+              echo "#" & spaces(nimState.nodeBranch.len) & nimState.nodeBranch[^1]
+
             if not searchAstForNode(astChild, nodeChild, nimState):
+              if nimState.gState.debug:
+                echo "#" & spaces(nimState.nodeBranch.len) & &" {$nodeChild.tsNodeType()} unexpected"
+                discard nimState.nodeBranch.pop()
               flag = false
               break
+
+            if nimState.gState.debug:
+              discard nimState.nodeBranch.pop()
+              if nimState.nodeBranch.len == 0:
+                echo ""
 
         if flag:
           return node.saveNodeData(nimState)
       else:
+        echo "#" & spaces(nimState.nodeBranch.len+1) & $node.tsNodeType()
         return node.saveNodeData(nimState)
   elif node.getTSNodeNamedChildCountSansComments() == 0:
+    echo "#" & spaces(nimState.nodeBranch.len+1) & $node.tsNodeType()
     return node.saveNodeData(nimState)
 
 proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =

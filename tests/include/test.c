@@ -64,6 +64,10 @@ void **test_call10(int **param1) {
 	return NULL;
 }
 
+char *test_array_param(int arr[5]) {
+	return NULL;
+}
+
 void multiline1(void) {}
 
 void *multiline2(void) {

@@ -43,6 +43,19 @@ proc initGrammar(): Grammar =
      )
     """
 
+    arrGrammar = &"""
+     (array_declarator!
+      (pointer_declarator!
+       (pointer_declarator!
+        (type_identifier)
+       )
+       (type_identifier)
+      )
+      (type_identifier|identifier)
+      (identifier|number_literal)
+     )
+    """
+
     paramListGrammar = &"""
      (parameter_list
       (parameter_declaration*
@@ -52,10 +65,13 @@ proc initGrammar(): Grammar =
         (type_qualifier?)
         (pointer_declarator!
          (type_qualifier?)
+         {arrGrammar}
          (identifier|type_identifier)
         )
+        {arrGrammar}
         (identifier|type_identifier)
        )
+       {arrGrammar}
        (abstract_pointer_declarator?
         (abstract_pointer_declarator?)
        )
@@ -77,20 +93,7 @@ proc initGrammar(): Grammar =
      )
     """
 
-    arrGrammar = &"""
-     (array_declarator!
-      (pointer_declarator!
-       (pointer_declarator!
-        (type_identifier)
-       )
-       (type_identifier)
-      )
-      (type_identifier)
-      (identifier|number_literal)
-     )
-    """
-
-  template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i: untyped): untyped =
+  template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen: untyped): untyped =
     ptyp = nimState.getIdentifier(nimState.data[i].val, nskType, fname).getType()
 
     pptr = ""
@@ -106,7 +109,14 @@ proc initGrammar(): Grammar =
       count += 1
       i += 1
 
-    if pptr.len != 0 or ptyp != "object":
+    if i < nimState.data.len and nimState.data[i].name in ["identifier", "number_literal"]:
+      flen = nimState.data[i].val
+      if nimState.data[i].name == "identifier":
+        flen = nimState.getIdentifier(flen, nskConst, fname)
+
+      pout &= &"{pname}: array[{flen}, {getPtrType(pptr&ptyp)}], "
+      i += 1
+    elif pptr.len != 0 or ptyp != "object":
       pout &= &"{pname}: {getPtrType(pptr&ptyp)}, "
 
   # typedef int X
@@ -171,12 +181,13 @@ proc initGrammar(): Grammar =
             fname = nname
             pout, pname, ptyp, pptr = ""
             count = 1
+            flen = ""
 
           while i < nimState.data.len:
             if nimState.data[i].name == "function_declarator":
               break
 
-            funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
+            funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen)
 
           if pout.len != 0 and pout[^2 .. ^1] == ", ":
             pout = pout[0 .. ^3]
@@ -277,6 +288,7 @@ proc initGrammar(): Grammar =
         ftyp, fname: string
         fptr = ""
         aptr = ""
+        flen = ""
       while i < nimState.data.len-fend:
         fptr = ""
         aptr = ""
@@ -323,7 +335,7 @@ proc initGrammar(): Grammar =
             if nimState.data[i].name == "field_declaration":
               break
 
-            funcParamCommon(fname, pname, ptyp, pptr, pout, count, i)
+            funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen)
 
           if pout.len != 0 and pout[^2 .. ^1] == ", ":
             pout = pout[0 .. ^3]
@@ -575,13 +587,14 @@ proc initGrammar(): Grammar =
           fnname = nimState.getIdentifier(fname, nskProc)
           pout, pname, ptyp, pptr = ""
           count = 1
+          flen = ""
 
         i += 1
         while i < nimState.data.len:
           if nimState.data[i].name == "function_declarator":
             break
 
-          funcParamCommon(fnname, pname, ptyp, pptr, pout, count, i)
+          funcParamCommon(fnname, pname, ptyp, pptr, pout, count, i, flen)
 
         if pout.len != 0 and pout[^2 .. ^1] == ", ":
           pout = pout[0 .. ^3]

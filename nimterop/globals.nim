@@ -72,6 +72,8 @@ type
 
     data*: seq[tuple[name, val: string]]
 
+    nodeBranch*: seq[string]
+
 var
   gStateCT {.compiletime, used.} = new(State)
 

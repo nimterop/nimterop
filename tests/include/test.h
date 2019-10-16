@@ -119,6 +119,7 @@ int test_call_param7(union UNION1 param1);
 float test_call_param8(int *param1);
 void *test_call9();
 void **test_call10(int **param1);
+char *test_array_param(int arr[5]);
 
 // Issue #58
 void

@@ -178,3 +178,8 @@ check TDEFL_OUT_BUF_SIZE == 85196
 check TDEFL_BOGUS_1 == 2
 check TDEFL_BOGUS_2 == 1024
 check TDEFL_BOGUS_3 == (85196 / 2).int
+
+var
+  arr: array[5, cint]
+
+check test_array_param(arr) == nil
