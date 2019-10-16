@@ -191,7 +191,7 @@ proc removeStatic(content: string): string =
   ## Replace static function bodies with a semicolon and commented
   ## out body
   return content.replace(
-    re"(?ms)static inline(.*?\))(\s*\{(\s*?.*?$)*?[\n\r]\})",
+    re"(?msU)static inline ([^)]+\))([^}]+\})",
     proc (m: RegexMatch, s: string): string =
       let funcDecl = s[m.group(0)[0]]
       let body = s[m.group(1)[0]].strip()
