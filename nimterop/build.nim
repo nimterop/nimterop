@@ -107,8 +107,14 @@ proc rmFile*(source: string, dir = false) =
           "del /s/q/f"
       else:
         "rm -rf"
+    exists =
+      if dir:
+        dirExists(source)
+      else:
+        fileExists(source)
 
-  discard execAction(&"{cmd} {source.sanitizePath}", retry = 2)
+  if exists:
+    discard execAction(&"{cmd} {source.sanitizePath}", retry = 2)
 
 proc rmDir*(dir: string) =
   ## Remove a directory or pattern at compile time
