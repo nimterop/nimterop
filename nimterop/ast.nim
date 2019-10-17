@@ -74,11 +74,16 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
   if ast.isNil:
     return
 
+  if nimState.gState.debug:
+    nimState.nodeBranch.add $node.tsNodeType()
+    echo "#" & spaces(nimState.nodeBranch.len * 2) & nimState.nodeBranch[^1]
+
   if ast.children.len != 0:
     if childNames.contains(ast.regex) or
       (childNames.len == 0 and ast.recursive):
       if node.getTSNodeNamedChildCountSansComments() != 0:
         var flag = true
+
         for i in 0 .. node.tsNodeNamedChildCount()-1:
           if $node.tsNodeNamedChild(i).tsNodeType() != "comment":
             let
@@ -89,30 +94,24 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
                 else:
                   ast
 
-            if nimState.gState.debug:
-              nimState.nodeBranch.add $node.tsNodeType()
-              echo "#" & spaces(nimState.nodeBranch.len) & nimState.nodeBranch[^1]
-
             if not searchAstForNode(astChild, nodeChild, nimState):
-              if nimState.gState.debug:
-                echo "#" & spaces(nimState.nodeBranch.len) & &" {$nodeChild.tsNodeType()} unexpected"
-                discard nimState.nodeBranch.pop()
               flag = false
               break
 
-            if nimState.gState.debug:
-              discard nimState.nodeBranch.pop()
-              if nimState.nodeBranch.len == 0:
-                echo ""
-
         if flag:
-          return node.saveNodeData(nimState)
+          result = node.saveNodeData(nimState)
       else:
-        echo "#" & spaces(nimState.nodeBranch.len+1) & $node.tsNodeType()
-        return node.saveNodeData(nimState)
+        result = node.saveNodeData(nimState)
+    else:
+      if nimState.gState.debug:
+        echo "#" & spaces(nimState.nodeBranch.len * 2) & &"  {ast.getRegexForAstChildren()} !=~ {childNames}"
   elif node.getTSNodeNamedChildCountSansComments() == 0:
-    echo "#" & spaces(nimState.nodeBranch.len+1) & $node.tsNodeType()
-    return node.saveNodeData(nimState)
+    result = node.saveNodeData(nimState)
+
+  if nimState.gState.debug:
+    discard nimState.nodeBranch.pop()
+    if nimstate.nodeBranch.len == 0:
+      echo ""
 
 proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
   var
