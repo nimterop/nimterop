@@ -86,7 +86,7 @@ proc initGrammar(): Grammar =
        (pointer_declarator!
         (type_identifier)
        )
-       (type_identifier)
+       (type_identifier|identifier)
       )
       {paramListGrammar}
       (noexcept|throw_specifier?)
@@ -588,8 +588,13 @@ proc initGrammar(): Grammar =
           pout, pname, ptyp, pptr = ""
           count = 1
           flen = ""
+          fVar = false
 
         i += 1
+        if i < nimState.data.len and nimState.data[i].name == "pointer_declarator":
+          fVar = true
+          i += 1
+
         while i < nimState.data.len:
           if nimState.data[i].name == "function_declarator":
             break
@@ -605,9 +610,15 @@ proc initGrammar(): Grammar =
             pragma = nimState.getPragma(nimState.getImportC(fname, fnname), "cdecl")
 
           if fptr.len != 0 or ftyp != "object":
-            nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
+            if fVar:
+              nimState.procStr &= &"{nimState.getComments(true)}\nvar {fnname}*: proc ({pout}): {getPtrType(fptr&ftyp)}{{.cdecl.}}"
+            else:
+              nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
           else:
-            nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}){pragma}"
+            if fVar:
+              nimState.procStr &= &"{nimState.getComments(true)}\nvar {fnname}*: proc ({pout}){{.cdecl.}}"
+            else:
+              nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}){pragma}"
   ))
 
   # // comment

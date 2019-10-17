@@ -47,14 +47,16 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
 
     nimState.data.add((name, val))
 
-    if name == "field_identifier" and
-      pname == "pointer_declarator" and
+    if pname == "pointer_declarator" and
       ppname == "function_declarator":
-      if pppname == "pointer_declarator":
-        nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
-        if ppppname == "pointer_declarator":
+      if name == "field_identifier":
+        if pppname == "pointer_declarator":
           nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
-      nimState.data.add(("function_declarator", ""))
+          if ppppname == "pointer_declarator":
+            nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
+        nimState.data.add(("function_declarator", ""))
+      elif name == "identifier":
+        nimState.data.add(("pointer_declarator", ""))
 
   elif name in gExpressions and name != "escape_sequence":
     if $node.tsNodeParent.tsNodeType() notin gExpressions:

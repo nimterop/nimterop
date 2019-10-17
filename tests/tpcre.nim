@@ -1,6 +1,6 @@
 import os
 
-import nimterop/[cimport, build, paths]
+import nimterop/[cimport, build]
 
 const
   baseDir = getProjectCacheDir("nimterop" / "tests" / "pcre")
@@ -33,3 +33,8 @@ cPlugin:
 cImport(pcreH, dynlib="dynpcre")
 
 echo version()
+
+proc my_malloc(a1: cuint) {.cdecl.} =
+  discard
+
+malloc = my_malloc
