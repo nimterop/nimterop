@@ -320,6 +320,9 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
     if name in ast.children[i].name.split("|"):
       return ast.children[i]
 
+  if ast.children.len == 1 and ast.children[0].name == ".":
+    return ast.children[0]
+
 proc getPxName*(node: TSNode, offset: int): string =
   var
     np = node

@@ -637,6 +637,23 @@ proc initGrammar(): Grammar =
         nimState.commentStr &= &"\n  # {line.strip(leading=false)}"
   ))
 
+  # // unknown
+  result.add((&"""
+   (type_definition|struct_specifier|union_specifier|enum_specifier|declaration
+    (^.*)
+   )
+  """,
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      for i in nimState.data:
+        case $node.tsNodeType()
+        of "declaration":
+          if i.name == "identifier":
+            echo "# Unknown declaration " & i.val
+        else:
+          if i.name == "type_identifier":
+            echo "# Unknown type " & i.val
+  ))
+
 proc initRegex(ast: ref Ast) =
   if ast.children.len != 0:
     if not ast.recursive:
@@ -653,7 +670,7 @@ proc initRegex(ast: ref Ast) =
       raise newException(Exception, getCurrentExceptionMsg())
 
 proc parseGrammar*(): AstTable =
-  let grammars = initGrammar()
+  const grammars = initGrammar()
 
   result = newTable[string, seq[ref Ast]]()
   for i in 0 .. grammars.len-1:
