@@ -570,13 +570,25 @@ proc make*(path, check: string, flags = "", regex = false) =
 
   doAssert findFile(check, path, regex = regex).len != 0, "# make failed"
 
+proc getCompiler*(): string =
+  var
+    compiler =
+      when defined(gcc):
+        "gcc"
+      elif defined(clang):
+        "clang"
+      else:
+        doAssert false, "Nimterop only supports gcc and clang at this time"
+
+  result = getEnv("CC", compiler)
+
 proc getGccPaths*(mode = "c"): seq[string] =
   var
     nul = when defined(Windows): "nul" else: "/dev/null"
     mmode = if mode == "cpp": "c++" else: mode
     inc = false
 
-    (outp, _) = gorgeEx(&"""{getEnv("CC", "gcc")} -Wp,-v -x{mmode} {nul}""")
+    (outp, _) = gorgeEx(&"""{getCompiler()} -Wp,-v -x{mmode} {nul}""")
 
   for line in outp.splitLines():
     if "#include <...> search starts here" in line:
@@ -599,7 +611,7 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
     mmode = if mode == "cpp": "c++" else: mode
     linker = when defined(OSX): "-Xlinker" else: ""
 
-    (outp, _) = gorgeEx(&"""{getEnv("CC", "gcc")} {linker} -v -x{mmode} {nul}""")
+    (outp, _) = gorgeEx(&"""{getCompiler()} {linker} -v -x{mmode} {nul}""")
 
   for line in outp.splitLines():
     if "LIBRARY_PATH=" in line:

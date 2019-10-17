@@ -204,7 +204,7 @@ proc removeStatic(content: string): string =
 proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
   var
     mmode = if mode == "cpp": "c++" else: mode
-    cmd = &"""{getEnv("CC", "gcc")} -E -CC -dD -x{mmode} -w """
+    cmd = &"""{getCompiler()} -E -CC -dD -x{mmode} -w """
 
     rdata: seq[string] = @[]
     start = false
