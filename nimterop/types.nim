@@ -16,22 +16,21 @@ when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
   type
     time_t* = Time
     time64_t* = Time
-    wchar_t* {.importc.} = object
 else:
   import std/time_t as time_t_temp
   type
     time_t* = time_t_temp.Time
     time64_t* = time_t_temp.Time
 
-  when defined(c) or defined(nimdoc):
-    # http://www.cplusplus.com/reference/cwchar/wchar_t/
-    # In C++, wchar_t is a distinct fundamental type (and thus it is
-    # not defined in <cwchar> nor any other header).
-    type
-      wchar_t* {.importc, header:"<cwchar>".} = object
-  elif defined(cpp):
-    type
-      wchar_t* {.importc.} = object
+when defined(cpp):
+  # http://www.cplusplus.com/reference/cwchar/wchar_t/
+  # In C++, wchar_t is a distinct fundamental type (and thus it is
+  # not defined in <cwchar> nor any other header).
+  type
+    wchar_t* {.importc.} = object
+else:
+  type
+    wchar_t* {.importc, header:"<cwchar>".} = object
 
 type
   ptrdiff_t* = ByteAddress
