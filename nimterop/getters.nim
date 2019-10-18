@@ -127,6 +127,17 @@ proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent="
   else:
     result = ""
 
+proc getOverride*(nimState: NimState, name: string, kind: NimSymKind, parent=""): string =
+  doAssert name.len != 0, "Blank identifier error"
+
+  if nimState.gState.onSymbol != nil:
+    var
+      nname = nimState.getIdentifier(name, kind, parent)
+      sym = Symbol(name: nname, parent: parent, kind: kind)
+    nimState.gState.onSymbol(sym)
+
+    result = sym.override
+
 proc getUniqueIdentifier*(nimState: NimState, prefix = ""): string =
   var
     name = prefix & "_" & nimState.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])

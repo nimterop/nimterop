@@ -648,10 +648,22 @@ proc initGrammar(): Grammar =
         case $node.tsNodeType()
         of "declaration":
           if i.name == "identifier":
-            echo "# Unknown declaration " & i.val
+            let
+              override = nimState.getOverride(i.val, nskProc)
+
+            if override.len != 0:
+              nimState.procStr &= &"{nimState.getComments(true)}\n{override}"
+            else:
+              nimState.procStr &= &"{nimState.getComments(true)}\n# Unable to wrap declaration '{i.val}'"
         else:
           if i.name == "type_identifier":
-            echo "# Unknown type " & i.val
+            let
+              override = nimState.getOverride(i.val, nskType)
+
+            if override.len != 0:
+              nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+            else:
+              nimState.typeStr &= &"{nimState.getComments()}\n  # Unable to wrap type '{i.val}'"
   ))
 
 proc initRegex(ast: ref Ast) =
