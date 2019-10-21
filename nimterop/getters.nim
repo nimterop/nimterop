@@ -127,16 +127,27 @@ proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent="
   else:
     result = ""
 
-proc getOverride*(nimState: NimState, name: string, kind: NimSymKind, parent=""): string =
+proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
   doAssert name.len != 0, "Blank identifier error"
 
-  if nimState.gState.onSymbol != nil:
+  if nimState.gState.onSymbolOverride != nil:
     var
-      nname = nimState.getIdentifier(name, kind, parent)
-      sym = Symbol(name: nname, parent: parent, kind: kind)
-    nimState.gState.onSymbol(sym)
+      nname = nimState.getIdentifier(name, kind, "Parent")
+      sym = Symbol(name: nname, kind: kind)
+    nimState.gState.onSymbolOverride(sym)
 
     result = sym.override
+
+proc getOverrideFinal*(nimState: NimState, kind: NimSymKind): string =
+  let
+    typ = $kind
+
+  if nimState.gState.onSymbolOverrideFinal != nil:
+    for i in nimState.gState.onSymbolOverrideFinal(typ):
+      result &= "\n" & nimState.getOverride(i, kind)
+
+    if kind != nskProc:
+      result = result.replace(re"(?m)^(.*?)$", "  $1")
 
 proc getUniqueIdentifier*(nimState: NimState, prefix = ""): string =
   var
@@ -155,7 +166,9 @@ proc addNewIdentifer*(nimState: NimState, name: string): bool =
       nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
 
     if nimState.identifiers.hasKey(nimName):
-      doAssert name == nimState.identifiers[nimName], &"Identifier '{name}' is a stylistic duplicate of identifier '{nimState.identifiers[nimName]}', use 'cPlugin:onSymbol()' to rename"
+      doAssert name == nimState.identifiers[nimName],
+        &"Identifier '{name}' is a stylistic duplicate of identifier " &
+        &"'{nimState.identifiers[nimName]}', use 'cPlugin:onSymbol()' to rename"
       result = false
     else:
       nimState.identifiers[nimName] = name
@@ -463,7 +476,10 @@ proc loadPlugin*(gState: State, sourcePath: string) =
   doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [sourcePath, pdll]
 
   gState.onSymbol = cast[OnSymbol](lib.symAddr("onSymbol"))
-  doAssert gState.onSymbol != nil, "onSymbol() load failed from " & pdll
+
+  gState.onSymbolOverride = cast[OnSymbol](lib.symAddr("onSymbolOverride"))
+
+  gState.onSymbolOverrideFinal = cast[OnSymbolOverrideFinal](lib.symAddr("onSymbolOverrideFinal"))
 
 proc expandSymlinkAbs*(path: string): string =
   try:

@@ -201,22 +201,64 @@ macro cOverride*(body): untyped =
   ## `cOverride() <cimport.html#cOverride.m>`_ only affects calls to
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ that follow it.
 
-  proc recFindIdent(node: NimNode): seq[string] =
-    if node.kind != nnkIdent:
-      for child in node:
-        result.add recFindIdent(child)
-        if result.len != 0 and node.kind notin [nnkTypeSection, nnkConstSection]:
-          break
-    elif $node != "*":
-      result.add $node
+  iterator findOverrides(node: NimNode): tuple[name, override: string, kind: NimNodeKind] =
+    for child in node:
+      case child.kind
+      of nnkTypeSection, nnkConstSection:
+        # Types, const
+        for inst in child:
+          let name =
+            if inst[0].kind == nnkPragmaExpr:
+              $inst[0][0]
+            else:
+              $inst[0]
 
-  for sym in body:
-    gStateCT.symOverride.add recFindIdent(sym)
+          yield (name.strip(chars={'*'}), inst.repr, child.kind)
+      of nnkProcDef:
+        let
+          name = $child[0]
 
-  result = body
+        yield (name.strip(chars={'*'}), child.repr, child.kind)
+      else:
+        discard
 
-  if gStateCT.debug:
-    echo "# Overriding " & gStateCT.symOverride.join(" ")
+  if gStateCT.overrides.len == 0:
+    gStateCT.overrides = """
+import sets, tables
+
+proc onSymbolOverride*(sym: var Symbol) {.exportc, dynlib.} =
+"""
+
+  # If cPlugin called before cOverride
+  if gStateCT.pluginSourcePath.len != 0:
+    gStateCT.pluginSourcePath = ""
+
+  var
+    names: seq[string]
+  for name, override, kind in body.findOverrides():
+    let
+      typ =
+        case kind
+        of nnkTypeSection: "nskType"
+        of nnkConstSection: "nskConst"
+        of nnkProcDef: "nskProc"
+        else: ""
+
+    gStateCT.overrides &= &"""
+  if sym.name == "{name}" and sym.kind == {typ} and "{name}" in cOverrides["{typ}"]:
+    sym.override = """ & "\"\"\"" & override & "\"\"\"\n"
+
+    gStateCT.overrides &= &"    cOverrides[\"{typ}\"].excl \"{name}\"\n"
+
+    gStateCT.overrides = gStateCT.overrides.replace("proc onSymbolOverride",
+      &"cOverrides[\"{typ}\"].incl \"{name}\"\nproc onSymbolOverride")
+
+    names.add name
+
+    gStateCT.symOverride.add name
+
+  if gStateCT.debug and names.len != 0:
+    echo "# Overriding " & names.join(" ")
 
 proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   ## Similar to `cOverride() <cimport.html#cOverride.m>`_, this macro allows
@@ -227,6 +269,22 @@ proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   runnableExamples:
     static: cSkipSymbol @["proc1", "Type2"]
   gStateCT.symOverride.add skips
+
+proc cPluginHelper(body: string) =
+  gStateCT.pluginSource = body
+
+  let
+    data = "import macros, nimterop/plugin\n\n" & body & gStateCT.overrides
+    hash = data.hash().abs()
+    path = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
+
+  if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
+    mkDir(path.parentDir())
+    writeFile(path, data)
+
+  doAssert fileExists(path), "Unable to write plugin file: " & path
+
+  gStateCT.pluginSourcePath = path
 
 macro cPlugin*(body): untyped =
   ## When `cOverride() <cimport.html#cOverride.m>`_ and
@@ -276,18 +334,7 @@ macro cPlugin*(body): untyped =
         if sym.kind == nskProc and sym.name.contains("SDL_"):
           sym.name = sym.name.replace("SDL_", "")
 
-  let
-    data = "import macros, nimterop/plugin\n\n" & body.repr
-    hash = data.hash().abs()
-    path = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
-
-  if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
-    mkDir(path.parentDir())
-    writeFile(path, data)
-
-  doAssert fileExists(path), "Unable to write plugin file: " & path
-
-  gStateCT.pluginSourcePath = path
+  cPluginHelper(body.repr)
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory `path` in search path configured
@@ -528,6 +575,9 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
 
   let
     fullpath = findPath(filename)
+
+  if gStateCT.overrides.len != 0 and gStateCT.pluginSourcePath.len == 0:
+    cPluginHelper(gStateCT.pluginSource)
 
   echo "# Importing " & fullpath.sanitizePath
 

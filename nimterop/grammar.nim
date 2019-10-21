@@ -20,14 +20,22 @@ proc initGrammar(): Grammar =
         nimState.debugStr &= "\n# define X Y"
 
       let
+        name = nimState.getIdentifier(nimState.data[0].val, nskConst)
         val = nimState.data[1].val.getLit()
 
-      if val.nBl:
-        let
-          name = nimState.getIdentifier(nimState.data[0].val, nskConst)
+      if name.nBl:
+        if val.nBl:
+          if nimState.addNewIdentifer(name):
+            nimState.constStr &= &"{nimState.getComments()}\n  {name}* = {val}"
+        else:
+          let
+            override = nimState.getOverride(name, nskConst)
 
-        if name.nBl and nimState.addNewIdentifer(name):
-          nimState.constStr &= &"{nimState.getComments()}\n  {name}* = {val}"
+          if override.len != 0:
+            if nimState.addNewIdentifer(name):
+              nimState.constStr &= &"{nimState.getComments()}\n  {override}"
+          else:
+            nimState.constStr &= &"{nimState.getComments()}\n  # Const '{name}' skipped"
   ))
 
   let
@@ -653,17 +661,22 @@ proc initGrammar(): Grammar =
 
             if override.len != 0:
               nimState.procStr &= &"{nimState.getComments(true)}\n{override}"
+              break
             else:
-              nimState.procStr &= &"{nimState.getComments(true)}\n# Unable to wrap declaration '{i.val}'"
+              nimState.procStr &= &"{nimState.getComments(true)}\n# Declaration '{i.val}' skipped"
+
         else:
           if i.name == "type_identifier":
             let
               override = nimState.getOverride(i.val, nskType)
 
             if override.len != 0:
-              nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+              let
+                override = override.replace(re"(?m)^(.*?)$", "  $1")
+              nimState.typeStr &= &"{nimState.getComments()}\n{override} #" & $nimState.data
             else:
-              nimState.typeStr &= &"{nimState.getComments()}\n  # Unable to wrap type '{i.val}'"
+              nimState.typeStr &= &"{nimState.getComments()}\n  # Type '{i.val}' skipped"
+
   ))
 
 proc initRegex(ast: ref Ast) =

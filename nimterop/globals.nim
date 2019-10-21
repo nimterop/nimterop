@@ -57,9 +57,10 @@ type
 
     nocache*, nocomments*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 
-    code*, dynlib*, mode*, nim*, pluginSourcePath*: string
+    code*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
 
-    onSymbol*: OnSymbol
+    onSymbol*, onSymbolOverride*: OnSymbol
+    onSymbolOverrideFinal*: OnSymbolOverrideFinal
 
   NimState {.used.} = ref object
     identifiers*: TableRef[string, string]
