@@ -29,7 +29,14 @@ proc execAction*(cmd: string, retry = 0, nostderr = false): string =
     ccmd = ""
     ret = 0
   when defined(Windows):
-    ccmd = "cmd /c " & cmd
+    var filteredCmd = cmd
+    if cmd.startsWith("cd"):
+      var
+        colonIndex = cmd.find(":")
+        driveLetter = cmd.substr(colonIndex-1, colonIndex)
+      if driveLetter[0].isAlphaAscii() and driveLetter[1] == ':':
+        filteredCmd = &"{driveLetter} && {cmd}"
+    ccmd = "cmd /c " & filteredCmd
   elif defined(posix):
     ccmd = cmd
   else:
