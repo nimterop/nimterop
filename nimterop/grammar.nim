@@ -20,22 +20,19 @@ proc initGrammar(): Grammar =
         nimState.debugStr &= "\n# define X Y"
 
       let
-        name = nimState.getIdentifier(nimState.data[0].val, nskConst)
+        name = nimState.data[0].val
+        nname = nimState.getIdentifier(name, nskConst)
         val = nimState.data[1].val.getLit()
 
-      if name.nBl:
-        if val.nBl:
-          if nimState.addNewIdentifer(name):
-            nimState.constStr &= &"{nimState.getComments()}\n  {name}* = {val}"
+      if not nname.nBl:
+        let
+          override = nimState.getOverride(name, nskConst)
+        if override.len != 0:
+          nimState.constStr &= &"{nimState.getComments()}\n{override}"
         else:
-          let
-            override = nimState.getOverride(name, nskConst)
-
-          if override.len != 0:
-            if nimState.addNewIdentifer(name):
-              nimState.constStr &= &"{nimState.getComments()}\n  {override}"
-          else:
-            nimState.constStr &= &"{nimState.getComments()}\n  # Const '{name}' skipped"
+          nimState.constStr &= &"{nimState.getComments()}\n  # Const '{name}' skipped"
+      elif val.nBl and nimState.addNewIdentifer(nname):
+        nimState.constStr &= &"{nimState.getComments()}\n  {nname}* = {val}"
   ))
 
   let
@@ -183,7 +180,12 @@ proc initGrammar(): Grammar =
       let
         pragma = nimState.getPragma(pragmas)
 
-      if nname notin gTypeMap and typ.nBl and nname.nBl and nimState.addNewIdentifer(nname):
+      if not nname.nBl:
+        let
+          override = nimState.getOverride(name, nskType)
+        if override.len != 0:
+          nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+      elif nname notin gTypeMap and typ.nBl and nimState.addNewIdentifer(nname):
         if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
           var
             fname = nname
@@ -274,7 +276,12 @@ proc initGrammar(): Grammar =
                   union = ", union"
               break
 
-    if nname.nBl and nimState.addNewIdentifer(nname):
+    if not nname.nBl:
+      let
+        override = nimState.getOverride(name, nskType)
+      if override.len != 0:
+        nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+    elif nimState.addNewIdentifer(nname):
       if nimState.data.len == 1:
         nimState.typeStr &= &"{nimState.getComments()}\n  {nname}* {{.bycopy{union}.}} = object"
       else:
@@ -612,7 +619,12 @@ proc initGrammar(): Grammar =
         if pout.len != 0 and pout[^2 .. ^1] == ", ":
           pout = pout[0 .. ^3]
 
-        if fnname.nBl and nimState.addNewIdentifer(fnname):
+        if not fnname.nBl:
+          let
+            override = nimState.getOverride(fname, nskProc)
+          if override.len != 0:
+            nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+        elif nimState.addNewIdentifer(fnname):
           let
             ftyp = nimState.getIdentifier(nimState.data[0].val, nskType, fnname).getType()
             pragma = nimState.getPragma(nimState.getImportC(fname, fnname), "cdecl")
@@ -671,9 +683,7 @@ proc initGrammar(): Grammar =
               override = nimState.getOverride(i.val, nskType)
 
             if override.len != 0:
-              let
-                override = override.replace(re"(?m)^(.*?)$", "  $1")
-              nimState.typeStr &= &"{nimState.getComments()}\n{override} #" & $nimState.data
+              nimState.typeStr &= &"{nimState.getComments()}\n{override}"
             else:
               nimState.typeStr &= &"{nimState.getComments()}\n  # Type '{i.val}' skipped"
 
