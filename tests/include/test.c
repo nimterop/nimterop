@@ -75,3 +75,11 @@ void *multiline2(void) {
 }
 
 void multiline3(void) {}
+
+int weirdfunc(char ***apple) {
+  return 1;
+}
+
+int weirdfunc2(char **apple) {
+  return 2;
+}
