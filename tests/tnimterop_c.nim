@@ -20,6 +20,27 @@ cPlugin:
     else:
       sym.name = sym.name.strip(chars={'_'})
 
+cOverride:
+  type
+    BITMAPINFOHEADER* {.bycopy.} = object
+      biClrImportant*: int
+
+    Random = object
+
+    ABC = pointer
+
+    GHI = object
+      f2: ptr ptr cint
+
+    JKL = object
+      f2: ptr ptr cint
+
+  const
+    BIT* = 1
+
+  proc weirdfunc(apple: ptr ptr ptr cchar): int {.importc.}
+  proc weirdfunc2(mango: ptr ptr cchar): int {.importc.}
+
 cImport cSearchPath "test.h"
 
 check TEST_INT == 512
@@ -183,3 +204,23 @@ var
   arr: array[5, cint]
 
 check test_array_param(arr) == nil
+
+# cOverride
+
+var
+  ca = weirdfunc
+  cb: BITMAPINFOHEADER
+  cc = weirdfunc2
+  cd: ABC
+  ce: DEF
+  cf: GHI
+  cg: JKL
+
+cd = nil
+ce = 5
+cf.f2 = nil
+cg.f2 = nil
+
+doAssert BIT == 1
+doAssert ca(nil) == 1
+doAssert cc(nil) == 2

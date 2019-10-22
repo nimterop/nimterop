@@ -48,8 +48,9 @@ cOverride:
     z_crc_t = culong
     alloc_func* {.importc.} = proc(opaque: voidpf, items, size: uint) {.cdecl.}
     Bytef {.importc.} = object
-  
-  when defined(posix):
+
+when defined(posix):
+  cOverride:
     type
       pthread_mutex_s = object
       pthread_cond_s = object

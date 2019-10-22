@@ -20,14 +20,19 @@ proc initGrammar(): Grammar =
         nimState.debugStr &= "\n# define X Y"
 
       let
+        name = nimState.data[0].val
+        nname = nimState.getIdentifier(name, nskConst)
         val = nimState.data[1].val.getLit()
 
-      if val.nBl:
+      if not nname.nBl:
         let
-          name = nimState.getIdentifier(nimState.data[0].val, nskConst)
-
-        if name.nBl and nimState.addNewIdentifer(name):
-          nimState.constStr &= &"{nimState.getComments()}\n  {name}* = {val}"
+          override = nimState.getOverride(name, nskConst)
+        if override.len != 0:
+          nimState.constStr &= &"{nimState.getComments()}\n{override}"
+        else:
+          nimState.constStr &= &"{nimState.getComments()}\n  # Const '{name}' skipped"
+      elif val.nBl and nimState.addNewIdentifer(nname):
+        nimState.constStr &= &"{nimState.getComments()}\n  {nname}* = {val}"
   ))
 
   let
@@ -175,7 +180,12 @@ proc initGrammar(): Grammar =
       let
         pragma = nimState.getPragma(pragmas)
 
-      if nname notin gTypeMap and typ.nBl and nname.nBl and nimState.addNewIdentifer(nname):
+      if not nname.nBl:
+        let
+          override = nimState.getOverride(name, nskType)
+        if override.len != 0:
+          nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+      elif nname notin gTypeMap and typ.nBl and nimState.addNewIdentifer(nname):
         if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
           var
             fname = nname
@@ -266,7 +276,12 @@ proc initGrammar(): Grammar =
                   union = ", union"
               break
 
-    if nname.nBl and nimState.addNewIdentifer(nname):
+    if not nname.nBl:
+      let
+        override = nimState.getOverride(name, nskType)
+      if override.len != 0:
+        nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+    elif nimState.addNewIdentifer(nname):
       if nimState.data.len == 1:
         nimState.typeStr &= &"{nimState.getComments()}\n  {nname}* {{.bycopy{union}.}} = object"
       else:
@@ -604,7 +619,12 @@ proc initGrammar(): Grammar =
         if pout.len != 0 and pout[^2 .. ^1] == ", ":
           pout = pout[0 .. ^3]
 
-        if fnname.nBl and nimState.addNewIdentifer(fnname):
+        if not fnname.nBl:
+          let
+            override = nimState.getOverride(fname, nskProc)
+          if override.len != 0:
+            nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+        elif nimState.addNewIdentifer(fnname):
           let
             ftyp = nimState.getIdentifier(nimState.data[0].val, nskType, fnname).getType()
             pragma = nimState.getPragma(nimState.getImportC(fname, fnname), "cdecl")
@@ -637,6 +657,38 @@ proc initGrammar(): Grammar =
         nimState.commentStr &= &"\n  # {line.strip(leading=false)}"
   ))
 
+  # // unknown
+  result.add((&"""
+   (type_definition|struct_specifier|union_specifier|enum_specifier|declaration
+    (^.*)
+   )
+  """,
+    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      for i in nimState.data:
+        case $node.tsNodeType()
+        of "declaration":
+          if i.name == "identifier":
+            let
+              override = nimState.getOverride(i.val, nskProc)
+
+            if override.len != 0:
+              nimState.procStr &= &"{nimState.getComments(true)}\n{override}"
+              break
+            else:
+              nimState.procStr &= &"{nimState.getComments(true)}\n# Declaration '{i.val}' skipped"
+
+        else:
+          if i.name == "type_identifier":
+            let
+              override = nimState.getOverride(i.val, nskType)
+
+            if override.len != 0:
+              nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+            else:
+              nimState.typeStr &= &"{nimState.getComments()}\n  # Type '{i.val}' skipped"
+
+  ))
+
 proc initRegex(ast: ref Ast) =
   if ast.children.len != 0:
     if not ast.recursive:
@@ -653,7 +705,7 @@ proc initRegex(ast: ref Ast) =
       raise newException(Exception, getCurrentExceptionMsg())
 
 proc parseGrammar*(): AstTable =
-  let grammars = initGrammar()
+  const grammars = initGrammar()
 
   result = newTable[string, seq[ref Ast]]()
   for i in 0 .. grammars.len-1:

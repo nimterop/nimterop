@@ -138,17 +138,43 @@ proc getUniqueIdentifier*(nimState: NimState, prefix = ""): string =
 
   return name & $count
 
-proc addNewIdentifer*(nimState: NimState, name: string): bool =
-  if name notin nimState.gState.symOverride:
+proc addNewIdentifer*(nimState: NimState, name: string, override = false): bool =
+  if override or name notin nimState.gState.symOverride:
     let
       nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
 
     if nimState.identifiers.hasKey(nimName):
-      doAssert name == nimState.identifiers[nimName], &"Identifier '{name}' is a stylistic duplicate of identifier '{nimState.identifiers[nimName]}', use 'cPlugin:onSymbol()' to rename"
+      doAssert name == nimState.identifiers[nimName],
+        &"Identifier '{name}' is a stylistic duplicate of identifier " &
+        &"'{nimState.identifiers[nimName]}', use 'cPlugin:onSymbol()' to rename"
       result = false
     else:
       nimState.identifiers[nimName] = name
       result = true
+
+proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
+  doAssert name.len != 0, "Blank identifier error"
+
+  if nimState.gState.onSymbolOverride != nil:
+    var
+      nname = nimState.getIdentifier(name, kind, "Override")
+      sym = Symbol(name: nname, kind: kind)
+    if nname.nBl:
+      nimState.gState.onSymbolOverride(sym)
+
+      if sym.override.len != 0 and nimState.addNewIdentifer(nname, override = true):
+        result = sym.override
+
+        if kind != nskProc:
+          result = result.replace(re"(?m)^(.*?)$", "  $1")
+
+proc getOverrideFinal*(nimState: NimState, kind: NimSymKind): string =
+  let
+    typ = $kind
+
+  if nimState.gState.onSymbolOverrideFinal != nil:
+    for i in nimState.gState.onSymbolOverrideFinal(typ):
+      result &= "\n" & nimState.getOverride(i, kind)
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -320,6 +346,9 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
     if name in ast.children[i].name.split("|"):
       return ast.children[i]
 
+  if ast.children.len == 1 and ast.children[0].name == ".":
+    return ast.children[0]
+
 proc getPxName*(node: TSNode, offset: int): string =
   var
     np = node
@@ -449,7 +478,10 @@ proc loadPlugin*(gState: State, sourcePath: string) =
   doAssert lib != nil, "Plugin $1 compiled to $2 failed to load" % [sourcePath, pdll]
 
   gState.onSymbol = cast[OnSymbol](lib.symAddr("onSymbol"))
-  doAssert gState.onSymbol != nil, "onSymbol() load failed from " & pdll
+
+  gState.onSymbolOverride = cast[OnSymbol](lib.symAddr("onSymbolOverride"))
+
+  gState.onSymbolOverrideFinal = cast[OnSymbolOverrideFinal](lib.symAddr("onSymbolOverrideFinal"))
 
 proc expandSymlinkAbs*(path: string): string =
   try:

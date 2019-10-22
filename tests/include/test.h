@@ -167,6 +167,31 @@ enum
     TDEFL_BOGUS_3 = TDEFL_OUT_BUF_SIZE / TDEFL_BOGUS_1
 };
 
+// cOverride
+struct foo { int foo[8][1]; };
+
+typedef struct tagBITMAPINFOHEADER{
+          int biClrImportant;
+} BITMAPINFOHEADER, * pBITMAPINFOHEADER;
+
+#define BIT 123u
+
+#define BIT2 123u
+
+#define BIT3 123
+
+typedef int ABC;
+
+typedef int DEF;
+
+typedef struct {
+  int **f1;
+} GHI;
+
+struct JKL {
+  int **f1;
+};
+
 #ifdef __cplusplus
 }
 #endif

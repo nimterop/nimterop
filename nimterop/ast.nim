@@ -1,4 +1,4 @@
-import os, sets, strformat, strutils, tables, times
+import macros, os, sets, strformat, strutils, tables, times
 
 import regex
 
@@ -187,6 +187,7 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
   if nimState.enumStr.nBl:
     echo &"{nimState.enumStr}\n"
 
+  nimState.constStr = nimState.getOverrideFinal(nskConst) & nimState.constStr
   if nimState.constStr.nBl:
     echo &"const{nimState.constStr}\n"
 
@@ -195,9 +196,11 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
 {{.pragma: {nimState.impShort}C, {nimState.impShort}, cdecl{nimState.getDynlib()}.}}
 """
 
+  nimState.typeStr = nimState.getOverrideFinal(nskType) & nimState.typeStr
   if nimState.typeStr.nBl:
     echo &"type{nimState.typeStr}\n"
 
+  nimState.procStr = nimState.getOverrideFinal(nskProc) & nimState.procStr
   if nimState.procStr.nBl:
     echo &"{nimState.procStr}\n"
 

@@ -20,7 +20,7 @@ cPlugin:
   import strutils
 
   proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
-    sym.name = sym.name.strip(chars={'_'})
+    sym.name = sym.name.strip(chars={'_'}).replace("__", "_")
 
 cImport cSearchPath("math.h")
 
