@@ -1,4 +1,4 @@
-import macros, osproc, sets, strformat, strutils, regex, tables
+import macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
 
@@ -29,13 +29,15 @@ proc execAction*(cmd: string, retry = 0, nostderr = false): string =
     ccmd = ""
     ret = 0
   when defined(Windows):
-    var
-      filteredCmd = cmd
-      matches: RegexMatch
-    if cmd.find(re"cd\s+(\D)\:", matches):
-      var driveLetter = cmd[matches.group(0)[0]]
-      filteredCmd = &"{driveLetter}: && {cmd}"
-      echo filteredCmd
+    var filteredCmd = cmd
+    if cmd.toLower().startsWith("cd"):
+      var
+        colonIndex = cmd.find(":")
+        driveLetter = cmd.substr(colonIndex-1, colonIndex)
+      if (driveLetter[0].isAlphaAscii() and 
+          driveLetter[1] == ':' and
+          colonIndex == 4):
+        filteredCmd = &"{driveLetter} && {cmd}"
     ccmd = "cmd /c " & filteredCmd
   elif defined(posix):
     ccmd = cmd
