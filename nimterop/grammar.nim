@@ -216,6 +216,9 @@ proc initGrammar(): Grammar =
             nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = {aptr}array[{flen}, {getPtrType(tptr&typ)}]"
           else:
             if nname == typ:
+              pragmas.add "incompleteStruct"
+              let
+                pragma = nimState.getPragma(pragmas)
               nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object"
             else:
               nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = {getPtrType(tptr&typ)}"
