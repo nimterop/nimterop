@@ -34,7 +34,7 @@ cImport(pcreH, dynlib="dynpcre")
 
 echo version()
 
-proc my_malloc(a1: cuint) {.cdecl.} =
+proc my_malloc(a1: uint) {.cdecl.} =
   discard
 
 malloc = my_malloc

@@ -46,12 +46,12 @@ const gTypeMap* = {
   "int": "cint",
   "signed": "cint",
   "signed int": "cint",
-  "ssize_t": "cint",
+  "ssize_t": "int",
   "unsigned": "cuint",
   "unsigned int": "cuint",
   "uInt": "cuint",
   "u_int": "cuint",
-  "size_t": "cuint",
+  "size_t": "uint",
 
   # long
   "long": "clong",
