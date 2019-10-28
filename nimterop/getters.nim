@@ -102,7 +102,7 @@ proc checkIdentifier(name, kind, parent, origName: string) =
 
     doAssert name[0] != '_' and name[^1] != '_', errmsg & " leading/trailing underscores '_'"
 
-    doAssert (not name.contains(re"_[_]+")): errmsg & " more than one consecutive underscore '_'"
+    doAssert (not name.contains("__")): errmsg & " consecutive underscores '_'"
 
   if parent.nBl:
     doAssert name.nBl, &"Blank identifier, originally '{parentStr}{name}' ({kind}), cannot be empty"
@@ -191,11 +191,10 @@ proc getPtrType*(str: string): string =
 
 proc getLit*(str: string): string =
   let
-    str = str.replace(re"//.*?$", "").replace(re"/\*.*?\*/", "").strip()
+    str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
 
-  if str.contains(re"^[\-]?[\d]+$") or
-    str.contains(re"^[\-]?[\d]*\.[\d]+$") or
-    str.contains(re"^0x[\d]+$"):
+  if str.contains(re"^[\-]?[\d]*[.]?[\d]+$") or
+    str.contains(re"^0x[\da-fA-F]+$"):
     return str
 
 proc getNodeVal*(nimState: NimState, node: TSNode): string =
@@ -211,7 +210,7 @@ proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
     result.col += 1
 
 proc getCurrentHeader*(fullpath: string): string =
-  ("header" & fullpath.splitFile().name.replace(re"[-.]+", ""))
+  ("header" & fullpath.splitFile().name.multiReplace([(".", ""), ("-", "")]))
 
 proc removeStatic(content: string): string =
   ## Replace static function bodies with a semicolon and commented
@@ -269,12 +268,11 @@ proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
         if start:
           if "#undef" in line:
             continue
-          rdata.add(
-            line.
-              replace("__restrict", "").
-              replace(re"__attribute__[ ]*\(\(.*?\)\)([ ,;])", "$1")
-          )
-  return rdata.join("\n").removeStatic()
+          rdata.add line
+  return rdata.join("\n").
+    replace("__restrict", "").
+    replace(re"__attribute__[ ]*\(\(.*?\)\)([ ,;])", "$1").
+    removeStatic()
 
 converter toString*(kind: Kind): string =
   return case kind:
