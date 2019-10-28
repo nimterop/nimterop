@@ -31,6 +31,8 @@ proc initGrammar(): Grammar =
           nimState.constStr &= &"{nimState.getComments()}\n{override}"
         else:
           nimState.constStr &= &"{nimState.getComments()}\n  # Const '{name}' skipped"
+          if nimState.gState.debug:
+            nimState.skipStr &= &"\n{nimState.getNodeVal(node)}"
       elif val.nBl and nimState.addNewIdentifer(nname):
         nimState.constStr &= &"{nimState.getComments()}\n  {nname}* = {val}"
   ))
@@ -667,6 +669,8 @@ proc initGrammar(): Grammar =
    )
   """,
     proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+      var
+        done = false
       for i in nimState.data:
         case $node.tsNodeType()
         of "declaration":
@@ -676,6 +680,7 @@ proc initGrammar(): Grammar =
 
             if override.len != 0:
               nimState.procStr &= &"{nimState.getComments(true)}\n{override}"
+              done = true
               break
             else:
               nimState.procStr &= &"{nimState.getComments(true)}\n# Declaration '{i.val}' skipped"
@@ -687,9 +692,13 @@ proc initGrammar(): Grammar =
 
             if override.len != 0:
               nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+              done = true
+              break
             else:
               nimState.typeStr &= &"{nimState.getComments()}\n  # Type '{i.val}' skipped"
 
+      if nimState.gState.debug and not done:
+        nimState.skipStr &= &"\n{nimState.getNodeVal(node)}"
   ))
 
 proc initRegex(ast: ref Ast) =

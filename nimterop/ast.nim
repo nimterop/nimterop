@@ -1,4 +1,4 @@
-import macros, os, sets, strformat, strutils, tables, times
+import hashes, macros, os, sets, strformat, strutils, tables, times
 
 import regex
 
@@ -204,5 +204,13 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
   if nimState.procStr.nBl:
     echo &"{nimState.procStr}\n"
 
-  if nimState.debugStr.nBl:
-    echo nimState.debugStr
+  if nimState.gState.debug:
+    if nimState.debugStr.nBl:
+      echo nimState.debugStr
+
+    if nimState.skipStr.nBl:
+      let
+        hash = nimState.skipStr.hash().abs()
+        sname = getTempDir() / &"nimterop_{$hash}.h"
+      echo &"# Writing skipped definitions to {sname}\n"
+      writeFile(sname, nimState.skipStr)
