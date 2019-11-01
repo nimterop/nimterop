@@ -81,6 +81,9 @@ var
 template nBl(s: typed): untyped {.used.} =
   (s.len != 0)
 
+template Bl(s: typed): untyped {.used.} =
+  (s.len == 0)
+
 type CompileMode = enum
   c,
   cpp,
@@ -89,4 +92,5 @@ type CompileMode = enum
 const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
 
 when not declared(CIMPORT):
-  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState, nBl, CompileMode, modeDefault
+  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState,
+    nBl, Bl, CompileMode, modeDefault

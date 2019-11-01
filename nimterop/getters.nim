@@ -95,7 +95,7 @@ proc checkIdentifier(name, kind, parent, origName: string) =
   let
     parentStr = if parent.nBl: parent & ":" else: ""
 
-  if name.len != 0:
+  if name.nBl:
     let
       origStr = if name != origName: &", originally '{origName}' before 'cPlugin:onSymbol()', still" else: ""
       errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} contains"
@@ -108,7 +108,7 @@ proc checkIdentifier(name, kind, parent, origName: string) =
     doAssert name.nBl, &"Blank identifier, originally '{parentStr}{name}' ({kind}), cannot be empty"
 
 proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent=""): string =
-  doAssert name.len != 0, "Blank identifier error"
+  doAssert name.nBl, "Blank identifier error"
 
   if name notin nimState.gState.symOverride or parent.nBl:
     if nimState.gState.onSymbol != nil:
@@ -153,7 +153,7 @@ proc addNewIdentifer*(nimState: NimState, name: string, override = false): bool 
       result = true
 
 proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
-  doAssert name.len != 0, "Blank identifier error"
+  doAssert name.nBl, "Blank identifier error"
 
   if nimState.gState.onSymbolOverride != nil:
     var
@@ -162,7 +162,7 @@ proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
     if nname.nBl:
       nimState.gState.onSymbolOverride(sym)
 
-      if sym.override.len != 0 and nimState.addNewIdentifer(nname, override = true):
+      if sym.override.nBl and nimState.addNewIdentifer(nname, override = true):
         result = sym.override
 
         if kind != nskProc:
@@ -257,7 +257,7 @@ proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
         elif gState.recurse:
           let
             pDir = sfile.expandFilename().parentDir().sanitizePath(noQuote = true)
-          if pDir.len == 0 or pDir in saniLine:
+          if pDir.Bl or pDir in saniLine:
             start = true
           else:
             for inc in gState.includeDirs:
@@ -368,10 +368,10 @@ proc getNimExpression*(nimState: NimState, expr: string): string =
 
   for i in 0 .. clean.len:
     if i != clean.len:
-      if clean[i] == '_' and ident.len == 0:
+      if clean[i] == '_' and ident.Bl:
         gen = $clean[i]
       elif clean[i] in IdentChars:
-        if clean[i] in Digits and ident.len == 0:
+        if clean[i] in Digits and ident.Bl:
           gen = $clean[i]
         elif clean[i] in HexDigits and hex == true:
           gen = $clean[i]
@@ -397,8 +397,8 @@ proc getNimExpression*(nimState: NimState, expr: string): string =
         )
         hex = false
 
-    if i == clean.len or gen.len != 0:
-      if ident.len != 0:
+    if i == clean.len or gen.nBl:
+      if ident.nBl:
         ident = nimState.getIdentifier(ident, nskConst)
         result &= ident
         ident = ""
@@ -415,14 +415,14 @@ proc getSplitComma*(joined: seq[string]): seq[string] =
 
 proc getHeader*(nimState: NimState): string =
   result =
-    if nimState.gState.dynlib.len == 0:
+    if nimState.gState.dynlib.Bl:
       &", header: {nimState.currentHeader}"
     else:
       ""
 
 proc getDynlib*(nimState: NimState): string =
   result =
-    if nimState.gState.dynlib.len != 0:
+    if nimState.gState.dynlib.nBl:
       &", dynlib: {nimState.gState.dynlib}"
     else:
       ""
@@ -436,9 +436,9 @@ proc getImportC*(nimState: NimState, origName, nimName: string): string =
 proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
   result = ""
   for pragma in pragmas.items():
-    if pragma.len != 0:
+    if pragma.nBl:
       result &= pragma & ", "
-  if result.len != 0:
+  if result.nBl:
     result = " {." & result[0 .. ^3] & ".}"
 
   result = result.replace(nimState.impShort & ", cdecl", nimState.impShort & "C")
@@ -446,11 +446,11 @@ proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
   let
     dy = nimState.getDynlib()
 
-  if ", cdecl" in result and dy.len != 0:
+  if ", cdecl" in result and dy.nBl:
     result = result.replace(".}", dy & ".}")
 
 proc getComments*(nimState: NimState, strip = false): string =
-  if not nimState.gState.nocomments and nimState.commentStr.len != 0:
+  if not nimState.gState.nocomments and nimState.commentStr.nBl:
     result = "\n" & nimState.commentStr
     if strip:
       result = result.replace("\n  ", "\n")

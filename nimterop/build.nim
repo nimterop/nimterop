@@ -34,7 +34,7 @@ proc execAction*(cmd: string, retry = 0, nostderr = false): string =
       var
         colonIndex = cmd.find(":")
         driveLetter = cmd.substr(colonIndex-1, colonIndex)
-      if (driveLetter[0].isAlphaAscii() and 
+      if (driveLetter[0].isAlphaAscii() and
           driveLetter[1] == ':' and
           colonIndex == 4):
         filteredCmd = &"{driveLetter} && {cmd}"

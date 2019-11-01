@@ -63,7 +63,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
   defer:
     parser.tsParserDelete()
 
-  if gState.mode.len == 0:
+  if gState.mode.Bl:
     if ext in [".h", ".c"]:
       gState.mode = "c"
     elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
@@ -74,7 +74,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
   else:
     gState.code = readFile(path)
 
-  doAssert gState.code.len != 0, "Empty file or preprocessor error"
+  doAssert gState.code.nBl, "Empty file or preprocessor error"
 
   if gState.mode == "c":
     doAssert parser.tsParserSetLanguage(treeSitterC()), "Failed to load C parser"
@@ -141,7 +141,7 @@ proc main(
     astTable = parseGrammar()
   if pgrammar:
     astTable.printGrammar()
-  elif source.len != 0:
+  elif source.nBl:
     if gState.pnim:
       printNimHeader()
     for src in source:

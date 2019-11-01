@@ -48,7 +48,7 @@ proc walkDirImpl(indir, inext: string, file=true): seq[string] =
   let
     dir = joinPathIfRel(getProjectPath(), indir)
     ext =
-      if inext.len != 0:
+      if inext.nBl:
         when not defined(Windows):
           "-name " & inext
         else:
@@ -100,7 +100,7 @@ proc getToastError(output: string): string =
       result &= "\n\nERROR:$1\n" % line.split("fatal error:")[1]
 
   # Toast error
-  if result.len == 0:
+  if result.Bl:
     result = "\n\n" & output
 
 proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
@@ -139,7 +139,7 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
   if recurse:
     cmd.add " --recurse"
 
-  if flags.len != 0:
+  if flags.nBl:
     cmd.add flags
 
   for i in gStateCT.defines:
@@ -151,10 +151,10 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
   if not noNimout:
     cmd.add &" --pnim"
 
-    if dynlib.len != 0:
+    if dynlib.nBl:
       cmd.add &" --dynlib={dynlib}"
 
-    if gStateCT.symOverride.len != 0:
+    if gStateCT.symOverride.nBl:
       cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
 
     when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
@@ -222,7 +222,7 @@ macro cOverride*(body): untyped =
       else:
         discard
 
-  if gStateCT.overrides.len == 0:
+  if gStateCT.overrides.Bl:
     gStateCT.overrides = """
 import sets, tables
 
@@ -230,7 +230,7 @@ proc onSymbolOverride*(sym: var Symbol) {.exportc, dynlib.} =
 """
 
   # If cPlugin called before cOverride
-  if gStateCT.pluginSourcePath.len != 0:
+  if gStateCT.pluginSourcePath.nBl:
     gStateCT.pluginSourcePath = ""
 
   var
@@ -257,7 +257,7 @@ proc onSymbolOverride*(sym: var Symbol) {.exportc, dynlib.} =
 
     gStateCT.symOverride.add name
 
-  if gStateCT.debug and names.len != 0:
+  if gStateCT.debug and names.nBl:
     echo "# Overriding " & names.join(" ")
 
 proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
@@ -273,18 +273,19 @@ proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
 proc cPluginHelper(body: string) =
   gStateCT.pluginSource = body
 
-  let
-    data = "import macros, nimterop/plugin\n\n" & body & gStateCT.overrides
-    hash = data.hash().abs()
-    path = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
+  if gStateCT.pluginSource.nBl or gStateCT.overrides.nBl:
+    let
+      data = "import macros, nimterop/plugin\n\n" & body & gStateCT.overrides
+      hash = data.hash().abs()
+      path = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
 
-  if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
-    mkDir(path.parentDir())
-    writeFile(path, data)
+    if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
+      mkDir(path.parentDir())
+      writeFile(path, data)
 
-  doAssert fileExists(path), "Unable to write plugin file: " & path
+    doAssert fileExists(path), "Unable to write plugin file: " & path
 
-  gStateCT.pluginSourcePath = path
+    gStateCT.pluginSourcePath = path
 
 macro cPlugin*(body): untyped =
   ## When `cOverride() <cimport.html#cOverride.m>`_ and
@@ -347,11 +348,11 @@ proc cSearchPath*(path: string): string {.compileTime.}=
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
 
   result = findPath(path, fail = false)
-  if result.len == 0:
+  if result.Bl:
     var found = false
     for inc in gStateCT.searchDirs:
       result = findPath(inc / path, fail = false)
-      if result.len != 0:
+      if result.nBl:
         found = true
         break
     doAssert found, "File or directory not found: " & path &
@@ -498,7 +499,7 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
     result = true
     if "_nimterop_" in file:
       result = false
-    elif exclude.len != 0:
+    elif exclude.nBl:
       for excl in exclude.split(","):
         if excl in file:
           result = false
@@ -508,7 +509,7 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
       files = walkDirImpl(dir, ext)
 
     for f in files:
-      if f.len != 0 and f.notExcluded(exclude):
+      if f.nBl and f.notExcluded(exclude):
         result &= fcompile(f)
 
   if path.contains("*") or path.contains("?"):
@@ -576,13 +577,18 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   let
     fullpath = findPath(filename)
 
-  if gStateCT.overrides.len != 0 and gStateCT.pluginSourcePath.len == 0:
+  # In case cOverride called after cPlugin
+  if gStateCT.pluginSourcePath.Bl:
     cPluginHelper(gStateCT.pluginSource)
 
   echo "# Importing " & fullpath.sanitizePath
 
   let
     output = getToast(fullpath, recurse, dynlib, mode, flags)
+
+  # Reset plugin and overrides for next cImport
+  gStateCT.pluginSourcePath = ""
+  gStateCT.overrides = ""
 
   if gStateCT.debug:
     echo output
@@ -641,11 +647,11 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
     cmd = when defined(Windows): "cmd /c " else: ""
   cmd &= &"c2nim {hpath} --header:{header}"
 
-  if dynlib.len != 0:
+  if dynlib.nBl:
     cmd.add &" --dynlib:{dynlib}"
   if mode.contains("cpp"):
     cmd.add " --cpp"
-  if flags.len != 0:
+  if flags.nBl:
     cmd.add &" {flags}"
 
   for i in gStateCT.defines:

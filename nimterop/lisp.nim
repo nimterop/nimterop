@@ -45,7 +45,7 @@ proc readFromTokens(): ref Ast =
 proc printAst*(node: ref Ast, offset=""): string =
   result = offset & "(" & (if node.recursive: "^" else: "") & node.name & node.kind.toString()
 
-  if node.children.len != 0 and not node.recursive:
+  if node.children.nBl and not node.recursive:
     result &= "\n"
     for child in node.children:
       result &= printAst(child, offset & " ")

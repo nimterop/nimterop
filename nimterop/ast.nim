@@ -78,9 +78,9 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
     nimState.nodeBranch.add $node.tsNodeType()
     echo "#" & spaces(nimState.nodeBranch.len * 2) & nimState.nodeBranch[^1]
 
-  if ast.children.len != 0:
+  if ast.children.nBl:
     if childNames.contains(ast.regex) or
-      (childNames.len == 0 and ast.recursive):
+      (childNames.Bl and ast.recursive):
       if node.getTSNodeNamedChildCountSansComments() != 0:
         var flag = true
 
@@ -110,7 +110,7 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
 
   if nimState.gState.debug:
     discard nimState.nodeBranch.pop()
-    if nimstate.nodeBranch.len == 0:
+    if nimstate.nodeBranch.Bl:
       echo ""
 
 proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
@@ -179,7 +179,7 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
   nimState.impShort = nimState.currentHeader.replace("header", "imp")
   nimState.sourceFile = fullpath
 
-  if nimState.gState.dynlib.len == 0:
+  if nimState.gState.dynlib.Bl:
     nimState.constStr &= &"\n  {nimState.currentHeader} {{.used.}} = \"{fp}\""
 
   root.searchAst(astTable, nimState)

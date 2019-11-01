@@ -27,7 +27,7 @@ proc initGrammar(): Grammar =
       if not nname.nBl:
         let
           override = nimState.getOverride(name, nskConst)
-        if override.len != 0:
+        if override.nBl:
           nimState.constStr &= &"{nimState.getComments()}\n{override}"
         else:
           nimState.constStr &= &"{nimState.getComments()}\n  # Const '{name}' skipped"
@@ -123,7 +123,7 @@ proc initGrammar(): Grammar =
 
       pout &= &"{pname}: array[{flen}, {getPtrType(pptr&ptyp)}], "
       i += 1
-    elif pptr.len != 0 or ptyp != "object":
+    elif pptr.nBl or ptyp != "object":
       pout &= &"{pname}: {getPtrType(pptr&ptyp)}, "
 
   # typedef int X
@@ -176,7 +176,7 @@ proc initGrammar(): Grammar =
         nname = nimState.getIdentifier(name, nskType)
         i += 1
 
-      if nimState.gState.dynlib.len == 0:
+      if nimState.gState.dynlib.Bl:
         pragmas.add nimState.getImportC(name, nname)
 
       let
@@ -185,7 +185,7 @@ proc initGrammar(): Grammar =
       if not nname.nBl:
         let
           override = nimState.getOverride(name, nskType)
-        if override.len != 0:
+        if override.nBl:
           nimState.typeStr &= &"{nimState.getComments()}\n{override}"
       elif nname notin gTypeMap and typ.nBl and nimState.addNewIdentifer(nname):
         if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
@@ -201,10 +201,10 @@ proc initGrammar(): Grammar =
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen)
 
-          if pout.len != 0 and pout[^2 .. ^1] == ", ":
+          if pout.nBl and pout[^2 .. ^1] == ", ":
             pout = pout[0 .. ^3]
 
-          if tptr.len != 0 or typ != "object":
+          if tptr.nBl or typ != "object":
             nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = proc({pout}): {getPtrType(tptr&typ)} {{.cdecl.}}"
           else:
             nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = proc({pout}) {{.cdecl.}}"
@@ -284,7 +284,7 @@ proc initGrammar(): Grammar =
     if not nname.nBl:
       let
         override = nimState.getOverride(name, nskType)
-      if override.len != 0:
+      if override.nBl:
         nimState.typeStr &= &"{nimState.getComments()}\n{override}"
     elif nimState.addNewIdentifer(nname):
       if nimState.data.len == 1:
@@ -292,10 +292,10 @@ proc initGrammar(): Grammar =
       else:
         var
           pragmas: seq[string] = @[]
-        if nimState.gState.dynlib.len == 0:
+        if nimState.gState.dynlib.Bl:
           pragmas.add nimState.getImportC(prefix & name, nname)
         pragmas.add "bycopy"
-        if union.len != 0:
+        if union.nBl:
           pragmas.add "union"
 
         let
@@ -357,9 +357,9 @@ proc initGrammar(): Grammar =
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen)
 
-          if pout.len != 0 and pout[^2 .. ^1] == ", ":
+          if pout.nBl and pout[^2 .. ^1] == ", ":
             pout = pout[0 .. ^3]
-          if fptr.len != 0 or ftyp != "object":
+          if fptr.nBl or ftyp != "object":
             nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.cdecl.}}"
           else:
             nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: proc({pout}) {{.cdecl.}}"
@@ -372,7 +372,7 @@ proc initGrammar(): Grammar =
           i += 1
 
       if node.tsNodeType() == "type_definition" and
-        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.len != 0:
+        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.nBl:
           pDupTypeCommon(nname, fend, nimState, false)
 
   let
@@ -473,7 +473,7 @@ proc initGrammar(): Grammar =
       nimState.debugStr &= "\n#   pEnumCommon()"
 
     let nname =
-      if name.len == 0:
+      if name.Bl:
         getUniqueIdentifier(nimState, "Enum")
       else:
         nimState.getIdentifier(name, nskType)
@@ -508,7 +508,7 @@ proc initGrammar(): Grammar =
           count += 1
 
       if node.tsNodeType() == "type_definition" and
-        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.len != 0:
+        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.nBl:
           pDupTypeCommon(nname, fend, nimState, true)
 
   # enum X {}
@@ -621,20 +621,20 @@ proc initGrammar(): Grammar =
 
           funcParamCommon(fnname, pname, ptyp, pptr, pout, count, i, flen)
 
-        if pout.len != 0 and pout[^2 .. ^1] == ", ":
+        if pout.nBl and pout[^2 .. ^1] == ", ":
           pout = pout[0 .. ^3]
 
         if not fnname.nBl:
           let
             override = nimState.getOverride(fname, nskProc)
-          if override.len != 0:
+          if override.nBl:
             nimState.typeStr &= &"{nimState.getComments()}\n{override}"
         elif nimState.addNewIdentifer(fnname):
           let
             ftyp = nimState.getIdentifier(nimState.data[0].val, nskType, fnname).getType()
             pragma = nimState.getPragma(nimState.getImportC(fname, fnname), "cdecl")
 
-          if fptr.len != 0 or ftyp != "object":
+          if fptr.nBl or ftyp != "object":
             if fVar:
               nimState.procStr &= &"{nimState.getComments(true)}\nvar {fnname}*: proc ({pout}): {getPtrType(fptr&ftyp)}{{.cdecl.}}"
             else:
@@ -678,7 +678,7 @@ proc initGrammar(): Grammar =
             let
               override = nimState.getOverride(i.val, nskProc)
 
-            if override.len != 0:
+            if override.nBl:
               nimState.procStr &= &"{nimState.getComments(true)}\n{override}"
               done = true
               break
@@ -690,7 +690,7 @@ proc initGrammar(): Grammar =
             let
               override = nimState.getOverride(i.val, nskType)
 
-            if override.len != 0:
+            if override.nBl:
               nimState.typeStr &= &"{nimState.getComments()}\n{override}"
               done = true
               break
@@ -702,7 +702,7 @@ proc initGrammar(): Grammar =
   ))
 
 proc initRegex(ast: ref Ast) =
-  if ast.children.len != 0:
+  if ast.children.nBl:
     if not ast.recursive:
       for child in ast.children:
         child.initRegex()
