@@ -198,8 +198,10 @@ macro cOverride*(body): untyped =
   ## can be instructed to use this definition of `svGetCallerInfo()` instead.
   ## This works for procs, consts and types.
   ##
-  ## `cOverride() <cimport.html#cOverride.m>`_ only affects calls to
-  ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ that follow it.
+  ## `cOverride()` only affects the next `cImport()` call. This is because any
+  ## recognized symbols get overridden in place and any remaining symbols get
+  ## added to the top. If reused, the next `cImport()` would add those symbols
+  ## again leading to redefinition errors.
 
   iterator findOverrides(node: NimNode): tuple[name, override: string, kind: NimNodeKind] =
     for child in node:
@@ -571,6 +573,10 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   ## be ignored for the foreseeable future.
   ##
   ## `flags` can be used to pass any other command line arguments to `toast`.
+  ##
+  ## `cImport()` consumes and resets preceding `cOverride()` calls. `cPlugin()`
+  ## is retained for the next `cImport()` call unless a new `cPlugin()` call is
+  ## defined.
 
   result = newNimNode(nnkStmtList)
 
@@ -587,8 +593,9 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
     output = getToast(fullpath, recurse, dynlib, mode, flags)
 
   # Reset plugin and overrides for next cImport
-  gStateCT.pluginSourcePath = ""
-  gStateCT.overrides = ""
+  if gStateCT.overrides.nBl:
+    gStateCT.pluginSourcePath = ""
+    gStateCT.overrides = ""
 
   if gStateCT.debug:
     echo output
