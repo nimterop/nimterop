@@ -105,7 +105,7 @@ proc checkIdentifier(name, kind, parent, origName: string) =
     doAssert (not name.contains("__")): errmsg & " consecutive underscores '_'"
 
   if parent.nBl:
-    doAssert name.nBl, &"Blank identifier, originally '{parentStr}{name}' ({kind}), cannot be empty"
+    doAssert name.nBl, &"Blank identifier, originally '{parentStr}{origName}' ({kind}), cannot be empty"
 
 proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent=""): string =
   doAssert name.nBl, "Blank identifier error"
@@ -229,7 +229,8 @@ proc removeStatic(content: string): string =
 proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
   var
     mmode = if mode == "cpp": "c++" else: mode
-    cmd = &"""{getCompiler()} -E -CC -dD -x{mmode} -w """
+    cmts = if gState.nocomments: "" else: "-CC"
+    cmd = &"""{getCompiler()} -E {cmts} -dD -x{mmode} -w """
 
     rdata: seq[string] = @[]
     start = false
