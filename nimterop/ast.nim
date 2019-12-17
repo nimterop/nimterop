@@ -6,6 +6,8 @@ import "."/[getters, globals, treesitter/api]
 
 proc saveNodeData(node: TSNode, nimState: NimState): bool =
   let name = $node.tsNodeType()
+
+  # Atoms are nodes whose values are to be saved
   if name in gAtoms:
     let
       pname = node.getPxName(1)
@@ -16,16 +18,20 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
     var
       val = nimState.getNodeVal(node)
 
+    # Skip since value already obtained from parent atom
     if name == "primitive_type" and pname == "sized_type_specifier":
       return true
 
+    # Skip since value already obtained from parent expression
     if name in ["number_literal", "identifier"] and pname in gExpressions:
       return true
 
+    # Add reference point in saved data for bitfield_clause
     if name in ["number_literal"] and pname == "bitfield_clause":
       nimState.data.add(("bitfield_clause", val))
       return true
 
+    # Process value as a type
     if name in ["primitive_type", "sized_type_specifier"]:
       val = val.getType()
 
@@ -58,6 +64,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
       elif name == "identifier":
         nimState.data.add(("pointer_declarator", ""))
 
+  # Save node value for a top-level expression
   elif name in gExpressions and name != "escape_sequence":
     if $node.tsNodeParent.tsNodeType() notin gExpressions:
       nimState.data.add((name, nimState.getNodeVal(node)))
@@ -125,6 +132,8 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
         name = $node.tsNodeType()
       if name in astTable:
         for ast in astTable[name]:
+          if nimState.gState.debug:
+            echo "\n#  " & nimState.getNodeVal(node).replace("\n", "\n#  ") & "\n"
           if searchAstForNode(ast, node, nimState):
             ast.tonim(ast, node, nimState)
             if nimState.gState.debug:
