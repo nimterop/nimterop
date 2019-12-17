@@ -896,6 +896,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   var
     name = header.extractFilename().split(".")[0]
 
+    # -d:xxx for this header
     stdStr = name & "Std"
     gitStr = name & "Git"
     dlStr = name & "DL"
@@ -903,20 +904,24 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
     staticStr = name & "Static"
     verStr = name & "SetVer"
 
+    # Ident nodes of the -d:xxx to check in when statements
     nameStd = newIdentNode(stdStr)
     nameGit = newIdentNode(gitStr)
     nameDL = newIdentNode(dlStr)
 
     nameStatic = newIdentNode(staticStr)
 
+    # Consts to generate
     path = newIdentNode(name & "Path")
     lpath = newIdentNode(name & "LPath")
     version = newIdentNode(verStr)
     lname = newIdentNode(name & "LName")
     preBuild = newIdentNode(name & "PreBuild")
 
+    # Regex for library search
     lre = "(lib)?$1[_]?(static)?[0-9.\\-]*\\"
 
+    # If -d:xxx set with setDefines()
     stdVal = gDefines.hasKey(stdStr)
     gitVal = gDefines.hasKey(gitStr)
     dlVal = gDefines.hasKey(dlStr)
@@ -927,6 +932,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
       else:
         ""
 
+  # Use alternate library names if specified for regex search
   if altNames.len != 0:
     lre = lre % ("(" & altNames.replace(",", "|") & ")")
   else:
@@ -934,12 +940,23 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
 
   result = newNimNode(nnkStmtList)
   result.add(quote do:
+    # Need to check -d:xxx or setDefines()
     const
       `nameStd`* = when defined(`nameStd`): true else: `stdVal` == 1
       `nameGit`* = when defined(`nameGit`): true else: `gitVal` == 1
       `nameDL`* = when defined(`nameDL`): true else: `dlVal` == 1
       `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
 
+    # Search for header in outdir (after retrieving code) depending on -d:xxx mode
+    proc getPath(header, giturl, dlurl, outdir, version: string): string =
+      when `nameGit`:
+        getGitPath(header, giturl, outdir, version)
+      elif `nameDL`:
+        getDlPath(header, dlurl, outdir, version)
+      else:
+        getLocalPath(header, outdir)
+
+    const
       `version`* {.strdefine.} = `verVal`
       `lname` =
         when `nameStatic`:
@@ -947,37 +964,45 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         else:
           `lre` & getDynlibExt()
 
+      # Look in standard path if requested by user
       stdPath =
         when `nameStd`: getStdPath(`header`) else: ""
       stdLPath =
         when `nameStd`: getStdLibPath(`lname`) else: ""
 
-      `path`* =
+      # Look elsewhere if requested while prioritizing standard paths
+      prePath =
         when stdPath.len != 0 and stdLPath.len != 0:
           stdPath
-        elif `nameGit`:
-          getGitPath(`header`, `giturl`, `outdir`, `version`)
-        elif `nameDL`:
-          getDlPath(`header`, `dlurl`, `outdir`, `version`)
         else:
-          getLocalPath(`header`, `outdir`)
+          getPath(`header`, `giturl`, `dlurl`, `outdir`, `version`)
 
-    when `path` != stdPath and declared(`preBuild`):
+    # Run preBuild hook before building library if not standard
+    when (prePath != stdPath or prePath.len == 0) and declared(`preBuild`):
       static:
-        `preBuild`(`outdir`, `path`)
+        `preBuild`(`outdir`, prePath)
 
     const
+      # Library binary path - build if not standard
       `lpath`* =
         when stdPath.len != 0 and stdLPath.len != 0:
           stdLPath
         else:
           buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`)
 
+      # Header path - search again in case header is generated in build
+      `path`* =
+        if prePath.len != 0:
+          prePath
+        else:
+          getPath(`header`, `giturl`, `dlurl`, `outdir`, `version`)
+
     static:
       doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " & "missing/empty outdir or -d:$1Std -d:$1Git or -d:$1DL not specified" % `name`
       doAssert `lpath`.len != 0, "\nLibrary " & `lname` & " not found"
       echo "# Including library " & `lpath`
 
+    # Automatically link with static libary
     when `nameStatic`:
       {.passL: `lpath`.}
   )
