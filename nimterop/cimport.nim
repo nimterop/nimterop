@@ -140,7 +140,7 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
     cmd.add " --recurse"
 
   if flags.nBl:
-    cmd.add flags
+    cmd.add " " & flags
 
   for i in gStateCT.defines:
     cmd.add &" --defines+={i.quoteShell}"
@@ -300,13 +300,18 @@ macro cPlugin*(body): untyped =
   ##
   ##     proc onSymbol(sym: var Symbol) {.exportc, dynlib.}
   ##
-  ## `onSymbol()` can be used to handle symbol name modifications required due to invalid
-  ## characters like leading/trailing `_` or rename symbols that would clash due to Nim's style
-  ## insensitivity. It can also be used to remove prefixes and suffixes like `SDL_`. The symbol
-  ## name and type is provided to the callback and the name can be modified.
+  ## `onSymbol()` can be used to handle symbol name modifications required due
+  ## to invalid characters in identifiers or to rename symbols that would clash
+  ## due to Nim's style insensitivity. The symbol name and type is provided to
+  ## the callback and the name can be modified.
   ##
-  ## Returning a blank name will result in the symbol being skipped. This will fail for `nskParam`
-  ## and `nskField` since the generated Nim code will be wrong.
+  ## While `cPlugin` can easily remove leading/trailing `_` or prefixes and
+  ## suffixes like `SDL_`, passing `--prefix` or `--suffix` flags to `cImport`
+  ## in the `flags` parameter is much easier. However, these flags will only be
+  ## considered when no `cPlugin` is specified.
+  ##
+  ## Returning a blank name will result in the symbol being skipped. This will
+  ## fail for `nskParam` and `nskField` since the generated Nim code will be wrong.
   ##
   ## Symbol types can be any of the following:
   ## - `nskConst` for constants
@@ -316,10 +321,12 @@ macro cPlugin*(body): untyped =
   ## - `nskEnumField` for enum (field) names, though they are in the global namespace as `nskConst`
   ## - `nskProc` - for proc names
   ##
-  ## `nimterop/plugins` is implicitly imported to provide access to standard plugin facilities.
+  ## `nimterop/plugins` is implicitly imported to provide access to standard
+  ## plugin facilities.
   ##
   ## `cPlugin() <cimport.html#cPlugin.m>`_  only affects calls to
-  ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ that follow it.
+  ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ that
+  ## follow it.
   runnableExamples:
     cPlugin:
       import strutils
@@ -572,7 +579,9 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   ## `mode` is purely for forward compatibility when toast adds C++ support. It can
   ## be ignored for the foreseeable future.
   ##
-  ## `flags` can be used to pass any other command line arguments to `toast`.
+  ## `flags` can be used to pass any other command line arguments to `toast`. A
+  ## good example would be `--prefix` and `--suffix` which strip leading and
+  ## trailing strings from identifiers, `_` being quite common.
   ##
   ## `cImport()` consumes and resets preceding `cOverride()` calls. `cPlugin()`
   ## is retained for the next `cImport()` call unless a new `cPlugin()` call is

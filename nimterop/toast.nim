@@ -97,42 +97,51 @@ proc process(gState: State, path: string, astTable: AstTable) =
   elif gState.preprocess:
     echo gState.code
 
+# CLI processing with default values
 proc main(
-    preprocess = false,
-    past = false,
-    pnim = false,
-    recurse = false,
-    nocomments = false,
-    defines: seq[string] = @[],
-    includeDirs: seq[string] = @[],
-    dynlib: string = "",
-    symOverride: seq[string] = @[],
-    nim: string = "nim",
-    pluginSourcePath: string = "",
     debug = false,
+    defines: seq[string] = @[],
+    dynlib: string = "",
+    includeDirs: seq[string] = @[],
     mode = modeDefault,
+    nim: string = "nim",
+    nocomments = false,
+    past = false,
     pgrammar = false,
+    pluginSourcePath: string = "",
+    pnim = false,
+    prefix: seq[string] = @[],
+    preprocess = false,
+    recurse = false,
+    suffix: seq[string] = @[],
+    symOverride: seq[string] = @[],
     source: seq[string]
   ) =
 
+  # Setup global state with arguments
   var gState = State(
-    preprocess: preprocess,
-    past: past,
-    pnim: pnim,
-    recurse: recurse,
-    nocomments: nocomments,
-    defines: defines,
-    includeDirs: includeDirs,
-    dynlib: dynlib,
-    symOverride: symOverride,
-    nim: nim,
-    pluginSourcePath: pluginSourcePath,
     debug: debug,
+    defines: defines,
+    dynlib: dynlib,
+    includeDirs: includeDirs,
     mode: mode,
-    pretty: true
+    nim: nim,
+    nocomments: nocomments,
+    past: past,
+    pluginSourcePath: pluginSourcePath,
+    pnim: pnim,
+    prefix: prefix,
+    preprocess: preprocess,
+    pretty: true,
+    recurse: recurse,
+    suffix: suffix,
+    symOverride: symOverride
   )
 
+  # Split some arguments with ,
   gState.symOverride = gState.symOverride.getSplitComma()
+  gState.prefix = gState.prefix.getSplitComma()
+  gState.suffix = gState.suffix.getSplitComma()
 
   if pluginSourcePath.nBl:
     gState.loadPlugin(pluginSourcePath)
@@ -148,33 +157,38 @@ proc main(
       gState.process(src.expandSymlinkAbs(), astTable)
 
 when isMainModule:
+  # Setup cligen command line help and short flags
   import cligen
   dispatch(main, help = {
-    "preprocess": "run preprocessor on header",
-    "past": "print AST output",
-    "pnim": "print Nim output",
-    "recurse": "process #include files",
-    "nocomments": "exclude top-level comments from output",
-    "defines": "definitions to pass to preprocessor",
-    "includeDirs": "include directory to pass to preprocessor",
-    "dynlib": "Import symbols from library in specified Nim string",
-    "symOverride": "skip generating specified symbols",
-    "nim": "use a particular Nim executable (default: $PATH/nim)",
-    "pluginSourcePath": "Nim file to build and load as a plugin",
     "debug": "enable debug output",
+    "defines": "definitions to pass to preprocessor",
+    "dynlib": "Import symbols from library in specified Nim string",
+    "includeDirs": "include directory to pass to preprocessor",
     "mode": "language parser: c or cpp",
+    "nim": "use a particular Nim executable (default: $PATH/nim)",
+    "nocomments": "exclude top-level comments from output",
+    "past": "print AST output",
     "pgrammar": "print grammar",
-    "source" : "C/C++ source/header"
+    "pluginSourcePath": "Nim file to build and load as a plugin",
+    "pnim": "print Nim output",
+    "preprocess": "run preprocessor on header",
+    "recurse": "process #include files",
+    "source" : "C/C++ source/header",
+    "prefix": "Strip prefix from identifiers",
+    "suffix": "Strip suffix from identifiers",
+    "symOverride": "skip generating specified symbols"
   }, short = {
-    "preprocess": 'p',
-    "past": 'a',
-    "pnim": 'n',
-    "recurse": 'r',
-    "nocomments": 'c',
-    "defines": 'D',
-    "includeDirs": 'I',
-    "dynlib": 'l',
-    "symOverride": 'O',
     "debug": 'd',
-    "pgrammar": 'g'
+    "defines": 'D',
+    "dynlib": 'l',
+    "includeDirs": 'I',
+    "nocomments": 'c',
+    "past": 'a',
+    "pgrammar": 'g',
+    "pnim": 'n',
+    "prefix": 'E',
+    "preprocess": 'p',
+    "recurse": 'r',
+    "suffix": 'F',
+    "symOverride": 'O'
   })

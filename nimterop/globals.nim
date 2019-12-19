@@ -53,7 +53,7 @@ type
   AstTable {.used.} = TableRef[string, seq[ref Ast]]
 
   State = ref object
-    compile*, defines*, headers*, includeDirs*, searchDirs*, symOverride*: seq[string]
+    compile*, defines*, headers*, includeDirs*, searchDirs*, prefix*, suffix*, symOverride*: seq[string]
 
     nocache*, nocomments*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
 

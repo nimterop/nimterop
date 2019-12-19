@@ -112,6 +112,7 @@ proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent="
 
   if name notin nimState.gState.symOverride or parent.nBl:
     if nimState.gState.onSymbol != nil:
+      # Use onSymbol from plugin provided by user
       var
         sym = Symbol(name: name, parent: parent, kind: kind)
       nimState.gState.onSymbol(sym)
@@ -120,11 +121,23 @@ proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent="
     else:
       result = name
 
+      # Strip out --prefix from CLI if specified
+      for str in nimState.gState.prefix:
+        if result.startsWith(str):
+          result = result[str.len .. ^1]
+
+      # Strip out --suffix from CLI if specified
+      for str in nimState.gState.suffix:
+        if result.endsWith(str):
+          result = result[0 .. ^(str.len+1)]
+
     checkIdentifier(result, $kind, parent, name)
 
     if result in gReserved or (result == "object" and kind != nskType):
+      # Enclose in backticks since Nim reserved word
       result = &"`{result}`"
   else:
+    # Skip identifier since in symOverride
     result = ""
 
 proc getUniqueIdentifier*(nimState: NimState, prefix = ""): string =

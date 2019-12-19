@@ -4,6 +4,7 @@ import nimterop/[build, cimport]
 
 const
   baseDir = getProjectCacheDir("nimterop" / "tests" / "liblzma")
+  flags = "--prefix=__,_"
 
 static:
   cDebug()
@@ -21,12 +22,6 @@ getHeader(
   conFlags = "--disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo"
 )
 
-cPlugin:
-  import strutils
-
-  proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
-    sym.name = sym.name.strip(chars = {'_'})
-
 cOverride:
   type
     lzma_internal = object
@@ -39,8 +34,8 @@ cOverride:
     lzma_index_iter = object
 
 when not lzmaStatic:
-  cImport(lzmaPath, recurse = true, dynlib = "lzmaLPath")
+  cImport(lzmaPath, recurse = true, dynlib = "lzmaLPath", flags = flags)
 else:
-  cImport(lzmaPath, recurse = true)
+  cImport(lzmaPath, recurse = true, flags = flags)
 
 echo "liblzma version = " & $lzma_version_string()
