@@ -299,7 +299,7 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
 
   if checkout.len != 0:
     echo "# Checking out " & checkout
-    discard execAction(&"cd {outdirQ} && git pull --tags origin master")
+    discard execAction(&"cd {outdirQ} && git fetch")
     discard execAction(&"cd {outdirQ} && git checkout {checkout}")
   else:
     echo "# Pulling repository"
