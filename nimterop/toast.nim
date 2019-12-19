@@ -106,6 +106,7 @@ proc main(
     mode = modeDefault,
     nim: string = "nim",
     nocomments = false,
+    output = "",
     past = false,
     pgrammar = false,
     pluginSourcePath: string = "",
@@ -146,6 +147,9 @@ proc main(
   if pluginSourcePath.nBl:
     gState.loadPlugin(pluginSourcePath)
 
+  if output.len != 0:
+    doAssert reopen(stdout, output, fmWrite), "Failed to write to " & output
+
   let
     astTable = parseGrammar()
   if pgrammar:
@@ -167,6 +171,7 @@ when isMainModule:
     "mode": "language parser: c or cpp",
     "nim": "use a particular Nim executable (default: $PATH/nim)",
     "nocomments": "exclude top-level comments from output",
+    "output": "file to output content - default stdout",
     "past": "print AST output",
     "pgrammar": "print grammar",
     "pluginSourcePath": "Nim file to build and load as a plugin",
@@ -183,6 +188,7 @@ when isMainModule:
     "dynlib": 'l',
     "includeDirs": 'I',
     "nocomments": 'c',
+    "output": 'o',
     "past": 'a',
     "pgrammar": 'g',
     "pnim": 'n',
