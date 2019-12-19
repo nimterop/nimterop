@@ -4,7 +4,7 @@ import nimterop/[build, cimport]
 
 const
   baseDir = getProjectCacheDir("nimterop" / "tests" / "liblzma")
-  flags = "--prefix=__,_"
+  flags = "--prefix=__,_ --suffix=__,_"
 
 static:
   cDebug()
