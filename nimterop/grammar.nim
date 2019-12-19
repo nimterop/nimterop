@@ -332,8 +332,11 @@ proc initGrammar(): Grammar =
         fname = nimState.getIdentifier(nimState.data[i].val, nskField, nname)
 
         if i+1 < nimState.data.len-fend and nimState.data[i+1].name in gEnumVals:
-          let
+          # Struct field is an array where size is an expression
+          var
             flen = nimState.getNimExpression(nimState.data[i+1].val)
+          if "/" in flen:
+            flen = &"({flen}).int"
           nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
           i += 2
         elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "bitfield_clause":
