@@ -54,7 +54,7 @@ proc printLisp(gState: State, root: TSNode) =
       break
 
 proc process(gState: State, path: string, astTable: AstTable) =
-  doAssert existsFile(path), "Invalid path " & path
+  doAssert existsFile(path), &"Invalid path {path}"
 
   var
     parser = tsParserNew()
@@ -81,7 +81,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
   elif gState.mode == "cpp":
     doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
   else:
-    doAssert false, "Invalid parser " & gState.mode
+    doAssert false, &"Invalid parser {gState.mode}"
 
   var
     tree = parser.tsParserParseString(nil, gState.code.cstring, gState.code.len.uint32)
@@ -115,6 +115,7 @@ proc main(
     prefix: seq[string] = @[],
     preprocess = false,
     recurse = false,
+    stub = false,
     suffix: seq[string] = @[],
     symOverride: seq[string] = @[],
     source: seq[string]
@@ -153,20 +154,26 @@ proc main(
     outputFile = output
     outputHandle: File
     stdoutBackup = stdout
+    check = check or stub
+
+  # Fix output file extention
+  if outputFile.len != 0:
+    if outputFile.splitFile().ext != ".nim":
+      outputFile = outputFile & ".nim"
 
   # Check needs a file
   if check and outputFile.len == 0:
     outputFile = getTempDir() / "toast_" & ($getTime().toUnix()).addFileExt("nim")
     when defined(windows):
       # https://github.com/nim-lang/Nim/issues/12939
-      echo "Cannot print wrapper with check on Windows, review " & outputFile & "\n"
+      echo &"Cannot print wrapper with check on Windows, review {outputFile}\n"
 
   # Redirect output to file
   if outputFile.len != 0:
     when defined(windows):
-      doAssert stdout.reopen(outputFile, fmWrite), "Failed to write to " & outputFile
+      doAssert stdout.reopen(outputFile, fmWrite), &"Failed to write to {outputFile}"
     else:
-      doAssert outputHandle.open(outputFile, fmWrite), "Failed to write to " & outputFile
+      doAssert outputHandle.open(outputFile, fmWrite), &"Failed to write to {outputFile}"
       stdout = outputHandle
 
   # Process grammar into AST
@@ -187,18 +194,52 @@ proc main(
     # Restore stdout
     stdout = stdoutBackup
 
+  # Check Nim output
+  if gState.pnim and check:
+    # Run nim check on generated wrapper
+    var
+      (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
+    if err != 0:
+      # Failed check so try stubbing
+      if stub:
+        # Close output file to prepend stubs
+        when not defined(windows):
+          outputHandle.close()
+        else:
+          stdout.close()
+
+        # Find undeclared identifiers in error
+        var
+          data = ""
+          stubData = ""
+        for line in check.splitLines:
+          if "undeclared identifier" in line:
+            try:
+              # Add stub of object type
+              stubData &= "  " & line.split("'")[1] & " = object\n"
+            except:
+              discard
+
+        # Include in wrapper file
+        data = outputFile.readFile()
+        if "type\n" in data:
+          # In existing type block
+          data = data.replace("type\n", "type\n" & stubData)
+        else:
+          # At the top if none already
+          data = "type\n" & stubData & data
+        outputFile.writeFile(data)
+
+        # Rerun nim check on stubbed wrapper
+        (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
+        doAssert err == 0, "# Nim check with stub failed:\n\n" & check
+      else:
+        doAssert err == 0, "# Nim check failed:\n\n" & check
+
+  when not defined(windows):
     # Print wrapper if temporarily redirected to file
     if check and output.len == 0:
       stdout.write outputFile.readFile()
-
-  # Check Nim output
-  if gState.pnim and check:
-    var
-      (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
-    if err == 0:
-      echo "# Checked wrapper successfully"
-    else:
-      doAssert err == 0, "# Nim check failed:\n\n" & check
 
 when isMainModule:
   # Setup cligen command line help and short flags
@@ -221,6 +262,7 @@ when isMainModule:
     "recurse": "process #include files",
     "source" : "C/C++ source/header",
     "prefix": "Strip prefix from identifiers",
+    "stub": "stub out undefined type references as objects",
     "suffix": "Strip suffix from identifiers",
     "symOverride": "skip generating specified symbols"
   }, short = {
@@ -237,6 +279,7 @@ when isMainModule:
     "prefix": 'E',
     "preprocess": 'p',
     "recurse": 'r',
+    "stub": 's',
     "suffix": 'F',
     "symOverride": 'O'
   })

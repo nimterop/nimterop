@@ -112,6 +112,7 @@ Options(opt-arg sep :|=|spc):
   -E=, --prefix=       strings  {}     Strip prefix from identifiers
   -p, --preprocess     bool     false  run preprocessor on header
   -r, --recurse        bool     false  process #include files
+  -s, --stub           bool     false  stub out undefined type references as objects
   -F=, --suffix=       strings  {}     Strip suffix from identifiers
   -O=, --symOverride=  strings  {}     skip generating specified symbols
 ```
