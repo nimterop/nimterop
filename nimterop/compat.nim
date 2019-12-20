@@ -30,3 +30,5 @@ else:
     if not base.endsWith DirSep: base.add DirSep
     doAssert file.startsWith base
     result = file[base.len .. ^1]
+
+  proc getCurrentCompilerExe*(): string = "nim"

@@ -1,8 +1,8 @@
-import os, strformat, strutils
+import os, strformat, strutils, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, globals, getters, grammar]
+import "."/[ast, compat, globals, getters, grammar]
 
 proc printLisp(gState: State, root: TSNode) =
   var
@@ -99,6 +99,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
 
 # CLI processing with default values
 proc main(
+    check = false,
     debug = false,
     defines: seq[string] = @[],
     dynlib: string = "",
@@ -147,23 +148,57 @@ proc main(
   if pluginSourcePath.nBl:
     gState.loadPlugin(pluginSourcePath)
 
-  if output.len != 0:
-    doAssert reopen(stdout, output, fmWrite), "Failed to write to " & output
+  # Backup stdout
+  var
+    outputFile = output
+    outputHandle: File
+    stdoutBackup = stdout
 
+  # Check needs a file
+  if check and outputFile.len == 0:
+    outputFile = getTempDir() / "toast_" & ($getTime().toUnix()).addFileExt("nim")
+
+  # Redirect output to file
+  if outputFile.len != 0:
+    doAssert outputHandle.open(outputFile, fmWrite), "Failed to write to " & outputFile
+    stdout = outputHandle
+
+  # Process grammar into AST
   let
     astTable = parseGrammar()
+
   if pgrammar:
+    # Print AST of grammar
     astTable.printGrammar()
   elif source.nBl:
+    # Print source after preprocess or Nim output
     if gState.pnim:
       printNimHeader()
     for src in source:
       gState.process(src.expandSymlinkAbs(), astTable)
 
+  # Restore stdout
+  stdout = stdoutBackup
+
+  # Print wrapper if temporarily redirected to file
+  if check and output.len == 0:
+    stdout.write outputFile.readFile()
+    discard outputFile.tryRemoveFile()
+
+  # Check Nim output
+  if gState.pnim and check:
+    var
+      (check, err) = gorgeEx(&"{getCurrentCompilerExe()} check {outputFile}")
+    if err == 0:
+      echo "# Checked wrapper successfully"
+    else:
+      doAssert err == 0, "# Nim check failed:\n\n" & check
+
 when isMainModule:
   # Setup cligen command line help and short flags
   import cligen
   dispatch(main, help = {
+    "check": "check generated wrapper with compiler",
     "debug": "enable debug output",
     "defines": "definitions to pass to preprocessor",
     "dynlib": "Import symbols from library in specified Nim string",
@@ -183,6 +218,7 @@ when isMainModule:
     "suffix": "Strip suffix from identifiers",
     "symOverride": "skip generating specified symbols"
   }, short = {
+    "check": 'k',
     "debug": 'd',
     "defines": 'D',
     "dynlib": 'l',

@@ -21,7 +21,7 @@ const CIMPORT {.used.} = 1
 
 include "."/globals
 
-import "."/[build, paths, types]
+import "."/[build, compat, paths, types]
 export types
 
 proc interpPath(dir: string): string=
@@ -116,12 +116,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
   doAssert fileExists(result.tmpFile), "Failed to write to cache dir: " & result.tmpFile
 
   let
-    nim =
-      when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-        getCurrentCompilerExe()
-      else:
-        "nim"
-    (check, _) = gorgeEx(&"{nim} check {result.tmpFile.sanitizePath}")
+    (check, _) = gorgeEx(&"{getCurrentCompilerExe()} check {result.tmpFile.sanitizePath}")
 
   result.errors = "\n\n" & check
 
@@ -157,8 +152,7 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
     if gStateCT.symOverride.nBl:
       cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
 
-    when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-      cmd.add &" --nim:{getCurrentCompilerExe().sanitizePath}"
+    cmd.add &" --nim:{getCurrentCompilerExe().sanitizePath}"
 
     if gStateCT.pluginSourcePath.nBl:
       cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.sanitizePath}"

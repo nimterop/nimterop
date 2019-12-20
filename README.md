@@ -96,6 +96,7 @@ Usage:
 Options(opt-arg sep :|=|spc):
   -h, --help                           print this cligen-erated help
   --help-syntax                        advanced: prepend,plurals,..
+  -k, --check          bool     false  check generated wrapper with compiler
   -d, --debug          bool     false  enable debug output
   -D=, --defines=      strings  {}     definitions to pass to preprocessor
   -l=, --dynlib=       string   ""     Import symbols from library in specified Nim string
@@ -103,6 +104,7 @@ Options(opt-arg sep :|=|spc):
   -m=, --mode=         string   "cpp"  language parser: c or cpp
   --nim=               string   "nim"  use a particular Nim executable (default: $PATH/nim)
   -c, --nocomments     bool     false  exclude top-level comments from output
+  -o=, --output=       string   ""     file to output content - default stdout
   -a, --past           bool     false  print AST output
   -g, --pgrammar       bool     false  print grammar
   --pluginSourcePath=  string   ""     Nim file to build and load as a plugin
