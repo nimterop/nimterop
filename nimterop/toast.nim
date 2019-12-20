@@ -222,9 +222,11 @@ proc main(
 
         # Include in wrapper file
         data = outputFile.readFile()
-        if "type\n" in data:
-          # In existing type block
-          data = data.replace("type\n", "type\n" & stubData)
+        let
+          idx = data.find("\ntype\n")
+        if idx != -1:
+          # In first existing type block
+          data = data[0 ..< idx+6] & stubData & data[idx+6 .. ^1]
         else:
           # At the top if none already
           data = "type\n" & stubData & data
