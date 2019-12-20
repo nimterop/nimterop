@@ -1,4 +1,4 @@
-import os, strformat, strutils, times
+import os, osproc, strformat, strutils, times
 
 import "."/treesitter/[api, c, cpp]
 
@@ -157,11 +157,17 @@ proc main(
   # Check needs a file
   if check and outputFile.len == 0:
     outputFile = getTempDir() / "toast_" & ($getTime().toUnix()).addFileExt("nim")
+    when defined(windows):
+      # https://github.com/nim-lang/Nim/issues/12939
+      echo "Check cannot print wrapper on Windows, use --output or review " & outputFile
 
   # Redirect output to file
   if outputFile.len != 0:
-    doAssert outputHandle.open(outputFile, fmWrite), "Failed to write to " & outputFile
-    stdout = outputHandle
+    when defined(windows):
+      doAssert stdout.reopen(outputFile, fmWrite), "Failed to write to " & outputFile
+    else:
+      doAssert outputHandle.open(outputFile, fmWrite), "Failed to write to " & outputFile
+      stdout = outputHandle
 
   # Process grammar into AST
   let
@@ -177,18 +183,18 @@ proc main(
     for src in source:
       gState.process(src.expandSymlinkAbs(), astTable)
 
-  # Restore stdout
-  stdout = stdoutBackup
+  when not defined(windows):
+    # Restore stdout
+    stdout = stdoutBackup
 
-  # Print wrapper if temporarily redirected to file
-  if check and output.len == 0:
-    stdout.write outputFile.readFile()
-    discard outputFile.tryRemoveFile()
+    # Print wrapper if temporarily redirected to file
+    if check and output.len == 0:
+      stdout.write outputFile.readFile()
 
   # Check Nim output
   if gState.pnim and check:
     var
-      (check, err) = gorgeEx(&"{getCurrentCompilerExe()} check {outputFile}")
+      (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
     if err == 0:
       echo "# Checked wrapper successfully"
     else:
