@@ -159,7 +159,7 @@ proc main(
     outputFile = getTempDir() / "toast_" & ($getTime().toUnix()).addFileExt("nim")
     when defined(windows):
       # https://github.com/nim-lang/Nim/issues/12939
-      echo "Check cannot print wrapper on Windows, use --output or review " & outputFile
+      echo "Cannot print wrapper with check on Windows, review " & outputFile & "\n"
 
   # Redirect output to file
   if outputFile.len != 0:
