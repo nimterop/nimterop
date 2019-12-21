@@ -93,23 +93,28 @@ The `toast` binary can also be used directly on the CLI:
 toast -h
 Usage:
   main [optional-params] C/C++ source/header
-  Options(opt-arg sep :|=|spc):
+Options(opt-arg sep :|=|spc):
   -h, --help                           print this cligen-erated help
-  --help-syntax                        advanced: prepend, multi-val,..
-  -p, --preprocess     bool     false  run preprocessor on header
-  -a, --past           bool     false  print AST output
-  -n, --pnim           bool     false  print Nim output
-  -r, --recurse        bool     false  process #include files
-  -c, --nocomments     bool     false  exclude top-level comments from output
-  -D=, --defines=      strings  {}     definitions to pass to preprocessor
-  -I=, --includeDirs=  strings  {}     include directory to pass to preprocessor
-  -l=, --dynlib=       string   ""     Import symbols from library in specified Nim string
-  -O=, --symOverride=  strings  {}     skip generating specified symbols
-  --nim=               string   "nim"  use a particular Nim executable (default: $PATH/nim)
-  --pluginSourcePath=  string   ""     Nim file to build and load as a plugin
+  --help-syntax                        advanced: prepend,plurals,..
+  -k, --check          bool     false  check generated wrapper with compiler
   -d, --debug          bool     false  enable debug output
+  -D=, --defines=      strings  {}     definitions to pass to preprocessor
+  -l=, --dynlib=       string   ""     Import symbols from library in specified Nim string
+  -I=, --includeDirs=  strings  {}     include directory to pass to preprocessor
   -m=, --mode=         string   "cpp"  language parser: c or cpp
+  --nim=               string   "nim"  use a particular Nim executable (default: $PATH/nim)
+  -c, --nocomments     bool     false  exclude top-level comments from output
+  -o=, --output=       string   ""     file to output content - default stdout
+  -a, --past           bool     false  print AST output
   -g, --pgrammar       bool     false  print grammar
+  --pluginSourcePath=  string   ""     Nim file to build and load as a plugin
+  -n, --pnim           bool     false  print Nim output
+  -E=, --prefix=       strings  {}     Strip prefix from identifiers
+  -p, --preprocess     bool     false  run preprocessor on header
+  -r, --recurse        bool     false  process #include files
+  -s, --stub           bool     false  stub out undefined type references as objects
+  -F=, --suffix=       strings  {}     Strip suffix from identifiers
+  -O=, --symOverride=  strings  {}     skip generating specified symbols
 ```
 
 __Implementation Details__

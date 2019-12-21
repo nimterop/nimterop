@@ -1,8 +1,8 @@
-import os, strformat, strutils
+import os, osproc, strformat, strutils, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, globals, getters, grammar]
+import "."/[ast, compat, globals, getters, grammar]
 
 proc printLisp(gState: State, root: TSNode) =
   var
@@ -54,7 +54,7 @@ proc printLisp(gState: State, root: TSNode) =
       break
 
 proc process(gState: State, path: string, astTable: AstTable) =
-  doAssert existsFile(path), "Invalid path " & path
+  doAssert existsFile(path), &"Invalid path {path}"
 
   var
     parser = tsParserNew()
@@ -81,7 +81,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
   elif gState.mode == "cpp":
     doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
   else:
-    doAssert false, "Invalid parser " & gState.mode
+    doAssert false, &"Invalid parser {gState.mode}"
 
   var
     tree = parser.tsParserParseString(nil, gState.code.cstring, gState.code.len.uint32)
@@ -97,84 +97,191 @@ proc process(gState: State, path: string, astTable: AstTable) =
   elif gState.preprocess:
     echo gState.code
 
+# CLI processing with default values
 proc main(
-    preprocess = false,
-    past = false,
-    pnim = false,
-    recurse = false,
-    nocomments = false,
-    defines: seq[string] = @[],
-    includeDirs: seq[string] = @[],
-    dynlib: string = "",
-    symOverride: seq[string] = @[],
-    nim: string = "nim",
-    pluginSourcePath: string = "",
+    check = false,
     debug = false,
+    defines: seq[string] = @[],
+    dynlib: string = "",
+    includeDirs: seq[string] = @[],
     mode = modeDefault,
+    nim: string = "nim",
+    nocomments = false,
+    output = "",
+    past = false,
     pgrammar = false,
+    pluginSourcePath: string = "",
+    pnim = false,
+    prefix: seq[string] = @[],
+    preprocess = false,
+    recurse = false,
+    stub = false,
+    suffix: seq[string] = @[],
+    symOverride: seq[string] = @[],
     source: seq[string]
   ) =
 
+  # Setup global state with arguments
   var gState = State(
-    preprocess: preprocess,
-    past: past,
-    pnim: pnim,
-    recurse: recurse,
-    nocomments: nocomments,
-    defines: defines,
-    includeDirs: includeDirs,
-    dynlib: dynlib,
-    symOverride: symOverride,
-    nim: nim,
-    pluginSourcePath: pluginSourcePath,
     debug: debug,
+    defines: defines,
+    dynlib: dynlib,
+    includeDirs: includeDirs,
     mode: mode,
-    pretty: true
+    nim: nim,
+    nocomments: nocomments,
+    past: past,
+    pluginSourcePath: pluginSourcePath,
+    pnim: pnim,
+    prefix: prefix,
+    preprocess: preprocess,
+    pretty: true,
+    recurse: recurse,
+    suffix: suffix,
+    symOverride: symOverride
   )
 
+  # Split some arguments with ,
   gState.symOverride = gState.symOverride.getSplitComma()
+  gState.prefix = gState.prefix.getSplitComma()
+  gState.suffix = gState.suffix.getSplitComma()
 
   if pluginSourcePath.nBl:
     gState.loadPlugin(pluginSourcePath)
 
+  # Backup stdout
+  var
+    outputFile = output
+    outputHandle: File
+    stdoutBackup = stdout
+    check = check or stub
+
+  # Fix output file extention
+  if outputFile.len != 0:
+    if outputFile.splitFile().ext != ".nim":
+      outputFile = outputFile & ".nim"
+
+  # Check needs a file
+  if check and outputFile.len == 0:
+    outputFile = getTempDir() / "toast_" & ($getTime().toUnix()).addFileExt("nim")
+    when defined(windows):
+      # https://github.com/nim-lang/Nim/issues/12939
+      echo &"Cannot print wrapper with check on Windows, review {outputFile}\n"
+
+  # Redirect output to file
+  if outputFile.len != 0:
+    when defined(windows):
+      doAssert stdout.reopen(outputFile, fmWrite), &"Failed to write to {outputFile}"
+    else:
+      doAssert outputHandle.open(outputFile, fmWrite), &"Failed to write to {outputFile}"
+      stdout = outputHandle
+
+  # Process grammar into AST
   let
     astTable = parseGrammar()
+
   if pgrammar:
+    # Print AST of grammar
     astTable.printGrammar()
   elif source.nBl:
+    # Print source after preprocess or Nim output
     if gState.pnim:
       printNimHeader()
     for src in source:
       gState.process(src.expandSymlinkAbs(), astTable)
 
+  when not defined(windows):
+    # Restore stdout
+    stdout = stdoutBackup
+
+  # Check Nim output
+  if gState.pnim and check:
+    # Run nim check on generated wrapper
+    var
+      (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
+    if err != 0:
+      # Failed check so try stubbing
+      if stub:
+        # Close output file to prepend stubs
+        when not defined(windows):
+          outputHandle.close()
+        else:
+          stdout.close()
+
+        # Find undeclared identifiers in error
+        var
+          data = ""
+          stubData = ""
+        for line in check.splitLines:
+          if "undeclared identifier" in line:
+            try:
+              # Add stub of object type
+              stubData &= "  " & line.split("'")[1] & " = object\n"
+            except:
+              discard
+
+        # Include in wrapper file
+        data = outputFile.readFile()
+        let
+          idx = data.find("\ntype\n")
+        if idx != -1:
+          # In first existing type block
+          data = data[0 ..< idx+6] & stubData & data[idx+6 .. ^1]
+        else:
+          # At the top if none already
+          data = "type\n" & stubData & data
+        outputFile.writeFile(data)
+
+        # Rerun nim check on stubbed wrapper
+        (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
+        doAssert err == 0, "# Nim check with stub failed:\n\n" & check
+      else:
+        doAssert err == 0, "# Nim check failed:\n\n" & check
+
+  when not defined(windows):
+    # Print wrapper if temporarily redirected to file
+    if check and output.len == 0:
+      stdout.write outputFile.readFile()
+
 when isMainModule:
+  # Setup cligen command line help and short flags
   import cligen
   dispatch(main, help = {
-    "preprocess": "run preprocessor on header",
-    "past": "print AST output",
-    "pnim": "print Nim output",
-    "recurse": "process #include files",
-    "nocomments": "exclude top-level comments from output",
-    "defines": "definitions to pass to preprocessor",
-    "includeDirs": "include directory to pass to preprocessor",
-    "dynlib": "Import symbols from library in specified Nim string",
-    "symOverride": "skip generating specified symbols",
-    "nim": "use a particular Nim executable (default: $PATH/nim)",
-    "pluginSourcePath": "Nim file to build and load as a plugin",
+    "check": "check generated wrapper with compiler",
     "debug": "enable debug output",
+    "defines": "definitions to pass to preprocessor",
+    "dynlib": "Import symbols from library in specified Nim string",
+    "includeDirs": "include directory to pass to preprocessor",
     "mode": "language parser: c or cpp",
+    "nim": "use a particular Nim executable (default: $PATH/nim)",
+    "nocomments": "exclude top-level comments from output",
+    "output": "file to output content - default stdout",
+    "past": "print AST output",
     "pgrammar": "print grammar",
-    "source" : "C/C++ source/header"
+    "pluginSourcePath": "Nim file to build and load as a plugin",
+    "pnim": "print Nim output",
+    "preprocess": "run preprocessor on header",
+    "recurse": "process #include files",
+    "source" : "C/C++ source/header",
+    "prefix": "Strip prefix from identifiers",
+    "stub": "stub out undefined type references as objects",
+    "suffix": "Strip suffix from identifiers",
+    "symOverride": "skip generating specified symbols"
   }, short = {
-    "preprocess": 'p',
-    "past": 'a',
-    "pnim": 'n',
-    "recurse": 'r',
-    "nocomments": 'c',
-    "defines": 'D',
-    "includeDirs": 'I',
-    "dynlib": 'l',
-    "symOverride": 'O',
+    "check": 'k',
     "debug": 'd',
-    "pgrammar": 'g'
+    "defines": 'D',
+    "dynlib": 'l',
+    "includeDirs": 'I',
+    "nocomments": 'c',
+    "output": 'o',
+    "past": 'a',
+    "pgrammar": 'g',
+    "pnim": 'n',
+    "prefix": 'E',
+    "preprocess": 'p',
+    "recurse": 'r',
+    "stub": 's',
+    "suffix": 'F',
+    "symOverride": 'O'
   })
