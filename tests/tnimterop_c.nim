@@ -46,6 +46,8 @@ cImport cSearchPath "test.h"
 check TEST_INT == 512
 check TEST_FLOAT == 5.12
 check TEST_HEX == 0x512
+check TEST_CHAR == 'a'
+check TEST_STR == "hello world"
 
 when defined(osx):
   check OSDEF == 10

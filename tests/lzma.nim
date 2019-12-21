@@ -8,6 +8,11 @@ const
 
 static:
   cDebug()
+  cSkipSymbol(@[
+    "PRIX8", "PRIX16", "PRIX32",
+    "PRIXLEAST8", "PRIXLEAST16", "PRIXLEAST32",
+    "PRIXFAST8"
+  ])
 
 when defined(envTest):
   setDefines(@["lzmaStd"])

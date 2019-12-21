@@ -203,11 +203,14 @@ proc getPtrType*(str: string): string =
       str
 
 proc getLit*(str: string): string =
+  # Used to convert #define literals into const
   let
     str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
 
-  if str.contains(re"^[\-]?[\d]*[.]?[\d]+$") or
-    str.contains(re"^0x[\da-fA-F]+$"):
+  if str.contains(re"^[\-]?[\d]*[.]?[\d]+$") or # decimal
+    str.contains(re"^0x[\da-fA-F]+$") or        # hexadecimal
+    str.contains(re"^'[[:ascii:]]'$") or        # char
+    str.contains(re"""^"[[:ascii:]]+"$"""):     # char *
     return str
 
 proc getNodeVal*(nimState: NimState, node: TSNode): string =

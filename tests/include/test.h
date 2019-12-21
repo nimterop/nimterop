@@ -9,6 +9,8 @@ extern "C" {
 #define TEST_INT 512
 #define TEST_FLOAT 5.12
 #define TEST_HEX 0x512
+#define TEST_CHAR 'a'
+#define TEST_STR "hello world"
 
 #ifdef __APPLE__
 #define OSDEF 10
