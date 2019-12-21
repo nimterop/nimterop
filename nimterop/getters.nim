@@ -382,24 +382,27 @@ proc getNimExpression*(nimState: NimState, expr: string): string =
 
   for i in 0 .. clean.len:
     if i != clean.len:
-      if clean[i] == '_' and ident.Bl:
-        gen = $clean[i]
-      elif clean[i] in IdentChars:
+      if clean[i] in IdentChars:
         if clean[i] in Digits and ident.Bl:
+          # Identifiers cannot start with digits
           gen = $clean[i]
         elif clean[i] in HexDigits and hex == true:
+          # Part of a hex number
           gen = $clean[i]
         elif i > 0 and i < clean.len-1 and clean[i] in ['x', 'X'] and
               clean[i-1] == '0' and clean[i+1] in HexDigits:
+          # Found a hex number
           gen = $clean[i]
           hex = true
         else:
+          # Part of an identifier
           ident &= clean[i]
           hex = false
       else:
         gen = (block:
           if (i == 0 or clean[i-1] != '\'') or
             (i == clean.len - 1 or clean[i+1] != '\''):
+              # If unquoted, convert logical ops to Nim
               case clean[i]
               of '^': " xor "
               of '&': " and "
@@ -412,6 +415,7 @@ proc getNimExpression*(nimState: NimState, expr: string): string =
         hex = false
 
     if i == clean.len or gen.nBl:
+      # Process identifier
       if ident.nBl:
         ident = nimState.getIdentifier(ident, nskConst)
         result &= ident
@@ -419,6 +423,7 @@ proc getNimExpression*(nimState: NimState, expr: string): string =
       result &= gen
       gen = ""
 
+  # Convert shift ops to Nim
   result = result.multiReplace([
     ("<<", " shl "), (">>", " shr ")
   ])

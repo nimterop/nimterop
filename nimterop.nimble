@@ -38,6 +38,7 @@ task test, "Test":
 
   execTest "tests/tnimterop_c.nim"
   execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
+  execCmd "./nimterop/toast -pnk -E=_ tests/include/toast.h"
   execTest "tests/tpcre.nim"
 
   # Platform specific tests
