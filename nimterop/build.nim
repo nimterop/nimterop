@@ -231,12 +231,12 @@ proc downloadUrl*(url, outdir: string) =
     else:
       cmd = findExe("wget")
       if cmd.len != 0:
-        cmd &= " $# -o $#"
+        cmd &= " $# -O $#"
       elif defined(Windows):
         cmd = "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
       else:
         doAssert false, "No download tool available - curl, wget"
-    discard execAction(cmd % [url, (outdir/file).sanitizePath])
+    discard execAction(cmd % [url, (outdir/file).sanitizePath], retry = 1)
 
     if ext == ".zip":
       extractZip(file, outdir)
@@ -299,11 +299,11 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
 
   if checkout.len != 0:
     echo "# Checking out " & checkout
-    discard execAction(&"cd {outdirQ} && git fetch")
+    discard execAction(&"cd {outdirQ} && git fetch", retry = 1)
     discard execAction(&"cd {outdirQ} && git checkout {checkout}")
   else:
     echo "# Pulling repository"
-    discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master")
+    discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master", retry = 1)
 
 proc findFile*(file: string, dir: string, recurse = true, first = false, regex = false): string =
   ## Find the file in the specified directory
