@@ -1,4 +1,4 @@
-import macros, osproc, sets, strformat, strutils, tables
+import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
 
@@ -18,17 +18,33 @@ proc sleep*(milsecs: int) =
       else:
         "sleep "
 
-    (oup, ret) = gorgeEx(cmd & $(milsecs / 1000))
+  discard gorgeEx(cmd & $(milsecs / 1000))
 
-proc execAction*(cmd: string, retry = 0, nostderr = false): string =
+proc getOsCacheDir(): string =
+  when defined(posix):
+    result = getEnv("XDG_CACHE_HOME", getHomeDir() / ".cache") / "nim"
+  else:
+    result = getHomeDir() / "nimcache"
+
+proc getNimteropCacheDir(): string =
+  result = getOsCacheDir() / "nimterop"
+
+proc execAction*(cmd: string, retry = 0, die = true, cache = false,
+                 cacheKey = ""): tuple[output: string, ret: int] =
   ## Execute an external command - supported at compile time
   ##
   ## Checks if command exits successfully before returning. If not, an
-  ## error is raised.
+  ## error is raised. Always caches results to be used in nimsuggest or nimcheck
+  ## mode.
+  ##
+  ## `retry` - number of times command should be retried before error
+  ## `die = false` - return on errors
+  ## `cache = true` - cache results unless cleared with -f
+  ## `cacheKey` - key to create unique cache entry
   var
     ccmd = ""
-    ret = 0
   when defined(Windows):
+    # Replace 'cd d:\abc' with 'd: && cd d:\abc`
     var filteredCmd = cmd
     if cmd.toLower().startsWith("cd"):
       var
@@ -45,16 +61,44 @@ proc execAction*(cmd: string, retry = 0, nostderr = false): string =
     doAssert false
 
   when nimvm:
-    (result, ret) = gorgeEx(ccmd)
+    # Cache results for speedup if cache = true
+    # Else cache for preserving functionality in nimsuggest and nimcheck
+    let
+      hash = (ccmd & cacheKey).hash().abs()
+      cacheFile = getNimteropCacheDir() / "execCache" / "nimterop_" & $hash & ".txt"
+
+    when defined(nimsuggest) or defined(nimcheck):
+      # Load results from cache file if generated in previous run
+      if fileExists(cacheFile):
+        result.output = cacheFile.readFile()
+      elif die:
+        doAssert false, "Results not cached - run nim c/cpp at least once\n" & ccmd
+    else:
+      if cache and fileExists(cacheFile) and not compileOption("forceBuild"):
+        # Return from cache when requested
+        result.output = cacheFile.readFile()
+      else:
+        # Execute command and store results in cache
+        (result.output, result.ret) = gorgeEx(ccmd)
+        if result.ret == 0:
+          # mkdir for execCache dir (circular dependency)
+          let dir = cacheFile.parentDir()
+          if not dirExists(dir):
+            let flag = when not defined(Windows): "-p" else: ""
+            discard execAction(&"mkdir {flag} {dir.sanitizePath}")
+          cacheFile.writeFile(result.output)
   else:
-    let opt = if nostderr: {poUsePath} else: {poStdErrToStdOut, poUsePath}
-    (result, ret) = execCmdEx(ccmd, opt)
-  if ret != 0:
+    # Used by toast
+    (result.output, result.ret) = execCmdEx(ccmd)
+
+  # On failure, retry or die as requested
+  if result.ret != 0:
     if retry > 0:
       sleep(500)
-      result = execAction(cmd, retry = retry - 1)
-    else:
-      doAssert false, "Command failed: " & $(ret, nostderr) & "\ncmd: " & ccmd & "\nresult:\n" & result
+      result = execAction(cmd, retry = retry - 1, die, cache, cacheKey)
+    elif die:
+      doAssert false, "Command failed: " & $result.ret & "\ncmd: " & ccmd &
+                      "\nresult:\n" & result.output
 
 proc findExe*(exe: string): string =
   ## Find the specified executable using the `which`/`where` command - supported
@@ -66,10 +110,10 @@ proc findExe*(exe: string): string =
       else:
         "which " & exe
 
-    (oup, code) = gorgeEx(cmd)
+    (output, ret) = execAction(cmd, die = false)
 
-  if code == 0:
-    return oup.splitLines()[0].strip()
+  if ret == 0:
+    return output.splitLines()[0].strip()
 
 proc mkDir*(dir: string) =
   ## Create a directory at compile time
@@ -128,15 +172,6 @@ proc rmFile*(source: string, dir = false) =
 proc rmDir*(dir: string) =
   ## Remove a directory or pattern at compile time
   rmFile(dir, dir = true)
-
-proc getOsCacheDir(): string =
-  when defined(posix):
-    result = getEnv("XDG_CACHE_HOME", getHomeDir() / ".cache") / "nim"
-  else:
-    result = getHomeDir() / "nimcache"
-
-proc getNimteropCacheDir(): string =
-  result = getOsCacheDir() / "nimterop"
 
 proc getProjectCacheDir*(name: string, forceClean = true): string =
   ## Get a cache directory where all nimterop artifacts can be stored
@@ -248,7 +283,7 @@ proc gitReset*(outdir: string) =
   echo "# Resetting " & outdir
 
   let cmd = &"cd {outdir.sanitizePath} && git reset --hard"
-  while execAction(cmd).contains("Permission denied"):
+  while execAction(cmd).output.contains("Permission denied"):
     sleep(1000)
     echo "#   Retrying ..."
 
@@ -261,7 +296,7 @@ proc gitCheckout*(file, outdir: string) =
   echo "# Resetting " & file
   let file2 = file.relativePath outdir
   let cmd = &"cd {outdir.sanitizePath} && git checkout {file2.sanitizePath}"
-  while execAction(cmd).contains("Permission denied"):
+  while execAction(cmd).output.contains("Permission denied"):
     sleep(500)
     echo "#   Retrying ..."
 
@@ -344,7 +379,7 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
   cmd = cmd % [recursive, (".*[\\\\/]" & file & "$").quoteShell, dir.sanitizePath]
 
   let
-    (files, ret) = gorgeEx(cmd)
+    (files, ret) = execAction(cmd, die = false)
   if ret == 0:
     for line in files.splitLines():
       let f =
@@ -386,7 +421,7 @@ proc linkLibs*(names: openArray[string], staticLink = true): string =
   for name in names:
     let
       cmd = &"pkg-config --libs --silence-errors {stat} lib{name}"
-      libs = gorge(cmd)
+      (libs, _) = execAction(cmd, die = false)
     for lib in libs.split(" "):
       resSet.incl lib
 
@@ -421,7 +456,8 @@ proc configure*(path, check: string, flags = "") =
       if fileExists(path / i):
         echo "#   Running autogen.sh"
 
-        echo execAction(&"cd {(path / i).parentDir().sanitizePath} && bash autogen.sh")
+        echo execAction(
+          &"cd {(path / i).parentDir().sanitizePath} && bash autogen.sh").output
 
         break
 
@@ -430,7 +466,7 @@ proc configure*(path, check: string, flags = "") =
       if fileExists(path / i):
         echo "#   Running autoreconf"
 
-        echo execAction(&"cd {path.sanitizePath} && autoreconf -fi")
+        echo execAction(&"cd {path.sanitizePath} && autoreconf -fi").output
 
         break
 
@@ -442,7 +478,7 @@ proc configure*(path, check: string, flags = "") =
     if flags.len != 0:
       cmd &= &" {flags}"
 
-    echo execAction(cmd)
+    echo execAction(cmd).output
 
   doAssert (path / check).fileExists(), "# Configure failed"
 
@@ -539,7 +575,7 @@ proc cmake*(path, check, flags: string) =
   var
     cmd = &"cd {path.sanitizePath} && cmake {flags}"
 
-  echo execAction(cmd)
+  echo execAction(cmd).output
 
   doAssert (path / check).fileExists(), "# cmake failed"
 
@@ -575,7 +611,7 @@ proc make*(path, check: string, flags = "", regex = false) =
   if flags.len != 0:
     cmd &= &" {flags}"
 
-  echo execAction(cmd)
+  echo execAction(cmd).output
 
   doAssert findFile(check, path, regex = regex).len != 0, "# make failed"
 
@@ -597,7 +633,7 @@ proc getGccPaths*(mode = "c"): seq[string] =
     mmode = if mode == "cpp": "c++" else: mode
     inc = false
 
-    (outp, _) = gorgeEx(&"""{getCompiler()} -Wp,-v -x{mmode} {nul}""")
+    (outp, _) = execAction(&"""{getCompiler()} -Wp,-v -x{mmode} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "#include <...> search starts here" in line:
@@ -612,7 +648,7 @@ proc getGccPaths*(mode = "c"): seq[string] =
         result.add path
 
   when defined(osx):
-    result.add execAction("xcrun --show-sdk-path").strip() & "/usr/include"
+    result.add(execAction("xcrun --show-sdk-path").output.strip() & "/usr/include")
 
 proc getGccLibPaths*(mode = "c"): seq[string] =
   var
@@ -620,7 +656,7 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
     mmode = if mode == "cpp": "c++" else: mode
     linker = when defined(OSX): "-Xlinker" else: ""
 
-    (outp, _) = gorgeEx(&"""{getCompiler()} {linker} -v -x{mmode} {nul}""")
+    (outp, _) = execAction(&"""{getCompiler()} {linker} -v -x{mmode} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "LIBRARY_PATH=" in line:
@@ -699,9 +735,9 @@ proc getNumProcs(): string =
   when defined(windows):
     getEnv("NUMBER_OF_PROCESSORS").strip()
   elif defined(linux):
-    execAction("nproc").strip()
+    execAction("nproc").output.strip()
   elif defined(macosx):
-    execAction("sysctl -n hw.ncpu").strip()
+    execAction("sysctl -n hw.ncpu").output.strip()
   else:
     "1"
 
@@ -727,7 +763,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
         when defined(windows):
           if findExe("sh").len != 0:
             let
-              uname = execAction("sh -c uname -a").toLowerAscii()
+              uname = execAction("sh -c uname -a").output.toLowerAscii()
             if uname.contains("msys"):
               gen = "MSYS Makefiles".quoteShell
             elif uname.contains("mingw"):

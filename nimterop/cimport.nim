@@ -69,7 +69,7 @@ proc walkDirImpl(indir, inext: string, file=true): seq[string] =
         else:
           "find $1 -type d" % dir
 
-    (output, ret) = gorgeEx(cmd)
+    (output, ret) = execAction(cmd, die = false)
 
   if ret == 0:
     result = output.splitLines()
@@ -85,9 +85,7 @@ proc getFileDate(fullpath: string): string =
       elif defined(OSX):
         &"stat -f %m {fullpath.sanitizePath}"
 
-  (result, ret) = gorgeEx(cmd)
-
-  doAssert ret == 0, "File date error: " & fullpath & "\n" & result
+  (result, ret) = execAction(cmd)
 
 proc getCacheValue(fullpath: string): string =
   if not gStateCT.nocache:
@@ -116,7 +114,10 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
   doAssert fileExists(result.tmpFile), "Failed to write to cache dir: " & result.tmpFile
 
   let
-    (check, _) = gorgeEx(&"{getCurrentCompilerExe()} check {result.tmpFile.sanitizePath}")
+    (check, _) = execAction(
+      &"{getCurrentCompilerExe()} check {result.tmpFile.sanitizePath}",
+      die = false
+    )
 
   result.errors = "\n\n" & check
 
@@ -160,7 +161,8 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
   cmd.add &" {fullpath.sanitizePath}"
 
   # see https://github.com/nimterop/nimterop/issues/69
-  (result, ret) = gorgeEx(cmd, cache=getCacheValue(fullpath))
+  (result, ret) = execAction(cmd, die = false, cache = (not gStateCT.nocache),
+                             cacheKey = getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
 
 macro cOverride*(body): untyped =
@@ -668,8 +670,8 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
     cmd.add &" --assumedef:{i.quoteShell}"
 
   let
-    (c2nimout, ret) = gorgeEx(cmd, cache=getCacheValue(hpath))
-  doAssert ret == 0, "Command failed:\n  " & cmd & "\n\n" & c2nimout
+    (c2nimout, ret) = execAction(cmd, cache = not gStateCT.nocache,
+                                 cacheKey = getCacheValue(hpath))
 
   var
     nimout = &"const {header} = \"{fullpath}\"\n\n" & readFile(npath)

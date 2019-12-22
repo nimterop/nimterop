@@ -261,7 +261,7 @@ proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
   cmd &= &"{fullpath.sanitizePath}"
 
   # Include content only from file
-  for line in execAction(cmd).splitLines():
+  for line in execAction(cmd).output.splitLines():
     if line.strip() != "":
       if line.len > 1 and line[0 .. 1] == "# ":
         start = false
