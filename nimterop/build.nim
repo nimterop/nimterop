@@ -350,7 +350,7 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
   var
     cmd =
       when defined(windows):
-        "nimgrep --filenames --oneline --nocolor $1 $2 $3"
+        "nimgrep --filenames --oneline --nocolor $1 \"$2\" $3"
       elif defined(linux):
         "find $3 $1 -regextype egrep -regex $2"
       elif defined(osx):
