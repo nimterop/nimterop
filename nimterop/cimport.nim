@@ -115,7 +115,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
 
   let
     (check, _) = execAction(
-      &"{getCurrentCompilerExe()} check {result.tmpFile.sanitizePath}",
+      &"{getCurrentNimCompiler()} check {result.tmpFile.sanitizePath}",
       die = false
     )
 
@@ -153,7 +153,7 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
     if gStateCT.symOverride.nBl:
       cmd.add &" --symOverride={gStateCT.symOverride.join(\",\")}"
 
-    cmd.add &" --nim:{getCurrentCompilerExe().sanitizePath}"
+    cmd.add &" --nim:{getCurrentNimCompiler().sanitizePath}"
 
     if gStateCT.pluginSourcePath.nBl:
       cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.sanitizePath}"

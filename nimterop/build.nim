@@ -29,6 +29,11 @@ proc getOsCacheDir(): string =
 proc getNimteropCacheDir(): string =
   result = getOsCacheDir() / "nimterop"
 
+proc getCurrentNimCompiler*(): string =
+  result = getCurrentCompilerExe()
+  when defined(nimsuggest):
+    result = result.replace("nimsuggest", "nim")
+
 proc execAction*(cmd: string, retry = 0, die = true, cache = false,
                  cacheKey = ""): tuple[output: string, ret: int] =
   ## Execute an external command - supported at compile time

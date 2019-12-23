@@ -198,7 +198,7 @@ proc main(
   if gState.pnim and check:
     # Run nim check on generated wrapper
     var
-      (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
+      (check, err) = execCmdEx(&"{gState.nim} check {outputFile}")
     if err != 0:
       # Failed check so try stubbing
       if stub:
@@ -233,7 +233,7 @@ proc main(
         outputFile.writeFile(data)
 
         # Rerun nim check on stubbed wrapper
-        (check, err) = execCmdEx(&"{getCurrentCompilerExe()} check {outputFile}")
+        (check, err) = execCmdEx(&"{gState.nim} check {outputFile}")
         doAssert err == 0, "# Nim check with stub failed:\n\n" & check
       else:
         doAssert err == 0, "# Nim check failed:\n\n" & check
