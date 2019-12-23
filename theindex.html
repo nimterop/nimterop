@@ -900,7 +900,9 @@ function main() {
           </ul></dd>
 <dt><a name="execAction" href="#execAction"><span>execAction:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="build: execAction(cmd: string; retry = 0; nostderr = false): string" href="build.html#execAction%2Cstring%2Cint">build: execAction(cmd: string; retry = 0; nostderr = false): string</a></li>
+          data-doc-search-tag="build: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;): tuple[
+    output: string, ret: int]" href="build.html#execAction%2Cstring%2Cint%2Cstring">build: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;): tuple[
+    output: string, ret: int]</a></li>
           </ul></dd>
 <dt><a name="extractTar" href="#extractTar"><span>extractTar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -929,6 +931,10 @@ function main() {
 <dt><a name="getCompiler" href="#getCompiler"><span>getCompiler:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getCompiler(): string" href="build.html#getCompiler">build: getCompiler(): string</a></li>
+          </ul></dd>
+<dt><a name="getCurrentNimCompiler" href="#getCurrentNimCompiler"><span>getCurrentNimCompiler:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getCurrentNimCompiler(): string" href="build.html#getCurrentNimCompiler">build: getCurrentNimCompiler(): string</a></li>
           </ul></dd>
 <dt><a name="getGccLibPaths" href="#getGccLibPaths"><span>getGccLibPaths:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1077,7 +1083,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2019-12-23 19:42:55 UTC</small>
+        <small>Made with Nim. Generated: 2019-12-23 20:57:15 UTC</small>
       </div>
     </div>
   </div>
