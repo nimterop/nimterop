@@ -96,7 +96,7 @@ s3.field1 = 7
 s4.field2[2] = 5
 
 # note: simplify with `defined(c)` for nim >= 0.19.9
-when defined(cpp):
+when defined(cpp) and defined(OSX):
   discard
 else:
   s4.field3[3] = enum1
@@ -125,7 +125,7 @@ check test_call_int() == 5
 check test_call_param(5).field1 == 5
 check test_call_param2(5, s2).field1 == 11
 check test_call_param3(5, s1).field1 == 10
-when defined(cpp):
+when defined(cpp) and defined(OSX):
   # error: assigning to 'enum ENUM' from incompatible type 'NI' (aka 'long long')
   discard
 else:
@@ -135,7 +135,7 @@ check test_call_param6(u2) == 'c'
 u.field1 = 4
 check test_call_param7(u) == 4
 
-when defined(cpp):
+when defined(cpp) and defined(OSX):
    # note: candidate function not viable: no known conversion from 'NI *' (aka 'long long *') to 'int *' for 1st argument
   # check test_call_param8(cast[ptr int](addr i)) == 25.0
   discard
