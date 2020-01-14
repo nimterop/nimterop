@@ -83,7 +83,7 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
 
   if nimState.gState.debug:
     nimState.nodeBranch.add $node.tsNodeType()
-    echo "#" & spaces(nimState.nodeBranch.len * 2) & nimState.nodeBranch[^1]
+    necho "#" & spaces(nimState.nodeBranch.len * 2) & nimState.nodeBranch[^1]
 
   if ast.children.nBl:
     if childNames.contains(ast.regex) or
@@ -111,14 +111,14 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
         result = node.saveNodeData(nimState)
     else:
       if nimState.gState.debug:
-        echo "#" & spaces(nimState.nodeBranch.len * 2) & &"  {ast.getRegexForAstChildren()} !=~ {childNames}"
+        necho "#" & spaces(nimState.nodeBranch.len * 2) & &"  {ast.getRegexForAstChildren()} !=~ {childNames}"
   elif node.getTSNodeNamedChildCountSansComments() == 0:
     result = node.saveNodeData(nimState)
 
   if nimState.gState.debug:
     discard nimState.nodeBranch.pop()
     if nimstate.nodeBranch.Bl:
-      echo ""
+      necho ""
 
 proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
   var
@@ -133,7 +133,7 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
       if name in astTable:
         for ast in astTable[name]:
           if nimState.gState.debug:
-            echo "\n#  " & nimState.getNodeVal(node).replace("\n", "\n#  ") & "\n"
+            necho "\n#  " & nimState.getNodeVal(node).replace("\n", "\n#  ") & "\n"
           if searchAstForNode(ast, node, nimState):
             ast.tonim(ast, node, nimState)
             if nimState.gState.debug:
@@ -166,8 +166,8 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
     if node == root:
       break
 
-proc printNimHeader*() =
-  echo """# Generated at $1
+proc printNimHeader*(gState: State) =
+  gecho """# Generated at $1
 # Command line:
 #   $2 $3
 
@@ -194,32 +194,32 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
   root.searchAst(astTable, nimState)
 
   if nimState.enumStr.nBl:
-    echo &"{nimState.enumStr}\n"
+    necho &"{nimState.enumStr}\n"
 
   nimState.constStr = nimState.getOverrideFinal(nskConst) & nimState.constStr
   if nimState.constStr.nBl:
-    echo &"const{nimState.constStr}\n"
+    necho &"const{nimState.constStr}\n"
 
-  echo &"""
+  necho &"""
 {{.pragma: {nimState.impShort}, importc{nimState.getHeader()}.}}
 {{.pragma: {nimState.impShort}C, {nimState.impShort}, cdecl{nimState.getDynlib()}.}}
 """
 
   nimState.typeStr = nimState.getOverrideFinal(nskType) & nimState.typeStr
   if nimState.typeStr.nBl:
-    echo &"type{nimState.typeStr}\n"
+    necho &"type{nimState.typeStr}\n"
 
   nimState.procStr = nimState.getOverrideFinal(nskProc) & nimState.procStr
   if nimState.procStr.nBl:
-    echo &"{nimState.procStr}\n"
+    necho &"{nimState.procStr}\n"
 
   if nimState.gState.debug:
     if nimState.debugStr.nBl:
-      echo nimState.debugStr
+      necho nimState.debugStr
 
     if nimState.skipStr.nBl:
       let
         hash = nimState.skipStr.hash().abs()
         sname = getTempDir() / &"nimterop_{$hash}.h"
-      echo &"# Writing skipped definitions to {sname}\n"
+      necho &"# Writing skipped definitions to {sname}\n"
       writeFile(sname, nimState.skipStr)

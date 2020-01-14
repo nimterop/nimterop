@@ -62,6 +62,8 @@ type
     onSymbol*, onSymbolOverride*: OnSymbol
     onSymbolOverrideFinal*: OnSymbolOverrideFinal
 
+    outputHandle*: File
+
   NimState {.used.} = ref object
     identifiers*: TableRef[string, string]
 
@@ -94,3 +96,14 @@ const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
 when not declared(CIMPORT):
   export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState,
     nBl, Bl, CompileMode, modeDefault
+
+  # Redirect output to file when required
+  template gecho*(args: string) {.dirty.} =
+    if gState.outputHandle.isNil:
+      echo args
+    else:
+      gState.outputHandle.writeLine(args)
+
+  template necho*(args: string) {.dirty.} =
+    let gState = nimState.gState
+    gecho args

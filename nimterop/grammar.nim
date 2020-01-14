@@ -735,7 +735,7 @@ proc parseGrammar*(): AstTable =
       else:
         result[n].add(ast)
 
-proc printGrammar*(astTable: AstTable) =
+proc printGrammar*(gState: State, astTable: AstTable) =
   for name in astTable.keys():
     for ast in astTable[name]:
-      echo ast.printAst()
+      gecho ast.printAst()
