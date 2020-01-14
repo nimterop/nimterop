@@ -17,7 +17,7 @@ const
     "primitive_type",
     "sized_type_specifier",
     "type_identifier"
-  ].toSet()
+  ].toHashSet()
 
   gExpressions {.used.} = @[
     "parenthesized_expression",
@@ -25,7 +25,7 @@ const
     "shift_expression",
     "math_expression",
     "escape_sequence"
-  ].toSet()
+  ].toHashSet()
 
   gEnumVals {.used.} = @[
     "identifier",

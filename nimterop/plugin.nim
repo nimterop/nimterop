@@ -6,17 +6,17 @@ type
     parent*: string
     kind*: NimSymKind
     override*: string
-
+  StringHash = HashSet[string]
   OnSymbol* = proc(sym: var Symbol) {.cdecl.}
-  OnSymbolOverrideFinal* = proc(typ: string): HashSet[string] {.cdecl.}
+  OnSymbolOverrideFinal* = proc(typ: string): StringHash {.cdecl.}
 
 var
-  cOverrides*: Table[string, HashSet[string]]
+  cOverrides*: Table[string, StringHash]
 
-cOverrides = initTable[string, HashSet[string]]()
-cOverrides["nskType"] = initSet[string]()
-cOverrides["nskConst"] = initSet[string]()
-cOverrides["nskProc"] = initSet[string]()
+cOverrides = initTable[string, StringHash]()
+cOverrides["nskType"] = StringHash()
+cOverrides["nskConst"] = StringHash()
+cOverrides["nskProc"] = StringHash()
 
-proc onSymbolOverrideFinal*(typ: string): HashSet[string] {.exportc, dynlib.} =
+proc onSymbolOverrideFinal*(typ: string): StringHash {.exportc, dynlib.} =
   result = cOverrides[typ]
