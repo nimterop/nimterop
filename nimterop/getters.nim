@@ -24,7 +24,7 @@ using
 var
 when while
 xor
-yield""".split(Whitespace).toSet()
+yield""".split(Whitespace).toHashSet()
 
 const gTypeMap* = {
   # char
