@@ -1,4 +1,5 @@
 os:
+  - windows
   - linux
   - osx
 
@@ -16,15 +17,12 @@ env:
 
 cache:
   directories:
-    - "$HOME/.choosenim/toolchains/nim-0.20.2"
-    - "$HOME/.choosenim/toolchains/nim-1.0.6"
+    - "$HOME/.choosenim"
 
 install:
-  - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
-  - |
-      curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
-      sh init.sh -y
-  - export PATH="$HOME/.nimble/bin:/usr/local/opt/gettext/bin:$PATH"
+  - export PATH="/usr/local/opt/gettext/bin:$PATH"
+  - curl https://gist.github.com/genotrance/fb53504a4fba88bc5201d3783df5c522/raw/travis.sh -LsSf -o travis.sh
+  - source travis.sh
 
 script:
   - nimble --verbose install -y
