@@ -59,6 +59,8 @@ type
 
     code*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
 
+    feature*: seq[Feature]
+
     onSymbol*, onSymbolOverride*: OnSymbol
     onSymbolOverrideFinal*: OnSymbolOverrideFinal
 
@@ -77,6 +79,12 @@ type
 
     nodeBranch*: seq[string]
 
+  CompileMode = enum
+    c, cpp
+
+  Feature* = enum
+    ast2
+
 var
   gStateCT {.compiletime, used.} = new(State)
 
@@ -86,12 +94,7 @@ template nBl(s: typed): untyped {.used.} =
 template Bl(s: typed): untyped {.used.} =
   (s.len == 0)
 
-type CompileMode = enum
-  c,
-  cpp,
-
-# TODO: can cligen accept enum instead of string?
-const modeDefault {.used.} = $cpp # TODO: USE this everywhere relevant
+const modeDefault {.used.} = $cpp
 
 when not declared(CIMPORT):
   export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState,

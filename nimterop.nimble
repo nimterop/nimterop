@@ -25,7 +25,7 @@ proc execTest(test: string) =
   execCmd "nim cpp -r " & test
 
 task buildToast, "build toast":
-  execCmd("nim c -f -d:danger nimterop/toast.nim")
+  execCmd("nim c -f nimterop/toast.nim")
 
 task bt, "build toast":
   execCmd("nim c -d:danger nimterop/toast.nim")
