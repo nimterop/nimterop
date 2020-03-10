@@ -5,6 +5,8 @@ import regex
 import "."/plugin
 
 when not declared(CIMPORT):
+  import compiler/[ast, idents, options]
+
   import "."/treesitter/api
 
 const
@@ -69,7 +71,16 @@ type
   NimState {.used.} = ref object
     identifiers*: TableRef[string, string]
 
-    commentStr*, constStr*, debugStr*, enumStr*, procStr*, skipStr*, typeStr*: string
+    # Legacy ast fields, remove when ast2 becomes default
+    constStr*, enumStr*, procStr*, typeStr*: string
+
+    commentStr*, debugStr*, skipStr*: string
+
+    # Nim compiler objects
+    when not declared(CIMPORT):
+      constSection*, enumSection*, procSection*, typeSection*: PNode
+      identCache*: IdentCache
+      config*: ConfigRef
 
     gState*: State
 
@@ -110,3 +121,7 @@ when not declared(CIMPORT):
   template necho*(args: string) {.dirty.} =
     let gState = nimState.gState
     gecho args
+
+  template decho*(str: untyped): untyped =
+    if nimState.gState.debug:
+      necho str.getCommented()

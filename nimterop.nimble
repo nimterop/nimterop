@@ -36,6 +36,8 @@ task docs, "Generate docs":
 task test, "Test":
   buildToastTask()
 
+  execTest "tests/tast2.nim"
+
   execTest "tests/tnimterop_c.nim"
   execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
   execCmd "./nimterop/toast -pnk -E=_ tests/include/toast.h"

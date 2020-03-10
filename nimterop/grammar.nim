@@ -7,6 +7,30 @@ import "."/[getters, globals, lisp, treesitter/api]
 type
   Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, nimState: NimState) {.nimcall.}]]
 
+proc getPtrType(str: string): string =
+  result = case str:
+    of "ptr cchar":
+      "cstring"
+    of "ptr ptr cchar":
+      "ptr cstring"
+    of "ptr object":
+      "pointer"
+    of "ptr ptr object":
+      "ptr pointer"
+    else:
+      str
+
+proc getLit(str: string): string =
+  # Used to convert #define literals into const
+  let
+    str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
+
+  if str.contains(re"^[\-]?[\d]*[.]?[\d]+$") or # decimal
+    str.contains(re"^0x[\da-fA-F]+$") or        # hexadecimal
+    str.contains(re"^'[[:ascii:]]'$") or        # char
+    str.contains(re"""^"[[:ascii:]]+"$"""):     # char *
+    return str
+
 proc initGrammar(): Grammar =
   # #define X Y
   result.add(("""

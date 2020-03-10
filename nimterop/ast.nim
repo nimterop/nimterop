@@ -1,4 +1,4 @@
-import hashes, macros, os, sets, strformat, strutils, tables, times
+import hashes, macros, os, sets, strformat, strutils, tables
 
 import regex
 
@@ -165,16 +165,6 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
 
     if node == root:
       break
-
-proc printNimHeader*(gState: State) =
-  gecho """# Generated at $1
-# Command line:
-#   $2 $3
-
-{.hint[ConvFromXtoItselfNotNeeded]: off.}
-
-import nimterop/types
-""" % [$now(), getAppFilename(), commandLineParams().join(" ")]
 
 proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable) =
   var

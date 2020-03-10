@@ -2,6 +2,8 @@ import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
+import compiler/[ast, idents, lineinfos, msgs, pathutils, renderer]
+
 import "."/[build, globals, plugin, treesitter/api]
 
 const gReserved = """
@@ -25,6 +27,8 @@ var
 when while
 xor
 yield""".split(Whitespace).toHashSet()
+
+# Types related
 
 const gTypeMap* = {
   # char
@@ -90,6 +94,8 @@ proc getType*(str: string): string =
 
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
+
+# Identifier related
 
 proc checkIdentifier(name, kind, parent, origName: string) =
   let
@@ -165,6 +171,8 @@ proc addNewIdentifer*(nimState: NimState, name: string, override = false): bool 
       nimState.identifiers[nimName] = name
       result = true
 
+# Overrides related
+
 proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
   doAssert name.nBl, "Blank identifier error"
 
@@ -189,34 +197,121 @@ proc getOverrideFinal*(nimState: NimState, kind: NimSymKind): string =
     for i in nimState.gState.onSymbolOverrideFinal(typ):
       result &= "\n" & nimState.getOverride(i, kind)
 
-proc getPtrType*(str: string): string =
-  result = case str:
-    of "ptr cchar":
-      "cstring"
-    of "ptr ptr cchar":
-      "ptr cstring"
-    of "ptr object":
-      "pointer"
-    of "ptr ptr object":
-      "ptr pointer"
-    else:
-      str
+# TSNode shortcuts
 
-proc getLit*(str: string): string =
-  # Used to convert #define literals into const
-  let
-    str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
+proc isNil*(node: TSNode): bool =
+  node.tsNodeIsNull()
 
-  if str.contains(re"^[\-]?[\d]*[.]?[\d]+$") or # decimal
-    str.contains(re"^0x[\da-fA-F]+$") or        # hexadecimal
-    str.contains(re"^'[[:ascii:]]'$") or        # char
-    str.contains(re"""^"[[:ascii:]]+"$"""):     # char *
-    return str
+proc len*(node: TSNode): int =
+  if not node.isNil:
+    result = node.tsNodeNamedChildCount().int
+
+proc `[]`*(node: TSNode, i: SomeInteger): TSNode =
+  if i < node.len():
+    result = node.tsNodeNamedChild(i.uint32)
+
+proc getName*(node: TSNode): string {.inline.} =
+  if not node.isNil:
+    return $node.tsNodeType()
+
+proc getNodeVal*(gState: State, node: TSNode): string =
+  if not node.isNil:
+    return gState.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
 
 proc getNodeVal*(nimState: NimState, node: TSNode): string =
-  return nimState.gState.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
+  nimState.gState.getNodeVal(node)
+
+proc getAtom*(node: TSNode): TSNode =
+  if not node.isNil:
+    # Get child node which is topmost atom
+    if node.getName() in gAtoms:
+      return node
+    elif node.len() != 0:
+      return node[0].getAtom()
+
+proc getStartAtom*(node: TSNode): int =
+  if not node.isNil:
+    # Skip const, volatile and other type qualifiers
+    for i in 0 .. node.len - 1:
+      if node[i].getAtom().getName() notin gAtoms:
+        result += 1
+      else:
+        break
+
+proc getXCount*(node: TSNode, ntype: string, reverse = false): int =
+  if not node.isNil:
+    # Get number of ntype nodes nested in tree
+    var
+      cnode = node
+    while ntype in cnode.getName():
+      result += 1
+      if reverse:
+        cnode = cnode.tsNodeParent()
+      else:
+        if cnode.len() != 0:
+          cnode = cnode[0]
+        else:
+          break
+
+proc getPtrCount*(node: TSNode, reverse = false): int =
+  node.getXCount("pointer_declarator")
+
+proc getArrayCount*(node: TSNode, reverse = false): int =
+  node.getXCount("array_declarator")
+
+proc getDeclarator*(node: TSNode): TSNode =
+  if not node.isNil:
+    # Return if child is a function or array declarator
+    if node.getName() in ["function_declarator", "array_declarator"]:
+      return node
+    elif node.len() != 0:
+      return node[0].getDeclarator()
+
+proc firstChildInTree*(node: TSNode, ntype: string): TSNode =
+  # Search for node type in tree - first children
+  var
+    cnode = node
+  while not cnode.isNil:
+    if cnode.getName() == ntype:
+      return cnode
+    cnode = cnode[0]
+
+proc anyChildInTree*(node: TSNode, ntype: string): TSNode =
+  # Search for node type anywhere in tree - depth first
+  var
+    cnode = node
+  while not cnode.isNil:
+    if cnode.getName() == ntype:
+      return cnode
+    for i in 0 ..< cnode.len:
+      let
+        ccnode = cnode[i].anyChildInTree(ntype)
+      if not ccnode.isNil():
+        return ccnode
+    if cnode != node:
+      cnode = cnode.tsNodeNextNamedSibling()
+    else:
+      break
+
+proc mostNestedChildInTree*(node: TSNode): TSNode =
+  # Search for the most nested child of node's type in tree
+  var
+    cnode = node
+    ntype = cnode.getName()
+  while not cnode.isNil and cnode.len != 0 and cnode[0].getName() == ntype:
+    cnode = cnode[0]
+  result = cnode
+
+proc inChildren*(node: TSNode, ntype: string): bool =
+  # Search for node type in immediate children
+  result = false
+  for i in 0 ..< node.len():
+    if (node[i]).getName() == ntype:
+      result = true
+      break
 
 proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
+  # Get line number and column info for node
   result.line = 1
   result.col = 1
   for i in 0 .. node.tsNodeStartByte().int-1:
@@ -224,6 +319,150 @@ proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
       result.col = 0
       result.line += 1
     result.col += 1
+
+proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
+  for i in 0 ..< node.len():
+    if node.getName() != "comment":
+      result += 1
+
+proc getPxName*(node: TSNode, offset: int): string =
+  # Get the xth (grand)parent of the node
+  var
+    np = node
+    count = 0
+
+  while not np.isNil() and count < offset:
+    np = np.tsNodeParent()
+    count += 1
+
+  if count == offset and not np.isNil():
+    return np.getName()
+
+proc printLisp*(gState: State, root: TSNode): string =
+  var
+    node = root
+    nextnode: TSNode
+    depth = 0
+
+  while true:
+    if not node.isNil() and depth > -1:
+      if gState.pretty:
+        result &= spaces(depth)
+      let
+        (line, col) = gState.getLineCol(node)
+      result &= &"({$node.tsNodeType()} {line} {col} {node.tsNodeEndByte() - node.tsNodeStartByte()}"
+      let
+        val = gState.getNodeVal(node)
+      if "\n" notin val and " " notin val:
+        result &= &" \"{val}\""
+    else:
+      break
+
+    if node.tsNodeNamedChildCount() != 0:
+      if gState.pretty:
+        result &= "\n"
+      nextnode = node.tsNodeNamedChild(0)
+      depth += 1
+    else:
+      if gState.pretty:
+        result &= ")\n"
+      else:
+        result &= ")"
+      nextnode = node.tsNodeNextNamedSibling()
+
+    if nextnode.isNil():
+      while true:
+        node = node.tsNodeParent()
+        depth -= 1
+        if depth == -1:
+          break
+        if gState.pretty:
+          result &= spaces(depth) & ")\n"
+        else:
+          result &= ")"
+        if node == root:
+          break
+        if not node.tsNodeNextNamedSibling().isNil():
+          node = node.tsNodeNextNamedSibling()
+          break
+    else:
+      node = nextnode
+
+    if node == root:
+      break
+
+proc getCommented*(str: string): string =
+  "\n# " & str.strip().replace("\n", "\n# ")
+
+proc printTree*(nimState: NimState, pnode: PNode, offset = "") =
+  if nimState.gState.debug and pnode.kind != nkNone:
+    stdout.write "\n# " & offset & $pnode.kind & "("
+    case pnode.kind
+    of nkCharLit:
+      stdout.write "'" & pnode.intVal.char & "')"
+    of nkIntLit..nkUInt64Lit:
+      stdout.write $pnode.intVal & ")"
+    of nkFloatLit..nkFloat128Lit:
+      stdout.write $pnode.floatVal & ")"
+    of nkStrLit..nkTripleStrLit:
+      stdout.write "\"" & pnode.strVal & "\")"
+    of nkSym:
+      stdout.write $pnode.sym & ")"
+    of nkIdent:
+      stdout.write "\"" & $pnode.ident.s & "\")"
+    else:
+      if pnode.sons.len != 0:
+        for i in 0 ..< pnode.sons.len:
+          nimState.printTree(pnode.sons[i], offset & " ")
+          if i != pnode.sons.len - 1:
+            stdout.write ","
+        stdout.write "\n# " & offset & ")"
+      else:
+        stdout.write ")"
+    if offset.len == 0:
+      necho ""
+
+proc printDebug*(nimState: NimState, node: TSNode) =
+  if nimState.gState.debug:
+    necho ("Input => " & nimState.getNodeVal(node)).getCommented() & "\n" &
+          nimState.gState.printLisp(node).getCommented()
+
+proc printDebug*(nimState: NimState, pnode: PNode) =
+  if nimState.gState.debug:
+    necho ("Output => " & $pnode).getCommented()
+    nimState.printTree(pnode)
+
+# Compiler shortcuts
+
+proc getLineInfo*(nimState: NimState, node: TSNode): TLineInfo =
+  # Get Nim equivalent line:col info from node
+  let
+    (line, col) = nimState.gState.getLineCol(node)
+
+  result = newLineInfo(nimState.config, nimState.sourceFile.AbsoluteFile, line, col)
+
+proc getIdent*(nimState: NimState, name: string, info: TLineInfo, exported = true): PNode =
+  # Get ident PNode for name + info
+  let
+    exp = getIdent(nimState.identCache, "*")
+    ident = getIdent(nimState.identCache, name)
+
+  if exported:
+    result = newNode(nkPostfix)
+    result.add newIdentNode(exp, info)
+    result.add newIdentNode(ident, info)
+  else:
+    result = newIdentNode(ident, info)
+
+proc getNameInfo*(nimState: NimState, node: TSNode, kind: NimSymKind, parent = ""):
+  tuple[name: string, info: TLineInfo] =
+  # Shortcut to get identifier name and info (node value and line:col)
+  let
+    name = nimState.getNodeVal(node)
+  result.name = nimState.getIdentifier(name, kind, parent)
+  if kind == nskType:
+    result.name = result.name.getType()
+  result.info = nimState.getLineInfo(node)
 
 proc getCurrentHeader*(fullpath: string): string =
   ("header" & fullpath.splitFile().name.multiReplace([(".", ""), ("-", "")]))
@@ -328,12 +567,6 @@ proc getNameKind*(name: string): tuple[name: string, kind: Kind, recursive: bool
   if result.kind != exactlyOne:
     result.name = result.name[0 .. ^2]
 
-proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
-  if node.tsNodeNamedChildCount() != 0:
-    for i in 0 .. node.tsNodeNamedChildCount()-1:
-      if $node.tsNodeType() != "comment":
-        result += 1
-
 proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
   if node.tsNodeNamedChildCount() != 0:
     for i in 0 .. node.tsNodeNamedChildCount()-1:
@@ -363,18 +596,6 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
 
   if ast.children.len == 1 and ast.children[0].name == ".":
     return ast.children[0]
-
-proc getPxName*(node: TSNode, offset: int): string =
-  var
-    np = node
-    count = 0
-
-  while not np.tsNodeIsNull() and count < offset:
-    np = np.tsNodeParent()
-    count += 1
-
-  if count == offset and not np.tsNodeIsNull():
-    return $np.tsNodeType()
 
 proc getNimExpression*(nimState: NimState, expr: string): string =
   var
