@@ -2,7 +2,7 @@ import os, osproc, strformat, strutils, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, compat, globals, getters, grammar]
+import "."/[ast, globals, getters, grammar]
 
 proc printLisp(gState: State, root: TSNode) =
   var

@@ -1,26 +1,9 @@
 # see https://github.com/nimterop/nimterop/issues/79
 
-when (NimMajor, NimMinor, NimPatch) < (0, 19, 9):
-  # clean this up once upgraded; adapted from std/time_t
-  when defined(nimdoc):
-    type
-      impl = distinct int64
-      Time = impl
-  elif defined(windows):
-    when defined(i386) and defined(gcc):
-      type Time {.importc: "time_t", header: "<time.h>".} = distinct int32
-    else:
-      type Time {.importc: "time_t", header: "<time.h>".} = distinct int64
-  elif defined(posix):
-    import posix
-  type
-    time_t* = Time
-    time64_t* = Time
-else:
-  import std/time_t as time_t_temp
-  type
-    time_t* = time_t_temp.Time
-    time64_t* = time_t_temp.Time
+import std/time_t as time_t_temp
+type
+  time_t* = time_t_temp.Time
+  time64_t* = time_t_temp.Time
 
 when defined(cpp):
   # http://www.cplusplus.com/reference/cwchar/wchar_t/

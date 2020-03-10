@@ -21,7 +21,7 @@ const CIMPORT {.used.} = 1
 
 include "."/globals
 
-import "."/[build, compat, paths, types]
+import "."/[build, paths, types]
 export types
 
 proc interpPath(dir: string): string=

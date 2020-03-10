@@ -2,8 +2,6 @@ import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
 
-import "."/[compat]
-
 proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
   if not noQuote:
@@ -648,7 +646,7 @@ proc getGccPaths*(mode = "c"): seq[string] =
       break
     if inc:
       var
-        path = line.strip().myNormalizedPath()
+        path = line.strip().normalizedPath()
       if path notin result:
         result.add path
 
@@ -667,13 +665,13 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
     if "LIBRARY_PATH=" in line:
       for path in line[13 .. ^1].split(PathSep):
         var
-          path = path.strip().myNormalizedPath()
+          path = path.strip().normalizedPath()
         if path notin result:
           result.add path
       break
     elif '\t' in line:
       var
-        path = line.strip().myNormalizedPath()
+        path = line.strip().normalizedPath()
       if path notin result:
         result.add path
 

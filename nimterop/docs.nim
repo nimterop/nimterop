@@ -1,22 +1,18 @@
 import macros, strformat
 
-when (NimMajor, NimMinor, NimPatch) >= (0, 19, 9):
-  from os import parentDir, getCurrentCompilerExe, DirSep
-  proc getNimRootDir(): string =
-    #[
-    hack, but works
-    alternatively (but more complex), use (from a nim file, not nims otherwise
-    you get Error: ambiguous call; both system.fileExists):
-    import "$nim/testament/lib/stdtest/specialpaths.nim"
-    nimRootDir
-    ]#
-    fmt"{currentSourcePath}".parentDir.parentDir.parentDir
-else:
-  proc getCurrentCompilerExe*(): string =
-    "nim"
+from os import parentDir, getCurrentCompilerExe, DirSep
+proc getNimRootDir(): string =
+  #[
+  hack, but works
+  alternatively (but more complex), use (from a nim file, not nims otherwise
+  you get Error: ambiguous call; both system.fileExists):
+  import "$nim/testament/lib/stdtest/specialpaths.nim"
+  nimRootDir
+  ]#
+  fmt"{currentSourcePath}".parentDir.parentDir.parentDir
 
-  const
-    DirSep = when defined(windows): '\\' else: '/'
+const
+  DirSep = when defined(windows): '\\' else: '/'
 
 proc execAction(cmd: string): string =
   var

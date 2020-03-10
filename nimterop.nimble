@@ -12,7 +12,7 @@ installDirs = @["nimterop"]
 installFiles = @["config.nims"]
 
 # Dependencies
-requires "nim >= 0.19.6", "regex >= 0.13.0", "cligen >= 0.9.41"
+requires "nim >= 0.20.2", "regex >= 0.13.1", "cligen >= 0.9.43"
 
 import nimterop/docs
 

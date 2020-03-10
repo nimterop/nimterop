@@ -39,7 +39,7 @@ else:
 
 cCompile(src/"c_api/soloud_c.cpp")
 cCompile(src/"core/*.cpp")
-cCompile(src/"audiosource", "cpp")
+cCompile(src/"audiosource", "cpp", exclude="ay/")
 cCompile(src/"audiosource", "c")
 cCompile(src/"filter/*.cpp")
 
