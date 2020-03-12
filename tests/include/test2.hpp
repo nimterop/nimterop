@@ -4,11 +4,13 @@
 #define TEST_FLOAT 5.12
 #define TEST_HEX 0x512
 
-int test_call_int();
+extern "C" {
+  int test_call_int();
 
-struct Foo{
-  int bar;
-};
+  struct Foo{
+    int bar;
+  };
+}
 
 class Foo1{
   int bar1;

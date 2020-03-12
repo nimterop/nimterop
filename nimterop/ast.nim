@@ -178,7 +178,7 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
   nimState.impShort = nimState.currentHeader.replace("header", "imp")
   nimState.sourceFile = fullpath
 
-  if nimState.gState.dynlib.Bl:
+  if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
     nimState.constStr &= &"\n  {nimState.currentHeader} {{.used.}} = \"{fp}\""
 
   root.searchAst(astTable, nimState)
@@ -191,7 +191,7 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
     necho &"const{nimState.constStr}\n"
 
   necho &"""
-{{.pragma: {nimState.impShort}, importc{nimState.getHeader()}.}}
+{{.pragma: {nimState.impShort}, importc{nimState.getHeaderPragma()}.}}
 {{.pragma: {nimState.impShort}C, {nimState.impShort}, cdecl{nimState.getDynlib()}.}}
 """
 

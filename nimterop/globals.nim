@@ -57,7 +57,7 @@ type
   State = ref object
     compile*, defines*, headers*, includeDirs*, searchDirs*, prefix*, suffix*, symOverride*: seq[string]
 
-    nocache*, nocomments*, debug*, past*, preprocess*, pnim*, pretty*, recurse*: bool
+    debug*, includeHeader*, nocache*, nocomments*, past*, preprocess*, pnim*, recurse*: bool
 
     code*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
 

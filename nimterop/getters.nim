@@ -346,8 +346,7 @@ proc printLisp*(gState: State, root: TSNode): string =
 
   while true:
     if not node.isNil() and depth > -1:
-      if gState.pretty:
-        result &= spaces(depth)
+      result &= spaces(depth)
       let
         (line, col) = gState.getLineCol(node)
       result &= &"({$node.tsNodeType()} {line} {col} {node.tsNodeEndByte() - node.tsNodeStartByte()}"
@@ -359,15 +358,11 @@ proc printLisp*(gState: State, root: TSNode): string =
       break
 
     if node.tsNodeNamedChildCount() != 0:
-      if gState.pretty:
-        result &= "\n"
+      result &= "\n"
       nextnode = node.tsNodeNamedChild(0)
       depth += 1
     else:
-      if gState.pretty:
-        result &= ")\n"
-      else:
-        result &= ")"
+      result &= ")\n"
       nextnode = node.tsNodeNextNamedSibling()
 
     if nextnode.isNil():
@@ -376,10 +371,7 @@ proc printLisp*(gState: State, root: TSNode): string =
         depth -= 1
         if depth == -1:
           break
-        if gState.pretty:
-          result &= spaces(depth) & ")\n"
-        else:
-          result &= ")"
+        result &= spaces(depth) & ")\n"
         if node == root:
           break
         if not node.tsNodeNextNamedSibling().isNil():
@@ -656,9 +648,9 @@ proc getSplitComma*(joined: seq[string]): seq[string] =
   for i in joined:
     result = result.concat(i.split(","))
 
-proc getHeader*(nimState: NimState): string =
+proc getHeaderPragma*(nimState: NimState): string =
   result =
-    if nimState.gState.dynlib.Bl:
+    if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
       &", header: {nimState.currentHeader}"
     else:
       ""
@@ -672,7 +664,7 @@ proc getDynlib*(nimState: NimState): string =
 
 proc getImportC*(nimState: NimState, origName, nimName: string): string =
   if nimName != origName:
-    result = &"importc: \"{origName}\"{nimState.getHeader()}"
+    result = &"importc: \"{origName}\"{nimState.getHeaderPragma()}"
   else:
     result = nimState.impShort
 

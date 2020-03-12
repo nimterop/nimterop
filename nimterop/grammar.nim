@@ -200,7 +200,7 @@ proc initGrammar(): Grammar =
         nname = nimState.getIdentifier(name, nskType)
         i += 1
 
-      if nimState.gState.dynlib.Bl:
+      if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
         pragmas.add nimState.getImportC(name, nname)
 
       let
@@ -316,7 +316,7 @@ proc initGrammar(): Grammar =
       else:
         var
           pragmas: seq[string] = @[]
-        if nimState.gState.dynlib.Bl:
+        if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
           pragmas.add nimState.getImportC(prefix & name, nname)
         pragmas.add "bycopy"
         if union.nBl:
