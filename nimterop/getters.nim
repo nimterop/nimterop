@@ -386,33 +386,33 @@ proc printLisp*(gState: State, root: TSNode): string =
 proc getCommented*(str: string): string =
   "\n# " & str.strip().replace("\n", "\n# ")
 
-proc printTree*(nimState: NimState, pnode: PNode, offset = "") =
+proc printTree*(nimState: NimState, pnode: PNode, offset = ""): string =
   if nimState.gState.debug and pnode.kind != nkNone:
-    stdout.write "\n# " & offset & $pnode.kind & "("
+    result &= "\n# " & offset & $pnode.kind & "("
     case pnode.kind
     of nkCharLit:
-      stdout.write "'" & pnode.intVal.char & "')"
+      result &= "'" & pnode.intVal.char & "')"
     of nkIntLit..nkUInt64Lit:
-      stdout.write $pnode.intVal & ")"
+      result &= $pnode.intVal & ")"
     of nkFloatLit..nkFloat128Lit:
-      stdout.write $pnode.floatVal & ")"
+      result &= $pnode.floatVal & ")"
     of nkStrLit..nkTripleStrLit:
-      stdout.write "\"" & pnode.strVal & "\")"
+      result &= "\"" & pnode.strVal & "\")"
     of nkSym:
-      stdout.write $pnode.sym & ")"
+      result &= $pnode.sym & ")"
     of nkIdent:
-      stdout.write "\"" & $pnode.ident.s & "\")"
+      result &= "\"" & $pnode.ident.s & "\")"
     else:
       if pnode.sons.len != 0:
         for i in 0 ..< pnode.sons.len:
-          nimState.printTree(pnode.sons[i], offset & " ")
+          result &= nimState.printTree(pnode.sons[i], offset & " ")
           if i != pnode.sons.len - 1:
-            stdout.write ","
-        stdout.write "\n# " & offset & ")"
+            result &= ","
+        result &= "\n# " & offset & ")"
       else:
-        stdout.write ")"
+        result &= ")"
     if offset.len == 0:
-      necho ""
+      result &= "\n"
 
 proc printDebug*(nimState: NimState, node: TSNode) =
   if nimState.gState.debug:
@@ -421,8 +421,8 @@ proc printDebug*(nimState: NimState, node: TSNode) =
 
 proc printDebug*(nimState: NimState, pnode: PNode) =
   if nimState.gState.debug:
-    necho ("Output => " & $pnode).getCommented()
-    nimState.printTree(pnode)
+    necho ("Output => " & $pnode).getCommented() & "\n" &
+          nimState.printTree(pnode)
 
 # Compiler shortcuts
 

@@ -69,3 +69,6 @@ assert A20 is object
 testFields(A20, {"a1": "cchar"}.toTable())
 assert A21 is A20
 assert A21p is ptr A20
+
+assert A22 is object
+testFields(A22, {"f1": "ptr ptr cint", "f2": "array[0..254, ptr cint]"}.toTable())

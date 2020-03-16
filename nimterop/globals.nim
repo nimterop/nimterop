@@ -5,7 +5,7 @@ import regex
 import "."/plugin
 
 when not declared(CIMPORT):
-  import compiler/[ast, idents, options]
+  import compiler/[ast, idents, modulegraphs, options]
 
   import "."/treesitter/api
 
@@ -81,6 +81,7 @@ type
       constSection*, enumSection*, procSection*, typeSection*: PNode
       identCache*: IdentCache
       config*: ConfigRef
+      graph*: ModuleGraph
 
     gState*: State
 

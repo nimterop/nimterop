@@ -2,7 +2,7 @@ import macros, os, sets, strutils, tables, times
 
 import regex
 
-import compiler/[ast, idents, options, renderer]
+import compiler/[ast, idents, modulegraphs, options, parser, renderer]
 
 import "."/treesitter/api
 
@@ -19,8 +19,9 @@ proc getPtrType*(str: string): string =
     else:
       str
 
-proc getLit*(str: string): PNode =
-  # Used to convert #define literals into const
+proc getLit*(nimState: NimState, str: string): PNode =
+  # Used to convert #define literals into const and expressions
+  # in array sizes
   let
     str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
 
@@ -30,9 +31,9 @@ proc getLit*(str: string): PNode =
   elif str.contains(re"^[\-]?[\d]*[.]?[\d]+$"):   # float
     result = newFloatNode(nkFloatLit, parseFloat(str))
 
-  # TODO - hex becomes int on render
-  elif str.contains(re"^0x[\da-fA-F]+$"):         # hexadecimal
-    result = newIntNode(nkIntLit, parseHexInt(str))
+  # # TODO - hex becomes int on render
+  # elif str.contains(re"^0x[\da-fA-F]+$"):         # hexadecimal
+  #   result = newIntNode(nkIntLit, parseHexInt(str))
 
   elif str.contains(re"^'[[:ascii:]]'$"):         # char
     result = newNode(nkCharLit)
@@ -42,7 +43,11 @@ proc getLit*(str: string): PNode =
     result = newStrNode(nkStrLit, str[1 .. ^2])
 
   else:
-    result = newNode(nkNilLit)
+    result = parseString(
+      nimState.getNimExpression(str), 
+      nimState.identCache, nimState.config)
+    if result.isNil:
+      result = newNode(nkNilLit)
 
 proc addConst(nimState: NimState, node: TSNode) =
   # #define X Y
@@ -65,7 +70,7 @@ proc addConst(nimState: NimState, node: TSNode) =
       ident = nimState.getIdent(name, info)
 
       # node[1] = preproc_arg = value
-      val = nimState.getNodeVal(node[1]).getLit()
+      val = nimState.getLit(nimState.getNodeVal(node[1]))
 
     # If supported literal
     if val.kind != nkNilLit:
@@ -464,7 +469,7 @@ proc getTypeArray(nimState: NimState, node: TSNode): PNode =
 
   for i in 0 ..< acount:
     let
-      size = nimState.getNodeVal(cnode[1]).getLit()
+      size = nimState.getLit(nimState.getNodeVal(cnode[1]))
     if size.kind != nkNilLit:
       result = nimState.newArrayTree(cnode, result, size)
       cnode = cnode[0]
@@ -877,6 +882,7 @@ proc printNim*(gState: State, fullpath: string, root: TSNode) =
   # Nim compiler objects
   nimState.identCache = newIdentCache()
   nimState.config = newConfigRef()
+  nimstate.graph = newModuleGraph(nimState.identCache, nimState.config)
 
   nimState.constSection = newNode(nkConstSection)
   nimState.enumSection = newNode(nkStmtList)
