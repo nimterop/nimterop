@@ -35,8 +35,8 @@ typedef struct A20 { char a1; } A20, A21, *A21p;
 typedef struct A22 { int **f1; int *f2[123+132]; } A22;
 
 //Unions
-//union UNION1 {int f1; };
-//typedef union UNION2 { int **f1; int abc[123+132]; } UNION2;
+union U1 {int f1; float f2; };
+typedef union U2 { int **f1; int abc[123+132]; } U2;
 
 // Anonymous
 //typedef struct { char a1; };

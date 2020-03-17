@@ -72,3 +72,9 @@ assert A21p is ptr A20
 
 assert A22 is object
 testFields(A22, {"f1": "ptr ptr cint", "f2": "array[0..254, ptr cint]"}.toTable())
+
+assert U1 is object
+assert sizeof(U1) == sizeof(cfloat)
+
+assert U2 is object
+assert sizeof(U2) == 256 * sizeof(cint)

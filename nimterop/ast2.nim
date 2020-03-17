@@ -93,7 +93,55 @@ proc addConst(nimState: NimState, node: TSNode) =
 
       nimState.printDebug(constDef)
 
-proc newTypeIdent(nimState: NimState, node: TSNode, override = ""): PNode =
+proc newPragma(nimState: NimState, node: TSNode, pragmas: Table[string, string]): PNode =
+  # Create nkPragma tree for name:value
+  #
+  # {.name1, name2: value2.}
+  #
+  # nkPragma(
+  #  nkIdent(name1),
+  #  nkExprColonExpr(
+  #   nkIdent(name2),
+  #   nkStrLit(value2)
+  #  )
+  # )
+  result = newNode(nkPragma)
+  for name, value in pragmas.pairs:
+    let
+      (_, pinfo) = nimState.getNameInfo(node, nskUnknown)
+      pident = nimState.getIdent(name, pinfo, exported = false)
+    
+    if value.len == 0:
+      result.add pident
+    else:
+      let
+        colExpr = newNode(nkExprColonExpr)
+        pvalue = newStrNode(nkStrLit, value)
+      colExpr.add pident
+      colExpr.add pvalue
+      result.add colExpr
+
+proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: Table[string, string]): PNode =
+  # Create nkPragmaExpr tree
+  #
+  # nkPragmaExpr(
+  #  nkPostfix(
+  #   nkIdent("*"),
+  #   nkIdent("X")
+  #  ),
+  #  nkPragma(
+  #   nkIdent(name1),
+  #   nkExprColonExpr(
+  #    nkIdent(name2),
+  #    nkStrLit(value2)
+  #   )
+  #  )
+  # )
+  result = newNode(nkPragmaExpr)
+  result.add ident
+  result.add nimState.newPragma(node, pragmas)
+
+proc newTypeIdent(nimState: NimState, node: TSNode, override = "", union = false): PNode =
   # Create nkTypeDef PNode with first ident
   #
   # If `override`, use it instead of node.getAtom() for name
@@ -105,6 +153,11 @@ proc newTypeIdent(nimState: NimState, node: TSNode, override = ""): PNode =
         nimState.getIdent(override, info)
       else:
         nimState.getIdent(name, info)
+    prident =
+      if union:
+        nimState.newPragmaExpr(node, ident, {"union": ""}.toTable())
+      else:
+        ident
 
   # type name* =
   #
@@ -116,7 +169,7 @@ proc newTypeIdent(nimState: NimState, node: TSNode, override = ""): PNode =
   #  nkEmpty()
   # )
   result = newNode(nkTypeDef)
-  result.add ident
+  result.add prident
   result.add newNode(nkEmpty)
 
 proc newPtrTree(nimState: NimState, count: int, typ: PNode): PNode =
@@ -325,7 +378,7 @@ proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
       if not field.isNil:
         result.add field
 
-proc addTypeObject(nimState: NimState, node: TSNode, override = "", duplicate = "") =
+proc addTypeObject(nimState: NimState, node: TSNode, override = "", duplicate = "", union = false) =
   # Add a type of object
   #
   # If `override` is set, use it as the name
@@ -333,7 +386,7 @@ proc addTypeObject(nimState: NimState, node: TSNode, override = "", duplicate = 
   decho("addTypeObject()")
   let
     # TODO - check blank and override
-    typeDef = nimState.newTypeIdent(node, override)
+    typeDef = nimState.newTypeIdent(node, override, union = union)
     name = $typeDef[0][1]
 
   if name != duplicate:
@@ -597,11 +650,11 @@ proc addTypeProc(nimState: NimState, node: TSNode) =
 
   nimState.printDebug(typeDef)
 
-proc addType(nimState: NimState, node: TSNode) =
+proc addType(nimState: NimState, node: TSNode, union = false) =
   decho("addType()")
   nimState.printDebug(node)
 
-  if node.getName() == "struct_specifier":
+  if node.getName() in ["struct_specifier", "union_specifier"]:
     # struct X;
     #
     # (struct_specifier
@@ -631,7 +684,7 @@ proc addType(nimState: NimState, node: TSNode) =
     #   (field_declaration ...)
     #  )
     decho("addType(): case 1")
-    nimState.addTypeObject(node)
+    nimState.addTypeObject(node, union = union)
   elif node.getName() == "type_definition":
     if node.len >= 2:
       let
@@ -657,7 +710,7 @@ proc addType(nimState: NimState, node: TSNode) =
         #  (type_definition = "")
         # )
         decho("addType(): case 2")
-        nimState.addTypeObject(node[0])
+        nimState.addTypeObject(node[0], union = union)
       else:
         let
           fdecl = node[1].anyChildInTree("function_declarator")
@@ -763,7 +816,7 @@ proc addType(nimState: NimState, node: TSNode) =
 
             # First add struct as object
             decho("addType(): case 6")
-            nimState.addTypeObject(node[0])
+            nimState.addTypeObject(node[0], union = union)
 
             if node.len > 1 and nimState.getNodeVal(node[1]) != "":
               # Add any additional names
@@ -786,7 +839,7 @@ proc addType(nimState: NimState, node: TSNode) =
                 name
 
             # Now add struct as object with specified name
-            nimState.addTypeObject(node[0], override = name)
+            nimState.addTypeObject(node[0], override = name, union = union)
 
             if name.len != 0:
               # Add any additional names except duplicate
@@ -809,10 +862,14 @@ proc processNode(nimState: NimState, node: TSNode): bool =
   of "type_definition":
     if not node.firstChildInTree("enum_specifier").isNil():
       nimState.addEnum(node)
+    elif not node.firstChildInTree("union_specifier").isNil():
+      nimState.addType(node, union = true)
     else:
       nimState.addType(node)
   of "struct_specifier":
     nimState.addType(node)
+  of "union_specifier":
+    nimState.addType(node, union = true)
   of "enum_specifier":
     nimState.addEnum(node)
   of "declaration":
