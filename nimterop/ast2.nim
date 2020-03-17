@@ -50,6 +50,42 @@ proc getLit*(nimState: NimState, str: string): PNode =
     if result.isNil:
       result = newNode(nkNilLit)
 
+proc newConstDef(nimState: NimState, node: TSNode, name = "", val = ""): PNode =
+  let
+    # node[0] = identifier = const name
+    (cname, info) = nimState.getNameInfo(node.getAtom(), nskConst)
+    
+    # TODO - check blank and override
+    ident =
+      if name.len != 0:
+        nimState.getIdent(name, info)
+      else:
+        nimState.getIdent(cname, info)
+
+    # node[1] = preproc_arg = value
+    nval =
+      if val.len != 0:
+        newStrNode(nkStrLit, val)
+      else:
+        nimState.getLit(nimState.getNodeVal(node[1]))
+
+  # If supported literal
+  if nval.kind != nkNilLit:
+    # const X* = Y
+    #
+    # nkConstDef(
+    #  nkPostfix(
+    #   nkIdent("*"),
+    #   nkIdent("X")
+    #  ),
+    #  nkEmpty(),
+    #  nkXLit(Y)
+    # )
+    result = newNode(nkConstDef)
+    result.add ident
+    result.add newNode(nkEmpty)
+    result.add nval
+
 proc addConst(nimState: NimState, node: TSNode) =
   # #define X Y
   #
@@ -63,32 +99,9 @@ proc addConst(nimState: NimState, node: TSNode) =
   if node[0].getName() == "identifier" and
     node[1].getName() == "preproc_arg":
     let
-      constDef = newNode(nkConstDef)
+      constDef = nimState.newConstDef(node)
 
-      # node[0] = identifier = const name
-      (name, info) = nimState.getNameInfo(node.getAtom(), nskConst)
-      # TODO - check blank and override
-      ident = nimState.getIdent(name, info)
-
-      # node[1] = preproc_arg = value
-      val = nimState.getLit(nimState.getNodeVal(node[1]))
-
-    # If supported literal
-    if val.kind != nkNilLit:
-      # const X* = Y
-      #
-      # nkConstDef(
-      #  nkPostfix(
-      #   nkIdent("*"),
-      #   nkIdent("X")
-      #  ),
-      #  nkEmpty(),
-      #  nkXLit(Y)
-      # )
-      constDef.add ident
-      constDef.add newNode(nkEmpty)
-      constDef.add val
-
+    if not constDef.isNil:
       # nkConstSection.add
       nimState.constSection.add constDef
 
@@ -1026,6 +1039,10 @@ proc printNim*(gState: State, fullpath: string, root: TSNode) =
   nimState.enumSection = newNode(nkStmtList)
   nimState.procSection = newNode(nkStmtList)
   nimState.typeSection = newNode(nkTypeSection)
+
+  if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
+    nimState.constSection.add nimState.newConstDef(
+      root, name = nimState.currentHeader, val = fp)
 
   nimState.searchTree(root)
 
