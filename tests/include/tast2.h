@@ -40,3 +40,5 @@ typedef union U2 { int **f1; int abc[123+132]; } U2;
 
 // Anonymous
 //typedef struct { char a1; };
+
+struct A2 test_proc1(struct A0 a);
