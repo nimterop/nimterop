@@ -107,23 +107,27 @@ proc addConst(nimState: NimState, node: TSNode) =
 
       nimState.printDebug(constDef)
 
+proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, name: string, value: PNode = nil) =
+  # Add pragma to an existing nkPragma tree
+  let
+    (_, pinfo) = nimState.getNameInfo(node.getAtom(), nskUnknown)
+    pident = nimState.getIdent(name, pinfo, exported = false)
+  
+  if value.isNil:
+    pragma.add pident
+  else:
+    let
+      colExpr = newNode(nkExprColonExpr)
+    colExpr.add pident
+    colExpr.add value
+    pragma.add colExpr
+
 proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, pragmas: OrderedTable[string, PNode]) =
   # Add pragmas to an existing nkPragma tree
   for name, value in pragmas.pairs:
-    let
-      (_, pinfo) = nimState.getNameInfo(node.getAtom(), nskUnknown)
-      pident = nimState.getIdent(name, pinfo, exported = false)
-    
-    if value.isNil:
-      pragma.add pident
-    else:
-      let
-        colExpr = newNode(nkExprColonExpr)
-      colExpr.add pident
-      colExpr.add value
-      pragma.add colExpr
+    nimState.addPragma(node, pragma, name, value)
 
-proc newPragma(nimState: NimState, node: TSNode, pragmas: OrderedTable[string, PNode]): PNode =
+proc newPragma(nimState: NimState, node: TSNode, name: string, value: PNode = nil): PNode =
   # Create nkPragma tree for name:value
   #
   # {.name1, name2: value2.}
@@ -136,10 +140,15 @@ proc newPragma(nimState: NimState, node: TSNode, pragmas: OrderedTable[string, P
   #  )
   # )
   result = newNode(nkPragma)
+  nimState.addPragma(node, result, name, value)
+
+proc newPragma(nimState: NimState, node: TSNode, pragmas: OrderedTable[string, PNode]): PNode =
+  # Create nkPragma tree for multiple name:value
+  result = newNode(nkPragma)
   nimState.addPragma(node, result, pragmas)
 
-proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: OrderedTable[string, PNode]): PNode =
-  # Create nkPragmaExpr tree
+proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, name: string, value: PNode = nil): PNode =
+  # Create nkPragmaExpr tree for name:value
   #
   # nkPragmaExpr(
   #  nkPostfix(
@@ -154,6 +163,12 @@ proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: Orde
   #   )
   #  )
   # )
+  result = newNode(nkPragmaExpr)
+  result.add ident
+  result.add nimState.newPragma(node, name, value)
+
+proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: OrderedTable[string, PNode]): PNode =
+  # Create nkPragmaExpr tree for multiple name:value
   result = newNode(nkPragmaExpr)
   result.add ident
   result.add nimState.newPragma(node, pragmas)
@@ -172,9 +187,7 @@ proc newTypeIdent(nimState: NimState, node: TSNode, override = "", union = false
         nimState.getIdent(name, info)
     prident =
       if union:
-        var
-          empty: PNode
-        nimState.newPragmaExpr(node, ident, {"union": empty}.toOrderedTable())
+        nimState.newPragmaExpr(node, ident, "union")
       else:
         ident
 
@@ -1017,31 +1030,22 @@ proc setupPragmas(nimState: NimState, root: TSNode, fullpath: string) =
   var
     impPragma = newNode(nkPragma)
     impCPragma = newNode(nkPragma)
-    empty: PNode
 
-  nimState.addPragma(root, impPragma, {
-    "pragma": nimState.getIdent(nimState.impShort),
-    "importc": empty
-  }.toOrderedTable())
+  nimState.addPragma(root, impPragma, "pragma", nimState.getIdent(nimState.impShort))
+  nimState.addPragma(root, impPragma, "importc")
 
   if nimState.includeHeader():
     nimState.constSection.add nimState.newConstDef(
       root, name = nimState.currentHeader, val = fullpath)
 
-    nimState.addPragma(root, impPragma, {
-      "header": newStrNode(nkStrLit, nimState.currentHeader)
-    }.toOrderedTable())
+    nimState.addPragma(root, impPragma, "header", newStrNode(nkStrLit, nimState.currentHeader))
 
-  nimState.addPragma(root, impCPragma, {
-    "pragma": nimState.getIdent(nimState.impShort & "C"),
-    nimState.impShort: empty,
-    "cdecl": empty
-  }.toOrderedTable())
+  nimState.addPragma(root, impCPragma, "pragma", nimState.getIdent(nimState.impShort & "C"))
+  nimState.addPragma(root, impCPragma, nimState.impShort)
+  nimState.addPragma(root, impCPragma, "cdecl")
 
   if nimState.gState.dynlib.nBl:
-    nimState.addPragma(root, impCPragma, {
-      "dynlib": nimState.getIdent(nimState.gState.dynlib)
-    }.toOrderedTable())
+    nimState.addPragma(root, impCPragma, "dynlib", nimState.getIdent(nimState.gState.dynlib))
 
   nimState.pragmaSection.add impPragma
   nimState.pragmaSection.add impCPragma
