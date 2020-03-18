@@ -4,6 +4,42 @@ import regex
 
 import "."/[getters, globals, treesitter/api]
 
+proc getHeaderPragma*(nimState: NimState): string =
+  result =
+    if nimState.includeHeader():
+      &", header: {nimState.currentHeader}"
+    else:
+      ""
+
+proc getDynlib*(nimState: NimState): string =
+  result =
+    if nimState.gState.dynlib.nBl:
+      &", dynlib: {nimState.gState.dynlib}"
+    else:
+      ""
+
+proc getImportC*(nimState: NimState, origName, nimName: string): string =
+  if nimName != origName:
+    result = &"importc: \"{origName}\"{nimState.getHeaderPragma()}"
+  else:
+    result = nimState.impShort
+
+proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
+  result = ""
+  for pragma in pragmas.items():
+    if pragma.nBl:
+      result &= pragma & ", "
+  if result.nBl:
+    result = " {." & result[0 .. ^3] & ".}"
+
+  result = result.replace(nimState.impShort & ", cdecl", nimState.impShort & "C")
+
+  let
+    dy = nimState.getDynlib()
+
+  if ", cdecl" in result and dy.nBl:
+    result = result.replace(".}", dy & ".}")
+
 proc saveNodeData(node: TSNode, nimState: NimState): bool =
   let name = $node.tsNodeType()
 
@@ -178,7 +214,7 @@ proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
   nimState.impShort = nimState.currentHeader.replace("header", "imp")
   nimState.sourceFile = fullpath
 
-  if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
+  if nimState.includeHeader():
     nimState.constStr &= &"\n  {nimState.currentHeader} {{.used.}} = \"{fp}\""
 
   root.searchAst(astTable, nimState)

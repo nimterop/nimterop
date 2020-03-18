@@ -426,6 +426,9 @@ proc printDebug*(nimState: NimState, pnode: PNode) =
 
 # Compiler shortcuts
 
+proc getDefaultLineInfo*(nimState: NimState): TLineInfo =
+  result = newLineInfo(nimState.config, nimState.sourceFile.AbsoluteFile, -1, -1)
+
 proc getLineInfo*(nimState: NimState, node: TSNode): TLineInfo =
   # Get Nim equivalent line:col info from node
   let
@@ -445,6 +448,9 @@ proc getIdent*(nimState: NimState, name: string, info: TLineInfo, exported = tru
     result.add newIdentNode(ident, info)
   else:
     result = newIdentNode(ident, info)
+
+proc getIdent*(nimState: NimState, name: string): PNode =
+  nimState.getIdent(name, nimState.getDefaultLineInfo(), exported = false)
 
 proc getNameInfo*(nimState: NimState, node: TSNode, kind: NimSymKind, parent = ""):
   tuple[name: string, info: TLineInfo] =
@@ -648,41 +654,8 @@ proc getSplitComma*(joined: seq[string]): seq[string] =
   for i in joined:
     result = result.concat(i.split(","))
 
-proc getHeaderPragma*(nimState: NimState): string =
-  result =
-    if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
-      &", header: {nimState.currentHeader}"
-    else:
-      ""
-
-proc getDynlib*(nimState: NimState): string =
-  result =
-    if nimState.gState.dynlib.nBl:
-      &", dynlib: {nimState.gState.dynlib}"
-    else:
-      ""
-
-proc getImportC*(nimState: NimState, origName, nimName: string): string =
-  if nimName != origName:
-    result = &"importc: \"{origName}\"{nimState.getHeaderPragma()}"
-  else:
-    result = nimState.impShort
-
-proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
-  result = ""
-  for pragma in pragmas.items():
-    if pragma.nBl:
-      result &= pragma & ", "
-  if result.nBl:
-    result = " {." & result[0 .. ^3] & ".}"
-
-  result = result.replace(nimState.impShort & ", cdecl", nimState.impShort & "C")
-
-  let
-    dy = nimState.getDynlib()
-
-  if ", cdecl" in result and dy.nBl:
-    result = result.replace(".}", dy & ".}")
+template includeHeader*(nimState: NimState): bool =
+  nimState.gState.dynlib.Bl and nimState.gState.includeHeader
 
 proc getComments*(nimState: NimState, strip = false): string =
   if not nimState.gState.nocomments and nimState.commentStr.nBl:

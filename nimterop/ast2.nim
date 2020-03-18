@@ -107,7 +107,23 @@ proc addConst(nimState: NimState, node: TSNode) =
 
       nimState.printDebug(constDef)
 
-proc newPragma(nimState: NimState, node: TSNode, pragmas: OrderedTable[string, string]): PNode =
+proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, pragmas: OrderedTable[string, PNode]) =
+  # Add pragmas to an existing nkPragma tree
+  for name, value in pragmas.pairs:
+    let
+      (_, pinfo) = nimState.getNameInfo(node.getAtom(), nskUnknown)
+      pident = nimState.getIdent(name, pinfo, exported = false)
+    
+    if value.isNil:
+      pragma.add pident
+    else:
+      let
+        colExpr = newNode(nkExprColonExpr)
+      colExpr.add pident
+      colExpr.add value
+      pragma.add colExpr
+
+proc newPragma(nimState: NimState, node: TSNode, pragmas: OrderedTable[string, PNode]): PNode =
   # Create nkPragma tree for name:value
   #
   # {.name1, name2: value2.}
@@ -120,22 +136,9 @@ proc newPragma(nimState: NimState, node: TSNode, pragmas: OrderedTable[string, s
   #  )
   # )
   result = newNode(nkPragma)
-  for name, value in pragmas.pairs:
-    let
-      (_, pinfo) = nimState.getNameInfo(node.getAtom(), nskUnknown)
-      pident = nimState.getIdent(name, pinfo, exported = false)
-    
-    if value.len == 0:
-      result.add pident
-    else:
-      let
-        colExpr = newNode(nkExprColonExpr)
-        pvalue = newStrNode(nkStrLit, value)
-      colExpr.add pident
-      colExpr.add pvalue
-      result.add colExpr
+  nimState.addPragma(node, result, pragmas)
 
-proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: OrderedTable[string, string]): PNode =
+proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: OrderedTable[string, PNode]): PNode =
   # Create nkPragmaExpr tree
   #
   # nkPragmaExpr(
@@ -169,7 +172,9 @@ proc newTypeIdent(nimState: NimState, node: TSNode, override = "", union = false
         nimState.getIdent(name, info)
     prident =
       if union:
-        nimState.newPragmaExpr(node, ident, {"union": ""}.toOrderedTable())
+        var
+          empty: PNode
+        nimState.newPragmaExpr(node, ident, {"union": empty}.toOrderedTable())
       else:
         ident
 
@@ -1008,6 +1013,39 @@ proc searchTree(nimState: NimState, root: TSNode) =
     if node == root:
       break
 
+proc setupPragmas(nimState: NimState, root: TSNode, fullpath: string) =
+  var
+    impPragma = newNode(nkPragma)
+    impCPragma = newNode(nkPragma)
+    empty: PNode
+
+  nimState.addPragma(root, impPragma, {
+    "pragma": nimState.getIdent(nimState.impShort),
+    "importc": empty
+  }.toOrderedTable())
+
+  if nimState.includeHeader():
+    nimState.constSection.add nimState.newConstDef(
+      root, name = nimState.currentHeader, val = fullpath)
+
+    nimState.addPragma(root, impPragma, {
+      "header": newStrNode(nkStrLit, nimState.currentHeader)
+    }.toOrderedTable())
+
+  nimState.addPragma(root, impCPragma, {
+    "pragma": nimState.getIdent(nimState.impShort & "C"),
+    nimState.impShort: empty,
+    "cdecl": empty
+  }.toOrderedTable())
+
+  if nimState.gState.dynlib.nBl:
+    nimState.addPragma(root, impCPragma, {
+      "dynlib": nimState.getIdent(nimState.gState.dynlib)
+    }.toOrderedTable())
+
+  nimState.pragmaSection.add impPragma
+  nimState.pragmaSection.add impCPragma
+
 proc printNimHeader*(gState: State) =
   gecho """# Generated at $1
 # Command line:
@@ -1035,19 +1073,19 @@ proc printNim*(gState: State, fullpath: string, root: TSNode) =
   nimState.config = newConfigRef()
   nimstate.graph = newModuleGraph(nimState.identCache, nimState.config)
 
+  nimState.pragmaSection = newNode(nkStmtList)
   nimState.constSection = newNode(nkConstSection)
   nimState.enumSection = newNode(nkStmtList)
   nimState.procSection = newNode(nkStmtList)
   nimState.typeSection = newNode(nkTypeSection)
 
-  if nimState.gState.dynlib.Bl and nimState.gState.includeHeader:
-    nimState.constSection.add nimState.newConstDef(
-      root, name = nimState.currentHeader, val = fp)
+  nimState.setupPragmas(root, fp)
 
   nimState.searchTree(root)
 
   var
     tree = newNode(nkStmtList)
+  tree.add nimState.pragmaSection
   tree.add nimState.enumSection
   tree.add nimState.constSection
   tree.add nimState.typeSection
