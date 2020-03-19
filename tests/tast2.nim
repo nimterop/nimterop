@@ -40,7 +40,8 @@ assert A6 is ptr cint
 assert A7 is ptr ptr A0
 assert A8 is pointer
 
-assert A9 is array[3, cstring]
+assert A9p is array[3, cstring]
+#assert A9 is array[4, cchar]
 assert A10 is array[3, array[6, cstring]]
 assert A11 is ptr array[3, cstring]
 

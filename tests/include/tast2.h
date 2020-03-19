@@ -15,7 +15,7 @@ typedef int *A6;
 typedef A0 **A7;
 typedef void *A8;
 
-typedef char *A9[3];
+typedef char *A9p[3]; //, A9[4];
 typedef char *A10[3][6];
 typedef char *(*A11)[3];
 
@@ -41,4 +41,4 @@ typedef union U2 { int **f1; int abc[123+132]; } U2;
 // Anonymous
 //typedef struct { char a1; };
 
-struct A2 test_proc1(struct A0 a);
+//struct A2 test_proc1(struct A0 a);

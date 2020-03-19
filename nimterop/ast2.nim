@@ -50,27 +50,55 @@ proc getLit*(nimState: NimState, str: string): PNode =
     if result.isNil:
       result = newNode(nkNilLit)
 
-proc newConstDef(nimState: NimState, node: TSNode, name = "", val = ""): PNode =
+proc getOverrideOrSkip(nimState: NimState, node: TSNode, origname: string, kind: NimSymKind): PNode =
+  let
+    override = nimState.getOverride(origname, kind)
+    def =
+      if kind == nskConst:
+        nkConstDef
+      elif kind == nskType:
+        nkTypeDef
+      else:
+        nkEmpty
+    skind =
+      if kind == nskConst:
+        "const "
+      elif kind == nskType:
+        "type "
+      else:
+        ""
+  if override.nBl:
+    result = newNode(def)
+    result.add nimState.parseString(nimState.getComments())
+    result.add nimState.parseString(skind & override)[0]
+  else:
+    result = nimState.parseString(nimState.getComments())
+    result.add nimState.parseString(&"  # $1'{origname}' skipped" % skind)
+    if nimState.gState.debug:
+      nimState.skipStr &= &"\n{nimState.getNodeVal(node)}"
+
+proc newConstDef(nimState: NimState, node: TSNode, fname = "", fval = ""): PNode =
   let
     # node[0] = identifier = const name
-    (cname, info) = nimState.getNameInfo(node.getAtom(), nskConst)
+    (name, origname, info) = nimState.getNameInfo(node.getAtom(), nskConst)
     
-    # TODO - check blank and override
     ident =
-      if name.len != 0:
-        nimState.getIdent(name, info)
+      if fname.nBl:
+        nimState.getIdent(fname, info)
       else:
-        nimState.getIdent(cname, info)
+        nimState.getIdent(name, info)
 
     # node[1] = preproc_arg = value
-    nval =
-      if val.len != 0:
-        newStrNode(nkStrLit, val)
+    val =
+      if fval.nBl:
+        newStrNode(nkStrLit, fval)
       else:
         nimState.getLit(nimState.getNodeVal(node[1]))
 
-  # If supported literal
-  if nval.kind != nkNilLit:
+  if name.Bl and fname.Bl:
+    # Name skipped or overridden since blank
+    result = nimState.getOverrideOrSkip(node, origname, nskConst)
+  elif val.kind != nkNilLit and nimState.addNewIdentifer(name):
     # const X* = Y
     #
     # nkConstDef(
@@ -84,7 +112,7 @@ proc newConstDef(nimState: NimState, node: TSNode, name = "", val = ""): PNode =
     result = newNode(nkConstDef)
     result.add ident
     result.add newNode(nkEmpty)
-    result.add nval
+    result.add val
 
 proc addConst(nimState: NimState, node: TSNode) =
   # #define X Y
@@ -110,7 +138,7 @@ proc addConst(nimState: NimState, node: TSNode) =
 proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, name: string, value: PNode = nil) =
   # Add pragma to an existing nkPragma tree
   let
-    (_, pinfo) = nimState.getNameInfo(node.getAtom(), nskUnknown)
+    pinfo = nimState.getLineInfo(node.getAtom())
     pident = nimState.getIdent(name, pinfo, exported = false)
   
   if value.isNil:
@@ -173,36 +201,41 @@ proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: Orde
   result.add ident
   result.add nimState.newPragma(node, pragmas)
 
-proc newTypeIdent(nimState: NimState, node: TSNode, override = "", union = false): PNode =
+proc newTypeIdent(nimState: NimState, node: TSNode, fname = "", union = false): PNode =
   # Create nkTypeDef PNode with first ident
   #
-  # If `override`, use it instead of node.getAtom() for name
+  # If `fname`, use it instead of node.getAtom() for name
   let
-    (name, info) = nimState.getNameInfo(node.getAtom(), nskType)
-    # TODO - check blank and override
+    (name, origname, info) = nimState.getNameInfo(node.getAtom(), nskType)
+
     ident =
-      if override.len != 0:
-        nimState.getIdent(override, info)
+      if fname.nBl:
+        nimState.getIdent(fname, info)
       else:
         nimState.getIdent(name, info)
+
     prident =
       if union:
         nimState.newPragmaExpr(node, ident, "union")
       else:
         ident
 
-  # type name* =
-  #
-  # nkTypeDef(
-  #  nkPostfix(
-  #   nkIdent("*"),
-  #   nkIdent(name)
-  #  ),
-  #  nkEmpty()
-  # )
-  result = newNode(nkTypeDef)
-  result.add prident
-  result.add newNode(nkEmpty)
+  if name.Bl and fname.Bl:
+    # Name skipped or overridden since blank
+    result = nimState.getOverrideOrSkip(node, origname, nskType)
+  else:
+    # type name* =
+    #
+    # nkTypeDef(
+    #  nkPostfix(
+    #   nkIdent("*"),
+    #   nkIdent(name)
+    #  ),
+    #  nkEmpty()
+    # )
+    result = newNode(nkTypeDef)
+    result.add prident
+    result.add newNode(nkEmpty)
 
 proc newPtrTree(nimState: NimState, count: int, typ: PNode): PNode =
   # Create nkPtrTy tree depending on count
@@ -247,7 +280,7 @@ proc newPtrTree(nimState: NimState, count: int, typ: PNode): PNode =
 proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode): PNode =
   # Create nkBracketExpr tree depending on input
   let
-    (_, info) = nimState.getNameInfo(node.getAtom(), nskType)
+    info = nimState.getLineInfo(node.getAtom())
     ident = nimState.getIdent("array", info, exported = false)
 
   # array[size, typ]
@@ -296,7 +329,7 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
     start = getStartAtom(node)
 
     # node[start] - param type
-    (tname, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType)
+    (tname, _, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
     tident = nimState.getIdent(tname, tinfo, exported = false)
 
   if start == node.len - 1:
@@ -330,7 +363,7 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
       else:
         # Named param, simple type
         let
-          (pname, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
+          (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
           pident = nimState.getIdent(pname, pinfo, exported)
 
           count = node[start+1].getPtrCount()
@@ -343,7 +376,7 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
     elif not fdecl.isNil:
       # Named param, function pointer
       let
-        (pname, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
+        (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
         pident = nimState.getIdent(pname, pinfo, exported)
       result.add pident
       result.add nimState.getTypeProc(name, node)
@@ -351,7 +384,7 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
     elif not adecl.isNil:
       # Named param, array type
       let
-        (pname, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
+        (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
         pident = nimState.getIdent(pname, pinfo, exported)
       result.add pident
       result.add nimState.getTypeArray(node)
@@ -421,15 +454,14 @@ proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
       if not field.isNil:
         result.add field
 
-proc addTypeObject(nimState: NimState, node: TSNode, override = "", duplicate = "", union = false) =
+proc addTypeObject(nimState: NimState, node: TSNode, fname = "", duplicate = "", union = false) =
   # Add a type of object
   #
-  # If `override` is set, use it as the name
+  # If `fname` is set, use it as the name
   # If `duplicate` is set, don't add the same name
   decho("addTypeObject()")
   let
-    # TODO - check blank and override
-    typeDef = nimState.newTypeIdent(node, override, union = union)
+    typeDef = nimState.newTypeIdent(node, fname, union = union)
     name = $typeDef[0][1]
 
   if name != duplicate:
@@ -467,10 +499,10 @@ proc addTypeObject(nimState: NimState, node: TSNode, override = "", duplicate = 
 
     nimState.printDebug(typeDef)
 
-proc addTypeTyped(nimState: NimState, node: TSNode, toverride = "", duplicate = "") =
+proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", duplicate = "") =
   # Add a type of a specified type
   #
-  # If `toverride` is set, use it as the type name
+  # If `ftname` is set, use it as the type name
   # If `duplicate` is set, don't add the same name
   decho("addTypeTyped()")
   let
@@ -479,14 +511,18 @@ proc addTypeTyped(nimState: NimState, node: TSNode, toverride = "", duplicate = 
     # Add a type of a specific type
     let
       # node[i] = identifer = name
-      # TODO - check blank and override
       typeDef = nimState.newTypeIdent(node[i])
+      name = $typeDef[0][1]
 
       # node[start] = identifier = type name
-      (tname0, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType)
+      (tname0, _, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
 
       # Override type name
-      tname = if toverride.len != 0: toverride else: tname0
+      tname =
+        if ftname.nBl:
+          ftname
+        else:
+          tname0
 
       ident = nimState.getIdent(tname, tinfo, exported = false)
 
@@ -527,7 +563,7 @@ proc getTypeArray(nimState: NimState, node: TSNode): PNode =
     start = getStartAtom(node)
 
     # node[start] = identifier = type name
-    (name, info) = nimState.getNameInfo(node[start].getAtom(), nskType)
+    (name, origname, info) = nimState.getNameInfo(node[start].getAtom(), nskType)
     ident = nimState.getIdent(name, info, exported = false)
 
     # Top-most array declarator
@@ -578,7 +614,6 @@ proc addTypeArray(nimState: NimState, node: TSNode) =
   decho("addTypeArray()")
   let
     # node[1] = identifer = name
-    # TODO - check blank and override
     typeDef = nimState.newTypeIdent(node[1])
 
     typ = nimState.getTypeArray(node)
@@ -613,7 +648,7 @@ proc getTypeProc(nimState: NimState, name: string, node: TSNode): PNode =
   # Create proc type tree
   let
     # node[0] = identifier = return type name
-    (rname, rinfo) = nimState.getNameInfo(node[0].getAtom(), nskType)
+    (rname, _, rinfo) = nimState.getNameInfo(node[0].getAtom(), nskType, parent = name)
 
     # Parameter list
     plist = node[1].anyChildInTree("parameter_list")
@@ -652,7 +687,6 @@ proc addTypeProc(nimState: NimState, node: TSNode) =
   decho("addTypeProc()")
   let
     # node[1] = identifier = name
-    # TODO - check blank and override
     typeDef = nimState.newTypeIdent(node[1])
     name = $typeDef[0][1]
 
@@ -732,7 +766,7 @@ proc addType(nimState: NimState, node: TSNode, union = false) =
     if node.len >= 2:
       let
         fdlist = node[0].anyChildInTree("field_declaration_list")
-      if (fdlist.isNil or (not fdlist.isNil and fdlist.len == 0)) and
+      if (fdlist.isNil or (not fdlist.isNil and fdlist.Bl)) and
           nimState.getNodeVal(node[1]) == "":
         # typedef struct X;
         #
@@ -882,11 +916,11 @@ proc addType(nimState: NimState, node: TSNode, union = false) =
                 name
 
             # Now add struct as object with specified name
-            nimState.addTypeObject(node[0], override = name, union = union)
+            nimState.addTypeObject(node[0], fname = name, union = union)
 
-            if name.len != 0:
+            if name.nBl:
               # Add any additional names except duplicate
-              nimState.addTypeTyped(node, toverride = name, duplicate = name)
+              nimState.addTypeTyped(node, ftname = name, duplicate = name)
 
 proc addEnum(nimState: NimState, node: TSNode) =
   decho("addEnum()")
@@ -900,19 +934,18 @@ proc addProc(nimState: NimState, node: TSNode) =
   let
     start = getStartAtom(node)
 
-    # node[start] = identifier = return type name
-    (rname, rinfo) = nimState.getNameInfo(node[start].getAtom(), nskType)
-
-    # Parameter list
-    plist = node[start+1].anyChildInTree("parameter_list")
-
     # node[start+1] = identifier = name
-    # TODO - check blank and override
     ident = nimState.newTypeIdent(node[start+1])
     name = $ident[0][1]
 
     # node[start+1] could have nested pointers
     tcount = node[start+1].getPtrCount()
+
+    # node[start] = identifier = return type name
+    (rname, _, rinfo) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
+
+    # Parameter list
+    plist = node[start+1].anyChildInTree("parameter_list")
 
     procDef = newNode(nkProcDef)
 
@@ -1036,7 +1069,7 @@ proc setupPragmas(nimState: NimState, root: TSNode, fullpath: string) =
 
   if nimState.includeHeader():
     nimState.constSection.add nimState.newConstDef(
-      root, name = nimState.currentHeader, val = fullpath)
+      root, fname = nimState.currentHeader, fval = fullpath)
 
     nimState.addPragma(root, impPragma, "header", newStrNode(nkStrLit, nimState.currentHeader))
 

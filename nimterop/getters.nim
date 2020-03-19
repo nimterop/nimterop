@@ -437,30 +437,31 @@ proc getLineInfo*(nimState: NimState, node: TSNode): TLineInfo =
   result = newLineInfo(nimState.config, nimState.sourceFile.AbsoluteFile, line, col)
 
 proc getIdent*(nimState: NimState, name: string, info: TLineInfo, exported = true): PNode =
-  # Get ident PNode for name + info
-  let
-    exp = getIdent(nimState.identCache, "*")
-    ident = getIdent(nimState.identCache, name)
+  if name.nBl:
+    # Get ident PNode for name + info
+    let
+      exp = getIdent(nimState.identCache, "*")
+      ident = getIdent(nimState.identCache, name)
 
-  if exported:
-    result = newNode(nkPostfix)
-    result.add newIdentNode(exp, info)
-    result.add newIdentNode(ident, info)
-  else:
-    result = newIdentNode(ident, info)
+    if exported:
+      result = newNode(nkPostfix)
+      result.add newIdentNode(exp, info)
+      result.add newIdentNode(ident, info)
+    else:
+      result = newIdentNode(ident, info)
 
 proc getIdent*(nimState: NimState, name: string): PNode =
   nimState.getIdent(name, nimState.getDefaultLineInfo(), exported = false)
 
 proc getNameInfo*(nimState: NimState, node: TSNode, kind: NimSymKind, parent = ""):
-  tuple[name: string, info: TLineInfo] =
+  tuple[name, origname: string, info: TLineInfo] =
   # Shortcut to get identifier name and info (node value and line:col)
-  let
-    name = nimState.getNodeVal(node)
-  result.name = nimState.getIdentifier(name, kind, parent)
-  if kind == nskType:
-    result.name = result.name.getType()
-  result.info = nimState.getLineInfo(node)
+  result.origname = nimState.getNodeVal(node)
+  result.name = nimState.getIdentifier(result.origname, kind, parent)
+  if result.name.nBl:
+    if kind == nskType:
+      result.name = result.name.getType()
+    result.info = nimState.getLineInfo(node)
 
 proc getCurrentHeader*(fullpath: string): string =
   ("header" & fullpath.splitFile().name.multiReplace([(".", ""), ("-", "")]))
