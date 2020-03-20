@@ -120,7 +120,8 @@ when not declared(CIMPORT):
       gState.outputHandle.writeLine(args)
 
   template necho*(args: string) {.dirty.} =
-    let gState = nimState.gState
+    when not declared(gState):
+      let gState = nimState.gState
     gecho args
 
   template decho*(str: untyped): untyped =

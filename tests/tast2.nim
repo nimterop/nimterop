@@ -5,6 +5,13 @@ import nimterop/[cimport]
 static:
   cDebug()
 
+cOverride:
+  const
+    A* = 2
+
+  type
+    A1* = A0
+
 cImport("include/tast2.h", flags="-d -f:ast2")
 
 proc testFields(t: typedesc, fields: Table[string, string] = initTable[string, string]()) =
@@ -18,7 +25,7 @@ proc testFields(t: typedesc, fields: Table[string, string] = initTable[string, s
       "typeof(" & $t & ":" & name & ") != " & fields[name] & ", is " & $typeof(value)
   assert count == fields.len, "Failed for " & $t
 
-assert A == 1
+assert A == 2
 assert B == 1.0
 assert C == 0x10
 assert D == "hello"
@@ -26,7 +33,7 @@ assert E == 'c'
 
 assert A0 is object
 testFields(A0)
-assert A1 is object
+assert A1 is A0
 testFields(A1)
 assert A2 is object
 testFields(A2)
@@ -44,6 +51,7 @@ assert A9p is array[3, cstring]
 #assert A9 is array[4, cchar]
 assert A10 is array[3, array[6, cstring]]
 assert A11 is ptr array[3, cstring]
+assert A111 is array[12, ptr A1]
 
 assert A12 is proc(a1: cint, b: cint, c: ptr cint, a4: ptr cint, count: array[4, ptr cint], `func`: proc(a1: cint, a2: cint): cint): ptr ptr cint
 assert A13 is proc(a1: cint, a2: cint): cint
