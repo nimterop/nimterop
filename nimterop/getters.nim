@@ -427,7 +427,7 @@ proc printDebug*(nimState: NimState, pnode: PNode) =
 # Compiler shortcuts
 
 proc getDefaultLineInfo*(nimState: NimState): TLineInfo =
-  result = newLineInfo(nimState.config, nimState.sourceFile.AbsoluteFile, -1, -1)
+  result = newLineInfo(nimState.config, nimState.sourceFile.AbsoluteFile, 0, 0)
 
 proc getLineInfo*(nimState: NimState, node: TSNode): TLineInfo =
   # Get Nim equivalent line:col info from node
