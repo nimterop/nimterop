@@ -32,9 +32,9 @@ assert D == "hello"
 assert E == 'c'
 
 assert A0 is object
-testFields(A0)
+testFields(A0, {"f1": "cint"}.toTable())
 assert A1 is A0
-testFields(A1)
+testFields(A1, {"f1": "cint"}.toTable())
 assert A2 is object
 testFields(A2)
 assert A3 is object

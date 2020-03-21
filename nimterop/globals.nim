@@ -69,6 +69,7 @@ type
     outputHandle*: File
 
   NimState {.used.} = ref object
+    # All symbols that have been declared so far indexed by nimName
     identifiers*: TableRef[string, string]
 
     # Legacy ast fields, remove when ast2 becomes default
@@ -82,6 +83,9 @@ type
       identCache*: IdentCache
       config*: ConfigRef
       graph*: ModuleGraph
+
+      # Craeted symbols to generated AST - forward declaration tracking
+      identifierNodes*: TableRef[string, PNode]
 
     gState*: State
 

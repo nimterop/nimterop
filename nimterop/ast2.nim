@@ -252,6 +252,8 @@ proc newTypeIdent(nimState: NimState, node: TSNode, fname = "", union = false): 
     result = newNode(nkTypeDef)
     result.add prident
     result.add newNode(nkEmpty)
+    
+    nimState.identifierNodes[name] = result
   else:
     necho &"# type '{origname}' is duplicate, skipped"
 
@@ -520,6 +522,24 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
     nimState.typeSection.add typeDef
 
     nimState.printDebug(typeDef)
+  else:
+    # Forward declaration case
+    let
+      fdlist = node.anyChildInTree("field_declaration_list")
+    if not fdlist.isNil and fdlist.len > 0:
+      # Current node has fields
+      let
+        name = nimState.getNodeVal(node.getAtom())
+
+      if nimState.identifierNodes.hasKey(name):
+        let
+          def = nimState.identifierNodes[name]
+        # Duplicate nkTypeDef for `name` with empty fields
+        if def.kind == nkTypeDef and def.len == 3 and
+          def[2].kind == nkObjectTy and def[2].len == 3 and
+          def[2][2].kind == nkEmpty:
+            # Add fields to existing object
+            def[2][2] = nimState.newRecListTree(name, fdlist)
 
 proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
   # Add a type of a specified type
@@ -1135,6 +1155,7 @@ proc printNim*(gState: State, fullpath: string, root: TSNode) =
     fp = fullpath.replace("\\", "/")
 
   nimState.identifiers = newTable[string, string]()
+  nimState.identifierNodes = newTable[string, PNode]()
 
   nimState.gState = gState
   nimState.currentHeader = getCurrentHeader(fullpath)
