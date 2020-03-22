@@ -35,10 +35,6 @@ when defined(posix):
     testCall(cmd & " -d:zlibStd" & zrcmd, zexp, 0)
     testCall(cmd & " -d:zlibStd -d:zlibStatic" & zrcmd, zexp, 0)
 
-  # git
-  testCall(cmd & " -d:lzmaGit" & lrcmd, lexp, 0)
-  testCall(cmd & " -d:lzmaGit -d:lzmaStatic" & lrcmd, lexp, 0, delete = false)
-
   # git tag
   testCall(cmd & " -d:lzmaGit -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0)
   testCall(cmd & " -d:lzmaGit -d:lzmaStatic -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0, delete = false)
