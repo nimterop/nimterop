@@ -41,7 +41,7 @@ cOverride:
   proc weirdfunc(apple: ptr ptr ptr cchar): int {.importc.}
   proc weirdfunc2(mango: ptr ptr cchar): int {.importc.}
 
-cImport cSearchPath "test.h"
+cImport(cSearchPath("test.h"))
 
 check TEST_INT == 512
 check TEST_FLOAT == 5.12

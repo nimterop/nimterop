@@ -453,6 +453,14 @@ proc getIdent*(nimState: NimState, name: string, info: TLineInfo, exported = tru
 proc getIdent*(nimState: NimState, name: string): PNode =
   nimState.getIdent(name, nimState.getDefaultLineInfo(), exported = false)
 
+proc getIdentName*(node: PNode): string =
+  if not node.isNil:
+    for i in 0 ..< node.len:
+      if node[i].kind == nkIdent and $node[i] != "*":
+        result = $node[i]
+    if result.Bl and node.len > 0:
+      result = node[0].getIdentName()
+
 proc getNameInfo*(nimState: NimState, node: TSNode, kind: NimSymKind, parent = ""):
   tuple[name, origname: string, info: TLineInfo] =
   # Shortcut to get identifier name and info (node value and line:col)

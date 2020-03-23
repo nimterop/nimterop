@@ -81,14 +81,15 @@ proc newConstDef(nimState: NimState, node: TSNode, fname = "", fval = ""): PNode
   #
   # If `fname` or `fval` are set, use them as name and val
   let
-    # node[0] = identifier = const name
-    (cname, origname, info) = nimState.getNameInfo(node.getAtom(), nskConst)
-    
-    name =
+    origname =
       if fname.nBl:
         fname
       else:
-        cname
+        # node[0] = identifier = const name
+        nimState.getNodeVal(node.getAtom())
+    
+    name = nimState.getIdentifier(origname, nskConst)
+    info = nimState.getLineInfo(node)
     ident = nimState.getIdent(name, info)
 
     # node[1] = preproc_arg = value
@@ -144,7 +145,7 @@ proc addConst(nimState: NimState, node: TSNode) =
     if not constDef.isNil:
       # nkConstSection.add
       nimState.constSection.add constDef
-      nimState.constIdentifiers.incl $constDef[0][1]
+      nimState.constIdentifiers.incl constDef.getIdentName()
 
       nimState.printDebug(constDef)
 
@@ -259,9 +260,9 @@ proc newPtrTree(nimState: NimState, count: int, typ: PNode): PNode =
   # Create nkPtrTy tree depending on count
   #
   # Reduce by 1 if Nim type available for ptr X - e.g. ptr cchar = cstring
+  result = typ
   var
     count = count
-    chng = false
   if typ.kind == nkIdent:
     let
       tname = typ.ident.s
@@ -269,7 +270,6 @@ proc newPtrTree(nimState: NimState, count: int, typ: PNode): PNode =
     if tname != ptname:
       # If Nim type available, use that ident
       result = nimState.getIdent(ptname, typ.info, exported = false)
-      chng = true
       # One ptr reduced
       count -= 1
   if count > 0:
@@ -282,18 +282,16 @@ proc newPtrTree(nimState: NimState, count: int, typ: PNode): PNode =
     #    typ
     #  )
     # )
-    result = newNode(nkPtrTy)
     var
-      parent = result
+      nresult = newNode(nkPtrTy)
+      parent = nresult
       child: PNode
     for i in 1 ..< count:
       child = newNode(nkPtrTy)
       parent.add child
       parent = child
-    parent.add typ
-  elif not chng:
-    # Either no ptr, or none left after Nim type adjustment
-    result = typ
+    parent.add result
+    result = nresult
 
 proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode): PNode =
   # Create nkBracketExpr tree depending on input
@@ -501,7 +499,7 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
     #  )
     # )
     let
-      name = $typeDef[0][1]
+      name = typeDef.getIdentName()
       obj = newNode(nkObjectTy)
     obj.add newNode(nkEmpty)
     obj.add newNode(nkEmpty)
@@ -555,7 +553,7 @@ proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
     
     if not typeDef.isNil:
       let
-        name = $typeDef[0][1]
+        name = typeDef.getIdentName()
 
         # node[start] = identifier = type name
         (tname0, _, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
@@ -573,7 +571,7 @@ proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
         count = node[i].getPtrCount()
 
       # Skip typedef X X;
-      if $typeDef[0][1] != tname:
+      if name != tname:
         if count > 0:
           # If pointers
           typeDef.add nimState.newPtrTree(count, ident)
@@ -661,7 +659,7 @@ proc addTypeArray(nimState: NimState, node: TSNode) =
 
   if not typeDef.isNil:
     let
-      name = $typeDef[0][1]
+      name = typeDef.getIdentName()
       typ = nimState.getTypeArray(node, name)
 
     typeDef.add typ
@@ -737,7 +735,7 @@ proc addTypeProc(nimState: NimState, node: TSNode) =
 
   if not typeDef.isNil:
     let
-      name = $typeDef[0][1]
+      name = typeDef.getIdentName()
 
       procTy = nimState.getTypeProc(name, node)
 
@@ -1064,7 +1062,7 @@ proc addProc(nimState: NimState, node: TSNode) =
     let
       # Only need the ident tree, not nkTypeDef parent
       ident = tident[0]
-      name = $tident[0][1]
+      name = tident.getIdentName()
 
       # node[start+1] could have nested pointers
       tcount = node[start+1].getPtrCount()
@@ -1197,7 +1195,7 @@ proc setupPragmas(nimState: NimState, root: TSNode, fullpath: string) =
 
   if nimState.includeHeader():
     nimState.constSection.add nimState.newConstDef(
-      root, fname = nimState.currentHeader, fval = fullpath)
+      root, fname = nimState.currentHeader, fval = '"' & fullpath & '"')
 
     nimState.addPragma(root, impPragma, "header", newStrNode(nkStrLit, nimState.currentHeader))
 
