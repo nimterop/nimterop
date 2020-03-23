@@ -596,7 +596,8 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
   if ast.children.len == 1 and ast.children[0].name == ".":
     return ast.children[0]
 
-proc getNimExpression*(nimState: NimState, expr: string): string =
+proc getNimExpression*(nimState: NimState, expr: string, name = ""): string =
+  # Convert C/C++ expression into Nim - cast identifiers to `name` if specified
   var
     clean = expr.multiReplace([("\n", " "), ("\r", "")])
     ident = ""
@@ -641,6 +642,8 @@ proc getNimExpression*(nimState: NimState, expr: string): string =
       # Process identifier
       if ident.nBl:
         ident = nimState.getIdentifier(ident, nskConst)
+        if name.nBl and ident in nimState.constIdentifiers:
+          ident = ident & "." & name
         result &= ident
         ident = ""
       result &= gen

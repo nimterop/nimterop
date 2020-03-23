@@ -98,10 +98,7 @@ proc newConstDef(nimState: NimState, node: TSNode, fname = "", fval = ""): PNode
       else:
         nimState.getNodeVal(node[1])
     valident =
-      if fval.nBl:
-        newStrNode(nkStrLit, fval)
-      else:
-        nimState.getLit(val)
+      nimState.getLit(val)
 
   if name.Bl:
     # Name skipped or overridden since blank
@@ -147,6 +144,7 @@ proc addConst(nimState: NimState, node: TSNode) =
     if not constDef.isNil:
       # nkConstSection.add
       nimState.constSection.add constDef
+      nimState.constIdentifiers.incl $constDef[0][1]
 
       nimState.printDebug(constDef)
 
@@ -977,6 +975,80 @@ proc addEnum(nimState: NimState, node: TSNode) =
   decho("addEnum()")
   nimState.printDebug(node)
 
+  let
+    enumlist = node.anyChildInTree("enumerator_list")
+  if not enumlist.isNil:
+    var
+      name, origname = ""
+      offset = 0
+      prev = ""
+
+    if node.getAtom().getName() == "type_identifier":
+      # [typedef] enum X {} Y;
+      # Use X as name
+      origname = nimState.getNodeVal(node.getAtom())
+    elif node.getName() == "type_definition" and node.len > 1:
+      # typedef enum {} Y;
+      # Use Y as name
+      origname = nimState.getNodeVal(node[1].getAtom())
+      offset = 1
+    
+    if origname.nBl:
+      name = nimState.getIdentifier(origname, nskType)
+    else:
+      # enum {};
+      # Nameless so create a name
+      name = nimState.getUniqueIdentifier("Enum")
+
+    if name.Bl:
+      # Name skipped or overridden since blank
+      let
+        eoverride = nimState.getOverrideOrSkip(node, origname, nskType)
+      if not eoverride.isNil:
+        nimState.typeSection.add eoverride
+    elif nimState.addNewIdentifer(name):
+      # Add enum definition and helpers
+      nimState.enumSection.add nimState.parseString(&"defineEnum({name})")
+
+      # Create const for fields
+      var
+        fnames: HashSet[string]
+      for i in 0 .. enumlist.len - 1:
+        let
+          en = enumlist[i]
+        if en.getName() == "comment":
+          continue
+        let
+          fname = nimState.getIdentifier(nimState.getNodeVal(en.getAtom()), nskEnumField)
+        if fname.nBl:
+          var
+            fval = ""
+          if prev.Bl:
+            # Starting default value
+            fval = &"(0).{name}"
+          else:
+            # One greater than previous
+            fval = &"({prev} + 1).{name}"
+
+          if en.len > 1 and en[1].getName() in gEnumVals:
+            # Explicit value
+            fval = "(" & nimState.getNimExpression(nimState.getNodeVal(en[1]), name) & ")." & name
+
+          # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
+          nimState.constSection.add nimState.parseString(&"const {fname}* = {fval}")[0][0]
+
+          fnames.incl fname
+
+          prev = fname
+
+      # Add fields to list of consts after processing enum so that we don't cast
+      # enum field to itself
+      nimState.constIdentifiers.incl fnames
+          
+      # Add other names
+      if node.getName() == "type_definition" and node.len > 1:
+        nimState.addTypeTyped(node, ftname = name, offset = offset)
+
 proc addProc(nimState: NimState, node: TSNode) =
   # Add a proc
   decho("addProc()")
@@ -1060,9 +1132,9 @@ proc processNode(nimState: NimState, node: TSNode): bool =
   of "preproc_def":
     nimState.addConst(node)
   of "type_definition":
-    if not node.firstChildInTree("enum_specifier").isNil():
+    if node.len > 0 and node[0].getName() == "enum_specifier":
       nimState.addEnum(node)
-    elif not node.firstChildInTree("union_specifier").isNil():
+    elif node.len > 0 and node[0].getName() == "union_specifier":
       nimState.addType(node, union = true)
     else:
       nimState.addType(node)

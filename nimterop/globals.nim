@@ -72,6 +72,9 @@ type
     # All symbols that have been declared so far indexed by nimName
     identifiers*: TableRef[string, string]
 
+    # All const names for enum casting
+    constIdentifiers*: HashSet[string]
+
     # Legacy ast fields, remove when ast2 becomes default
     constStr*, enumStr*, procStr*, typeStr*: string
 

@@ -12,7 +12,7 @@ cOverride:
   type
     A1* = A0
 
-cImport("include/tast2.h", flags="-d -f:ast2")
+cImport("include/tast2.h", flags="-d -f:ast2 -ENK_")
 
 proc testFields(t: typedesc, fields: Table[string, string] = initTable[string, string]()) =
   var
@@ -87,3 +87,20 @@ assert sizeof(U1) == sizeof(cfloat)
 
 assert U2 is object
 assert sizeof(U2) == 256 * sizeof(cint)
+
+assert PANEL_WINDOW == 1
+assert PANEL_GROUP == 2
+assert PANEL_POPUP == 4
+assert PANEL_CONTEXTUAL == 16
+assert PANEL_COMBO == 32
+assert PANEL_MENU == 64
+assert PANEL_TOOLTIP == 128
+assert PANEL_SET_NONBLOCK == 240
+assert PANEL_SET_POPUP == 244
+assert PANEL_SET_SUB == 246
+
+assert cmGray == 1000000
+assert pfGray16 == 1000011
+assert pfYUV422P8 == pfYUV420P8 + 1
+assert pfRGB27 == cmRGB.VSPresetFormat + 11
+assert pfCompatYUY2 == pfCompatBGR32 + 1
