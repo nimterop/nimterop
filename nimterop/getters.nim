@@ -174,6 +174,7 @@ proc addNewIdentifer*(nimState: NimState, name: string, override = false): bool 
 # Overrides related
 
 proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
+  # Get cOverride for identifier `name` of `kind` if defined
   doAssert name.nBl, "Blank identifier error"
 
   if nimState.gState.onSymbolOverride != nil:
@@ -190,12 +191,18 @@ proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
           result = result.replace(re"(?m)^(.*?)$", "  $1")
 
 proc getOverrideFinal*(nimState: NimState, kind: NimSymKind): string =
+  # Get all unused cOverride symbols of `kind`
   let
     typ = $kind
 
   if nimState.gState.onSymbolOverrideFinal != nil:
     for i in nimState.gState.onSymbolOverrideFinal(typ):
       result &= "\n" & nimState.getOverride(i, kind)
+
+proc getKeyword*(kind: NimSymKind): string =
+  # Convert `kind` into a Nim keyword
+  # cOverride procs already include `proc` keyword
+  result = ($kind).replace("nsk", "").toLowerAscii()
 
 # TSNode shortcuts
 

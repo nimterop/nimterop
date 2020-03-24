@@ -25,7 +25,7 @@ typedef char *(*A11)[3];
 typedef struct A1 *A111[12];
 
 typedef int **(*A12)(int, int b, int *c, int *, int *count[4], int (*func)(int, int));
-typedef int A13(int, int);
+typedef int A13(int, int, void (*func)(void));
 
 struct A14 { volatile char a1; };
 struct A15 { char *a1; const int *a2[1]; };

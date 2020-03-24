@@ -54,7 +54,7 @@ assert A11 is ptr array[3, cstring]
 assert A111 is array[12, ptr A1]
 
 assert A12 is proc(a1: cint, b: cint, c: ptr cint, a4: ptr cint, count: array[4, ptr cint], `func`: proc(a1: cint, a2: cint): cint): ptr ptr cint
-assert A13 is proc(a1: cint, a2: cint): cint
+assert A13 is proc(a1: cint, a2: cint, `func`: proc()): cint
 
 assert A14 is object
 testFields(A14, {"a1": "cchar"}.toTable())
