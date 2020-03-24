@@ -2,4 +2,4 @@ Symbol	plugin.html#Symbol	plugin: Symbol
 OnSymbol	plugin.html#OnSymbol	plugin: OnSymbol	
 OnSymbolOverrideFinal	plugin.html#OnSymbolOverrideFinal	plugin: OnSymbolOverrideFinal	
 cOverrides	plugin.html#cOverrides	plugin: cOverrides	
-onSymbolOverrideFinal	plugin.html#onSymbolOverrideFinal,string	plugin: onSymbolOverrideFinal(typ: string): HashSet[string]	
+onSymbolOverrideFinal	plugin.html#onSymbolOverrideFinal,string	plugin: onSymbolOverrideFinal(typ: string): StringHash	

@@ -1,3 +1,5 @@
+ast2	cimport.html#ast2	Feature.ast2	
+Feature	cimport.html#Feature	cimport: Feature	
 cOverride	cimport.html#cOverride.m	cimport: cOverride(body): untyped	
 cSkipSymbol	cimport.html#cSkipSymbol,seq[T][string]	cimport: cSkipSymbol(skips: seq[string])	
 cPlugin	cimport.html#cPlugin.m	cimport: cPlugin(body): untyped	
