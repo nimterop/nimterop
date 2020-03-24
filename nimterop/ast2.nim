@@ -192,8 +192,13 @@ proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, name: string, va
     colExpr.add value
     pragma.add colExpr
 
+proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, pragmas: seq[string]) =
+  # Add sequence of pragmas to an existing nkPragma tree
+  for name in pragmas:
+    nimState.addPragma(node, pragma, name)
+
 proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, pragmas: OrderedTable[string, PNode]) =
-  # Add pragmas to an existing nkPragma tree
+  # Add a table of name:value pragmas to an existing nkPragma tree
   for name, value in pragmas.pairs:
     nimState.addPragma(node, pragma, name, value)
 
@@ -212,7 +217,7 @@ proc newPragma(nimState: NimState, node: TSNode, name: string, value: PNode = ni
   result = newNode(nkPragma)
   nimState.addPragma(node, result, name, value)
 
-proc newPragma(nimState: NimState, node: TSNode, pragmas: OrderedTable[string, PNode]): PNode =
+proc newPragma(nimState: NimState, node: TSNode, pragmas: seq[string] | OrderedTable[string, PNode]): PNode =
   # Create nkPragma tree for multiple name:value
   result = newNode(nkPragma)
   nimState.addPragma(node, result, pragmas)
@@ -237,13 +242,13 @@ proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, name: string,
   result.add ident
   result.add nimState.newPragma(node, name, value)
 
-proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: OrderedTable[string, PNode]): PNode {.used.} =
+proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: seq[string] | OrderedTable[string, PNode]): PNode =
   # Create nkPragmaExpr tree for multiple name:value
   result = newNode(nkPragmaExpr)
   result.add ident
   result.add nimState.newPragma(node, pragmas)
 
-proc newTypeIdent(nimState: NimState, node: TSNode, fname = "", union = false): PNode =
+proc newTypeIdent(nimState: NimState, node: TSNode, fname = "", pragmas: seq[string] = @[]): PNode =
   # Create nkTypeDef PNode with first ident
   #
   # If `fname`, use it instead of node.getAtom() for name
@@ -258,8 +263,8 @@ proc newTypeIdent(nimState: NimState, node: TSNode, fname = "", union = false): 
     ident = nimState.getIdent(name, info)
 
     prident =
-      if union:
-        nimState.newPragmaExpr(node, ident, "union")
+      if pragmas.nBl and not ident.isNil:
+        nimState.newPragmaExpr(node, ident, pragmas)
       else:
         ident
 
@@ -509,9 +514,15 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
   # If `fname` is set, use it as the name when creating new PNode
   decho("addTypeObject()")
   let
+    pragmas =
+      if union:
+        @["union", "bycopy"]
+      else:
+        @["bycopy"]
+
     typeDef =
       if typeDef.isNil:
-        nimState.newTypeIdent(node, fname, union = union)
+        nimState.newTypeIdent(node, fname, pragmas)
       else:
         typeDef
 
@@ -545,6 +556,12 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
       obj.add newNode(nkEmpty)
 
     typeDef.add obj
+
+    # If typeDef was passed in, need to add pragmas if any
+    if pragmas.nBl and typeDef[0].kind != nkPragmaExpr:
+      let
+        npexpr = nimState.newPragmaExpr(node, typedef[0], pragmas)
+      typedef[0] = npexpr
 
     # nkTypeSection.add
     nimState.typeSection.add typeDef

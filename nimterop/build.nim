@@ -958,7 +958,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
     preBuild = newIdentNode(name & "PreBuild")
 
     # Regex for library search
-    lre = "(lib)?$1[_]?(static)?[0-9.\\-]*\\"
+    lre = "(lib)?$1[_-]?(static)?[0-9.\\-]*\\"
 
     # If -d:xxx set with setDefines()
     stdVal = gDefines.hasKey(stdStr)
