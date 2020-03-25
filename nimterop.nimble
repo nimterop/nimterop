@@ -37,6 +37,7 @@ task test, "Test":
   buildToastTask()
 
   execTest "tests/tast2.nim"
+  #execCmd "nim c -f -d:HEADER -r tests/tast2.nim"
 
   execTest "tests/tnimterop_c.nim"
   execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
