@@ -673,6 +673,8 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
     (c2nimout, ret) = execAction(cmd, cache = not gStateCT.nocache,
                                  cacheKey = getCacheValue(hpath))
 
+  doAssert ret == 0, "\n\nc2nim codegen limitation or error - " & c2nimout
+
   var
     nimout = &"const {header} = \"{fullpath}\"\n\n" & readFile(npath)
 

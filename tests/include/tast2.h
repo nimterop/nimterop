@@ -19,6 +19,10 @@ struct A0 {
   int f1;
 };
 
+struct A4 {
+  float f1;
+};
+
 typedef char *A9p[3]; //, A9[4];
 typedef char *A10[3][6];
 typedef char *(*A11)[3];
@@ -125,6 +129,10 @@ typedef void *A8;
 // Forward declaration
 struct A0 {
   int f1;
+};
+
+struct A4 {
+  float f1;
 };
 
 typedef char *A9p[3]; //, A9[4];

@@ -2,6 +2,8 @@ import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
 
+import regex
+
 proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
   if not noQuote:
@@ -83,7 +85,7 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
       else:
         # Execute command and store results in cache
         (result.output, result.ret) = gorgeEx(ccmd)
-        if result.ret == 0:
+        if result.ret == 0 or die == false:
           # mkdir for execCache dir (circular dependency)
           let dir = cacheFile.parentDir()
           if not dirExists(dir):
@@ -933,7 +935,8 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   ## Simply define `proc xxxPreBuild(outdir, header: string)` in the wrapper and it will get called
   ## prior to the build process.
   var
-    name = header.extractFilename().split(".")[0]
+    origname = header.extractFilename().split(".")[0]
+    name = origname.replace(re"[[:^alnum:]]", "")
 
     # -d:xxx for this header
     stdStr = name & "Std"
@@ -975,7 +978,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   if altNames.len != 0:
     lre = lre % ("(" & altNames.replace(",", "|") & ")")
   else:
-    lre = lre % name
+    lre = lre % origname
 
   result = newNimNode(nnkStmtList)
   result.add(quote do:

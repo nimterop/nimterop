@@ -5,8 +5,6 @@ author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
 
-# this gives Warning: Binary 'nimterop/toast' was already installed from source directory
-# when running `nimble install --verbose -y`
 bin = @["nimterop/toast"]
 installDirs = @["nimterop"]
 installFiles = @["config.nims"]
@@ -37,7 +35,7 @@ task test, "Test":
   buildToastTask()
 
   execTest "tests/tast2.nim"
-  #execCmd "nim c -f -d:HEADER -r tests/tast2.nim"
+  execCmd "nim c -f -d:HEADER -r tests/tast2.nim"
 
   execTest "tests/tnimterop_c.nim"
   execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
@@ -53,5 +51,6 @@ task test, "Test":
   # getHeader tests
   withDir("tests"):
     execCmd("nim e getheader.nims")
+    execCmd("nim e wrappers.nims")
 
   docsTask()

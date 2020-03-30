@@ -57,7 +57,7 @@ proc getOverrideOrSkip(nimState: NimState, node: TSNode, origname: string, kind:
   let
     # Get cleaned name for symbol, set parent so that cOverride is ignored
     name = nimState.getIdentifier(origname, kind, parent = "override")
-    
+
     override = nimState.getOverride(origname, kind)
 
   var
@@ -115,7 +115,7 @@ proc newConstDef(nimState: NimState, node: TSNode, fname = "", fval = ""): PNode
       else:
         # node[0] = identifier = const name
         nimState.getNodeVal(node.getAtom())
-    
+
     name = nimState.getIdentifier(origname, nskConst)
     info = nimState.getLineInfo(node)
     ident = nimState.getIdent(name, info)
@@ -182,7 +182,7 @@ proc addPragma(nimState: NimState, node: TSNode, pragma: PNode, name: string, va
   let
     pinfo = nimState.getLineInfo(node.getAtom())
     pident = nimState.getIdent(name, pinfo, exported = false)
-  
+
   if value.isNil:
     pragma.add pident
   else:
@@ -248,19 +248,28 @@ proc newPragmaExpr(nimState: NimState, node: TSNode, ident: PNode, pragmas: seq[
   result.add ident
   result.add nimState.newPragma(node, pragmas)
 
-proc newTypeIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", pragmas: seq[string] = @[]): PNode =
+proc newTypeIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", pragmas: seq[string] = @[], istype = false): PNode =
   # Create nkTypeDef PNode with first ident if `nskType` else just create an nkPostfix node for `nskProc`
   #
   # If `fname`, use it instead of node.getAtom() for name
   # If `pragmas`, add as nkPragmaExpr but only if `nskType` since procs add pragmas elsewhere
+  # If `istype` is set, this is a typedef, else struct/union so add {.importc: "struct/union X".} when includeHeader
   let
-    (tname, origname, info) = nimState.getNameInfo(node.getAtom(), kind)
+    (tname, torigname, info) = nimState.getNameInfo(node.getAtom(), kind)
 
-    name =
+    origname =
       if fname.nBl:
         fname
       else:
+        torigname
+
+    # Process name if forced, getNameInfo() already runs getIdentifier()
+    name =
+      if fname.nBl:
+        nimState.getIdentifier(fname, kind)
+      else:
         tname
+
     ident = nimState.getIdent(name, info)
 
   if name.Bl:
@@ -277,20 +286,39 @@ proc newTypeIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", 
       #  ),
       #  nkEmpty()
       # )
-      let
+      var
         pragmas =
-          if nimState.includeHeader and tname == origname:
-            # Need to add impShort
-            pragmas & nimState.impShort
+          if nimState.includeHeader:
+            # Need to add header and importc
+            if istype and name == origname:
+              # Need to add impShort since neither struct/union nor name change
+              pragmas & nimState.impShort
+            else:
+              # Add header shortcut, additional pragmas added later
+              pragmas & (nimState.impShort & "H")
           else:
             pragmas
 
         prident =
-          if pragmas.nBl and not ident.isNil:
+          if pragmas.nBl:
             nimState.newPragmaExpr(node, ident, pragmas)
           else:
             ident
-      
+
+      if nimState.includeHeader:
+        if not istype or name != origname:
+          # Add importc pragma since either struct/union or name changed
+          let
+            uors =
+              if not istype:
+                if "union" in pragmas:
+                  "union "
+                else:
+                  "struct "
+              else:
+                ""
+          nimState.addPragma(node, prident[1], "importc", newStrNode(nkStrLit, &"{uors}{origname}"))
+
       result = newNode(nkTypeDef)
       result.add prident
       result.add newNode(nkEmpty)
@@ -302,7 +330,7 @@ proc newTypeIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", 
       #  nkIdent(name)
       # )
       result = ident
-    
+
     nimState.identifierNodes[name] = result
   else:
     necho &"# $1 '{origname}' is duplicate, skipped" % getKeyword(kind)
@@ -525,24 +553,37 @@ proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
       if not field.isNil:
         result.add field
 
-proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname = "", union = false) =
+proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname = "", istype = false, union = false) =
   # Add a type of object
   #
   # If `typeDef` is set, use it instead of creating new PNode
   # If `fname` is set, use it as the name when creating new PNode
+  # If `istype` is set, this is a typedef, else struct/union
   decho("addTypeObject()")
   let
-    pragmas =
-      if union:
-        @["union", "bycopy"]
+    # Object has fields or not
+    fdlist = node.anyChildInTree("field_declaration_list")
+
+    pragmas = block:
+      var pragmas =
+        if union:
+          @["union"]
+        else:
+          @[]
+      if not fdlist.isNil and fdlist.len > 0:
+        # Object with fields should be bycopy
+        pragmas.add "bycopy"
       else:
-        @["bycopy"]
+        # Incomplete, might get forward declared
+        pragmas.add "incompleteStruct"
+
+      pragmas
 
     typeDefExisting = not typeDef.isNil
 
     typeDef =
       if typeDef.isNil:
-        nimState.newTypeIdent(node, fname = fname, pragmas = pragmas)
+        nimState.newTypeIdent(node, fname = fname, pragmas = pragmas, istype = istype)
       else:
         typeDef
 
@@ -567,8 +608,6 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
     obj.add newNode(nkEmpty)
     obj.add newNode(nkEmpty)
 
-    let
-      fdlist = node.anyChildInTree("field_declaration_list")
     if not fdlist.isNil and fdlist.len > 0:
       # Add fields to object if present
       obj.add nimState.newRecListTree(name, fdlist)
@@ -580,11 +619,11 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
     # If typeDef was passed in, need to add pragmas if any
     if pragmas.nBl and typeDefExisting:
       if typeDef[0].kind != nkPragmaExpr:
-        # includeHeader already added impShort
         let
           npexpr = nimState.newPragmaExpr(node, typedef[0], pragmas)
         typedef[0] = npexpr
       else:
+        # includeHeader already added impShort in newTypeIdent()
         nimState.addPragma(node, typeDef[0][1], pragmas)
 
     # nkTypeSection.add
@@ -610,6 +649,18 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
             # Add fields to existing object
             def[2][2] = nimState.newRecListTree(name, fdlist)
 
+            # Change incompleteStruct to bycopy pragma
+            if def[0].kind == nkPragmaExpr and def[0].len == 2 and
+              def[0][1].kind == nkPragma and def[0][1].len > 0:
+                for i in 0 ..< def[0][1].len:
+                  if $def[0][1][i] == "incompleteStruct":
+                    def[0][1][i] = nimState.getIdent(
+                      "bycopy", nimState.getLineInfo(node.getAtom()),
+                      exported = false
+                    )
+
+            nimState.printDebug(def)
+
 proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
   # Add a type of a specified type
   #
@@ -622,8 +673,8 @@ proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
     # Add a type of a specific type
     let
       # node[i] = identifer = name
-      typeDef = nimState.newTypeIdent(node[i])
-    
+      typeDef = nimState.newTypeIdent(node[i], istype = true)
+
     if not typeDef.isNil:
       let
         name = typeDef.getIdentName()
@@ -669,7 +720,7 @@ proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
 
         nimState.printDebug(typeDef)
       else:
-        nimState.addTypeObject(node, typeDef = typeDef)
+        nimState.addTypeObject(node, typeDef = typeDef, istype = true)
 
 proc getTypeArray(nimState: NimState, node: TSNode, name: string): PNode =
   # Create array type tree
@@ -728,7 +779,7 @@ proc addTypeArray(nimState: NimState, node: TSNode) =
   decho("addTypeArray()")
   let
     # node[1] = identifer = name
-    typeDef = nimState.newTypeIdent(node[1])
+    typeDef = nimState.newTypeIdent(node[1], istype = true)
 
   if not typeDef.isNil:
     let
@@ -809,7 +860,7 @@ proc addTypeProc(nimState: NimState, node: TSNode) =
   decho("addTypeProc()")
   let
     # node[1] = identifier = name
-    typeDef = nimState.newTypeIdent(node[1])
+    typeDef = nimState.newTypeIdent(node[1], istype = true)
 
   if not typeDef.isNil:
     let
@@ -1018,7 +1069,7 @@ proc addType(nimState: NimState, node: TSNode, union = false) =
 
             # First add struct as object
             decho("addType(): case 6")
-            nimState.addTypeObject(node[0], union = union)
+            nimState.addTypeObject(node[0], istype = true, union = union)
 
             if node.len > 1 and nimState.getNodeVal(node[1]) != "":
               # Add any additional names
@@ -1041,7 +1092,7 @@ proc addType(nimState: NimState, node: TSNode, union = false) =
                 name
 
             # Now add struct as object with specified name
-            nimState.addTypeObject(node[0], fname = name, union = union)
+            nimState.addTypeObject(node[0], fname = name, istype = true, union = union)
 
             if name.nBl:
               # Add any additional names
@@ -1068,7 +1119,7 @@ proc addEnum(nimState: NimState, node: TSNode) =
       # Use Y as name
       origname = nimState.getNodeVal(node[1].getAtom())
       offset = 1
-    
+
     if origname.nBl:
       name = nimState.getIdentifier(origname, nskType)
     else:
@@ -1120,7 +1171,7 @@ proc addEnum(nimState: NimState, node: TSNode) =
       # Add fields to list of consts after processing enum so that we don't cast
       # enum field to itself
       nimState.constIdentifiers.incl fnames
-          
+
       # Add other names
       if node.getName() == "type_definition" and node.len > 1:
         nimState.addTypeTyped(node, ftname = name, offset = offset)
@@ -1137,7 +1188,7 @@ proc addProc(nimState: NimState, node: TSNode) =
     let
       # node[i] = identifier = name
       ident = nimState.newTypeIdent(node[i], kind = nskProc)
-  
+
     if not ident.isNil:
       let
         # Only need the ident tree, not nkTypeDef parent
@@ -1270,10 +1321,13 @@ proc searchTree(nimState: NimState, root: TSNode) =
       break
 
 proc setupPragmas(nimState: NimState, root: TSNode, fullpath: string) =
+  # Create shortcut pragmas to reduce clutter
   var
+    hdrPragma: PNode
     impPragma = newNode(nkPragma)
     impCPragma = newNode(nkPragma)
 
+  # {.importc.}
   nimState.addPragma(root, impPragma, "pragma", nimState.getIdent(nimState.impShort))
   nimState.addPragma(root, impPragma, "importc")
 
@@ -1281,19 +1335,29 @@ proc setupPragmas(nimState: NimState, root: TSNode, fullpath: string) =
     nimState.constSection.add nimState.newConstDef(
       root, fname = nimState.currentHeader, fval = '"' & fullpath & '"')
 
-    nimState.addPragma(root, impPragma, "header", nimState.getIdent(nimState.currentHeader))
+    # {.header: "xxx".}
+    hdrPragma = nimState.newPragma(root, "pragma", nimState.getIdent(nimState.impShort & "H"))
+    nimState.addPragma(root, hdrPragma, "header", nimState.getIdent(nimState.currentHeader))
 
+    nimState.addPragma(root, impPragma, nimState.impShort & "H")
+
+  # {.importc.} + {.cdecl.} for procs
   nimState.addPragma(root, impCPragma, "pragma", nimState.getIdent(nimState.impShort & "C"))
   nimState.addPragma(root, impCPragma, nimState.impShort)
   nimState.addPragma(root, impCPragma, "cdecl")
 
   if nimState.gState.dynlib.nBl:
+    # {.dynlib.} for DLLs
     nimState.addPragma(root, impCPragma, "dynlib", nimState.getIdent(nimState.gState.dynlib))
 
+  # Add all pragma shortcuts to output
+  if not hdrPragma.isNil:
+    nimState.pragmaSection.add hdrPragma
   nimState.pragmaSection.add impPragma
   nimState.pragmaSection.add impCPragma
 
 proc printNimHeader*(gState: State) =
+  # Top level output with context info
   gecho """# Generated at $1
 # Command line:
 #   $2 $3
@@ -1304,13 +1368,16 @@ import nimterop/types
 """ % [$now(), getAppFilename(), commandLineParams().join(" ")]
 
 proc printNim*(gState: State, fullpath: string, root: TSNode) =
+  # Generate Nim from tree-sitter AST root node
   let
     nimState = new(NimState)
     fp = fullpath.replace("\\", "/")
 
+  # Track identifiers already rendered and corresponding PNodes
   nimState.identifiers = newTable[string, string]()
   nimState.identifierNodes = newTable[string, PNode]()
 
+  # toast objects
   nimState.gState = gState
   nimState.currentHeader = getCurrentHeader(fullpath)
   nimState.impShort = nimState.currentHeader.replace("header", "imp")
@@ -1321,18 +1388,23 @@ proc printNim*(gState: State, fullpath: string, root: TSNode) =
   nimState.config = newConfigRef()
   nimstate.graph = newModuleGraph(nimState.identCache, nimState.config)
 
+  # Initialize all section PNodes
   nimState.pragmaSection = newNode(nkStmtList)
   nimState.constSection = newNode(nkConstSection)
   nimState.enumSection = newNode(nkStmtList)
   nimState.procSection = newNode(nkStmtList)
   nimState.typeSection = newNode(nkTypeSection)
 
+  # Setup pragmas
   nimState.setupPragmas(root, fp)
 
+  # Search root node and render Nim
   nimState.searchTree(root)
 
+  # Add any unused cOverride symbols to output
   nimState.addAllOverrideFinal()
 
+  # Create output to Nim using Nim compiler renderer
   var
     tree = newNode(nkStmtList)
   tree.add nimState.enumSection
