@@ -51,6 +51,7 @@ task test, "Test":
   # getHeader tests
   withDir("tests"):
     execCmd("nim e getheader.nims")
-    execCmd("nim e wrappers.nims")
+    if not existsEnv("APPVEYOR"):
+      execCmd("nim e wrappers.nims")
 
   docsTask()
