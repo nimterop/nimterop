@@ -12,7 +12,7 @@ when defined(HEADER):
   cDefine("HEADER")
   const
     flags = " -H -d"
-    pHeader = @["header:" & path]
+    pHeader = @["header:" & path.replace("\\", "/")]
     pHeaderImp = @["importc"] & pHeader
 else:
   const
