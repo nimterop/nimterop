@@ -2,7 +2,7 @@ import macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
-import compiler/[ast, idents, modulegraphs, options, parser, renderer]
+import compiler/[ast, idents, lineinfos, modulegraphs, options, parser, renderer]
 
 import "."/treesitter/api
 
@@ -17,9 +17,19 @@ proc getPtrType*(str: string): string =
     else:
       str
 
+proc handleError*(conf: ConfigRef, info: TLineInfo, msg: TMsgKind, arg: string) =
+  # Raise exception in parseString() instead of exiting
+  raise newException(Exception, "")
+
 proc parseString(nimState: NimState, str: string): PNode =
-  # Parse a string into Nim AST
-  result = parseString(str, nimState.identCache, nimState.config)
+  # Parse a string into Nim AST - use custom error handler that raises
+  # an exception rather than exiting on failure
+  try:
+    result = parseString(
+      str, nimState.identCache, nimState.config, errorHandler = handleError
+    )
+  except:
+    discard
 
 proc getLit*(nimState: NimState, str: string): PNode =
   # Used to convert #define literals into const and expressions
@@ -33,9 +43,8 @@ proc getLit*(nimState: NimState, str: string): PNode =
   elif str.contains(re"^[\-]?[\d]*[.]?[\d]+$"):   # float
     result = newFloatNode(nkFloatLit, parseFloat(str))
 
-  # # TODO - hex becomes int on render
-  # elif str.contains(re"^0x[\da-fA-F]+$"):         # hexadecimal
-  #   result = newIntNode(nkIntLit, parseHexInt(str))
+  elif str.contains(re"^0x[\da-fA-F]+$"):         # hexadecimal
+    result = nimState.parseString(str)
 
   elif str.contains(re"^'[[:ascii:]]'$"):         # char
     result = newNode(nkCharLit)
@@ -46,8 +55,9 @@ proc getLit*(nimState: NimState, str: string): PNode =
 
   else:
     result = nimState.parseString(nimState.getNimExpression(str))
-    if result.isNil:
-      result = newNode(nkNilLit)
+
+  if result.isNil:
+    result = newNode(nkNilLit)
 
 proc getOverrideOrSkip(nimState: NimState, node: TSNode, origname: string, kind: NimSymKind): PNode =
   # Check if symbol `origname` of `kind` and `origname` has any cOverride defined
@@ -132,7 +142,9 @@ proc newConstDef(nimState: NimState, node: TSNode, fname = "", fval = ""): PNode
   if name.Bl:
     # Name skipped or overridden since blank
     result = nimState.getOverrideOrSkip(node, origname, nskConst)
-  elif valident.kind != nkNilLit:
+  elif valident.kind in {nkCharLit .. nkStrLit} or
+    (valident.kind == nkStmtList and valident.len > 0 and
+    valident[0].kind in {nkCharLit .. nkStrLit}):
     if nimState.addNewIdentifer(name):
       # const X* = Y
       #
@@ -147,7 +159,11 @@ proc newConstDef(nimState: NimState, node: TSNode, fname = "", fval = ""): PNode
       result = newNode(nkConstDef)
       result.add ident
       result.add newNode(nkEmpty)
-      result.add valident
+      if valident.kind == nkStmtList and valident.len == 1:
+        # Collapse single line statement
+        result.add valident[0]
+      else:
+        result.add valident
     else:
       necho &"# const '{origname}' is duplicate, skipped"
   else:
@@ -576,11 +592,12 @@ proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
     result = newNode(nkRecList)
 
     for i in 0 ..< node.len:
-      # Add nkIdentDefs for each field
-      let
-        field = nimState.newIdentDefs(name, node[i], i, exported = true)
-      if not field.isNil:
-        result.add field
+      if node[i].getName() == "field_declaration":
+        # Add nkIdentDefs for each field
+        let
+          field = nimState.newIdentDefs(name, node[i], i, exported = true)
+        if not field.isNil:
+          result.add field
 
 proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname = "", istype = false, union = false) =
   # Add a type of object
