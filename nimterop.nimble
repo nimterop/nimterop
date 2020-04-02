@@ -19,14 +19,17 @@ proc execCmd(cmd: string) =
   exec cmd
 
 proc execTest(test: string, flags = "") =
-  execCmd "nim c -f " & flags & " -r " & test
-  execCmd "nim cpp " & flags & " -r " & test
+  execCmd "nim c --hints:off -f " & flags & " -r " & test
+  execCmd "nim cpp --hints:off " & flags & " -r " & test
 
 task buildToast, "build toast":
-  execCmd("nim c -f nimterop/toast.nim")
+  execCmd("nim c --hints:off -f nimterop/toast.nim")
 
 task bt, "build toast":
-  execCmd("nim c -d:danger nimterop/toast.nim")
+  execCmd("nim c --hints:off -d:danger nimterop/toast.nim")
+
+task btd, "build toast":
+  execCmd("nim c --hints:off nimterop/toast.nim")
 
 task docs, "Generate docs":
   buildDocs(@["nimterop/all.nim"], "build/htmldocs")
@@ -38,13 +41,16 @@ task test, "Test":
   execTest "tests/tast2.nim", "-d:HEADER"
 
   execTest "tests/tnimterop_c.nim"
-  execTest "tests/tnimterop_c.nim", "-d:AST2"
-  execTest "tests/tnimterop_c.nim", "-d:HEADER -d:AST2"
+  execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2\""
+  execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2 -H\""
 
-  execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
+  execCmd "nim cpp --hints:off -f -r tests/tnimterop_cpp.nim"
   execCmd "./nimterop/toast -pnk -E=_ tests/include/toast.h"
   execCmd "./nimterop/toast -pnk -E=_ -f:ast2 tests/include/toast.h"
+
   execTest "tests/tpcre.nim"
+  #execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
+  #execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2 -H\""
 
   # Platform specific tests
   when defined(Windows):
