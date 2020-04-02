@@ -286,6 +286,24 @@ proc newTypeIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", 
       #  ),
       #  nkEmpty()
       # )
+      #
+      # type name* {.bycopy, importc: "abc".} =
+      #
+      # nkTypeDef(
+      #  nkPragmaExpr(
+      #   nkPostfix(
+      #    nkIdent("*"),
+      #    nkIdent(name)
+      #   ),
+      #   nkPragma(
+      #    nkIdent("bycopy"),
+      #    nkExprColonExpr(
+      #     nkIdent("importc"),
+      #     nkStrLit("abc")
+      #    )
+      #   )
+      #  )
+      # )
       var
         pragmas =
           if nimState.includeHeader:
@@ -329,6 +347,8 @@ proc newTypeIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", 
       #  nkIdent("*"),
       #  nkIdent(name)
       # )
+      #
+      # No pragmas here since proc pragmas are elsewhere in the AST
       result = ident
 
     nimState.identifierNodes[name] = result
@@ -465,8 +485,17 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
           (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
           pident = nimState.getIdent(pname, pinfo, exported)
 
+          # Bitfield support - typedef struct { int field: 1; };
+          prident =
+            if node.len > start+1 and node[start+2].getName() == "bitfield_clause":
+              nimState.newPragmaExpr(node, pident, "bitsize",
+                newIntNode(nkIntLit, parseInt(nimState.getNodeVal(node[start+2].getAtom()))))
+            else:
+              pident
+
           count = node[start+1].getPtrCount()
-        result.add pident
+
+        result.add prident
         if count > 0:
           result.add nimState.newPtrTree(count, tident)
         else:
@@ -527,11 +556,11 @@ proc newProcTy(nimState: NimState, name: string, node: TSNode, rtyp: PNode): PNo
   #    ..
   #   )
   #  ),
-  #  nkEmpty()
+  #  nkPragma(...)
   # )
   result = newNode(nkProcTy)
   result.add nimState.newFormalParams(name, node, rtyp)
-  result.add newNode(nkEmpty)
+  result.add nimState.newPragma(node, nimState.gState.convention)
 
 proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
   # Create nkRecList tree for specified object
@@ -600,6 +629,37 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
     #   nkEmpty(),
     #   nkEmpty(),
     #   nkEmpty()
+    #  )
+    # )
+    #
+    # type
+    #   X* {.bycopy.} = object
+    #     field1*: cint
+    #
+    # nkTypeDef(
+    #  nkPragmaExpr(
+    #   nkPostfix(
+    #    nkIdent("*"),
+    #    nkIdent("X")
+    #   ),
+    #   nkPragma(
+    #    nkIdent("bycopy")
+    #   )
+    #  ),
+    #  nkEmpty(),
+    #  nkObjectTy(
+    #   nkEmpty(),
+    #   nkEmpty(),
+    #   nkRecList(
+    #    nkIdentDefs(
+    #     nkPostfix(
+    #      nkIdent("*"),
+    #      nkIdent("field1")
+    #     ),
+    #     nkIdent("cint"),
+    #     nkEmpty()
+    #    )
+    #   )
     #  )
     # )
     let
@@ -893,7 +953,7 @@ proc addTypeProc(nimState: NimState, node: TSNode) =
     #     ),
     #     ...
     #    ),
-    #    nkEmpty()
+    #    nkPragma(...)
     #   )
     #  )
     # )
@@ -1069,7 +1129,7 @@ proc addType(nimState: NimState, node: TSNode, union = false) =
 
             # First add struct as object
             decho("addType(): case 6")
-            nimState.addTypeObject(node[0], istype = true, union = union)
+            nimState.addTypeObject(node[0], union = union)
 
             if node.len > 1 and nimState.getNodeVal(node[1]) != "":
               # Add any additional names
@@ -1193,6 +1253,7 @@ proc addProc(nimState: NimState, node: TSNode) =
       let
         # Only need the ident tree, not nkTypeDef parent
         name = ident.getIdentName()
+        origname = nimState.getNodeVal(node[i].getAtom())
 
         # node[i] could have nested pointers
         tcount = node[i].getPtrCount()
@@ -1249,7 +1310,27 @@ proc addProc(nimState: NimState, node: TSNode) =
 
       # Proc with return type and params
       procDef.add nimState.newFormalParams(name, plist, retType)
-      procDef.add newNode(nkEmpty) # Pragmas
+
+      # Pragmas
+      let
+        prident =
+          if name != origname:
+            # Explicit {.importc: "origname".}
+            nimState.newPragma(node[i], "importc", newStrNode(nkStrLit, origname))
+          else:
+            # {.impnameC.} shortcut
+            nimState.newPragma(node[i], nimState.impShort & "C")
+
+      # Need {.convention.} and {.header.} if applicable
+      if name != origname:
+        if nimState.includeHeader():
+          # {.impnameHC.} shortcut
+          nimState.addPragma(node[i], prident, nimState.impShort & "HC")
+        else:
+          # {.convention.}
+          nimState.addPragma(node[i], prident, nimState.gState.convention)
+
+      procDef.add prident
       procDef.add newNode(nkEmpty)
       procDef.add newNode(nkEmpty)
 
@@ -1324,37 +1405,46 @@ proc setupPragmas(nimState: NimState, root: TSNode, fullpath: string) =
   # Create shortcut pragmas to reduce clutter
   var
     hdrPragma: PNode
+    hdrConvPragma: PNode
     impPragma = newNode(nkPragma)
-    impCPragma = newNode(nkPragma)
+    impConvPragma = newNode(nkPragma)
 
-  # {.importc.}
+  # {.pragma: impname, importc.}
   nimState.addPragma(root, impPragma, "pragma", nimState.getIdent(nimState.impShort))
   nimState.addPragma(root, impPragma, "importc")
 
   if nimState.includeHeader():
+    # Path to header const
     nimState.constSection.add nimState.newConstDef(
       root, fname = nimState.currentHeader, fval = '"' & fullpath & '"')
 
-    # {.header: "xxx".}
+    # {.pragma: impnameH, header: "xxx".} for types when name != origname
     hdrPragma = nimState.newPragma(root, "pragma", nimState.getIdent(nimState.impShort & "H"))
     nimState.addPragma(root, hdrPragma, "header", nimState.getIdent(nimState.currentHeader))
 
+    # Add {.impnameH.} to {.impname.}
     nimState.addPragma(root, impPragma, nimState.impShort & "H")
 
-  # {.importc.} + {.cdecl.} for procs
-  nimState.addPragma(root, impCPragma, "pragma", nimState.getIdent(nimState.impShort & "C"))
-  nimState.addPragma(root, impCPragma, nimState.impShort)
-  nimState.addPragma(root, impCPragma, "cdecl")
+    # {.pragma: impnameHC, impnameH, convention.} for procs when name != origname
+    hdrConvPragma = nimState.newPragma(root, "pragma", nimState.getIdent(nimState.impShort & "HC"))
+    nimState.addPragma(root, hdrConvPragma, nimState.impShort & "H")
+    nimState.addPragma(root, hdrConvPragma, nimState.gState.convention)
+
+  # {.pragma: impnameC, impname, convention.} for procs
+  nimState.addPragma(root, impConvPragma, "pragma", nimState.getIdent(nimState.impShort & "C"))
+  nimState.addPragma(root, impConvPragma, nimState.impShort)
+  nimState.addPragma(root, impConvPragma, nimState.gState.convention)
 
   if nimState.gState.dynlib.nBl:
     # {.dynlib.} for DLLs
-    nimState.addPragma(root, impCPragma, "dynlib", nimState.getIdent(nimState.gState.dynlib))
+    nimState.addPragma(root, impConvPragma, "dynlib", nimState.getIdent(nimState.gState.dynlib))
 
   # Add all pragma shortcuts to output
   if not hdrPragma.isNil:
     nimState.pragmaSection.add hdrPragma
+    nimState.pragmaSection.add hdrConvPragma
   nimState.pragmaSection.add impPragma
-  nimState.pragmaSection.add impCPragma
+  nimState.pragmaSection.add impConvPragma
 
 proc printNimHeader*(gState: State) =
   # Top level output with context info

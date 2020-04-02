@@ -18,9 +18,9 @@ proc execCmd(cmd: string) =
   echo "execCmd:" & cmd
   exec cmd
 
-proc execTest(test: string) =
-  execCmd "nim c -f -r " & test
-  execCmd "nim cpp -r " & test
+proc execTest(test: string, flags = "") =
+  execCmd "nim c -f " & flags & " -r " & test
+  execCmd "nim cpp " & flags & " -r " & test
 
 task buildToast, "build toast":
   execCmd("nim c -f nimterop/toast.nim")
@@ -35,11 +35,15 @@ task test, "Test":
   buildToastTask()
 
   execTest "tests/tast2.nim"
-  execCmd "nim c -f -d:HEADER -r tests/tast2.nim"
+  execTest "tests/tast2.nim", "-d:HEADER"
 
   execTest "tests/tnimterop_c.nim"
+  execTest "tests/tnimterop_c.nim", "-d:AST2"
+  execTest "tests/tnimterop_c.nim", "-d:HEADER -d:AST2"
+
   execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
   execCmd "./nimterop/toast -pnk -E=_ tests/include/toast.h"
+  execCmd "./nimterop/toast -pnk -E=_ -f:ast2 tests/include/toast.h"
   execTest "tests/tpcre.nim"
 
   # Platform specific tests

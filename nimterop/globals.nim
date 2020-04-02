@@ -59,7 +59,7 @@ type
 
     debug*, includeHeader*, nocache*, nocomments*, past*, preprocess*, pnim*, recurse*: bool
 
-    code*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
+    code*, convention*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
 
     feature*: seq[Feature]
 

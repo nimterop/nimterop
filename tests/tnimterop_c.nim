@@ -41,7 +41,17 @@ cOverride:
   proc weirdfunc(apple: ptr ptr ptr cchar): int {.importc.}
   proc weirdfunc2(mango: ptr ptr cchar): int {.importc.}
 
-cImport(cSearchPath("test.h"))
+# includeHeader
+const header =
+  when defined(HEADER): " -H"
+  else: ""
+
+# Test AST2
+const mode =
+  when defined(AST2): " -f:ast2"
+  else: ""
+
+cImport(cSearchPath("test.h"), flags = header & mode)
 
 check TEST_INT == 512
 check TEST_FLOAT == 5.12
@@ -65,7 +75,7 @@ var
   ct: CUSTTYPE
   cct: CCUSTTYPE
 
-  s0: STRUCT0
+  s0: ptr STRUCT0
   s1: STRUCT1
   s2: STRUCT2
   s3: STRUCT3

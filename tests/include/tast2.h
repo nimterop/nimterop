@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define A 1
 #define B 1.0
 #define C 0x10
@@ -26,7 +30,7 @@ struct A4 {
 typedef char *A9p[3]; //, A9[4];
 typedef char *A10[3][6];
 typedef char *(*A11)[3];
-typedef struct A1 *A111[12];
+typedef struct A0 *A111[12];
 
 typedef int **(*A12)(int, int b, int *c, int *, int *count[4], int (*func)(int, int));
 typedef int A13(int, int, void (*func)(void));
@@ -212,4 +216,8 @@ typedef enum VSPresetFormat {
 
 //struct A2 test_proc1(struct A0 a);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

@@ -86,7 +86,6 @@ Check out [template.nim](https://github.com/nimterop/nimterop/blob/master/nimter
 
 Refer to the ```tests``` directory for examples on how the library can be used.
 
-
 The `toast` binary can also be used directly on the CLI:
 
 ```
@@ -94,29 +93,30 @@ The `toast` binary can also be used directly on the CLI:
 Usage:
   main [optional-params] C/C++ source/header
 Options:
-  -h, --help                            print this cligen-erated help
-  --help-syntax                         advanced: prepend,plurals,..
-  -k, --check          bool      false  check generated wrapper with compiler
-  -d, --debug          bool      false  enable debug output
-  -D=, --defines=      strings   {}     definitions to pass to preprocessor
-  -l=, --dynlib=       string    ""     import symbols from library in specified Nim string
-  -f=, --feature=      Features  {}     flags to enable experimental features
-  -H, --includeHeader  bool      false  add {.header.} pragma to wrapper
-  -I=, --includeDirs=  strings   {}     include directory to pass to preprocessor
-  -m=, --mode=         string    "cpp"  language parser: c or cpp
-  --nim=               string    "nim"  use a particular Nim executable (default: $PATH/nim)
-  -c, --nocomments     bool      false  exclude top-level comments from output
-  -o=, --output=       string    ""     file to output content - default stdout
-  -a, --past           bool      false  print AST output
-  -g, --pgrammar       bool      false  print grammar
-  --pluginSourcePath=  string    ""     nim file to build and load as a plugin
-  -n, --pnim           bool      false  print Nim output
-  -E=, --prefix=       strings   {}     strip prefix from identifiers
-  -p, --preprocess     bool      false  run preprocessor on header
-  -r, --recurse        bool      false  process #include files
-  -s, --stub           bool      false  stub out undefined type references as objects
-  -F=, --suffix=       strings   {}     strip suffix from identifiers
-  -O=, --symOverride=  strings   {}     skip generating specified symbols
+  -h, --help                              print this cligen-erated help
+  --help-syntax                           advanced: prepend,plurals,..
+  -k, --check          bool      false    check generated wrapper with compiler
+  -C=, --convention=   string    "cdecl"  calling convention for wrapped procs - default: cdecl
+  -d, --debug          bool      false    enable debug output
+  -D=, --defines=      strings   {}       definitions to pass to preprocessor
+  -l=, --dynlib=       string    ""       import symbols from library in specified Nim string
+  -f=, --feature=      Features  {}       flags to enable experimental features
+  -H, --includeHeader  bool      false    add {.header.} pragma to wrapper
+  -I=, --includeDirs=  strings   {}       include directory to pass to preprocessor
+  -m=, --mode=         string    "cpp"    language parser: c or cpp
+  --nim=               string    "nim"    use a particular Nim executable - default: $PATH/nim
+  -c, --nocomments     bool      false    exclude top-level comments from output
+  -o=, --output=       string    ""       file to output content - default: stdout
+  -a, --past           bool      false    print AST output
+  -g, --pgrammar       bool      false    print grammar
+  --pluginSourcePath=  string    ""       nim file to build and load as a plugin
+  -n, --pnim           bool      false    print Nim output
+  -E=, --prefix=       strings   {}       strip prefix from identifiers
+  -p, --preprocess     bool      false    run preprocessor on header
+  -r, --recurse        bool      false    process #include files
+  -s, --stub           bool      false    stub out undefined type references as objects
+  -F=, --suffix=       strings   {}       strip suffix from identifiers
+  -O=, --symOverride=  strings   {}       skip generating specified symbols
 ```
 
 __Implementation Details__

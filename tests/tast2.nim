@@ -11,7 +11,7 @@ const
 when defined(HEADER):
   cDefine("HEADER")
   const
-    flags = " -H -d"
+    flags = " -H"
     pHeader = @["header:" & path.replace("\\", "/")]
     pHeaderImp = @["importc"] & pHeader
 else:
@@ -183,21 +183,15 @@ a11 = addr a9p
 assert A111 is array[12, ptr A1]
 checkPragmas(A111, pHeaderImp)
 var a111: A111
-a111[11] = addr a1
+a111[11] = addr a0
 
-assert A12 is proc(a1: cint, b: cint, c: ptr cint, a4: ptr cint, count: array[4, ptr cint], `func`: proc(a1: cint, a2: cint): cint): ptr ptr cint
-checkPragmas(A12, pHeaderImp)
-when not defined(HEADER):
-  # Unclear why this fails
-  # request for member ‘ClE_0’ in something not a structure or union
-  var a12: A12
+assert A12 is proc(a1: cint, b: cint, c: ptr cint, a4: ptr cint, count: array[4, ptr cint], `func`: proc(a1: cint, a2: cint): cint {.cdecl.}): ptr ptr cint {.cdecl.}
+checkPragmas(A12, pHeaderImp & "cdecl")
+var a12: A12
 
-assert A13 is proc(a1: cint, a2: cint, `func`: proc()): cint
-checkPragmas(A13, pHeaderImp)
-when not defined(HEADER):
-  # Unclear why this fails
-  # request for member ‘ClE_0’ in something not a structure or union
-  var a13: A13
+assert A13 is proc(a1: cint, a2: cint, `func`: proc() {.cdecl.}): cint {.cdecl.}
+checkPragmas(A13, pHeaderImp & "cdecl")
+var a13: A13
 
 assert A14 is object
 testFields(A14, "a1:cchar")
@@ -216,20 +210,16 @@ a15.a2[0] = addr a15i
 
 assert A16 is object
 testFields(A16, "f1:cchar")
-checkPragmas(A16, pHeaderImpBy)
-when not defined(HEADER):
-  # Similar to A2
-  var a16: A16
-  a16.f1 = 's'
+checkPragmas(A16, pHeaderBy, istype = false)
+var a16: A16
+a16.f1 = 's'
 
 assert A17 is object
 testFields(A17, "a1|a2:cstring|array[1, ptr cint]")
-checkPragmas(A17, pHeaderImpBy)
-when not defined(HEADER):
-  # Similar to A2
-  var a17: A17
-  a17.a1 = "hello".cstring
-  a17.a2[0] = addr a15i
+checkPragmas(A17, pHeaderBy, istype = false)
+var a17: A17
+a17.a1 = "hello".cstring
+a17.a2[0] = addr a15i
 
 assert A18 is A17
 checkPragmas(A18, pHeaderImp)
@@ -254,7 +244,7 @@ a19p = addr a19
 
 assert A20 is object
 testFields(A20, "a1:cchar")
-checkPragmas(A20, pHeaderImpBy)
+checkPragmas(A20, pHeaderBy, istype = false)
 var a20: A20
 a20.a1 = 'a'
 
@@ -270,7 +260,7 @@ a21p = addr a20
 
 assert A22 is object
 testFields(A22, "f1|f2:ptr ptr cint|array[123 + 132, ptr cint]")
-checkPragmas(A22, pHeaderImpBy)
+checkPragmas(A22, pHeaderBy, istype = false)
 var a22: A22
 a22.f1 = addr a15.a2[0]
 
@@ -282,7 +272,7 @@ u1.f1 = 5
 
 assert U2 is object
 assert sizeof(U2) == 256 * sizeof(cint)
-checkPragmas(U2, pHeaderImpBy & @["union"])
+checkPragmas(U2, pHeaderBy & @["union"], istype = false)
 var u2: U2
 u2.f1 = addr a15.a2[0]
 
