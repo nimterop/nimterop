@@ -165,10 +165,10 @@ var a9p: A9p
 a9p[1] = nil
 a9p[2] = "hello".cstring
 
-#Not implemented yet
-#assert A9 is array[4, cchar]
-#checkPragmas(A9, pHeaderImp)
-#var a9: A9
+assert A9 is array[4, cchar]
+checkPragmas(A9, pHeaderImp)
+var a9: A9
+a9[2] = 'c'
 
 assert A10 is array[3, array[6, cstring]]
 checkPragmas(A10, pHeaderImp)
@@ -309,3 +309,19 @@ checkPragmas(pcre_free, @["importc", "cdecl"] & pHeader)
 
 assert pcre_stack_malloc is proc(a1: uint): pointer {.cdecl.}
 checkPragmas(pcre_stack_malloc, @["importc", "cdecl"] & pHeader)
+
+assert DuplexTransferImageViewMethod is
+  proc (a1: ptr ImageView; a2: ptr ImageView; a3: ptr ImageView; a4: uint;
+        a5: cint; a6: pointer): MagickBooleanType {.cdecl.}
+
+assert GetImageViewMethod is
+  proc (a1: ptr ImageView; a2: uint; a3: cint; a4: pointer): MagickBooleanType {.cdecl.}
+
+assert SetImageViewMethod is
+  proc (a1: ptr ImageView; a2: uint; a3: cint; a4: pointer): MagickBooleanType {.cdecl.}
+
+assert TransferImageViewMethod is
+  proc (a1: ptr ImageView; a2: ptr ImageView; a3: uint; a4: cint; a5: pointer): MagickBooleanType {.cdecl.}
+
+assert UpdateImageViewMethod is
+  proc (a1: ptr ImageView; a2: uint; a3: cint; a4: pointer): MagickBooleanType {.cdecl.}

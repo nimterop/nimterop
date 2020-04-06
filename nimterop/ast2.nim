@@ -465,7 +465,7 @@ proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode): PNode =
   result.add size
   result.add typ
 
-proc getTypeArray(nimState: NimState, node: TSNode, name: string): PNode
+proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode
 proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode
 
 proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeInteger, exported = false): PNode =
@@ -562,7 +562,7 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
         (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
         pident = nimState.getIdent(pname, pinfo, exported)
       result.add pident
-      result.add nimState.getTypeProc(name, node[1], rnode = node[0])
+      result.add nimState.getTypeProc(name, node[start+1], node[start])
       result.add newNode(nkEmpty)
     elif not adecl.isNil:
       # Named param, array type
@@ -570,7 +570,7 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
         (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
         pident = nimState.getIdent(pname, pinfo, exported)
       result.add pident
-      result.add nimState.getTypeArray(node, name)
+      result.add nimState.getTypeArray(node[start+1], node[start], name)
       result.add newNode(nkEmpty)
     else:
       result = nil
@@ -838,24 +838,22 @@ proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
       else:
         nimState.addTypeObject(node, typeDef = typeDef, istype = true)
 
-proc getTypeArray(nimState: NimState, node: TSNode, name: string): PNode =
+proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode =
   # Create array type tree
   let
-    start = getStartAtom(node)
-
-    # node[start] = identifier = type name
-    (tname, _, info) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
+    # tnode = identifier = type name
+    (tname, _, info) = nimState.getNameInfo(tnode.getAtom(), nskType, parent = name)
     ident = nimState.getIdent(tname, info, exported = false)
 
     # Top-most array declarator
-    adecl = node[start+1].firstChildInTree("array_declarator")
+    adecl = node.firstChildInTree("array_declarator")
 
-    # node[start+1] could have nested arrays
+    # node could have nested arrays
     acount = adecl.getArrayCount()
     innermost = adecl.mostNestedChildInTree()
 
-    # node[start+1] could have nested pointers - type
-    tcount = node[start+1].getPtrCount()
+    # node could have nested pointers - type
+    tcount = node.getPtrCount()
 
     # Name could be nested pointer to array
     #
@@ -894,39 +892,47 @@ proc addTypeArray(nimState: NimState, node: TSNode) =
   # Add a type of array type
   decho("addTypeArray()")
   let
-    # node[1] = identifer = name
-    typeDef = nimState.newXIdent(node[1], istype = true)
+    start = getStartAtom(node)
 
-  if not typeDef.isNil:
+    # node[start] = type name
+    tnode = node[start]
+
+  # Could have multiple types, comma separated
+  for i in start+1 ..< node.len:
     let
-      name = typeDef.getIdentName()
-      typ = nimState.getTypeArray(node, name)
+      # node[i] = identifer = name
+      typeDef = nimState.newXIdent(node[i], istype = true)
 
-    typeDef.add typ
+    if not typeDef.isNil:
+      let
+        name = typeDef.getIdentName()
+        typ = nimState.getTypeArray(node[i], tnode, name)
 
-    # type X* = [ptr] array[x, [ptr] Y]
-    #
-    # nkTypeDef(
-    #  nkPostfix(
-    #   nkIdent("*"),
-    #   nkIdent("X")
-    #  ),
-    #  nkEmpty(),
-    #  nkPtrTy(              # optional, nested
-    #   nkBracketExpr(
-    #    nkIdent("array")
-    #    nkXLit(x),
-    #    nkPtrTy(            # optional, nested
-    #     nkIdent("Y")
-    #    )
-    #   )
-    #  )
-    # )
+      typeDef.add typ
 
-    # nkTypeSection.add
-    nimState.typeSection.add typeDef
+      # type X* = [ptr] array[x, [ptr] Y]
+      #
+      # nkTypeDef(
+      #  nkPostfix(
+      #   nkIdent("*"),
+      #   nkIdent("X")
+      #  ),
+      #  nkEmpty(),
+      #  nkPtrTy(              # optional, nested
+      #   nkBracketExpr(
+      #    nkIdent("array")
+      #    nkXLit(x),
+      #    nkPtrTy(            # optional, nested
+      #     nkIdent("Y")
+      #    )
+      #   )
+      #  )
+      # )
 
-    nimState.printDebug(typeDef)
+      # nkTypeSection.add
+      nimState.typeSection.add typeDef
+
+      nimState.printDebug(typeDef)
 
 proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode =
   # Create proc type tree
@@ -939,7 +945,7 @@ proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode =
     # Parameter list
     plist = node.anyChildInTree("parameter_list")
 
-    # node[1] could have nested pointers
+    # node could have nested pointers
     tcount = node.getPtrCount()
 
     # Name could be nested pointer to function

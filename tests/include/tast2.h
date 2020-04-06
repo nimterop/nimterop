@@ -27,7 +27,7 @@ struct A4 {
   float f1;
 };
 
-typedef char *A9p[3]; //, A9[4];
+typedef char *A9p[3], A9[4];
 typedef char *A10[3][6];
 typedef char *(*A11)[3];
 typedef struct A0 *A111[12];
@@ -113,6 +113,16 @@ void
   (*pcre_free)(void *),
   *(*pcre_stack_malloc)(size_t);
 
+typedef int ImageView, MagickBooleanType;
+typedef MagickBooleanType
+  (*DuplexTransferImageViewMethod)(const ImageView *,const ImageView *,
+    ImageView *,const size_t,const int,void *),
+  (*GetImageViewMethod)(const ImageView *,const size_t,const int,void *),
+  (*SetImageViewMethod)(ImageView *,const size_t,const int,void *),
+  (*TransferImageViewMethod)(const ImageView *,ImageView *,const size_t,
+    const int,void *),
+(*UpdateImageViewMethod)(ImageView *,const size_t,const int,void *);
+
 
 
 
@@ -145,12 +155,15 @@ struct A4 {
   float f1;
 };
 
-typedef char *A9p[3]; //, A9[4];
+typedef char *A9p[3], A9[4];
 typedef char *A10[3][6];
 typedef char *(*A11)[3];
-typedef struct A1 *A111[12];
+typedef struct A0 *A111[12];
 
-typedef int **(*A12)(int, int b, int *c, int *, int *count[4], int (*func)(int, int));
+typedef int
+  **(*A12)(int, int b, int *c, int *, int *count[4], int (*func)(int, int)),
+  **(*A121)(float, float b, float *c, float *, float *count[4], float (*func)(float, float)),
+  **(*A122)(char, char b, char *c, char *, char *count[4], char (*func)(char, char));
 typedef int A13(int, int, void (*func)(void));
 
 struct A14 { volatile char a1; };
@@ -221,6 +234,22 @@ typedef enum VSPresetFormat {
 //typedef struct { char a1; };
 
 //struct A2 test_proc1(struct A0 a);
+
+// Proc vars
+void
+  *(*pcre_malloc)(size_t),
+  (*pcre_free)(void *),
+  *(*pcre_stack_malloc)(size_t);
+
+typedef MagickBooleanType
+  (*DuplexTransferImageViewMethod)(const ImageView *,const ImageView *,
+    ImageView *,const size_t,const int,void *),
+  (*GetImageViewMethod)(const ImageView *,const size_t,const int,void *),
+  (*SetImageViewMethod)(ImageView *,const size_t,const int,void *),
+  (*TransferImageViewMethod)(const ImageView *,ImageView *,const size_t,
+    const int,void *),
+(*UpdateImageViewMethod)(ImageView *,const size_t,const int,void *);
+
 
 #endif
 
