@@ -82,7 +82,7 @@ type
 
     # Nim compiler objects
     when not declared(CIMPORT):
-      pragmaSection*, constSection*, enumSection*, procSection*, typeSection*: PNode
+      constSection*, enumSection*, pragmaSection*, procSection*, typeSection*, varSection*: PNode
       identCache*: IdentCache
       config*: ConfigRef
       graph*: ModuleGraph

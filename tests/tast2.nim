@@ -189,6 +189,14 @@ assert A12 is proc(a1: cint, b: cint, c: ptr cint, a4: ptr cint, count: array[4,
 checkPragmas(A12, pHeaderImp & "cdecl")
 var a12: A12
 
+assert A121 is proc(a1: cfloat, b: cfloat, c: ptr cfloat, a4: ptr cfloat, count: array[4, ptr cfloat], `func`: proc(a1: cfloat, a2: cfloat): cfloat {.cdecl.}): ptr ptr cint {.cdecl.}
+checkPragmas(A121, pHeaderImp & "cdecl")
+var a121: A121
+
+assert A122 is proc(a1: cchar, b: cchar, c: cstring, a4: cstring, count: array[4, cstring], `func`: proc(a1: cchar, a2: cchar): cchar {.cdecl.}): ptr ptr cint {.cdecl.}
+checkPragmas(A122, pHeaderImp & "cdecl")
+var a122: A122
+
 assert A13 is proc(a1: cint, a2: cint, `func`: proc() {.cdecl.}): cint {.cdecl.}
 checkPragmas(A13, pHeaderImp & "cdecl")
 var a13: A13
@@ -292,3 +300,12 @@ assert pfGray16 == 1000011
 assert pfYUV422P8 == pfYUV420P8 + 1
 assert pfRGB27 == cmRGB.VSPresetFormat + 11
 assert pfCompatYUY2 == pfCompatBGR32 + 1
+
+assert pcre_malloc is proc(a1: uint): pointer {.cdecl.}
+checkPragmas(pcre_malloc, @["importc", "cdecl"] & pHeader)
+
+assert pcre_free is proc(a1: pointer) {.cdecl.}
+checkPragmas(pcre_free, @["importc", "cdecl"] & pHeader)
+
+assert pcre_stack_malloc is proc(a1: uint): pointer {.cdecl.}
+checkPragmas(pcre_stack_malloc, @["importc", "cdecl"] & pHeader)

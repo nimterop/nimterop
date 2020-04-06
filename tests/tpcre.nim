@@ -35,7 +35,9 @@ cImport(pcreH, dynlib="dynpcre", flags = FLAGS)
 
 echo version()
 
-proc my_malloc(a1: uint) {.cdecl.} =
-  discard
+when FLAGS.len != 0:
+  # Legacy algorithm is broken - does not convert void * return to pointer
+  proc my_malloc(a1: uint): pointer {.cdecl.} =
+    discard
 
-malloc = my_malloc
+  malloc = my_malloc
