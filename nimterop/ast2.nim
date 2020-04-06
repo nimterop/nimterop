@@ -386,6 +386,9 @@ proc newXIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", pra
             if nimState.includeHeader():
               # Add header
               nimState.addPragma(node, prident[1], nimState.impShort & "H")
+            elif nimState.gState.dynlib.nBl:
+              # Add dynlib
+              nimState.addPragma(node, prident[1], "dynlib", nimState.getIdent(nimState.gState.dynlib))
           else:
             # Only need impShort since no name change
             prident = nimState.newPragmaExpr(node, ident, nimState.impShort)
@@ -1456,6 +1459,10 @@ proc addProc(nimState: NimState, node, rnode: TSNode) =
       else:
         # {.convention.}
         nimState.addPragma(node, prident, nimState.gState.convention)
+
+        if nimState.gState.dynlib.nBl:
+          # {.dynlib.} for DLLs
+          nimState.addPragma(node, prident, "dynlib", nimState.getIdent(nimState.gState.dynlib))
 
     procDef.add prident
     procDef.add newNode(nkEmpty)

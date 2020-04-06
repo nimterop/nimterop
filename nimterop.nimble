@@ -49,8 +49,7 @@ task test, "Test":
   execCmd "./nimterop/toast -pnk -E=_ -f:ast2 tests/include/toast.h"
 
   execTest "tests/tpcre.nim"
-  #execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
-  #execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2 -H\""
+  execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
 
   # Platform specific tests
   when defined(Windows):

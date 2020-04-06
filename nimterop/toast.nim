@@ -100,6 +100,10 @@ proc main(
     symOverride: symOverride
   )
 
+  # Fail if both includeHeader and dynlib
+  doAssert not (includeHeader == true and dynlib.nBl),
+    "`includeHeader` and `dynlib` cannot be used simultaneously"
+
   # Split some arguments with ,
   gState.symOverride = gState.symOverride.getSplitComma()
   gState.prefix = gState.prefix.getSplitComma()

@@ -43,7 +43,8 @@ cCompile(src/"audiosource", "cpp", exclude="ay/")
 cCompile(src/"audiosource", "c")
 cCompile(src/"filter/*.cpp")
 
-cImport(incl/"soloud_c.h")
+const FLAGS {.strdefine.} = ""
+cImport(incl/"soloud_c.h", flags = FLAGS)
 
 var
   s = Soloud_create()
