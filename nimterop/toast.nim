@@ -20,7 +20,6 @@ proc process(gState: State, path: string, astTable: AstTable) =
     elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
       gState.mode = "cpp"
 
-  echo gState.mode
   if gState.preprocess:
     gState.code = gState.getPreprocessor(path)
   else:
@@ -61,7 +60,7 @@ proc main(
     feature: seq[Feature] = @[],
     includeHeader = false,
     includeDirs: seq[string] = @[],
-    mode = modeDefault,
+    mode = "",
     nim: string = "nim",
     nocomments = false,
     output = "",
