@@ -15,10 +15,10 @@ proc process(gState: State, path: string, astTable: AstTable) =
     parser.tsParserDelete()
 
   if gState.mode.Bl:
-    if ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
-      gState.mode = "cpp"
-    else:
+    if ext in [".h", ".c"]:
       gState.mode = "c"
+    elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
+      gState.mode = "cpp"
 
   if gState.preprocess:
     gState.code = gState.getPreprocessor(path)
