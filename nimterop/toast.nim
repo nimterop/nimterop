@@ -17,7 +17,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
   if gState.mode.Bl:
     if '.' in file.name:
       # triage for autoconf (e.g. '.h.in') until stdlib fix
-      file = path.splitFile(file.name)
+      file = file.name.splitFile()
     if file.ext in [".h", ".c"]:
       gState.mode = "c"
     elif file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
