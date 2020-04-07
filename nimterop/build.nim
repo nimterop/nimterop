@@ -1,6 +1,7 @@
 import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
+from "."/[getters] import determineCompilerMode, xModeArg
 
 proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
