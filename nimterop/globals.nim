@@ -95,9 +95,6 @@ type
 
     nodeBranch*: seq[string]
 
-  CompileMode = enum
-    c, cpp
-
   Feature* = enum
     ast2
 
@@ -112,7 +109,7 @@ template Bl(s: typed): untyped {.used.} =
 
 when not declared(CIMPORT):
   export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState,
-    nBl, Bl, CompileMode
+    nBl, Bl
 
   # Redirect output to file when required
   template gecho*(args: string) {.dirty.} =
