@@ -30,7 +30,7 @@ cPlugin:
   proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
     sym.name = sym.name.replace("pcre_", "")
 
-
+const FLAGS {.strdefine.} = ""
 cImport(pcreH, dynlib="dynpcre", flags="--mode=c " & FLAGS)
 echo version()
 
