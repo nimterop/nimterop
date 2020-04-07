@@ -531,10 +531,11 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
       result = nil
   else:
     let
-      fdecl = node[start+1].anyChildInTree("function_declarator")
-      adecl = node[start+1].anyChildInTree("array_declarator")
+      fdecl = node[start+1].firstChildInTree("function_declarator")
+      afdecl = node[start+1].firstChildInTree("abstract_function_declarator")
+      adecl = node[start+1].firstChildInTree("array_declarator")
       abst = node[start+1].getName() == "abstract_pointer_declarator"
-    if fdecl.isNil and adecl.isNil:
+    if fdecl.isNil and afdecl.isNil and adecl.isNil:
       if abst:
         # Only for proc with no named param with pointer type
         # Create a param name based on offset
@@ -576,6 +577,18 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
         pident = nimState.getIdent(pname, pinfo, exported)
       result.add pident
       result.add nimState.getTypeProc(name, node[start+1], node[start])
+      result.add newNode(nkEmpty)
+    elif not afdecl.isNil:
+      # Only for proc with no named param with function pointer type
+      # Create a param name based on offset
+      #
+      # int func(int (*)(int *));
+      let
+        pname = "a" & $(offset+1)
+        pident = nimState.getIdent(pname, tinfo, exported)
+        procTy = nimState.getTypeProc(name, node[start+1], node[start])
+      result.add pident
+      result.add procTy
       result.add newNode(nkEmpty)
     elif not adecl.isNil:
       # Named param, array type
@@ -963,6 +976,9 @@ proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode =
     # node could have nested pointers
     tcount = node.getPtrCount()
 
+    # Nameless function pointer
+    afdecl = node.firstChildInTree("abstract_function_declarator")
+
     # Name could be nested pointer to function
     #
     # (..
@@ -976,7 +992,12 @@ proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode =
     #   )
     #  )
     # )
-    ncount = node.getAtom().tsNodeParent().getPtrCount(reverse = true)
+    ncount =
+      if not afdecl.isNil:
+        # Pointer to function pointer
+        afdecl[0].getXCount("abstract_pointer_declarator")
+      else:
+        node.getAtom().tsNodeParent().getPtrCount(reverse = true)
 
   # Return type
   var

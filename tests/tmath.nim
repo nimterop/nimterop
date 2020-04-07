@@ -22,7 +22,8 @@ cPlugin:
   proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
     sym.name = sym.name.strip(chars={'_'}).replace("__", "_")
 
-cImport cSearchPath("math.h")
+const FLAGS {.strdefine.} = ""
+cImport(cSearchPath("math.h"), flags = FLAGS)
 
 check sin(5) == -0.9589242746631385
 check abs(-5) == 5

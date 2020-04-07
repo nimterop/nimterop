@@ -123,6 +123,17 @@ typedef MagickBooleanType
     const int,void *),
 (*UpdateImageViewMethod)(ImageView *,const size_t,const int,void *);
 
+// Issue #156, math.h
+void
+  *absfunptr1 (int (*)(struct A0 *)),
+  **absfunptr2 (int (**)(struct A1 *)),
+  absfunptr3 (int *(*)(struct A2 *)),
+  *absfunptr4 (int *(**)(struct A3 *)),
+  absfunptr5 (int (*a)(A4 *));
+
+int sqlite3_bind_blob(struct A1*, int, const void*, int n, void(*)(void*));
+
+
 
 
 
@@ -241,6 +252,7 @@ void
   (*pcre_free)(void *),
   *(*pcre_stack_malloc)(size_t);
 
+typedef int ImageView, MagickBooleanType;
 typedef MagickBooleanType
   (*DuplexTransferImageViewMethod)(const ImageView *,const ImageView *,
     ImageView *,const size_t,const int,void *),
@@ -249,6 +261,18 @@ typedef MagickBooleanType
   (*TransferImageViewMethod)(const ImageView *,ImageView *,const size_t,
     const int,void *),
 (*UpdateImageViewMethod)(ImageView *,const size_t,const int,void *);
+
+// Issue #156, math.h
+void
+  *absfunptr1 (int (*)(struct A0 *)),
+  **absfunptr2 (int (**)(struct A1 *)),
+  absfunptr3 (int *(*)(struct A2 *)),
+  *absfunptr4 (int *(**)(struct A3 *)),
+  absfunptr5 (int (*a)(A4 *));
+
+int sqlite3_bind_blob(struct A1*, int, const void*, int n, void(*)(void*));
+
+
 
 
 #endif

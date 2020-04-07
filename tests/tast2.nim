@@ -325,3 +325,13 @@ assert TransferImageViewMethod is
 
 assert UpdateImageViewMethod is
   proc (a1: ptr ImageView; a2: uint; a3: cint; a4: pointer): MagickBooleanType {.cdecl.}
+
+# Issue #156, math.h
+assert absfunptr1 is proc(a1: proc(a1: ptr A0): cint {.cdecl.}): pointer {.cdecl.}
+assert absfunptr2 is proc(a1: ptr proc(a1: ptr A1): cint {.cdecl.}): ptr pointer {.cdecl.}
+assert absfunptr3 is proc(a1: proc(a1: ptr A2): ptr cint {.cdecl.}) {.cdecl.}
+assert absfunptr4 is proc(a1: ptr proc(a1: ptr A3): ptr cint {.cdecl.}): pointer {.cdecl.}
+assert absfunptr5 is proc(a1: proc(a1: ptr A4): cint {.cdecl.}) {.cdecl.}
+
+assert sqlite3_bind_blob is
+  proc(a1: ptr A1, a2: cint, a3: pointer, n: cint, a5: proc(a1: pointer) {.cdecl.}): cint {.cdecl.}
