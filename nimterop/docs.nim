@@ -1,6 +1,10 @@
 import macros, strformat
 
 from os import parentDir, getCurrentCompilerExe, DirSep
+
+when defined(nimdoc):
+  from os import getCurrentDir, paramCount, paramStr
+
 proc getNimRootDir(): string =
   #[
   hack, but works

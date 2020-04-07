@@ -30,11 +30,13 @@ cPlugin:
   proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
     sym.name = sym.name.replace("pcre_", "")
 
-cImport(pcreH, dynlib="dynpcre", flags="--mode=c")
 
+cImport(pcreH, dynlib="dynpcre", flags="--mode=c " & FLAGS)
 echo version()
 
-proc my_malloc(a1: uint) {.cdecl.} =
-  discard
+when FLAGS.len != 0:
+  # Legacy algorithm is broken - does not convert void * return to pointer
+  proc my_malloc(a1: uint): pointer {.cdecl.} =
+    discard
 
-malloc = my_malloc
+  malloc = my_malloc

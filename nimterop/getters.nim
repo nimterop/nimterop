@@ -174,6 +174,7 @@ proc addNewIdentifer*(nimState: NimState, name: string, override = false): bool 
 # Overrides related
 
 proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
+  # Get cOverride for identifier `name` of `kind` if defined
   doAssert name.nBl, "Blank identifier error"
 
   if nimState.gState.onSymbolOverride != nil:
@@ -190,12 +191,18 @@ proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
           result = result.replace(re"(?m)^(.*?)$", "  $1")
 
 proc getOverrideFinal*(nimState: NimState, kind: NimSymKind): string =
+  # Get all unused cOverride symbols of `kind`
   let
     typ = $kind
 
   if nimState.gState.onSymbolOverrideFinal != nil:
     for i in nimState.gState.onSymbolOverrideFinal(typ):
       result &= "\n" & nimState.getOverride(i, kind)
+
+proc getKeyword*(kind: NimSymKind): string =
+  # Convert `kind` into a Nim keyword
+  # cOverride procs already include `proc` keyword
+  result = ($kind).replace("nsk", "").toLowerAscii()
 
 # TSNode shortcuts
 
@@ -453,6 +460,14 @@ proc getIdent*(nimState: NimState, name: string, info: TLineInfo, exported = tru
 proc getIdent*(nimState: NimState, name: string): PNode =
   nimState.getIdent(name, nimState.getDefaultLineInfo(), exported = false)
 
+proc getIdentName*(node: PNode): string =
+  if not node.isNil:
+    for i in 0 ..< node.len:
+      if node[i].kind == nkIdent and $node[i] != "*":
+        result = $node[i]
+    if result.Bl and node.len > 0:
+      result = node[0].getIdentName()
+
 proc getNameInfo*(nimState: NimState, node: TSNode, kind: NimSymKind, parent = ""):
   tuple[name, origname: string, info: TLineInfo] =
   # Shortcut to get identifier name and info (node value and line:col)
@@ -595,7 +610,8 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
   if ast.children.len == 1 and ast.children[0].name == ".":
     return ast.children[0]
 
-proc getNimExpression*(nimState: NimState, expr: string): string =
+proc getNimExpression*(nimState: NimState, expr: string, name = ""): string =
+  # Convert C/C++ expression into Nim - cast identifiers to `name` if specified
   var
     clean = expr.multiReplace([("\n", " "), ("\r", "")])
     ident = ""
@@ -640,6 +656,8 @@ proc getNimExpression*(nimState: NimState, expr: string): string =
       # Process identifier
       if ident.nBl:
         ident = nimState.getIdentifier(ident, nskConst)
+        if name.nBl and ident in nimState.constIdentifiers:
+          ident = ident & "." & name
         result &= ident
         ident = ""
       result &= gen

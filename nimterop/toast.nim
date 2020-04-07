@@ -49,6 +49,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
 # CLI processing with default values
 proc main(
     check = false,
+    convention = "cdecl",
     debug = false,
     defines: seq[string] = @[],
     dynlib: string = "",
@@ -74,6 +75,7 @@ proc main(
 
   # Setup global state with arguments
   var gState = State(
+    convention: convention,
     debug: debug,
     defines: defines,
     dynlib: dynlib,
@@ -184,6 +186,7 @@ when isMainModule:
   import cligen
   dispatch(main, help = {
     "check": "check generated wrapper with compiler",
+    "convention": "calling convention for wrapped procs - default: cdecl",
     "debug": "enable debug output",
     "defines": "definitions to pass to preprocessor",
     "dynlib": "import symbols from library in specified Nim string",
@@ -191,9 +194,9 @@ when isMainModule:
     "includeHeader": "add {.header.} pragma to wrapper",
     "includeDirs": "include directory to pass to preprocessor",
     "mode": "language parser: c or cpp",
-    "nim": "use a particular Nim executable (default: $PATH/nim)",
+    "nim": "use a particular Nim executable - default: $PATH/nim",
     "nocomments": "exclude top-level comments from output",
-    "output": "file to output content - default stdout",
+    "output": "file to output content - default: stdout",
     "past": "print AST output",
     "pgrammar": "print grammar",
     "pluginSourcePath": "nim file to build and load as a plugin",
@@ -207,6 +210,7 @@ when isMainModule:
     "symOverride": "skip generating specified symbols"
   }, short = {
     "check": 'k',
+    "convention": 'C',
     "debug": 'd',
     "defines": 'D',
     "dynlib": 'l',

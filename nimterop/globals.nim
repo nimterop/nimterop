@@ -59,7 +59,7 @@ type
 
     debug*, includeHeader*, nocache*, nocomments*, past*, preprocess*, pnim*, recurse*: bool
 
-    code*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
+    code*, convention*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
 
     feature*: seq[Feature]
 
@@ -72,6 +72,9 @@ type
     # All symbols that have been declared so far indexed by nimName
     identifiers*: TableRef[string, string]
 
+    # All const names for enum casting
+    constIdentifiers*: HashSet[string]
+
     # Legacy ast fields, remove when ast2 becomes default
     constStr*, enumStr*, procStr*, typeStr*: string
 
@@ -79,7 +82,7 @@ type
 
     # Nim compiler objects
     when not declared(CIMPORT):
-      pragmaSection*, constSection*, enumSection*, procSection*, typeSection*: PNode
+      constSection*, enumSection*, pragmaSection*, procSection*, typeSection*, varSection*: PNode
       identCache*: IdentCache
       config*: ConfigRef
       graph*: ModuleGraph

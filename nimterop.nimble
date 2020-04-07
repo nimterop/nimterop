@@ -5,8 +5,6 @@ author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
 
-# this gives Warning: Binary 'nimterop/toast' was already installed from source directory
-# when running `nimble install --verbose -y`
 bin = @["nimterop/toast"]
 installDirs = @["nimterop"]
 installFiles = @["config.nims"]
@@ -20,15 +18,18 @@ proc execCmd(cmd: string) =
   echo "execCmd:" & cmd
   exec cmd
 
-proc execTest(test: string) =
-  execCmd "nim c -f -r " & test
-  execCmd "nim cpp -r " & test
+proc execTest(test: string, flags = "") =
+  execCmd "nim c --hints:off -f " & flags & " -r " & test
+  execCmd "nim cpp --hints:off " & flags & " -r " & test
 
 task buildToast, "build toast":
-  execCmd("nim c -f nimterop/toast.nim")
+  execCmd("nim c --hints:off -f nimterop/toast.nim")
 
 task bt, "build toast":
-  execCmd("nim c -d:danger nimterop/toast.nim")
+  execCmd("nim c --hints:off -d:danger nimterop/toast.nim")
+
+task btd, "build toast":
+  execCmd("nim c --hints:off nimterop/toast.nim")
 
 task docs, "Generate docs":
   buildDocs(@["nimterop/all.nim"], "build/htmldocs")
@@ -37,11 +38,19 @@ task test, "Test":
   buildToastTask()
 
   execTest "tests/tast2.nim"
+  execTest "tests/tast2.nim", "-d:HEADER"
 
   execTest "tests/tnimterop_c.nim"
-  execCmd "nim cpp -f -r tests/tnimterop_cpp.nim"
+  execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2\""
+  execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2 -H\""
+
+  execCmd "nim cpp --hints:off -f -r tests/tnimterop_cpp.nim"
   execCmd "./nimterop/toast -pnk -E=_ tests/include/toast.h"
+  execCmd "./nimterop/toast -pnk -E=_ -f:ast2 tests/include/toast.h"
+
   execTest "tests/tpcre.nim"
+  #execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
+  #execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2 -H\""
 
   # Platform specific tests
   when defined(Windows):
@@ -52,5 +61,7 @@ task test, "Test":
   # getHeader tests
   withDir("tests"):
     execCmd("nim e getheader.nims")
+    if not existsEnv("APPVEYOR"):
+      execCmd("nim e wrappers.nims")
 
   docsTask()
