@@ -630,13 +630,12 @@ proc getCompiler*(): string =
 
   result = getEnv("CC", compiler)
 
-proc getGccPaths*(mode = "c"): seq[string] =
+proc getGccPaths*(mode: string): seq[string] =
   var
     nul = when defined(Windows): "nul" else: "/dev/null"
-    mmode = if mode == "cpp": "c++" else: mode
     inc = false
 
-    (outp, _) = execAction(&"""{getCompiler()} -Wp,-v -x{mmode} {nul}""", die = false)
+    (outp, _) = execAction(&"""{getCompiler()} -Wp,-v {xModeArg(mode)} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "#include <...> search starts here" in line:
@@ -653,13 +652,12 @@ proc getGccPaths*(mode = "c"): seq[string] =
   when defined(osx):
     result.add(execAction("xcrun --show-sdk-path").output.strip() & "/usr/include")
 
-proc getGccLibPaths*(mode = "c"): seq[string] =
+proc getGccLibPaths*(mode: string): seq[string] =
   var
     nul = when defined(Windows): "nul" else: "/dev/null"
-    mmode = if mode == "cpp": "c++" else: mode
     linker = when defined(OSX): "-Xlinker" else: ""
 
-    (outp, _) = execAction(&"""{getCompiler()} {linker} -v -x{mmode} {nul}""", die = false)
+    (outp, _) = execAction(&"""{getCompiler()} {linker} -v {xModeArg(mode)} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "LIBRARY_PATH=" in line:
@@ -678,14 +676,14 @@ proc getGccLibPaths*(mode = "c"): seq[string] =
   when defined(osx):
     result.add "/usr/lib"
 
-proc getStdPath(header: string): string =
-  for inc in getGccPaths():
+proc getStdPath(header, mode: string): string =
+  for inc in getGccPaths(mode):
     result = findFile(header, inc, recurse = false, first = true)
     if result.len != 0:
       break
 
-proc getStdLibPath(lname: string): string =
-  for lib in getGccLibPaths():
+proc getStdLibPath(lname, mode: string): string =
+  for lib in getGccLibPaths(mode):
     result = findFile(lname, lib, recurse = false, first = true, regex = true)
     if result.len != 0:
       break
@@ -970,6 +968,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         gDefines[verStr]
       else:
         ""
+    mode = determineCompilerMode(header)
 
   # Use alternate library names if specified for regex search
   if altNames.len != 0:
@@ -1005,9 +1004,9 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
 
       # Look in standard path if requested by user
       stdPath =
-        when `nameStd`: getStdPath(`header`) else: ""
+        when `nameStd`: getStdPath(`header`, mode) else: ""
       stdLPath =
-        when `nameStd`: getStdLibPath(`lname`) else: ""
+        when `nameStd`: getStdLibPath(`lname`, mode) else: ""
 
       # Look elsewhere if requested while prioritizing standard paths
       prePath =

@@ -7,18 +7,13 @@ import "."/[ast, ast2, globals, getters, grammar]
 proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), &"Invalid path {path}"
 
-  var
-    parser = tsParserNew()
-    file = path.splitFile()
+  var parser = tsParserNew()
 
   defer:
     parser.tsParserDelete()
 
   if gState.mode.Bl:
-    if file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
-      gState.mode = "cpp"
-    else:
-      gState.mode = "c"
+    gState.mode = determineCompilerMode(path)
 
   if gState.preprocess:
     gState.code = gState.getPreprocessor(path)

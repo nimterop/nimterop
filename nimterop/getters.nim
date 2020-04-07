@@ -482,9 +482,8 @@ proc removeStatic(content: string): string =
 
 proc getPreprocessor*(gState: State, fullpath: string): string =
   var
-    mmode = if gState.mode == "cpp": "c++" else: gState.mode
     cmts = if gState.nocomments: "" else: "-CC"
-    cmd = &"""{getCompiler()} -E {cmts} -dD -x{mmode} -w """
+    cmd = &"""{getCompiler()} -E {cmts} -dD {xModeArg(gState.mode)} -w """
 
     rdata: seq[string] = @[]
     start = false
@@ -695,3 +694,16 @@ proc expandSymlinkAbs*(path: string): string =
     result = path.expandSymlink().absolutePath(path.parentDir()).normalizedPath()
   except:
     result = path
+
+proc determineCompilerMode(path: string) :string =
+  let file = path.splitFile()
+  if file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
+    result = "cpp"
+  else:
+    result = "c"
+
+proc xModeArg(mode: string) :string =
+  if mode == "cpp":
+    result = "-xc++"
+  elif mode == "c":
+    result = "-xc"
