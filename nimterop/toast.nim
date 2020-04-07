@@ -9,15 +9,18 @@ proc process(gState: State, path: string, astTable: AstTable) =
 
   var
     parser = tsParserNew()
-    ext = path.splitFile().ext
+    file = path.splitFile()
 
   defer:
     parser.tsParserDelete()
 
   if gState.mode.Bl:
-    if ext in [".h", ".c"]:
+    if '.' in file.name:
+      # triage for autoconf (e.g. '.h.in') until stdlib fix
+      file = path.splitFile(file.name)
+    if file.ext in [".h", ".c"]:
       gState.mode = "c"
-    elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
+    elif file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
       gState.mode = "cpp"
 
   if gState.preprocess:
