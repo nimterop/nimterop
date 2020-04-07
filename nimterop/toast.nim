@@ -20,6 +20,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
     elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
       gState.mode = "cpp"
 
+  echo gState.mode
   if gState.preprocess:
     gState.code = gState.getPreprocessor(path)
   else:

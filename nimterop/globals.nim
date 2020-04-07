@@ -110,11 +110,9 @@ template nBl(s: typed): untyped {.used.} =
 template Bl(s: typed): untyped {.used.} =
   (s.len == 0)
 
-const modeDefault {.used.} = $cpp
-
 when not declared(CIMPORT):
   export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState,
-    nBl, Bl, CompileMode, modeDefault
+    nBl, Bl, CompileMode
 
   # Redirect output to file when required
   template gecho*(args: string) {.dirty.} =
