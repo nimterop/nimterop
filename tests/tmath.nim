@@ -1,10 +1,11 @@
 import unittest
 import nimterop/cimport
 
-type
-  locale_t = object
-  mingw_ldbl_type_t = object
-  mingw_dbl_type_t = object
+cOverride:
+  type
+    locale_t = object
+    mingw_ldbl_type_t = object
+    mingw_dbl_type_t = object
 
 when defined(windows):
   cOverride:
