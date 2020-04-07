@@ -699,7 +699,7 @@ proc getCompilerMode(path: string) :string =
   let file = path.splitFile()
   if file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
     result = "cpp"
-  else:
+  elif file.ext in [".h", ".c"]:
     result = "c"
 
 proc getModeArg(mode: string) :string =
