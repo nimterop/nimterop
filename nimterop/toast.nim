@@ -15,13 +15,10 @@ proc process(gState: State, path: string, astTable: AstTable) =
     parser.tsParserDelete()
 
   if gState.mode.Bl:
-    if '.' in file.name:
-      # triage for autoconf (e.g. '.h.in') until stdlib fix
-      file = file.name.splitFile()
-    if file.ext in [".h", ".c"]:
-      gState.mode = "c"
-    elif file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
+    if file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
       gState.mode = "cpp"
+    else:
+      gState.mode = "c"
 
   if gState.preprocess:
     gState.code = gState.getPreprocessor(path)
