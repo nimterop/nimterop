@@ -480,9 +480,9 @@ proc removeStatic(content: string): string =
       result.add(body.replace(re"(?m)^(.*\n?)", "//$1"))
   )
 
-proc getPreprocessor*(gState: State, fullpath: string, mode = "cpp"): string =
+proc getPreprocessor*(gState: State, fullpath: string): string =
   var
-    mmode = if mode == "cpp": "c++" else: mode
+    mmode = if gState.mode == "cpp": "c++" else: gState.mode
     cmts = if gState.nocomments: "" else: "-CC"
     cmd = &"""{getCompiler()} -E {cmts} -dD -x{mmode} -w """
 
