@@ -2,7 +2,7 @@ import macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
-import compiler/[ast, idents, lineinfos, modulegraphs, options, parser, renderer]
+import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, parser, renderer]
 
 import "."/treesitter/api
 
@@ -18,8 +18,9 @@ proc getPtrType*(str: string): string =
       str
 
 proc handleError*(conf: ConfigRef, info: TLineInfo, msg: TMsgKind, arg: string) =
-  # Raise exception in parseString() instead of exiting
-  raise newException(Exception, "")
+  # Raise exception in parseString() instead of exiting for errors
+  if msg < warnMin:
+    raise newException(Exception, msgKindToString(msg))
 
 proc parseString(nimState: NimState, str: string): PNode =
   # Parse a string into Nim AST - use custom error handler that raises
@@ -29,11 +30,13 @@ proc parseString(nimState: NimState, str: string): PNode =
       str, nimState.identCache, nimState.config, errorHandler = handleError
     )
   except:
-    discard
+    decho getCurrentExceptionMsg()
 
-proc getLit*(nimState: NimState, str: string): PNode =
+proc getLit*(nimState: NimState, str: string, expression = false): PNode =
   # Used to convert #define literals into const and expressions
   # in array sizes
+  #
+  # `expression` is true when `str` should be converted into a Nim expression
   let
     str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
 
@@ -54,7 +57,11 @@ proc getLit*(nimState: NimState, str: string): PNode =
     result = newStrNode(nkStrLit, str[1 .. ^2])
 
   else:
-    result = nimState.parseString(nimState.getNimExpression(str))
+    let
+      str =
+        if expression: nimState.getNimExpression(str)
+        else: str
+    result = nimState.parseString(str)
 
   if result.isNil:
     result = newNode(nkNilLit)
@@ -75,7 +82,10 @@ proc getOverrideOrSkip(nimState: NimState, node: TSNode, origname: string, kind:
   if override.nBl:
     if kind == nskProc:
       skind = ""
-    result = nimState.parseString(skind & override.replace(origname, name))[0][0]
+    let
+      pnode = nimState.parseString(skind & override.replace(origname, name))
+    if not pnode.isNil:
+      result = pnode[0][0]
   else:
     necho &"\n# $1'{origname}' skipped" % skind
     if nimState.gState.debug:
@@ -596,11 +606,12 @@ proc newFormalParams(nimState: NimState, name: string, node: TSNode, rtyp: PNode
 
   if not node.isNil:
     for i in 0 ..< node.len:
-      # Add nkIdentDefs for each param
-      let
-        param = nimState.newIdentDefs(name, node[i], i, exported = false)
-      if not param.isNil:
-        result.add param
+      if node[i].getName() == "parameter_declaration":
+        # Add nkIdentDefs for each param
+        let
+          param = nimState.newIdentDefs(name, node[i], i, exported = false)
+        if not param.isNil:
+          result.add param
 
 proc newProcTy(nimState: NimState, name: string, node: TSNode, rtyp: PNode): PNode =
   # Create nkProcTy tree for specified proc type
@@ -883,7 +894,8 @@ proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode 
 
   for i in 0 ..< acount:
     let
-      size = nimState.getLit(nimState.getNodeVal(cnode[1]))
+      # Size of array could be a Nim expression
+      size = nimState.getLit(nimState.getNodeVal(cnode[1]), expression = true)
     if size.kind != nkNilLit:
       result = nimState.newArrayTree(cnode, result, size)
       cnode = cnode[0]
