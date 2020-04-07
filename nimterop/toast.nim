@@ -13,7 +13,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
     parser.tsParserDelete()
 
   if gState.mode.Bl:
-    gState.mode = determineCompilerMode(path)
+    gState.mode = getCompilerMode(path)
 
   if gState.preprocess:
     gState.code = gState.getPreprocessor(path)

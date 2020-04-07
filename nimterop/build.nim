@@ -1,7 +1,7 @@
 import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
-from "."/[getters] import determineCompilerMode, xModeArg
+from "."/[getters] import getCompilerMode, getModeArg
 
 proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
@@ -636,7 +636,7 @@ proc getGccPaths*(mode: string): seq[string] =
     nul = when defined(Windows): "nul" else: "/dev/null"
     inc = false
 
-    (outp, _) = execAction(&"""{getCompiler()} -Wp,-v {xModeArg(mode)} {nul}""", die = false)
+    (outp, _) = execAction(&"""{getCompiler()} -Wp,-v {getModeArg(mode)} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "#include <...> search starts here" in line:
@@ -658,7 +658,7 @@ proc getGccLibPaths*(mode: string): seq[string] =
     nul = when defined(Windows): "nul" else: "/dev/null"
     linker = when defined(OSX): "-Xlinker" else: ""
 
-    (outp, _) = execAction(&"""{getCompiler()} {linker} -v {xModeArg(mode)} {nul}""", die = false)
+    (outp, _) = execAction(&"""{getCompiler()} {linker} -v {getModeArg(mode)} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "LIBRARY_PATH=" in line:
@@ -969,7 +969,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         gDefines[verStr]
       else:
         ""
-    mode = determineCompilerMode(header)
+    mode = getCompilerMode(header)
 
   # Use alternate library names if specified for regex search
   if altNames.len != 0:
@@ -1005,9 +1005,9 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
 
       # Look in standard path if requested by user
       stdPath =
-        when `nameStd`: getStdPath(`header`, mode) else: ""
+        when `nameStd`: getStdPath(`header`, `mode`) else: ""
       stdLPath =
-        when `nameStd`: getStdLibPath(`lname`, mode) else: ""
+        when `nameStd`: getStdLibPath(`lname`, `mode`) else: ""
 
       # Look elsewhere if requested while prioritizing standard paths
       prePath =

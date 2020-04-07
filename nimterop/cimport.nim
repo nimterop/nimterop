@@ -161,7 +161,6 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
   cmd.add &" {fullpath.sanitizePath}"
 
   # see https://github.com/nimterop/nimterop/issues/69
-  echo(cmd)
   (result, ret) = execAction(cmd, die = false, cache = (not gStateCT.nocache),
                              cacheKey = getCacheValue(fullpath))
   doAssert ret == 0, getToastError(result)
