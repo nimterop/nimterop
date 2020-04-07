@@ -1,7 +1,7 @@
 import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
-from "."/[getters] import getCompilerMode, getModeArg
+from "."/getters import getCompilerMode, getModeArg
 
 import regex
 
