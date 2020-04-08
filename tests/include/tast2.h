@@ -143,6 +143,17 @@ struct ucArrType2 {
     int *f2[][5];
 };
 
+typedef struct fieldfuncfunc {
+    int *(*func1)(int f1, int *(*sfunc1)(int f1, int *(*ssfunc1)(int f1)));
+};
+
+int *func2(int f1, int *(*sfunc2)(int f1, int *(*ssfunc2)(int f1)));
+
+typedef struct {
+ const char *name; // description
+ const char *driver; // driver
+ int flags;
+} BASS_DEVICEINFO;
 
 
 
@@ -282,6 +293,17 @@ void
 
 int sqlite3_bind_blob(struct A1*, int, const void*, int n, void(*)(void*));
 
+typedef struct fieldfuncfunc {
+    int *(*func1)(int f1, int *(*sfunc1)(int f1, int *(*ssfunc1)(int f1)));
+};
+
+int *func2(int f1, int *(*sfunc2)(int f1, int *(*ssfunc2)(int f1)));
+
+typedef struct {
+ const char *name; // description
+ const char *driver; // driver
+ int flags;
+} BASS_DEVICEINFO;
 
 
 

@@ -78,7 +78,7 @@ macro testFields(t: typed, fields: static[string] = "") =
   var
     ast = t.getImpl()
     rl = ast.getRecList()
-    fsplit = fields.split(":")
+    fsplit = fields.split("!")
     names = fsplit[0].split("|")
     types =
       if fsplit.len > 1:
@@ -89,7 +89,7 @@ macro testFields(t: typed, fields: static[string] = "") =
     for i in 0 ..< rl.len:
       let
         name = ($rl[i][0]).strip(chars = {'*'})
-        typ = $(rl[i][1].repr())
+        typ = ($(rl[i][1].repr())).replace("\n", "").replace("  ", "")
         n = names.find(name)
       assert n != -1, $t & "." & name & " invalid"
       assert types[n] == typ,
@@ -102,13 +102,13 @@ assert D == "hello"
 assert E == 'c'
 
 assert A0 is object
-testFields(A0, "f1:cint")
+testFields(A0, "f1!cint")
 checkPragmas(A0, pHeaderBy, istype = false)
 var a0: A0
 a0.f1 = 1
 
 assert A1 is A0
-testFields(A1, "f1:cint")
+testFields(A1, "f1!cint")
 var a1: A1
 a1.f1 = 2
 
@@ -125,13 +125,13 @@ checkPragmas(A3, pHeaderInc, istype = false)
 var a3: A3
 
 assert A4 is object
-testFields(A4, "f1:cfloat")
+testFields(A4, "f1!cfloat")
 checkPragmas(A4, pHeaderImpBy)
 var a4: A4
 a4.f1 = 4.1
 
 assert A4p is ptr A4
-testFields(A4p, "f1:cfloat")
+testFields(A4p, "f1!cfloat")
 checkPragmas(A4p, pHeaderImp)
 var a4p: A4p
 a4p = addr a4
@@ -202,13 +202,13 @@ checkPragmas(A13, pHeaderImp & "cdecl")
 var a13: A13
 
 assert A14 is object
-testFields(A14, "a1:cchar")
+testFields(A14, "a1!cchar")
 checkPragmas(A14, pHeaderBy, istype = false)
 var a14: A14
 a14.a1 = 'a'
 
 assert A15 is object
-testFields(A15, "a1|a2:cstring|array[1, ptr cint]")
+testFields(A15, "a1|a2!cstring|array[1, ptr cint]")
 checkPragmas(A15, pHeaderBy, istype = false)
 var
   a15: A15
@@ -217,13 +217,13 @@ a15.a1 = "hello".cstring
 a15.a2[0] = addr a15i
 
 assert A16 is object
-testFields(A16, "f1:cchar")
+testFields(A16, "f1!cchar")
 checkPragmas(A16, pHeaderBy, istype = false)
 var a16: A16
 a16.f1 = 's'
 
 assert A17 is object
-testFields(A17, "a1|a2:cstring|array[1, ptr cint]")
+testFields(A17, "a1|a2!cstring|array[1, ptr cint]")
 checkPragmas(A17, pHeaderBy, istype = false)
 var a17: A17
 a17.a1 = "hello".cstring
@@ -239,7 +239,7 @@ var a18p: A18p
 a18p = addr a18
 
 assert A19 is object
-testFields(A19, "a1|a2:cstring|array[1, ptr cint]")
+testFields(A19, "a1|a2!cstring|array[1, ptr cint]")
 checkPragmas(A19, pHeaderImpBy)
 var a19: A19
 a19.a1 = "hello".cstring
@@ -251,7 +251,7 @@ var a19p: A19p
 a19p = addr a19
 
 assert A20 is object
-testFields(A20, "a1:cchar")
+testFields(A20, "a1!cchar")
 checkPragmas(A20, pHeaderBy, istype = false)
 var a20: A20
 a20.a1 = 'a'
@@ -267,7 +267,7 @@ var a21p: A21p
 a21p = addr a20
 
 assert A22 is object
-testFields(A22, "f1|f2:ptr ptr cint|array[123 + 132, ptr cint]")
+testFields(A22, "f1|f2!ptr ptr cint|array[123 + 132, ptr cint]")
 checkPragmas(A22, pHeaderBy, istype = false)
 var a22: A22
 a22.f1 = addr a15.a2[0]
@@ -345,5 +345,15 @@ assert ucArrType1 is UncheckedArray[array[5, cint]]
 checkPragmas(ucArrType1, pHeaderImp)
 
 assert ucArrType2 is object
-testFields(ucArrType2, "f1|f2:array[5, array[5, cfloat]]|UncheckedArray[array[5, ptr cint]]")
+testFields(ucArrType2, "f1|f2!array[5, array[5, cfloat]]|UncheckedArray[array[5, ptr cint]]")
 checkPragmas(ucArrType2, pHeaderBy, istype = false)
+
+assert fieldfuncfunc is object
+testFields(fieldfuncfunc,
+  "func1!proc (f1: cint; sfunc1: proc (f1: cint; ssfunc1: proc (f1: cint): ptr cint {.cdecl.}): ptr cint {.cdecl.}): ptr cint {.cdecl.}")
+
+assert func2 is proc (f1: cint; sfunc2: proc (f1: cint; ssfunc2: proc (f1: cint): ptr cint {.cdecl.}): ptr cint {.cdecl.}): ptr cint {.cdecl.}
+
+assert BASS_DEVICEINFO is object
+testFields(BASS_DEVICEINFO, "name|driver|flags!cstring|cstring|cint")
+checkPragmas(BASS_DEVICEINFO, pHeaderImpBy)

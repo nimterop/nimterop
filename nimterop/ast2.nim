@@ -283,7 +283,13 @@ proc newXIdent(nimState: NimState, node: TSNode, kind = nskType, fname = "", pra
   # If `pragmas`, add as nkPragmaExpr but not for `nskProc` since procs add pragmas elsewhere
   # If `istype` is set, this is a typedef, else struct/union so add {.importc: "struct/union X".} when includeHeader
   let
-    (tname, torigname, info) = nimState.getNameInfo(node.getAtom(), kind)
+    atom = node.getAtom()
+
+    (tname, torigname, info) =
+      if not atom.isNil:
+        nimState.getNameInfo(node.getAtom(), kind)
+      else:
+        ("", "", nimState.getLineInfo(node))
 
     origname =
       if fname.nBl:
