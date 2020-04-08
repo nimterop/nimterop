@@ -1,7 +1,6 @@
 import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
-from "."/getters import getCompilerMode, getModeArg
 
 import regex
 
@@ -621,6 +620,21 @@ proc make*(path, check: string, flags = "", regex = false) =
 
   doAssert findFile(check, path, regex = regex).len != 0, "# make failed"
 
+proc getCompilerMode*(path: string): string =
+  ## Determines a target language mode from an input filename, if one is not already specified.
+  let file = path.splitFile()
+  if file.ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
+    result = "cpp"
+  elif file.ext in [".h", ".c"]:
+    result = "c"
+
+proc getGccModeArg*(mode: string): string =
+  ## Produces a GCC argument that explicitly sets the language mode to be used by the compiler.
+  if mode == "cpp":
+    result = "-xc++"
+  elif mode == "c":
+    result = "-xc"
+
 proc getCompiler*(): string =
   var
     compiler =
@@ -638,7 +652,7 @@ proc getGccPaths*(mode: string): seq[string] =
     nul = when defined(Windows): "nul" else: "/dev/null"
     inc = false
 
-    (outp, _) = execAction(&"""{getCompiler()} -Wp,-v {getModeArg(mode)} {nul}""", die = false)
+    (outp, _) = execAction(&"""{getCompiler()} -Wp,-v {getGccModeArg(mode)} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "#include <...> search starts here" in line:
@@ -660,7 +674,7 @@ proc getGccLibPaths*(mode: string): seq[string] =
     nul = when defined(Windows): "nul" else: "/dev/null"
     linker = when defined(OSX): "-Xlinker" else: ""
 
-    (outp, _) = execAction(&"""{getCompiler()} {linker} -v {getModeArg(mode)} {nul}""", die = false)
+    (outp, _) = execAction(&"""{getCompiler()} {linker} -v {getGccModeArg(mode)} {nul}""", die = false)
 
   for line in outp.splitLines():
     if "LIBRARY_PATH=" in line:
