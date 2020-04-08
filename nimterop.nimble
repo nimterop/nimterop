@@ -54,6 +54,8 @@ task test, "Test":
   # Platform specific tests
   when defined(Windows):
     execTest "tests/tmath.nim"
+    execTest "tests/tmath.nim", "-d:FLAGS=\"-f:ast2\""
+    execTest "tests/tmath.nim",  "-d:FLAGS=\"-f:ast2 -H\""
   if defined(OSX) or defined(Windows) or not existsEnv("TRAVIS"):
     execTest "tests/tsoloud.nim"
     execTest "tests/tsoloud.nim", "-d:FLAGS=\"-f:ast2\""
