@@ -335,3 +335,15 @@ assert absfunptr5 is proc(a1: proc(a1: ptr A4): cint {.cdecl.}) {.cdecl.}
 
 assert sqlite3_bind_blob is
   proc(a1: ptr A1, a2: cint, a3: pointer, n: cint, a5: proc(a1: pointer) {.cdecl.}): cint {.cdecl.}
+
+# Issue #174 - type name[] => UncheckedArray[type]
+assert ucArrFunc1 is proc(text: UncheckedArray[cint]): cint {.cdecl.}
+assert ucArrFunc2 is
+  proc(text: UncheckedArray[array[5, cint]], `func`: proc(text: UncheckedArray[cint]): cint {.cdecl.}): cint {.cdecl.}
+
+assert ucArrType1 is UncheckedArray[array[5, cint]]
+checkPragmas(ucArrType1, pHeaderImp)
+
+assert ucArrType2 is object
+testFields(ucArrType2, "f1|f2:array[5, array[5, cfloat]]|UncheckedArray[array[5, ptr cint]]")
+checkPragmas(ucArrType2, pHeaderBy, istype = false)

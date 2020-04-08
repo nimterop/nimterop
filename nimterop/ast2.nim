@@ -460,11 +460,18 @@ proc newPtrTree(nimState: NimState, count: int, typ: PNode): PNode =
     parent.add result
     result = nresult
 
-proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode): PNode =
+proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode = nil): PNode =
   # Create nkBracketExpr tree depending on input
+  #
+  # If `size` is nil, create UncheckedArray[typ]
   let
     info = nimState.getLineInfo(node.getAtom())
-    ident = nimState.getIdent("array", info, exported = false)
+    tname =
+      if size.isNil:
+        "UncheckedArray"
+      else:
+        "array"
+    ident = nimState.getIdent(tname, info, exported = false)
 
   # array[size, typ]
   #
@@ -475,7 +482,8 @@ proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode): PNode =
   # )
   result = newNode(nkBracketExpr)
   result.add ident
-  result.add size
+  if not size.isNil:
+    result.add size
   result.add typ
 
 proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode
@@ -906,11 +914,17 @@ proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode 
     result = nimState.newPtrTree(tcount, result)
 
   for i in 0 ..< acount:
-    let
-      # Size of array could be a Nim expression
-      size = nimState.getLit(nimState.getNodeVal(cnode[1]), expression = true)
-    if size.kind != nkNilLit:
-      result = nimState.newArrayTree(cnode, result, size)
+    if cnode.len == 2:
+      # type name[X] => array[X, type]
+      let
+        # Size of array could be a Nim expression
+        size = nimState.getLit(nimState.getNodeVal(cnode[1]), expression = true)
+      if size.kind != nkNilLit:
+        result = nimState.newArrayTree(cnode, result, size)
+        cnode = cnode[0]
+    elif cnode.len == 1:
+      # type name[] = UncheckedArray[type]
+      result = nimState.newArrayTree(cnode, result)
       cnode = cnode[0]
 
   if ncount > 0:

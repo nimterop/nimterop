@@ -133,6 +133,16 @@ void
 
 int sqlite3_bind_blob(struct A1*, int, const void*, int n, void(*)(void*));
 
+// Issue #174 - type name[] => UncheckedArray[type]
+int ucArrFunc1(int text[]);
+int ucArrFunc2(int text[][5], int (*func)(int text[]));
+
+typedef int ucArrType1[][5];
+struct ucArrType2 {
+    float f1[5][5];
+    int *f2[][5];
+};
+
 
 
 
