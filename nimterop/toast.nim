@@ -2,23 +2,18 @@ import os, osproc, strformat, strutils, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, ast2, globals, getters, grammar]
+import "."/[ast, ast2, globals, getters, grammar, build]
 
 proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), &"Invalid path {path}"
 
-  var
-    parser = tsParserNew()
-    ext = path.splitFile().ext
+  var parser = tsParserNew()
 
   defer:
     parser.tsParserDelete()
 
   if gState.mode.Bl:
-    if ext in [".h", ".c"]:
-      gState.mode = "c"
-    elif ext in [".hxx", ".hpp", ".hh", ".H", ".h++", ".cpp", ".cxx", ".cc", ".C", ".c++"]:
-      gState.mode = "cpp"
+    gState.mode = getCompilerMode(path)
 
   if gState.preprocess:
     gState.code = gState.getPreprocessor(path)
@@ -61,7 +56,7 @@ proc main(
     feature: seq[Feature] = @[],
     includeHeader = false,
     includeDirs: seq[string] = @[],
-    mode = modeDefault,
+    mode = "",
     nim: string = "nim",
     nocomments = false,
     output = "",

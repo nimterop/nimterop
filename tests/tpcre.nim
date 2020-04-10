@@ -31,8 +31,7 @@ cPlugin:
     sym.name = sym.name.replace("pcre_", "")
 
 const FLAGS {.strdefine.} = ""
-cImport(pcreH, dynlib="dynpcre", flags = FLAGS)
-
+cImport(pcreH, dynlib="dynpcre", flags="--mode=c " & FLAGS)
 echo version()
 
 when FLAGS.len != 0:
