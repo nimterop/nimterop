@@ -106,7 +106,8 @@ proc checkIdentifier(name, kind, parent, origName: string) =
       origStr = if name != origName: &", originally '{origName}' before 'cPlugin:onSymbol()', still" else: ""
       errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} contains"
 
-    doAssert name[0] != '_' and name[^1] != '_', errmsg & " leading/trailing underscores '_'"
+    if name != "_":
+      doAssert name[0] != '_' and name[^1] != '_', errmsg & " leading/trailing underscores '_'"
 
     doAssert (not name.contains("__")): errmsg & " consecutive underscores '_'"
 
