@@ -227,3 +227,4 @@ cg.f2 = nil
 doAssert BIT == 1
 doAssert ca(nil) == 1
 doAssert cc(nil) == 2
+doAssert SDLK_UNDERSCORE == 95

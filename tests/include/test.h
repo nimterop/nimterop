@@ -194,6 +194,12 @@ struct JKL {
   int **f1;
 };
 
+// Issue #178
+typedef enum
+{
+    SDLK_UNDERSCORE = '_'
+} SDL_KeyCode;
+
 #ifdef __cplusplus
 }
 #endif

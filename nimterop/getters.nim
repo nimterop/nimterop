@@ -655,7 +655,9 @@ proc getNimExpression*(nimState: NimState, expr: string, name = ""): string =
     if i == clean.len or gen.nBl:
       # Process identifier
       if ident.nBl:
-        ident = nimState.getIdentifier(ident, nskConst)
+        # Issue #178
+        if ident != "_":
+          ident = nimState.getIdentifier(ident, nskConst)
         if name.nBl and ident in nimState.constIdentifiers:
           ident = ident & "." & name
         result &= ident
