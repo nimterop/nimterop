@@ -178,7 +178,7 @@ proc initGrammar(): Grammar =
 
       var
         i = 0
-        typ = nimState.getIdentifier(nimState.data[i].val, nskType).getType()
+        typ = nimState.getIdentifier(nimState.data[i].val, nskType, "Parent").getType()
         name = ""
         nname = ""
         tptr = ""
