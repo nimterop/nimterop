@@ -155,6 +155,12 @@ typedef struct {
  int flags;
 } BASS_DEVICEINFO;
 
+// Issue #183
+struct GPU_Target
+{
+    int w, *h;
+    char *x, y, **z;
+};
 
 
 
@@ -304,6 +310,13 @@ typedef struct {
  const char *driver; // driver
  int flags;
 } BASS_DEVICEINFO;
+
+// Issue #183
+struct GPU_Target
+{
+    int w, *h;
+    char *x, y, **z;
+};
 
 
 

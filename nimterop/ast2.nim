@@ -495,7 +495,7 @@ proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode = nil): PNo
 proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode
 proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode
 
-proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeInteger, exported = false): PNode =
+iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeInteger, exported = false): PNode =
   # Create nkIdentDefs tree for specified proc parameter or object field
   #
   # For proc, param should not be exported
@@ -520,8 +520,13 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
   #  typ,
   #  nkEmpty()
   # )
-  result = newNode(nkIdentDefs)
-
+  #
+  # Iterator since structs can have multiple comma separated fields for the
+  # same type so can yield multiple results.
+  #
+  # struct ABC { int w, h; };
+  #
+  # This is not applicable for procs.
   let
     start = getStartAtom(node)
 
@@ -533,6 +538,9 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
     # Only for proc with no named param - create a param name based on offset
     #
     # int func(char, int);
+    var
+      result = newNode(nkIdentDefs)
+
     if tname != "object":
       let
         pname = "a" & $(offset+1)
@@ -543,77 +551,88 @@ proc newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeIn
     else:
       # int func(void)
       result = nil
+
+    yield result
   else:
-    let
-      fdecl = node[start+1].firstChildInTree("function_declarator")
-      afdecl = node[start+1].firstChildInTree("abstract_function_declarator")
-      adecl = node[start+1].firstChildInTree("array_declarator")
-      abst = node[start+1].getName() == "abstract_pointer_declarator"
-    if fdecl.isNil and afdecl.isNil and adecl.isNil:
-      if abst:
-        # Only for proc with no named param with pointer type
+    for i in start+1 ..< node.len:
+      if node[i].getName() == "bitfield_clause":
+        continue
+
+      var
+        result = newNode(nkIdentDefs)
+
+      let
+        fdecl = node[i].firstChildInTree("function_declarator")
+        afdecl = node[i].firstChildInTree("abstract_function_declarator")
+        adecl = node[i].firstChildInTree("array_declarator")
+        abst = node[i].getName() == "abstract_pointer_declarator"
+      if fdecl.isNil and afdecl.isNil and adecl.isNil:
+        if abst:
+          # Only for proc with no named param with pointer type
+          # Create a param name based on offset
+          #
+          # int func(char *, int **);
+          let
+            pname = "a" & $(offset+1)
+            pident = nimState.getIdent(pname, tinfo, exported)
+            acount = node[i].getXCount("abstract_pointer_declarator")
+          result.add pident
+          result.add nimState.newPtrTree(acount, tident)
+          result.add newNode(nkEmpty)
+        else:
+          # Named param, simple type
+          let
+            (pname, _, pinfo) = nimState.getNameInfo(node[i].getAtom(), nskField, parent = name)
+            pident = nimState.getIdent(pname, pinfo, exported)
+
+            # Bitfield support - typedef struct { int field: 1; };
+            prident =
+              if node.len > i and node[i + 1].getName() == "bitfield_clause":
+                nimState.newPragmaExpr(node, pident, "bitsize",
+                  newIntNode(nkIntLit, parseInt(nimState.getNodeVal(node[i + 1].getAtom()))))
+              else:
+                pident
+
+            count = node[i].getPtrCount()
+
+          result.add prident
+          if count > 0:
+            result.add nimState.newPtrTree(count, tident)
+          else:
+            result.add tident
+          result.add newNode(nkEmpty)
+      elif not fdecl.isNil:
+        # Named param, function pointer
+        let
+          (pname, _, pinfo) = nimState.getNameInfo(node[i].getAtom(), nskField, parent = name)
+          pident = nimState.getIdent(pname, pinfo, exported)
+        result.add pident
+        result.add nimState.getTypeProc(name, node[i], node[start])
+        result.add newNode(nkEmpty)
+      elif not afdecl.isNil:
+        # Only for proc with no named param with function pointer type
         # Create a param name based on offset
         #
-        # int func(char *, int **);
+        # int func(int (*)(int *));
         let
           pname = "a" & $(offset+1)
           pident = nimState.getIdent(pname, tinfo, exported)
-          acount = node[start+1].getXCount("abstract_pointer_declarator")
+          procTy = nimState.getTypeProc(name, node[i], node[start])
         result.add pident
-        result.add nimState.newPtrTree(acount, tident)
+        result.add procTy
+        result.add newNode(nkEmpty)
+      elif not adecl.isNil:
+        # Named param, array type
+        let
+          (pname, _, pinfo) = nimState.getNameInfo(node[i].getAtom(), nskField, parent = name)
+          pident = nimState.getIdent(pname, pinfo, exported)
+        result.add pident
+        result.add nimState.getTypeArray(node[i], node[start], name)
         result.add newNode(nkEmpty)
       else:
-        # Named param, simple type
-        let
-          (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
-          pident = nimState.getIdent(pname, pinfo, exported)
+        result = nil
 
-          # Bitfield support - typedef struct { int field: 1; };
-          prident =
-            if node.len > start+1 and node[start+2].getName() == "bitfield_clause":
-              nimState.newPragmaExpr(node, pident, "bitsize",
-                newIntNode(nkIntLit, parseInt(nimState.getNodeVal(node[start+2].getAtom()))))
-            else:
-              pident
-
-          count = node[start+1].getPtrCount()
-
-        result.add prident
-        if count > 0:
-          result.add nimState.newPtrTree(count, tident)
-        else:
-          result.add tident
-        result.add newNode(nkEmpty)
-    elif not fdecl.isNil:
-      # Named param, function pointer
-      let
-        (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
-        pident = nimState.getIdent(pname, pinfo, exported)
-      result.add pident
-      result.add nimState.getTypeProc(name, node[start+1], node[start])
-      result.add newNode(nkEmpty)
-    elif not afdecl.isNil:
-      # Only for proc with no named param with function pointer type
-      # Create a param name based on offset
-      #
-      # int func(int (*)(int *));
-      let
-        pname = "a" & $(offset+1)
-        pident = nimState.getIdent(pname, tinfo, exported)
-        procTy = nimState.getTypeProc(name, node[start+1], node[start])
-      result.add pident
-      result.add procTy
-      result.add newNode(nkEmpty)
-    elif not adecl.isNil:
-      # Named param, array type
-      let
-        (pname, _, pinfo) = nimState.getNameInfo(node[start+1].getAtom(), nskField, parent = name)
-        pident = nimState.getIdent(pname, pinfo, exported)
-      result.add pident
-      result.add nimState.getTypeArray(node[start+1], node[start], name)
-      result.add newNode(nkEmpty)
-    else:
-      result = nil
+      yield result
 
 proc newFormalParams(nimState: NimState, name: string, node: TSNode, rtyp: PNode): PNode =
   # Create nkFormalParams tree for specified params and return type
@@ -635,10 +654,9 @@ proc newFormalParams(nimState: NimState, name: string, node: TSNode, rtyp: PNode
     for i in 0 ..< node.len:
       if node[i].getName() == "parameter_declaration":
         # Add nkIdentDefs for each param
-        let
-          param = nimState.newIdentDefs(name, node[i], i, exported = false)
-        if not param.isNil:
-          result.add param
+        for param in nimState.newIdentDefs(name, node[i], i, exported = false):
+          if not param.isNil:
+            result.add param
 
 proc newProcTy(nimState: NimState, name: string, node: TSNode, rtyp: PNode): PNode =
   # Create nkProcTy tree for specified proc type
@@ -674,10 +692,9 @@ proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
     for i in 0 ..< node.len:
       if node[i].getName() == "field_declaration":
         # Add nkIdentDefs for each field
-        let
-          field = nimState.newIdentDefs(name, node[i], i, exported = true)
-        if not field.isNil:
-          result.add field
+        for field in nimState.newIdentDefs(name, node[i], i, exported = true):
+          if not field.isNil:
+            result.add field
 
 proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname = "", istype = false, union = false) =
   # Add a type of object

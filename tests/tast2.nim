@@ -357,3 +357,8 @@ assert func2 is proc (f1: cint; sfunc2: proc (f1: cint; ssfunc2: proc (f1: cint)
 assert BASS_DEVICEINFO is object
 testFields(BASS_DEVICEINFO, "name|driver|flags!cstring|cstring|cint")
 checkPragmas(BASS_DEVICEINFO, pHeaderImpBy)
+
+# Issue #183
+assert GPU_Target is object
+testFields(GPU_Target, "w|h|x|y|z!cint|ptr cint|cstring|cchar|ptr cstring")
+checkPragmas(GPU_Target, pHeaderBy, istype = false)
