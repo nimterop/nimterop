@@ -273,7 +273,7 @@ proc cPluginHelper(body: string) =
 
   if gStateCT.pluginSource.nBl or gStateCT.overrides.nBl:
     let
-      data = "import macros, nimterop/plugin\n\n" & body & gStateCT.overrides
+      data = "import macros, nimterop/plugin\n\n" & body & "\n\n" & gStateCT.overrides
       hash = data.hash().abs()
       path = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
 
@@ -317,7 +317,7 @@ macro cPlugin*(body): untyped =
   ## - `nskEnumField` for enum (field) names, though they are in the global namespace as `nskConst`
   ## - `nskProc` - for proc names
   ##
-  ## `nimterop/plugins` is implicitly imported to provide access to standard
+  ## `macros` and `nimterop/plugins` are implicitly imported to provide access to standard
   ## plugin facilities.
   ##
   ## `cPlugin() <cimport.html#cPlugin.m>`_  only affects calls to
@@ -341,6 +341,20 @@ macro cPlugin*(body): untyped =
           sym.name = sym.name.replace("SDL_", "")
 
   cPluginHelper(body.repr)
+
+macro cPluginPath*(path: static[string]): untyped =
+  ## Rather than embedding the `cPlugin()` code within the wrapper, it might be
+  ## preferable to have it stored in a separate source file. This allows for reuse
+  ## across multiple wrappers when applicable.
+  ##
+  ## The `cPluginPath()` macro enables this functionality - provide a path to the
+  ## plugin file and it will be consumed in the same way as `cPlugin()`.
+  ##
+  ## `path` is relative to the current dir and not necessarily relative to the
+  ## location of the wrapper file. Use `currentSourcePath.parentDir()` to specify
+  ## path relative to the wrapper file.
+  doAssert fileExists(path), "Plugin file not found: " & path
+  cPluginHelper(readFile(path))
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory `path` in search path configured
