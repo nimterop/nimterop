@@ -610,6 +610,23 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
   if ast.children.len == 1 and ast.children[0].name == ".":
     return ast.children[0]
 
+proc replaceCSuffix(m: RegexMatch, s: string): string =
+  let suffix = s[m.group(1)[0]].toLowerAscii
+  let number = s[m.group(0)[0]]
+  case suffix
+  of "u":
+    number & ".uint"
+  of "l":
+    number & ".int32"
+  of "ul":
+    number & ".uint32"
+  of "ll":
+    number & ".int64"
+  of "ull":
+    number & ".uint64"
+  else:
+    s
+
 proc getNimExpression*(nimState: NimState, expr: string, name = ""): string =
   # Convert C/C++ expression into Nim - cast identifiers to `name` if specified
   var
@@ -664,6 +681,8 @@ proc getNimExpression*(nimState: NimState, expr: string, name = ""): string =
         ident = ""
       result &= gen
       gen = ""
+
+  result = result.replace(re"(\d+)([ulUL]+)", replaceCSuffix)
 
   # Convert shift ops to Nim
   result = result.multiReplace([

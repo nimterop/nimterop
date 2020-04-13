@@ -147,14 +147,14 @@ proc newConstDef(nimState: NimState, node: TSNode, fname = "", fval = ""): PNode
       else:
         nimState.getNodeVal(node[1])
     valident =
-      nimState.getLit(val)
+      nimState.getLit(val, expression = true)
 
   if name.Bl:
     # Name skipped or overridden since blank
     result = nimState.getOverrideOrSkip(node, origname, nskConst)
   elif valident.kind in {nkCharLit .. nkStrLit} or
     (valident.kind == nkStmtList and valident.len > 0 and
-    valident[0].kind in {nkCharLit .. nkStrLit}):
+    (valident[0].kind in {nkCharLit .. nkStrLit} or valident[0].kind == nkPar)):
     if nimState.addNewIdentifer(name):
       # const X* = Y
       #

@@ -102,6 +102,19 @@ assert C == 0x10
 assert D == "hello"
 assert E == 'c'
 
+assert UEXPR == (1234.uint shl 1)
+assert ULEXPR == (1234.uint32 shl 2)
+assert ULLEXPR == (1234.uint64 shl 3)
+assert LEXPR == (1234.int32 shl 4)
+assert LLEXPR == (1234.int64 shl 5)
+
+assert SHL1 == (1.uint shl 1)
+assert SHL2 == (1.uint shl 2)
+assert SHL3 == (1.uint shl 3)
+
+assert ALLSHL == (SHL1 or SHL2 or SHL3)
+
+
 assert A0 is object
 testFields(A0, "f1!cint")
 checkPragmas(A0, pHeaderBy, istype = false)
