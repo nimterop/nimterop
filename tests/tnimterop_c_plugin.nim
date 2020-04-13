@@ -1,3 +1,5 @@
+import nimterop/plugin
+
 import strutils
 
 proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =

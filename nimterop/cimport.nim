@@ -268,12 +268,12 @@ proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
     static: cSkipSymbol @["proc1", "Type2"]
   gStateCT.symOverride.add skips
 
-proc cPluginHelper(body: string) =
+proc cPluginHelper(body: string, imports = "import macros, nimterop/plugin\n\n") =
   gStateCT.pluginSource = body
 
   if gStateCT.pluginSource.nBl or gStateCT.overrides.nBl:
     let
-      data = "import macros, nimterop/plugin\n\n" & body & "\n\n" & gStateCT.overrides
+      data = imports & body & "\n\n" & gStateCT.overrides
       hash = data.hash().abs()
       path = getProjectCacheDir("cPlugins", forceClean = false) / "nimterop_" & $hash & ".nim"
 
@@ -347,14 +347,18 @@ macro cPluginPath*(path: static[string]): untyped =
   ## preferable to have it stored in a separate source file. This allows for reuse
   ## across multiple wrappers when applicable.
   ##
-  ## The `cPluginPath()` macro enables this functionality - provide a path to the
+  ## The `cPluginPath()` macro enables this functionality - specify the path to the
   ## plugin file and it will be consumed in the same way as `cPlugin()`.
   ##
   ## `path` is relative to the current dir and not necessarily relative to the
-  ## location of the wrapper file. Use `currentSourcePath.parentDir()` to specify
-  ## path relative to the wrapper file.
+  ## location of the wrapper file. Use `currentSourcePath` to specify a path relative
+  ## to the wrapper file.
+  ##
+  ## Unlike `cPlugin()`, this macro also does not implicitly import any other modules
+  ## since the standalone plugin file will need explicit imports for `nim check` and
+  ## suggestions to work. `import nimterop/plugin` is required for all plugins.
   doAssert fileExists(path), "Plugin file not found: " & path
-  cPluginHelper(readFile(path))
+  cPluginHelper(readFile(path), imports = "")
 
 proc cSearchPath*(path: string): string {.compileTime.}=
   ## Get full path to file or directory `path` in search path configured
