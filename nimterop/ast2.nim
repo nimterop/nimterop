@@ -811,9 +811,16 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
     if not fdlist.isNil and fdlist.len > 0:
       # Current node has fields
       let
-        name = nimState.getNodeVal(node.getAtom())
+        origname = nimState.getNodeVal(node.getAtom())
 
-      if nimState.identifierNodes.hasKey(name):
+        # Fix issue #185
+        name =
+          if origname.nBl:
+            nimState.getIdentifier(origname, nskType)
+          else:
+            ""
+
+      if name.nBl and nimState.identifierNodes.hasKey(name):
         let
           def = nimState.identifierNodes[name]
         # Duplicate nkTypeDef for `name` with empty fields

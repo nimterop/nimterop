@@ -162,6 +162,14 @@ struct GPU_Target
     char *x, y, **z;
 };
 
+// Issue #185
+struct SDL_AudioCVT;
+
+typedef struct SDL_AudioCVT
+{
+    int needed;
+}  SDL_AudioCVT;
+
 
 
 // DUPLICATES
@@ -317,6 +325,14 @@ struct GPU_Target
     int w, *h;
     char *x, y, **z;
 };
+
+// Issue #185
+struct SDL_AudioCVT;
+
+typedef struct SDL_AudioCVT
+{
+    int needed;
+}  SDL_AudioCVT;
 
 
 

@@ -32,7 +32,7 @@ cOverride:
   type
     A1* = A0
 
-cImport(path, flags="-f:ast2 -ENK_" & flags)
+cImport(path, flags="-f:ast2 -ENK_,SDL_" & flags)
 
 proc getPragmas(n: NimNode): HashSet[string] =
   # Find all pragmas in AST, return as "name" or "name:value" in set
@@ -57,7 +57,8 @@ proc getRecList(n: NimNode): NimNode =
       if not rl.isNil:
         return rl
 
-macro checkPragmas(t: typed, pragmas: static[seq[string]], istype: static[bool] = true): untyped =
+macro checkPragmas(t: typed, pragmas: static[seq[string]], istype: static[bool] = true,
+  prefix: static[string] = ""): untyped =
   # Verify that type has expected pragmas defined
   # `istype` is true when typedef X
   var
@@ -67,9 +68,9 @@ macro checkPragmas(t: typed, pragmas: static[seq[string]], istype: static[bool] 
   when defined(HEADER):
     if not istype:
       if "union" in exprag:
-        exprag.incl "importc:union " & $t
+        exprag.incl "importc:union " & $prefix & $t
       else:
-        exprag.incl "importc:struct " & $t
+        exprag.incl "importc:struct " & $prefix & $t
   doAssert symmetricDifference(prag, exprag).len == 0,
     "\nWrong number of pragmas in " & $t & "\n" & $prag & " vs " & $exprag
 
@@ -362,3 +363,8 @@ checkPragmas(BASS_DEVICEINFO, pHeaderImpBy)
 assert GPU_Target is object
 testFields(GPU_Target, "w|h|x|y|z!cint|ptr cint|cstring|cchar|ptr cstring")
 checkPragmas(GPU_Target, pHeaderBy, istype = false)
+
+# Issue #185
+assert AudioCVT is object
+testFields(AudioCVT, "needed!cint")
+checkPragmas(AudioCVT, pHeaderBy, istype = false, "SDL_")
