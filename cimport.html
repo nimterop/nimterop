@@ -115,7 +115,7 @@ function main() {
 <li>
   <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#cSkipSymbol%2Cseq%5BT%5D%5Bstring%5D"
+      <li><a class="reference" href="#cSkipSymbol%2Cseq%5Bstring%5D"
     title="cSkipSymbol(skips: seq[string])"><wbr />c<wbr />Skip<wbr />Symbol<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cSearchPath%2Cstring"
     title="cSearchPath(path: string): string"><wbr />c<wbr />Search<wbr />Path<span class="attachedType"></span></a></li>
@@ -137,6 +137,8 @@ function main() {
     title="cOverride(body): untyped"><wbr />c<wbr />Override<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cPlugin.m"
     title="cPlugin(body): untyped"><wbr />c<wbr />Plugin<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cPluginPath.m%2Cstatic%5Bstring%5D"
+    title="cPluginPath(path: static[string]): untyped"><wbr />c<wbr />Plugin<wbr />Path<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cDefine.m%2C%2Cstring"
     title="cDefine(name: static string; val: static string = &quot;&quot;): untyped"><wbr />c<wbr />Define<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cIncludeDir.m"
@@ -191,8 +193,8 @@ function main() {
 <div class="section" id="12">
 <h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
-<a id="cSkipSymbol,seq[T][string]"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cSkipSymbol%2Cseq%5BT%5D%5Bstring%5D"><span class="Identifier">cSkipSymbol</span></a><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<a id="cSkipSymbol,seq[string]"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#cSkipSymbol%2Cseq%5Bstring%5D"><span class="Identifier">cSkipSymbol</span></a><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 <p>Similar to <a class="reference external" href="cimport.html#cOverride.m">cOverride()</a>, this macro allows filtering out symbols not of interest from the generated output.</p>
@@ -293,7 +295,7 @@ When <a class="reference external" href="cimport.html#cOverride.m">cOverride()</
 <li><tt class="docutils literal"><span class="pre">nskEnumField</span></tt> for enum (field) names, though they are in the global namespace as <tt class="docutils literal"><span class="pre">nskConst</span></tt></li>
 <li><tt class="docutils literal"><span class="pre">nskProc</span></tt> - for proc names</li>
 </ul>
-<p><tt class="docutils literal"><span class="pre">nimterop/plugins</span></tt> is implicitly imported to provide access to standard plugin facilities.</p>
+<p><tt class="docutils literal"><span class="pre">macros</span></tt> and <tt class="docutils literal"><span class="pre">nimterop/plugins</span></tt> are implicitly imported to provide access to standard plugin facilities.</p>
 <p><a class="reference external" href="cimport.html#cPlugin.m">cPlugin()</a>  only affects calls to <a class="reference external" href="cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring">cImport()</a> that follow it.</p>
 
 <p><strong class="examples_text">Examples:</strong></p>
@@ -313,6 +315,17 @@ When <a class="reference external" href="cimport.html#cOverride.m">cOverride()</
     <span class="Keyword">if</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">kind</span> <span class="Operator">==</span> <span class="Identifier">nskProc</span> <span class="Keyword">and</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">contains</span><span class="Other">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Other">)</span><span class="Other">:</span>
       <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span> <span class="Other">=</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">replace</span><span class="Other">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span>
 </pre>
+
+</dd>
+<a id="cPluginPath.m,static[string]"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cPluginPath.m%2Cstatic%5Bstring%5D"><span class="Identifier">cPluginPath</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Rather than embedding the <tt class="docutils literal"><span class="pre">cPlugin()</span></tt> code within the wrapper, it might be preferable to have it stored in a separate source file. This allows for reuse across multiple wrappers when applicable.</p>
+<p>The <tt class="docutils literal"><span class="pre">cPluginPath()</span></tt> macro enables this functionality - specify the path to the plugin file and it will be consumed in the same way as <tt class="docutils literal"><span class="pre">cPlugin()</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">path</span></tt> is relative to the current dir and not necessarily relative to the location of the wrapper file. Use <tt class="docutils literal"><span class="pre">currentSourcePath</span></tt> to specify a path relative to the wrapper file.</p>
+<p>Unlike <tt class="docutils literal"><span class="pre">cPlugin()</span></tt>, this macro also does not implicitly import any other modules since the standalone plugin file will need explicit imports for <tt class="docutils literal"><span class="pre">nim check</span></tt> and suggestions to work. <tt class="docutils literal"><span class="pre">import nimterop/plugin</span></tt> is required for all plugins.</p>
+
 
 </dd>
 <a id="cDefine.m,,string"></a>
@@ -400,7 +413,7 @@ Add an include directory that is forwarded to the C/C++ preprocessor if called w
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-03-24 20:55:42 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-04-13 15:31:35 UTC</small>
       </div>
     </div>
   </div>

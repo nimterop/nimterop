@@ -25,9 +25,11 @@ setCmakeLibName	build.html#setCmakeLibName,string,string,string,string,string	bu
 setCmakePositionIndependentCode	build.html#setCmakePositionIndependentCode,string	build: setCmakePositionIndependentCode(outdir: string)	
 cmake	build.html#cmake,string,string,string	build: cmake(path, check, flags: string)	
 make	build.html#make,string,string,string	build: make(path, check: string; flags = &quot;&quot;; regex = false)	
+getCompilerMode	build.html#getCompilerMode,string	build: getCompilerMode(path: string): string	
+getGccModeArg	build.html#getGccModeArg,string	build: getGccModeArg(mode: string): string	
 getCompiler	build.html#getCompiler	build: getCompiler(): string	
-getGccPaths	build.html#getGccPaths,string	build: getGccPaths(mode = &quot;c&quot;): seq[string]	
-getGccLibPaths	build.html#getGccLibPaths,string	build: getGccLibPaths(mode = &quot;c&quot;): seq[string]	
+getGccPaths	build.html#getGccPaths,string	build: getGccPaths(mode: string): seq[string]	
+getGccLibPaths	build.html#getGccLibPaths,string	build: getGccLibPaths(mode: string): seq[string]	
 setDefines	build.html#setDefines.m	build: setDefines(defs: static openArray[string]): untyped	
 clearDefines	build.html#clearDefines.m	build: clearDefines(): untyped	
 isDefined	build.html#isDefined.m,untyped	build: isDefined(def: untyped): untyped	

@@ -1,8 +1,9 @@
 ast2	cimport.html#ast2	Feature.ast2	
 Feature	cimport.html#Feature	cimport: Feature	
 cOverride	cimport.html#cOverride.m	cimport: cOverride(body): untyped	
-cSkipSymbol	cimport.html#cSkipSymbol,seq[T][string]	cimport: cSkipSymbol(skips: seq[string])	
+cSkipSymbol	cimport.html#cSkipSymbol,seq[string]	cimport: cSkipSymbol(skips: seq[string])	
 cPlugin	cimport.html#cPlugin.m	cimport: cPlugin(body): untyped	
+cPluginPath	cimport.html#cPluginPath.m,static[string]	cimport: cPluginPath(path: static[string]): untyped	
 cSearchPath	cimport.html#cSearchPath,string	cimport: cSearchPath(path: string): string	
 cDebug	cimport.html#cDebug	cimport: cDebug()	
 cDisableCaching	cimport.html#cDisableCaching	cimport: cDisableCaching()	
