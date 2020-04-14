@@ -170,6 +170,11 @@ typedef struct SDL_AudioCVT
     int needed;
 }  SDL_AudioCVT;
 
+// Issue #172
+typedef struct {
+  const char* const* x;
+} SomeType;
+
 
 
 // DUPLICATES
@@ -333,6 +338,11 @@ typedef struct SDL_AudioCVT
 {
     int needed;
 }  SDL_AudioCVT;
+
+// Issue #172
+typedef struct {
+  const char* const* x;
+} SomeType;
 
 
 

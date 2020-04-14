@@ -234,7 +234,14 @@ proc getAtom*(node: TSNode): TSNode =
     if node.getName() in gAtoms:
       return node
     elif node.len() != 0:
-      return node[0].getAtom()
+      if node[0].getName() == "type_qualifier":
+        # Skip const, volatile
+        if node.len() > 1:
+          return node[1].getAtom()
+        else:
+          return
+      else:
+        return node[0].getAtom()
 
 proc getStartAtom*(node: TSNode): int =
   if not node.isNil:
@@ -256,7 +263,14 @@ proc getXCount*(node: TSNode, ntype: string, reverse = false): int =
         cnode = cnode.tsNodeParent()
       else:
         if cnode.len() != 0:
-          cnode = cnode[0]
+          if cnode[0].getName() == "type_qualifier":
+            # Skip const, volatile
+            if cnode.len() > 1:
+              cnode = cnode[1]
+            else:
+              break
+          else:
+            cnode = cnode[0]
         else:
           break
 

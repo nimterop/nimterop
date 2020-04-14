@@ -23,7 +23,7 @@ proc execTest(test: string, flags = "") =
   execCmd "nim cpp --hints:off " & flags & " -r " & test
 
 task buildToast, "build toast":
-  execCmd("nim c --hints:off -f nimterop/toast.nim")
+  execCmd("nim c --hints:off nimterop/toast.nim")
 
 task bt, "build toast":
   execCmd("nim c --hints:off -d:danger nimterop/toast.nim")

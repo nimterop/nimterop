@@ -368,3 +368,8 @@ checkPragmas(GPU_Target, pHeaderBy, istype = false)
 assert AudioCVT is object
 testFields(AudioCVT, "needed!cint")
 checkPragmas(AudioCVT, pHeaderBy, istype = false, "SDL_")
+
+# Issue #172
+assert SomeType is object
+testFields(SomeType, "x!ptr cstring")
+checkPragmas(SomeType, pHeaderImpBy)
