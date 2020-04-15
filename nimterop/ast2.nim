@@ -73,7 +73,7 @@ proc getOverrideOrSkip(nimState: NimState, node: TSNode, origname: string, kind:
   # If not, symbol needs to be skipped - only get here if `name` is blank
   let
     # Get cleaned name for symbol, set parent so that cOverride is ignored
-    name = nimState.getIdentifier(origname, kind, parent = "override")
+    name = nimState.getIdentifier(origname, kind, parent = "getOverrideOrSkip")
 
     override = nimState.getOverride(origname, kind)
 
@@ -492,7 +492,7 @@ proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode = nil): PNo
     result.add size
   result.add typ
 
-proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode
+proc getTypeArray(nimState: NimState, node: TSNode, tident: PNode, name: string): PNode
 proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode
 
 iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeInteger, ftname = "", exported = false): PNode =
@@ -637,7 +637,7 @@ iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: So
           (pname, _, pinfo) = nimState.getNameInfo(node[i].getAtom(), nskField, parent = name)
           pident = nimState.getIdent(pname, pinfo, exported)
         result.add pident
-        result.add nimState.getTypeArray(node[i], node[start], name)
+        result.add nimState.getTypeArray(node[i], tident, name)
         result.add newNode(nkEmpty)
       else:
         result = nil
@@ -958,13 +958,11 @@ proc addTypeTyped(nimState: NimState, node: TSNode, ftname = "", offset = 0) =
       else:
         nimState.addTypeObject(node, typeDef = typeDef, istype = true)
 
-proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode =
+proc getTypeArray(nimState: NimState, node: TSNode, tident: PNode, name: string): PNode =
   # Create array type tree
+  #
+  # `tident` is type PNode
   let
-    # tnode = identifier = type name
-    (tname, _, info) = nimState.getNameInfo(tnode.getAtom(), nskType, parent = name)
-    ident = nimState.getIdent(tname, info, exported = false)
-
     # Top-most array declarator
     adecl = node.firstChildInTree("array_declarator")
 
@@ -990,7 +988,7 @@ proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode 
     # )
     ncount = innermost[0].getAtom().tsNodeParent().getPtrCount(reverse = true)
 
-  result = ident
+  result = tident
   var
     cnode = adecl
 
@@ -1021,8 +1019,9 @@ proc addTypeArray(nimState: NimState, node: TSNode) =
   let
     start = getStartAtom(node)
 
-    # node[start] = type name
-    tnode = node[start]
+    # node[start] = identifier = type name
+    (tname, _, info) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = "addTypeArray")
+    tident = nimState.getIdent(tname, info, exported = false)
 
   # Could have multiple types, comma separated
   for i in start+1 ..< node.len:
@@ -1033,7 +1032,7 @@ proc addTypeArray(nimState: NimState, node: TSNode) =
     if not typeDef.isNil:
       let
         name = typeDef.getIdentName()
-        typ = nimState.getTypeArray(node[i], tnode, name)
+        typ = nimState.getTypeArray(node[i], tident, name)
 
       typeDef.add typ
 

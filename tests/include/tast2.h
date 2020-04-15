@@ -175,6 +175,29 @@ typedef struct {
   const char* const* x;
 } SomeType;
 
+// Nested #137
+typedef struct {
+    struct NT1 { int f1; } f1;
+    struct { int f1; } f2;
+
+    struct NT3 {
+        struct {
+            int f1;
+            union NU1 {
+                float f1;
+            } f2;
+            enum { NEV1, NEV2, NEV3 } f3;
+        } f1;
+     } f3;
+
+    struct { int f1; } f4;
+
+    union NU2 { int f1; } f5;
+    union { int f1; } f6;
+    enum NE1 { NEV4 = 8, NEV5 } f7;
+    enum { NEV6 = 8 * 8, NEV7 } f8;
+} nested;
+
 
 
 // DUPLICATES
@@ -343,6 +366,29 @@ typedef struct SDL_AudioCVT
 typedef struct {
   const char* const* x;
 } SomeType;
+
+// Nested #137
+typedef struct {
+    struct NT1 { int f1; } f1;
+    struct { int f1; } f2;
+
+    struct NT3 {
+        struct {
+            int f1;
+            union NU1 {
+                float f1;
+            } f2;
+            enum { NEV1, NEV2, NEV3 } f3;
+        } f1;
+     } f3;
+
+    struct { int f1; } f4;
+
+    union NU2 { int f1; } f5;
+    union { int f1; } f6;
+    enum NE1 { NEV4 = 8, NEV5 } f7;
+    enum { NEV6 = 8 * 8, NEV7 } f8;
+} nested;
 
 
 

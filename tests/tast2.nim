@@ -373,3 +373,50 @@ checkPragmas(AudioCVT, pHeaderBy, istype = false, "SDL_")
 assert SomeType is object
 testFields(SomeType, "x!ptr cstring")
 checkPragmas(SomeType, pHeaderImpBy)
+
+# Nested #137
+assert NT1 is object
+testFields(NT1, "f1!cint")
+checkPragmas(NT1, pHeaderBy, istype = false)
+
+assert Type_tast2h1 is object
+testFields(Type_tast2h1, "f1!cint")
+checkPragmas(Type_tast2h1, pHeaderBy, istype = false)
+
+assert NU1 is object
+testFields(NU1, "f1!cfloat")
+checkPragmas(NU1, pHeaderBy & @["union"], istype = false)
+
+assert NEV1 == 0
+assert NEV2 == 1
+assert NEV3 == 2
+
+assert Type_tast2h2 is object
+testFields(Type_tast2h2, "f1|f2|f3!cint|NU1|Enum_tast2h1")
+checkPragmas(Type_tast2h2, pHeaderBy, istype = false)
+
+assert NT3 is object
+testFields(NT3, "f1!Type_tast2h2")
+checkPragmas(NT3, pHeaderBy, istype = false)
+
+assert Type_tast2h3 is object
+testFields(Type_tast2h3, "f1!cint")
+checkPragmas(Type_tast2h3, pHeaderBy, istype = false)
+
+assert NU2 is object
+testFields(NU2, "f1!cint")
+checkPragmas(NU2, pHeaderBy & @["union"], istype = false)
+
+assert Union_tast2h1 is object
+testFields(Union_tast2h1, "f1!cint")
+checkPragmas(Union_tast2h1, pHeaderBy & @["union"], istype = false)
+
+assert NEV4 == 8
+assert NEV5 == 9
+
+assert NEV6 == 64
+assert NEV7 == 65
+
+assert nested is object
+testFields(nested, "f1|f2|f3|f4|f5|f6|f7|f8!NT1|Type_tast2h1|NT3|Type_tast2h3|NU2|Union_tast2h1|NE1|Enum_tast2h2")
+checkPragmas(nested, pHeaderImpBy)
