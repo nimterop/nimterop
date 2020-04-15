@@ -22,14 +22,20 @@ type
   va_list* {.importc, header:"<stdarg.h>".} = object
 
 template enumOp*(op, typ, typout) =
-  proc op*(x: typ, y: int): typout {.borrow.}
-  proc op*(x: int, y: typ): typout {.borrow.}
+  proc op*(x: typ, y: cint): typout {.borrow.}
+  proc op*(x: cint, y: typ): typout {.borrow.}
   proc op*(x, y: typ): typout {.borrow.}
 
-template defineEnum*(typ) =
-  type
-    typ* = distinct int
+  proc op*(x: typ, y: int): typout = op(x, y.cint)
+  proc op*(x: int, y: typ): typout = op(x.cint, y)
 
+template defineEnum*(typ) =
+  # Create a `distinct cint` type for C enums since Nim enums
+  # need to be in order and cannot have duplicates.
+  type
+    typ* = distinct cint
+
+  # Enum operations allowed
   enumOp(`+`,   typ, typ)
   enumOp(`-`,   typ, typ)
   enumOp(`*`,   typ, typ)
@@ -39,29 +45,30 @@ template defineEnum*(typ) =
   enumOp(`div`, typ, typ)
   enumOp(`mod`, typ, typ)
 
-  proc `shl`*(x: typ, y: int): typ {.borrow.}
-  proc `shl`*(x: int, y: typ): typ {.borrow.}
+  # These don't work with `enumOp()` for some reason
+  proc `shl`*(x: typ, y: cint): typ {.borrow.}
+  proc `shl`*(x: cint, y: typ): typ {.borrow.}
   proc `shl`*(x, y: typ): typ {.borrow.}
 
-  proc `shr`*(x: typ, y: int): typ {.borrow.}
-  proc `shr`*(x: int, y: typ): typ {.borrow.}
+  proc `shr`*(x: typ, y: cint): typ {.borrow.}
+  proc `shr`*(x: cint, y: typ): typ {.borrow.}
   proc `shr`*(x, y: typ): typ {.borrow.}
 
-  proc `or`*(x: typ, y: int): typ {.borrow.}
-  proc `or`*(x: int, y: typ): typ {.borrow.}
+  proc `or`*(x: typ, y: cint): typ {.borrow.}
+  proc `or`*(x: cint, y: typ): typ {.borrow.}
   proc `or`*(x, y: typ): typ {.borrow.}
 
-  proc `and`*(x: typ, y: int): typ {.borrow.}
-  proc `and`*(x: int, y: typ): typ {.borrow.}
+  proc `and`*(x: typ, y: cint): typ {.borrow.}
+  proc `and`*(x: cint, y: typ): typ {.borrow.}
   proc `and`*(x, y: typ): typ {.borrow.}
 
-  proc `xor`*(x: typ, y: int): typ {.borrow.}
-  proc `xor`*(x: int, y: typ): typ {.borrow.}
+  proc `xor`*(x: typ, y: cint): typ {.borrow.}
+  proc `xor`*(x: cint, y: typ): typ {.borrow.}
   proc `xor`*(x, y: typ): typ {.borrow.}
 
-  proc `/`(x, y: typ): typ =
-    return (x.float / y.float).int.typ
-  proc `/`*(x: typ, y: int): typ = `/`(x, y.typ)
-  proc `/`*(x: int, y: typ): typ = `/`(x.typ, y)
+  proc `/`*(x, y: typ): typ =
+    return (x.float / y.float).cint.typ
+  proc `/`*(x: typ, y: cint): typ = `/`(x, y.typ)
+  proc `/`*(x: cint, y: typ): typ = `/`(x.typ, y)
 
-  proc `$` *(x: typ): string {.borrow.}
+  proc `$`*(x: typ): string {.borrow.}
