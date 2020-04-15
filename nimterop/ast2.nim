@@ -4,9 +4,34 @@ import regex
 
 import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, parser, renderer]
 
-import "."/treesitter/api
+import "."/treesitter/[api, c, cpp]
 
 import "."/[globals, getters]
+
+proc getCCodeAst*(gState: State, code: string): string =
+  var parser = tsParserNew()
+  var code = code
+
+  defer:
+    parser.tsParserDelete()
+
+
+  doAssert code.nBl, "Empty code"
+  if gState.mode == "c":
+    doAssert parser.tsParserSetLanguage(treeSitterC()), "Failed to load C parser"
+  elif gState.mode == "cpp":
+    doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
+  else:
+    doAssert false, &"Invalid parser {gState.mode}"
+
+  var
+    tree = parser.tsParserParseString(nil, code.cstring, code.len.uint32)
+    root = tree.tsTreeRootNode()
+
+  defer:
+    tree.tsTreeDelete()
+
+  return code.printLisp(root)
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -59,6 +84,9 @@ proc getLit*(gState: State, str: string, expression = false): PNode =
     result = newStrNode(nkStrLit, str[1 .. ^2])
 
   else:
+    decho "Macro AST:"
+    decho str
+    decho nimState.gState.getCCodeAst(str)
     let
       str =
         if expression: gState.getNimExpression(str)

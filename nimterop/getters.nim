@@ -228,9 +228,12 @@ proc getName*(node: TSNode): string {.inline.} =
   if not node.isNil:
     return $node.tsNodeType()
 
-proc getNodeVal*(gState: State, node: TSNode): string =
+proc getNodeVal*(code: var string, node: TSNode): string =
   if not node.isNil:
-    return gState.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
+    return code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
+
+proc getNodeVal*(gState: State, node: TSNode): string =
+  gState.code.getNodeVal(node)
 
 proc getAtom*(node: TSNode): TSNode =
   if not node.isNil:
@@ -349,12 +352,15 @@ proc inChildren*(node: TSNode, ntype: string): bool =
       result = true
       break
 
-proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
+proc getLineCol*(code: var string, node: TSNode): tuple[line, col: int] =
   # Get line number and column info for node
   let
     point = node.tsNodeStartPoint()
   result.line = point.row.int + 1
   result.col = point.column.int + 1
+
+proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
+  getLineCol(gState.code, node)
 
 proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
   for i in 0 ..< node.len:
@@ -374,7 +380,7 @@ proc getPxName*(node: TSNode, offset: int): string =
   if count == offset and not np.isNil:
     return np.getName()
 
-proc printLisp*(gState: State, root: TSNode): string =
+proc printLisp*(code: var string, root: TSNode): string =
   var
     node = root
     nextnode: TSNode
@@ -384,10 +390,10 @@ proc printLisp*(gState: State, root: TSNode): string =
     if not node.isNil and depth > -1:
       result &= spaces(depth)
       let
-        (line, col) = gState.getLineCol(node)
+        (line, col) = code.getLineCol(node)
       result &= &"({$node.tsNodeType()} {line} {col} {node.tsNodeEndByte() - node.tsNodeStartByte()}"
       let
-        val = gState.getNodeVal(node)
+        val = code.getNodeVal(node)
       if "\n" notin val and " " notin val:
         result &= &" \"{val}\""
     else:
@@ -418,6 +424,9 @@ proc printLisp*(gState: State, root: TSNode): string =
 
     if node == root:
       break
+
+proc printLisp*(gState: State, root: TSNode): string =
+  printLisp(gState.code, root)
 
 proc getCommented*(str: string): string =
   "\n# " & str.strip().replace("\n", "\n# ")
