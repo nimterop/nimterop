@@ -495,10 +495,12 @@ proc newArrayTree(nimState: NimState, node: TSNode, typ, size: PNode = nil): PNo
 proc getTypeArray(nimState: NimState, node, tnode: TSNode, name: string): PNode
 proc getTypeProc(nimState: NimState, name: string, node, rnode: TSNode): PNode
 
-iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeInteger, exported = false): PNode =
+iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: SomeInteger, ftname = "", exported = false): PNode =
   # Create nkIdentDefs tree for specified proc parameter or object field
   #
-  # For proc, param should not be exported
+  # For proc, param should not be `exported`
+  #
+  # If `ftname` is set, use it as the type name
   #
   # pname: [ptr ..] typ
   #
@@ -531,7 +533,15 @@ iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: So
     start = getStartAtom(node)
 
     # node[start] - param type
-    (tname, _, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
+    (tname0, _, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
+
+    # Override type name
+    tname =
+      if ftname.nBl:
+        ftname
+      else:
+        tname0
+
     tident = nimState.getIdent(tname, tinfo, exported = false)
 
   if start == node.len - 1:
@@ -676,6 +686,7 @@ proc newProcTy(nimState: NimState, name: string, node: TSNode, rtyp: PNode): PNo
   result.add nimState.newFormalParams(name, node, rtyp)
   result.add nimState.newPragma(node, nimState.gState.convention)
 
+proc processNode(nimState: NimState, node: TSNode): bool
 proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
   # Create nkRecList tree for specified object
   if not node.isNil:
@@ -691,8 +702,34 @@ proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
 
     for i in 0 ..< node.len:
       if node[i].getName() == "field_declaration":
+        # Check for nested structs / unions / enums
+        let
+          fdecl = node[i].anyChildInTree("field_declaration_list")
+          edecl = node[i].anyChildInTree("enumerator_list")
+
+          # `tname` is name of nested struct / union / enum just
+          # added, passed on as type name for field in `newIdentDefs()`
+          (processed, tname) =
+            if not fdecl.isNil:
+              # Nested struct / union
+              (
+                nimState.processNode(fdecl.tsNodeParent()),
+                nimState.typeSection[^1].getIdentName()
+              )
+            elif not edecl.isNil:
+              # Nested enum
+              (
+                nimState.processNode(edecl.tsNodeParent()),
+                $nimState.enumSection[^1][0][1]
+              )
+            else:
+              (true, "")
+
+        if not processed:
+          return nil
+
         # Add nkIdentDefs for each field
-        for field in nimState.newIdentDefs(name, node[i], i, exported = true):
+        for field in nimState.newIdentDefs(name, node[i], i, ftname = tname, exported = true):
           if not field.isNil:
             result.add field
 
@@ -721,6 +758,16 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
         pragmas.add "incompleteStruct"
 
       pragmas
+
+    fname =
+      if not node.firstChildInTree("field_declaration_list").isNil and
+        node.tsNodeParent().getName() == "field_declaration":
+        # If nested struct / union without a name
+        nimState.getUniqueIdentifier(
+          if union: "Union" else: "Type"
+        )
+      else:
+        fname
 
     typeDefExisting = not typeDef.isNil
 
@@ -784,7 +831,11 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
 
     if not fdlist.isNil and fdlist.len > 0:
       # Add fields to object if present
-      obj.add nimState.newRecListTree(name, fdlist)
+      let
+        fields = nimState.newRecListTree(name, fdlist)
+      if fields.isNil:
+        return
+      obj.add fields
     else:
       obj.add newNode(nkEmpty)
 
@@ -828,7 +879,11 @@ proc addTypeObject(nimState: NimState, node: TSNode, typeDef: PNode = nil, fname
           def[2].kind == nkObjectTy and def[2].len == 3 and
           def[2][2].kind == nkEmpty:
             # Add fields to existing object
-            def[2][2] = nimState.newRecListTree(name, fdlist)
+            let
+              fields = nimState.newRecListTree(name, fdlist)
+            if fields.isNil:
+              return
+            def[2][2] = fields
 
             # Change incompleteStruct to bycopy pragma
             if def[0].kind == nkPragmaExpr and def[0].len == 2 and
@@ -1180,7 +1235,7 @@ proc addType(nimState: NimState, node: TSNode, union = false) =
         let
           fdecl = node[1].anyChildInTree("function_declarator")
           adecl = node[1].anyChildInTree("array_declarator")
-        if fdlist.isNil():
+        if fdlist.isNil:
           if adecl.isNil and fdecl.isNil:
             # typedef X Y;
             # typedef X *Y;
@@ -1605,18 +1660,18 @@ proc searchTree(nimState: NimState, root: TSNode) =
     processed = false
 
   while true:
-    if not node.isNil() and depth > -1:
+    if not node.isNil and depth > -1:
       processed = nimState.processNode(node)
     else:
       break
 
-    if not processed and node.len() != 0:
+    if not processed and node.len != 0:
       nextnode = node[0]
       depth += 1
     else:
       nextnode = node.tsNodeNextNamedSibling()
 
-    if nextnode.isNil():
+    if nextnode.isNil:
       while true:
         node = node.tsNodeParent()
         depth -= 1
@@ -1624,7 +1679,7 @@ proc searchTree(nimState: NimState, root: TSNode) =
           break
         if node == root:
           break
-        if not node.tsNodeNextNamedSibling().isNil():
+        if not node.tsNodeNextNamedSibling().isNil:
           node = node.tsNodeNextNamedSibling()
           break
     else:

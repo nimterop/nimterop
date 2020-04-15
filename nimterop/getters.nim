@@ -214,7 +214,7 @@ proc len*(node: TSNode): int =
     result = node.tsNodeNamedChildCount().int
 
 proc `[]`*(node: TSNode, i: SomeInteger): TSNode =
-  if i < node.len():
+  if i < node.len:
     result = node.tsNodeNamedChild(i.uint32)
 
 proc getName*(node: TSNode): string {.inline.} =
@@ -233,10 +233,10 @@ proc getAtom*(node: TSNode): TSNode =
     # Get child node which is topmost atom
     if node.getName() in gAtoms:
       return node
-    elif node.len() != 0:
+    elif node.len != 0:
       if node[0].getName() == "type_qualifier":
         # Skip const, volatile
-        if node.len() > 1:
+        if node.len > 1:
           return node[1].getAtom()
         else:
           return
@@ -262,10 +262,10 @@ proc getXCount*(node: TSNode, ntype: string, reverse = false): int =
       if reverse:
         cnode = cnode.tsNodeParent()
       else:
-        if cnode.len() != 0:
+        if cnode.len != 0:
           if cnode[0].getName() == "type_qualifier":
             # Skip const, volatile
-            if cnode.len() > 1:
+            if cnode.len > 1:
               cnode = cnode[1]
             else:
               break
@@ -285,7 +285,7 @@ proc getDeclarator*(node: TSNode): TSNode =
     # Return if child is a function or array declarator
     if node.getName() in ["function_declarator", "array_declarator"]:
       return node
-    elif node.len() != 0:
+    elif node.len != 0:
       return node[0].getDeclarator()
 
 proc firstChildInTree*(node: TSNode, ntype: string): TSNode =
@@ -307,7 +307,7 @@ proc anyChildInTree*(node: TSNode, ntype: string): TSNode =
     for i in 0 ..< cnode.len:
       let
         ccnode = cnode[i].anyChildInTree(ntype)
-      if not ccnode.isNil():
+      if not ccnode.isNil:
         return ccnode
     if cnode != node:
       cnode = cnode.tsNodeNextNamedSibling()
@@ -326,7 +326,7 @@ proc mostNestedChildInTree*(node: TSNode): TSNode =
 proc inChildren*(node: TSNode, ntype: string): bool =
   # Search for node type in immediate children
   result = false
-  for i in 0 ..< node.len():
+  for i in 0 ..< node.len:
     if (node[i]).getName() == ntype:
       result = true
       break
@@ -342,7 +342,7 @@ proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
     result.col += 1
 
 proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
-  for i in 0 ..< node.len():
+  for i in 0 ..< node.len:
     if node.getName() != "comment":
       result += 1
 
@@ -352,11 +352,11 @@ proc getPxName*(node: TSNode, offset: int): string =
     np = node
     count = 0
 
-  while not np.isNil() and count < offset:
+  while not np.isNil and count < offset:
     np = np.tsNodeParent()
     count += 1
 
-  if count == offset and not np.isNil():
+  if count == offset and not np.isNil:
     return np.getName()
 
 proc printLisp*(gState: State, root: TSNode): string =
@@ -366,7 +366,7 @@ proc printLisp*(gState: State, root: TSNode): string =
     depth = 0
 
   while true:
-    if not node.isNil() and depth > -1:
+    if not node.isNil and depth > -1:
       result &= spaces(depth)
       let
         (line, col) = gState.getLineCol(node)
@@ -386,7 +386,7 @@ proc printLisp*(gState: State, root: TSNode): string =
       result &= ")\n"
       nextnode = node.tsNodeNextNamedSibling()
 
-    if nextnode.isNil():
+    if nextnode.isNil:
       while true:
         node = node.tsNodeParent()
         depth -= 1
@@ -395,7 +395,7 @@ proc printLisp*(gState: State, root: TSNode): string =
         result &= spaces(depth) & ")\n"
         if node == root:
           break
-        if not node.tsNodeNextNamedSibling().isNil():
+        if not node.tsNodeNextNamedSibling().isNil:
           node = node.tsNodeNextNamedSibling()
           break
     else:

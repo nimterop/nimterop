@@ -35,7 +35,7 @@ proc readFromTokens(): ref Ast =
     idx += 2
     while gTokens[idx] != ")":
       var res = readFromTokens()
-      if not res.isNil():
+      if not res.isNil:
         result.children.add(res)
   elif gTokens[idx] == ")":
     doAssert false, "Poor AST " & $(idx: idx)

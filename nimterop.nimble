@@ -29,7 +29,7 @@ task bt, "build toast":
   execCmd("nim c --hints:off -d:danger nimterop/toast.nim")
 
 task btd, "build toast":
-  execCmd("nim c -g --hints:off nimterop/toast.nim")
+  execCmd("nim c -g nimterop/toast.nim")
 
 task docs, "Generate docs":
   buildDocs(@["nimterop/all.nim"], "build/htmldocs")
