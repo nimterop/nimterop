@@ -686,6 +686,10 @@ proc newProcTy(nimState: NimState, name: string, node: TSNode, rtyp: PNode): PNo
   result.add nimState.newFormalParams(name, node, rtyp)
   result.add nimState.newPragma(node, nimState.gState.convention)
 
+  # Add varargs if ...
+  if node.getVarargs():
+    nimState.addPragma(node, result[^1], "varargs")
+
 proc processNode(nimState: NimState, node: TSNode): bool
 proc newRecListTree(nimState: NimState, name: string, node: TSNode): PNode =
   # Create nkRecList tree for specified object
@@ -1582,6 +1586,9 @@ proc addProc(nimState: NimState, node, rnode: TSNode) =
           # {.impnameC.} shortcut
           nimState.newPragma(node, nimState.impShort & "C")
 
+      # Detect ... and add {.varargs.}
+      pvarargs = plist.getVarargs()
+
     # Need {.convention.} and {.header.} if applicable
     if name != origname:
       if nimState.includeHeader():
@@ -1594,6 +1601,10 @@ proc addProc(nimState: NimState, node, rnode: TSNode) =
         if nimState.gState.dynlib.nBl:
           # {.dynlib.} for DLLs
           nimState.addPragma(node, prident, "dynlib", nimState.getIdent(nimState.gState.dynlib))
+
+    if pvarargs:
+      # Add {.varargs.} for ...
+      nimState.addPragma(node, prident, "varargs")
 
     procDef.add prident
     procDef.add newNode(nkEmpty)

@@ -288,6 +288,20 @@ proc getDeclarator*(node: TSNode): TSNode =
     elif node.len != 0:
       return node[0].getDeclarator()
 
+proc getVarargs*(node: TSNode): bool =
+  # Detect ... and add {.varargs.}
+  #
+  # `node` is the param list
+  #
+  # ... is an unnamed node, second last node and ) is last node
+  let
+    nlen = node.tsNodeChildCount()
+  if nlen > 1:
+    let
+      nval = node.tsNodeChild(nlen - 2).getName()
+    if nval == "...":
+      result = true
+
 proc firstChildInTree*(node: TSNode, ntype: string): TSNode =
   # Search for node type in tree - first children
   var
