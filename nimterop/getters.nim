@@ -296,9 +296,9 @@ proc getVarargs*(node: TSNode): bool =
   # ... is an unnamed node, second last node and ) is last node
   let
     nlen = node.tsNodeChildCount()
-  if nlen > 1:
+  if nlen > 1.uint32:
     let
-      nval = node.tsNodeChild(nlen - 2).getName()
+      nval = node.tsNodeChild(nlen - 2.uint32).getName()
     if nval == "...":
       result = true
 

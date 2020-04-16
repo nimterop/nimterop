@@ -109,7 +109,7 @@ typedef enum VSPresetFormat {
 
 // Proc vars
 void
-  *(*pcre_malloc)(size_t),
+  *(*pcre_malloc)(size_t, ...),
   (*pcre_free)(void *),
   *(*pcre_stack_malloc)(size_t);
 
@@ -144,7 +144,7 @@ struct ucArrType2 {
 };
 
 typedef struct fieldfuncfunc {
-    int *(*func1)(int f1, int *(*sfunc1)(int f1, int *(*ssfunc1)(int f1)));
+    int *(*func1)(int f1, int *(*sfunc1)(int f1, int *(*ssfunc1)(int f1, ...)));
 };
 
 int *func2(int f1, int *(*sfunc2)(int f1, int *(*ssfunc2)(int f1)));
@@ -311,7 +311,7 @@ typedef enum VSPresetFormat {
 
 // Proc vars
 void
-  *(*pcre_malloc)(size_t),
+  *(*pcre_malloc)(size_t, ...),
   (*pcre_free)(void *),
   *(*pcre_stack_malloc)(size_t);
 
@@ -336,7 +336,7 @@ void
 int sqlite3_bind_blob(struct A1*, int, const void*, int n, void(*)(void*));
 
 typedef struct fieldfuncfunc {
-    int *(*func1)(int f1, int *(*sfunc1)(int f1, int *(*ssfunc1)(int f1)));
+    int *(*func1)(int f1, int *(*sfunc1)(int f1, int *(*ssfunc1)(int f1, ...)));
 };
 
 int *func2(int f1, int *(*sfunc2)(int f1, int *(*ssfunc2)(int f1)));

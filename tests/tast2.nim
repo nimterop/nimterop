@@ -302,8 +302,8 @@ assert pfYUV422P8 == pfYUV420P8 + 1
 assert pfRGB27 == cmRGB.VSPresetFormat + 11
 assert pfCompatYUY2 == pfCompatBGR32 + 1
 
-assert pcre_malloc is proc(a1: uint): pointer {.cdecl.}
-checkPragmas(pcre_malloc, @["importc", "cdecl"] & pHeader)
+assert pcre_malloc is proc(a1: uint): pointer {.cdecl, varargs.}
+checkPragmas(pcre_malloc, @["importc", "cdecl", "varargs"] & pHeader)
 
 assert pcre_free is proc(a1: pointer) {.cdecl.}
 checkPragmas(pcre_free, @["importc", "cdecl"] & pHeader)
@@ -351,7 +351,7 @@ checkPragmas(ucArrType2, pHeaderBy, istype = false)
 
 assert fieldfuncfunc is object
 testFields(fieldfuncfunc,
-  "func1!proc (f1: cint; sfunc1: proc (f1: cint; ssfunc1: proc (f1: cint): ptr cint {.cdecl.}): ptr cint {.cdecl.}): ptr cint {.cdecl.}")
+  "func1!proc (f1: cint; sfunc1: proc (f1: cint; ssfunc1: proc (f1: cint): ptr cint {.cdecl, varargs.}): ptr cint {.cdecl.}): ptr cint {.cdecl.}")
 
 assert func2 is proc (f1: cint; sfunc2: proc (f1: cint; ssfunc2: proc (f1: cint): ptr cint {.cdecl.}): ptr cint {.cdecl.}): ptr cint {.cdecl.}
 
