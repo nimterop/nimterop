@@ -13,13 +13,15 @@ type
     state*: NimState
     code*: string
 
+  ExprParseError* = object of CatchableError
+
 proc newExprParser*(state: NimState, code: string): ExprParser =
   ExprParser(state: state, code: code)
 
-template decho(msg: varargs[string, `$`]) =
+template techo(msg: varargs[string, `$`]) =
   if exprParser.state.gState.debug:
     let nimState {.inject.} = exprParser.state
-    necho "# " & join(msg, "")
+    necho "# " & join(msg, "").replace("\n", "\n# ")
 
 template val*(node: TSNode): string =
   exprParser.code.getNodeVal(node)
@@ -54,16 +56,19 @@ proc getNumNode(number, suffix: string): PNode {.inline.} =
   result = newNode(nkNilLit)
   if number.contains("."):
     let floatSuffix = number[result.len-1]
-    case floatSuffix
-    of 'l', 'L':
-      # TODO: handle long double (128 bits)
-      # result = newNode(nkFloat128Lit)
-      result = newFloatNode(nkFloat64Lit, parseFloat(number[0 ..< number.len - 1]))
-    of 'f', 'F':
-      result = newFloatNode(nkFloat64Lit, parseFloat(number[0 ..< number.len - 1]))
-    else:
-      discard
-    return
+    try:
+      case floatSuffix
+      of 'l', 'L':
+        # TODO: handle long double (128 bits)
+        # result = newNode(nkFloat128Lit)
+        result = newFloatNode(nkFloat64Lit, parseFloat(number[0 ..< number.len - 1]))
+      of 'f', 'F':
+        result = newFloatNode(nkFloat64Lit, parseFloat(number[0 ..< number.len - 1]))
+      else:
+        result = newFloatNode(nkFloatLit, parseFloat(number[0 ..< number.len - 1]))
+      return
+    except ValueError:
+      raise newException(ExprParseError, &"Could not parse float value \"{number}\".")
 
   case suffix
   of "u", "U":
@@ -111,6 +116,8 @@ proc processNumberLiteral*(exprParser: ExprParser, node: TSNode): PNode =
         exprParser.state.getIdent("-"),
         result
       )
+  else:
+    raise newException(ExprParseError, &"Could not find a number in number_literal: \"{nodeVal}\"")
 
 proc processCharacterLiteral*(exprParser: ExprParser, node: TSNode): PNode =
   result = newNode(nkCharLit)
@@ -135,7 +142,7 @@ proc processShiftExpression*(exprParser: ExprParser, node: TSNode): PNode =
   of ">>":
     result.add exprParser.state.getIdent("shr")
   else:
-    discard
+    raise newException(ExprParseError, &"Unsupported shift symbol \"{shiftSym}\"")
 
   result.add exprParser.processTSNode(left)
   result.add exprParser.processTSNode(right)
@@ -151,15 +158,15 @@ proc processLogicalExpression*(exprParser: ExprParser, node: TSNode): PNode =
   var nimSym = ""
 
   var binarySym = exprParser.code[node.tsNodeStartByte() ..< child.tsNodeStartByte()].strip()
-  decho "LOG SYM: ", binarySym
+  techo "LOG SYM: ", binarySym
 
   case binarySym
   of "!":
     nimSym = "not"
   else:
-    return newNode(nkNilLit)
+    raise newException(ExprParseError, &"Unsupported logical symbol \"{binarySym}\"")
 
-  decho "LOG CHILD: ", child.val, ", nim: ", nimSym
+  techo "LOG CHILD: ", child.val, ", nim: ", nimSym
   result.add nkPrefix.newTree(
     exprParser.state.getIdent(nimSym),
     exprParser.processTSNode(child)
@@ -173,7 +180,7 @@ proc processBitwiseExpression*(exprParser: ExprParser, node: TSNode): PNode =
     var nimSym = ""
 
     var binarySym = exprParser.code[left.tsNodeEndByte() ..< right.tsNodeStartByte()].strip()
-    decho "# BIN SYM: ", binarySym
+    techo "BIN SYM: ", binarySym
 
     case binarySym
     of "|", "||":
@@ -183,7 +190,7 @@ proc processBitwiseExpression*(exprParser: ExprParser, node: TSNode): PNode =
     of "^":
       nimSym = "xor"
     else:
-      return newNode(nkNilLit)
+      raise newException(ExprParseError, &"Unsupported binary symbol \"{binarySym}\"")
 
     result.add exprParser.state.getIdent(nimSym)
     result.add exprParser.processTSNode(left)
@@ -195,23 +202,26 @@ proc processBitwiseExpression*(exprParser: ExprParser, node: TSNode): PNode =
     var nimSym = ""
 
     var binarySym = exprParser.code[node.tsNodeStartByte() ..< child.tsNodeStartByte()].strip()
-    decho "# BIN SYM: ", binarySym
+    techo "BIN SYM: ", binarySym
 
     case binarySym
     of "~":
       nimSym = "not"
     else:
-      return newNode(nkNilLit)
+      raise newException(ExprParseError, &"Unsupported unary symbol \"{binarySym}\"")
 
     result.add nkPrefix.newTree(
       exprParser.state.getIdent(nimSym),
       exprParser.processTSNode(child)
     )
+  else:
+    raise newException(ExprParseError, &"Invalid bitwise_expression \"{node.val}\"")
 
 proc processTSNode*(exprParser: ExprParser, node: TSNode): PNode =
   result = newNode(nkNilLit)
-  decho "# NODE: ", node.getName(), ", VAL: ", node.val
-  case node.getName()
+  let nodeName = node.getName()
+  techo "NODE: ", nodeName, ", VAL: ", node.val
+  case nodeName
   of "number_literal":
     result = exprParser.processNumberLiteral(node)
   of "string_literal":
@@ -220,7 +230,11 @@ proc processTSNode*(exprParser: ExprParser, node: TSNode): PNode =
     result = exprParser.processCharacterLiteral(node)
   of "expression_statement", "ERROR", "translation_unit":
     # This may be wrong. What can be in an expression?
-    result = exprParser.processTSNode(node[0])
+    if node.len > 0:
+      result = exprParser.processTSNode(node[0])
+    else:
+      raise newException(ExprParseError, &"Node type \"{nodeName}\" has no children")
+
   of "parenthesized_expression":
     result = exprParser.processParenthesizedExpr(node)
   of "bitwise_expression":
@@ -235,11 +249,18 @@ proc processTSNode*(exprParser: ExprParser, node: TSNode): PNode =
       ident = exprParser.state.getIdentifier(ident, nskConst)
     result = exprParser.state.getIdent(ident)
   else:
-    result = newNode(nkNilLit)
+    raise newException(ExprParseError, &"Unsupported node type \"{nodeName}\" for node \"{node.val}\"")
 
-  decho "# NODERES: ", result
+  techo "NODERES: ", result
 
 proc codeToNode*(state: NimState, code: string): PNode =
   let exprParser = newExprParser(state, code)
-  withCodeAst(exprParser):
-    result = exprParser.processTSNode(root)
+  try:
+    withCodeAst(exprParser):
+      result = exprParser.processTSNode(root)
+  except ExprParseError as e:
+    techo e.msg
+    result = newNode(nkNilLit)
+  except Exception as e:
+    techo e.msg
+    result = newNode(nkNilLit)
