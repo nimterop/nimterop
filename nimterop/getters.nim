@@ -399,7 +399,7 @@ proc printLisp*(code: var string, root: TSNode): string =
     else:
       break
 
-    if node.tsNodeNamedChildCount() != 0:
+    if node.len() != 0:
       result &= "\n"
       nextnode = node.tsNodeNamedChild(0)
       depth += 1
@@ -459,15 +459,19 @@ proc printTree*(gState: State, pnode: PNode, offset = ""): string =
     if offset.len == 0:
       result &= "\n"
 
-proc printDebug*(gState: State, node: TSNode) =
-  if gState.debug:
-    gecho ("Input => " & gState.getNodeVal(node)).getCommented() & "\n" &
-          gState.printLisp(node).getCommented()
+proc printDebug*(nimState: NimState, node: TSNode) =
+  discard
+  # This causes random segfaults for some reason on macOS Catalina
+  if nimState.gState.debug:
+    necho ("Input => " & nimState.getNodeVal(node)).getCommented()
+    necho nimState.gState.printLisp(node).getCommented()
 
-proc printDebug*(gState: State, pnode: PNode) =
-  if gState.debug:
-    gecho ("Output => " & $pnode).getCommented() & "\n" &
-          gState.printTree(pnode)
+proc printDebug*(nimState: NimState, pnode: PNode) =
+  discard
+  # This causes random segfaults for some reason on macOS Catalina
+  if nimState.gState.debug and pnode.kind != nkNone:
+    necho ("Output => " & $pnode).getCommented()
+    necho nimState.printTree(pnode)
 
 # Compiler shortcuts
 

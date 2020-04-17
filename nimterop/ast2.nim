@@ -1,10 +1,10 @@
 import macros, os, sequtils, sets, strformat, strutils, tables, times
 
-import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, parser, renderer]
+import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
 import "."/treesitter/api
 
-import "."/[globals, getters, exprparser]
+import "."/[globals, getters, exprparser, utils]
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -16,21 +16,6 @@ proc getPtrType*(str: string): string =
       "File"
     else:
       str
-
-proc handleError*(conf: ConfigRef, info: TLineInfo, msg: TMsgKind, arg: string) =
-  # Raise exception in parseString() instead of exiting for errors
-  if msg < warnMin:
-    raise newException(Exception, msgKindToString(msg))
-
-proc parseString(gState: State, str: string): PNode =
-  # Parse a string into Nim AST - use custom error handler that raises
-  # an exception rather than exiting on failure
-  try:
-    result = parseString(
-      str, gState.identCache, gState.config, errorHandler = handleError
-    )
-  except:
-    decho getCurrentExceptionMsg()
 
 proc getLit*(nimState: NimState, str: string, expression = false): PNode =
   result = nimState.codeToNode(str)
@@ -121,7 +106,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
   if name.Bl:
     # Name skipped or overridden since blank
     result = nimState.getOverrideOrSkip(node, origname, nskConst)
-  elif valident.kind != nkNilLit:
+  elif valident.kind != nkNone:
     if nimState.addNewIdentifer(name):
       # const X* = Y
       #
@@ -179,7 +164,7 @@ proc addPragma(gState: State, node: TSNode, pragma: PNode, name: string, value: 
   if value.isNil:
     pragma.add pident
   else:
-    let
+    var
       colExpr = newNode(nkExprColonExpr)
     colExpr.add pident
     colExpr.add value
@@ -1501,6 +1486,7 @@ proc addProc(gState: State, node, rnode: TSNode) =
       # Parameter list
       plist = node.anyChildInTree("parameter_list")
 
+    var
       procDef = newNode(nkProcDef)
 
     # proc X(a1: Y, a2: Z): P {.pragma.}

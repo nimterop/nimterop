@@ -105,6 +105,26 @@ assert C == 0x10
 assert D == "hello"
 assert E == 'c'
 
+assert UEXPR == (1234.uint shl 1)
+assert ULEXPR == (1234.uint32 shl 2)
+assert ULLEXPR == (1234.uint64 shl 3)
+assert LEXPR == (1234.int32 shl 4)
+assert LLEXPR == (1234.int64 shl 5)
+
+assert COERCE == 645635599460'u64
+assert COERCE2 == 645635599460'i64
+
+assert BINEXPR == 5
+assert BOOL == true
+assert MATHEXPR == -99
+assert ANDEXPR == 96
+
+assert SHL1 == (1.uint shl 1)
+assert SHL2 == (1.uint shl 2)
+assert SHL3 == (1.uint shl 3)
+
+assert ALLSHL == (SHL1 or SHL2 or SHL3)
+
 assert A0 is object
 testFields(A0, "f1!cint")
 checkPragmas(A0, pHeaderBy, istype = false)
@@ -271,7 +291,7 @@ var a21p: A21p
 a21p = addr a20
 
 assert A22 is object
-testFields(A22, "f1|f2!ptr ptr cint|array[123 + 132, ptr cint]")
+testFields(A22, "f1|f2!ptr ptr cint|array[typeof(123)(123 + cast[typeof(123)](132)), ptr cint]")
 checkPragmas(A22, pHeaderBy, istype = false)
 var a22: A22
 a22.f1 = addr a15.a2[0]

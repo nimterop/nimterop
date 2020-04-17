@@ -113,7 +113,7 @@ when not declared(CIMPORT):
   export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, nBl, Bl
 
   # Redirect output to file when required
-  template gecho*(args: string) {.dirty.} =
+  template gecho*(args: string) =
     if gState.outputHandle.isNil:
       echo args
     else:
