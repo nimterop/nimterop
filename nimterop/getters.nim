@@ -221,7 +221,7 @@ proc len*(node: TSNode): int =
     result = node.tsNodeNamedChildCount().int
 
 proc `[]`*(node: TSNode, i: SomeInteger): TSNode =
-  if i < node.len:
+  if i < type(i)(node.len()):
     result = node.tsNodeNamedChild(i.uint32)
 
 proc getName*(node: TSNode): string {.inline.} =

@@ -1,37 +1,10 @@
 import macros, os, sequtils, sets, strformat, strutils, tables, times
 
-import regex
-
 import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, parser, renderer]
 
-import "."/treesitter/[api, c, cpp]
+import "."/treesitter/api
 
-import "."/[globals, getters]
-
-proc getCCodeAst*(gState: State, code: string): string =
-  var parser = tsParserNew()
-  var code = code
-
-  defer:
-    parser.tsParserDelete()
-
-
-  doAssert code.nBl, "Empty code"
-  if gState.mode == "c":
-    doAssert parser.tsParserSetLanguage(treeSitterC()), "Failed to load C parser"
-  elif gState.mode == "cpp":
-    doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
-  else:
-    doAssert false, &"Invalid parser {gState.mode}"
-
-  var
-    tree = parser.tsParserParseString(nil, code.cstring, code.len.uint32)
-    root = tree.tsTreeRootNode()
-
-  defer:
-    tree.tsTreeDelete()
-
-  return code.printLisp(root)
+import "."/[globals, getters, exprparser]
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -59,42 +32,8 @@ proc parseString(gState: State, str: string): PNode =
   except:
     decho getCurrentExceptionMsg()
 
-proc getLit*(gState: State, str: string, expression = false): PNode =
-  # Used to convert #define literals into const and expressions
-  # in array sizes
-  #
-  # `expression` is true when `str` should be converted into a Nim expression
-  let
-    str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
-
-  if str.contains(re"^[\-]?[\d]+$"):              # decimal
-    result = newIntNode(nkIntLit, parseInt(str))
-
-  elif str.contains(re"^[\-]?[\d]*[.]?[\d]+$"):   # float
-    result = newFloatNode(nkFloatLit, parseFloat(str))
-
-  elif str.contains(re"^0x[\da-fA-F]+$"):         # hexadecimal
-    result = gState.parseString(str)
-
-  elif str.contains(re"^'[[:ascii:]]'$"):         # char
-    result = newNode(nkCharLit)
-    result.intVal = str[1].int64
-
-  elif str.contains(re"""^"[[:ascii:]]+"$"""):    # char *
-    result = newStrNode(nkStrLit, str[1 .. ^2])
-
-  else:
-    decho "Macro AST:"
-    decho str
-    decho nimState.gState.getCCodeAst(str)
-    let
-      str =
-        if expression: gState.getNimExpression(str)
-        else: str
-    result = gState.parseString(str)
-
-  if result.isNil:
-    result = newNode(nkNilLit)
+proc getLit*(nimState: NimState, str: string, expression = false): PNode =
+  result = nimState.codeToNode(str)
 
 proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimSymKind): PNode =
   # Check if symbol `origname` of `kind` and `origname` has any cOverride defined
@@ -181,11 +120,9 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
 
   if name.Bl:
     # Name skipped or overridden since blank
-    result = gState.getOverrideOrSkip(node, origname, nskConst)
-  elif valident.kind in {nkCharLit .. nkStrLit} or
-    (valident.kind == nkStmtList and valident.len > 0 and
-    valident[0].kind in {nkCharLit .. nkStrLit}):
-    if gState.addNewIdentifer(name):
+    result = nimState.getOverrideOrSkip(node, origname, nskConst)
+  elif valident.kind != nkNilLit:
+    if nimState.addNewIdentifer(name):
       # const X* = Y
       #
       # nkConstDef(
