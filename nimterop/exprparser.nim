@@ -144,8 +144,18 @@ proc processShiftExpression*(exprParser: ExprParser, node: TSNode): PNode =
   else:
     raise newException(ExprParseError, &"Unsupported shift symbol \"{shiftSym}\"")
 
-  result.add exprParser.processTSNode(left)
-  result.add exprParser.processTSNode(right)
+  let
+    leftNode = exprParser.processTSNode(left)
+    rightNode = exprParser.processTSNode(right)
+
+  result.add leftNode
+  result.add nkCast.newTree(
+    nkCall.newTree(
+      exprParser.state.getIdent("typeof"),
+      leftNode
+    ),
+    rightNode
+  )
 
 proc processParenthesizedExpr*(exprParser: ExprParser, node: TSNode): PNode =
   result = newNode(nkPar)
@@ -193,8 +203,18 @@ proc processBitwiseExpression*(exprParser: ExprParser, node: TSNode): PNode =
       raise newException(ExprParseError, &"Unsupported binary symbol \"{binarySym}\"")
 
     result.add exprParser.state.getIdent(nimSym)
-    result.add exprParser.processTSNode(left)
-    result.add exprParser.processTSNode(right)
+    let
+      leftNode = exprParser.processTSNode(left)
+      rightNode = exprParser.processTSNode(right)
+
+    result.add leftNode
+    result.add nkCast.newTree(
+      nkCall.newTree(
+        exprParser.state.getIdent("typeof"),
+        leftNode
+      ),
+      rightNode
+    )
 
   elif node.len() == 1:
     result = newNode(nkPar)
