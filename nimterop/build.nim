@@ -358,7 +358,7 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
         "nimgrep --filenames --oneline --nocolor $1 \"$2\" $3"
       elif defined(linux):
         "find $3 $1 -regextype egrep -regex $2"
-      elif defined(osx):
+      elif defined(osx) or defined(FreeBSD):
         "find -E $3 $1 -regex $2"
 
     recursive = ""
