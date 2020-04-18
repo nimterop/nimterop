@@ -963,7 +963,7 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
       let
         # Size of array could be a Nim expression
         size = gState.getLit(gState.getNodeVal(cnode[1]), expression = true)
-      if size.kind != nkNilLit:
+      if size.kind != nkNone:
         result = gState.newArrayTree(cnode, result, size)
         cnode = cnode[0]
     elif cnode.len == 1:

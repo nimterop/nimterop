@@ -460,18 +460,16 @@ proc printTree*(gState: State, pnode: PNode, offset = ""): string =
       result &= "\n"
 
 proc printDebug*(nimState: NimState, node: TSNode) =
-  discard
   # This causes random segfaults for some reason on macOS Catalina
   if nimState.gState.debug:
     necho ("Input => " & nimState.getNodeVal(node)).getCommented()
     necho nimState.gState.printLisp(node).getCommented()
 
 proc printDebug*(nimState: NimState, pnode: PNode) =
-  discard
   # This causes random segfaults for some reason on macOS Catalina
   if nimState.gState.debug and pnode.kind != nkNone:
     necho ("Output => " & $pnode).getCommented()
-    necho nimState.printTree(pnode)
+    necho nimState.printTree(pnode).getCommented()
 
 # Compiler shortcuts
 
