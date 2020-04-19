@@ -1657,6 +1657,12 @@ proc processNode(nimState: NimState, node: TSNode): bool =
     nimState.addEnum(node)
   of "declaration":
     nimState.addDecl(node)
+  of "function_definition":
+    # Handle static inline
+    let
+      start = getStartAtom(node)
+    if node[start+1].getName() == "function_declarator":
+      nimState.addProc(node[start+1], node[start])
   else:
     # Unknown
     result = false

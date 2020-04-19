@@ -568,8 +568,7 @@ proc getPreprocessor*(gState: State, fullpath: string): string =
           rdata.add line
   return rdata.join("\n").
     replace("__restrict", "").
-    replace(re"__attribute__[ ]*\(\(.*?\)\)([ ,;])", "$1").
-    removeStatic()
+    replace(re"__attribute__[ ]*\(\(.*?\)\)([ ,;])", "$1")
 
 converter toString*(kind: Kind): string =
   return case kind:
