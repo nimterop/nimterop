@@ -58,7 +58,7 @@ proc getRecList(n: NimNode): NimNode =
         return rl
 
 macro checkPragmas(t: typed, pragmas: static[seq[string]], istype: static[bool] = true,
-  prefix: static[string] = ""): untyped =
+  origname: static[string] = ""): untyped =
   # Verify that type has expected pragmas defined
   # `istype` is true when typedef X
   var
@@ -68,9 +68,12 @@ macro checkPragmas(t: typed, pragmas: static[seq[string]], istype: static[bool] 
   when defined(HEADER):
     if not istype:
       if "union" in exprag:
-        exprag.incl "importc:union " & $prefix & $t
+        exprag.incl "importc:union " & $t
       else:
-        exprag.incl "importc:struct " & $prefix & $t
+        exprag.incl "importc:struct " & $t
+    elif origname.len != 0:
+      exprag.incl "importc:" & $origname
+
   doAssert symmetricDifference(prag, exprag).len == 0,
     "\nWrong number of pragmas in " & $t & "\n" & $prag & " vs " & $exprag
 
@@ -358,7 +361,7 @@ assert func2 is proc (f1: cint; sfunc2: proc (f1: cint; ssfunc2: proc (f1: cint)
 # Test --replace VICE=SLICE
 assert BASS_DESLICEINFO is object
 testFields(BASS_DESLICEINFO, "name|driver|flags!cstring|cstring|cint")
-checkPragmas(BASS_DESLICEINFO, pHeaderImpBy)
+checkPragmas(BASS_DESLICEINFO, pHeaderBy, origname = "BASS_DEVICEINFO")
 
 # Issue #183
 assert GPU_Target is object
@@ -368,7 +371,7 @@ checkPragmas(GPU_Target, pHeaderBy, istype = false)
 # Issue #185
 assert AudioCVT is object
 testFields(AudioCVT, "needed!cint")
-checkPragmas(AudioCVT, pHeaderBy, istype = false, "SDL_")
+checkPragmas(AudioCVT, pHeaderBy, origname = "struct SDL_AudioCVT")
 
 # Issue #172
 assert SomeType is object
