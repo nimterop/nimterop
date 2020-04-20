@@ -258,7 +258,7 @@ proc processParenthesizedExpr(exprParser: ExprParser, node: TSNode, typeofNode: 
     result.add(exprParser.processTSNode(node[i], typeofNode))
 
 proc processCastExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
-  result = nkCall.newTree(
+  result = nkCast.newTree(
     exprParser.processTSNode(node[0], typeofNode),
     exprParser.processTSNode(node[1], typeofNode)
   )
@@ -455,7 +455,9 @@ proc processTSNode(exprParser: ExprParser, node: TSNode, typeofNode: var PNode):
     result = exprParser.processParenthesizedExpr(node, typeofNode)
   of "sizeof_expression":
     result = exprParser.processSizeofExpression(node, typeofNode)
-  of "bitwise_expression", "equality_expression":
+  # binary_expression from the new treesitter upgrade should work here
+  # once we upgrade
+  of "bitwise_expression", "equality_expression", "binary_expression":
     result = exprParser.processBitwiseExpression(node, typeofNode)
   of "math_expression":
     result = exprParser.processMathExpression(node, typeofNode)

@@ -3,10 +3,15 @@ import macros, os, sets, strutils
 import nimterop/[cimport]
 
 static:
+  # Skip casting on lower nim compilers because
+  # the VM does not support it
+  when (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
+    cSkipSymbol @["CASTEXPR"]
   cDebug()
 
 const
   path = currentSourcePath.parentDir() / "include" / "tast2.h"
+
 
 when defined(HEADER):
   cDefine("HEADER")
@@ -118,7 +123,9 @@ assert BINEXPR == 5
 assert BOOL == true
 assert MATHEXPR == -99
 assert ANDEXPR == 96
-assert CASTEXPR == 34.chr
+
+when (NimMajor, NimMinor, NimPatch) >= (1, 0, 0):
+  assert CASTEXPR == 34.chr
 
 assert TRICKYSTR == "N\x1C\nfoo\x00\'\"\c\v\a\b\e\f\t\\\\?bar"
 assert NULLCHAR == '\0'

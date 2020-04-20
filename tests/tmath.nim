@@ -13,6 +13,10 @@ when defined(windows):
       complex = object
 
 static:
+  when (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
+    cSkipSymbol @["mingw_choose_expr", "EXCEPTION_DEFINED", "COMPLEX_DEFINED", "matherr", "HUGE", "FP_ILOGB0", "FP_ILOGBNAN"]
+  else:
+    cSkipSymbol @["mingw_choose_expr", "EXCEPTION_DEFINED", "COMPLEX_DEFINED", "matherr", "HUGE"]
   cDebug()
   cDisableCaching()
   cAddStdDir()
