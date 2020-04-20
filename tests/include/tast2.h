@@ -23,6 +23,12 @@ extern "C" {
 #define BOOL true
 #define MATHEXPR (1 + 2/3*20 - 100)
 #define ANDEXPR (100 & 11000)
+#define CASTEXPR (int) 34
+
+#define NULLCHAR '\0'
+#define OCTCHAR '\012'
+#define HEXCHAR '\xFE'
+#define TRICKYSTR "\x4E\034\nfoo\0\'\"\r\v\a\b\e\f\t\\\?bar"
 
 #define ALLSHL (SHL1 | SHL2 | SHL3)
 
