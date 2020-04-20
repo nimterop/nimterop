@@ -32,7 +32,7 @@ cOverride:
   type
     A1* = A0
 
-cImport(path, flags="-f:ast2 -ENK_,SDL_" & flags)
+cImport(path, flags="-f:ast2 -ENK_,SDL_ -GVICE=SLICE" & flags)
 
 proc getPragmas(n: NimNode): HashSet[string] =
   # Find all pragmas in AST, return as "name" or "name:value" in set
@@ -355,9 +355,10 @@ testFields(fieldfuncfunc,
 
 assert func2 is proc (f1: cint; sfunc2: proc (f1: cint; ssfunc2: proc (f1: cint): ptr cint {.cdecl.}): ptr cint {.cdecl.}): ptr cint {.cdecl.}
 
-assert BASS_DEVICEINFO is object
-testFields(BASS_DEVICEINFO, "name|driver|flags!cstring|cstring|cint")
-checkPragmas(BASS_DEVICEINFO, pHeaderImpBy)
+# Test --replace VICE=SLICE
+assert BASS_DESLICEINFO is object
+testFields(BASS_DESLICEINFO, "name|driver|flags!cstring|cstring|cint")
+checkPragmas(BASS_DESLICEINFO, pHeaderImpBy)
 
 # Issue #183
 assert GPU_Target is object
@@ -420,3 +421,7 @@ assert NEV7 == 65
 assert nested is object
 testFields(nested, "f1|f2|f3|f4|f5|f6|f7|f8!NT1|Type_tast2h1|NT3|Type_tast2h3|NU2|Union_tast2h1|NE1|Enum_tast2h2")
 checkPragmas(nested, pHeaderImpBy)
+
+when defined(HEADER):
+  assert sitest1(5) == 10
+  assert sitest1(10) == 20

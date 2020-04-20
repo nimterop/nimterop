@@ -1,7 +1,5 @@
 ##[
-Module that should import everything so that `nim doc --project nimtero/all` runs docs on everything.
+The following modules are available to users of Nimterop.
 ]##
-
-# TODO: make sure it does import everything.
 
 import "."/[docs, cimport, build, types, plugin]

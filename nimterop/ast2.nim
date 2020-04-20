@@ -1636,6 +1636,22 @@ proc addDecl(nimState: NimState, node: TSNode) =
       # Regular var
       discard
 
+proc addDef(nimState: NimState, node: TSNode) =
+  # Wrap static inline definition if {.header.} mode is specified
+  #
+  # Without {.header.} the definition will not be available to the C compiler
+  # and will fail at link time
+  decho("addDef()")
+  nimState.printDebug(node)
+  let
+    start = getStartAtom(node)
+  if node[start+1].getName() == "function_declarator":
+    if nimState.includeHeader():
+      nimState.addProc(node[start+1], node[start])
+    else:
+      necho &"\n# proc '$1' skipped - static inline procs require 'includeHeader'" %
+        nimState.getNodeVal(node[start+1].getAtom())
+
 proc processNode(nimState: NimState, node: TSNode): bool =
   result = true
 
@@ -1658,11 +1674,7 @@ proc processNode(nimState: NimState, node: TSNode): bool =
   of "declaration":
     nimState.addDecl(node)
   of "function_definition":
-    # Handle static inline
-    let
-      start = getStartAtom(node)
-    if node[start+1].getName() == "function_declarator":
-      nimState.addProc(node[start+1], node[start])
+    nimState.addDef(node)
   else:
     # Unknown
     result = false

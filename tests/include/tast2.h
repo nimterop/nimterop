@@ -198,6 +198,10 @@ typedef struct {
     enum { NEV6 = 8 * 8, NEV7 } f8;
 } nested;
 
+static inline int sitest1(int f1) {
+  return f1 * 2;
+}
+
 
 
 // DUPLICATES
@@ -389,6 +393,10 @@ typedef struct {
     enum NE1 { NEV4 = 8, NEV5 } f7;
     enum { NEV6 = 8 * 8, NEV7 } f8;
 } nested;
+
+static inline int sitest1(int f1) {
+  return f1 * 2;
+}
 
 
 

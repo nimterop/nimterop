@@ -184,6 +184,7 @@ Options:
   -E=, --prefix=       strings   {}       strip prefix from identifiers
   -p, --preprocess     bool      false    run preprocessor on header
   -r, --recurse        bool      false    process #include files
+  -G=, --replace=      strings   {}       replace X with Y in identifiers, X1=Y1,X2=Y2, @X for regex
   -s, --stub           bool      false    stub out undefined type references as objects
   -F=, --suffix=       strings   {}       strip suffix from identifiers
   -O=, --symOverride=  strings   {}       skip generating specified symbols

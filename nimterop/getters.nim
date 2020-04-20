@@ -137,6 +137,13 @@ proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent="
         if result.endsWith(str):
           result = result[0 .. ^(str.len+1)]
 
+      # --replace from CLI if specified
+      for name, value in nimState.gState.replace.pairs:
+          if name.len > 1 and name[0] == '@':
+            result = result.replace(re(name[1 .. ^1]), value)
+          else:
+            result = result.replace(name, value)
+
     checkIdentifier(result, $kind, parent, name)
 
     if result in gReserved or (result == "object" and kind != nskType):
@@ -738,6 +745,6 @@ proc loadPlugin*(gState: State, sourcePath: string) =
 
 proc expandSymlinkAbs*(path: string): string =
   try:
-    result = path.expandSymlink().absolutePath(path.parentDir()).normalizedPath()
+    result = path.expandFilename().expandSymlink().normalizedPath()
   except:
     result = path

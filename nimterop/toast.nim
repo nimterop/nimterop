@@ -1,4 +1,4 @@
-import os, osproc, strformat, strutils, times
+import os, osproc, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
@@ -67,6 +67,7 @@ proc main(
     prefix: seq[string] = @[],
     preprocess = false,
     recurse = false,
+    replace: seq[string] = @[],
     stub = false,
     suffix: seq[string] = @[],
     symOverride: seq[string] = @[],
@@ -91,6 +92,7 @@ proc main(
     prefix: prefix,
     preprocess: preprocess,
     recurse: recurse,
+    replace: newOrderedTable[string, string](),
     suffix: suffix,
     symOverride: symOverride
   )
@@ -103,6 +105,14 @@ proc main(
   gState.symOverride = gState.symOverride.getSplitComma()
   gState.prefix = gState.prefix.getSplitComma()
   gState.suffix = gState.suffix.getSplitComma()
+
+  # Replace => Table
+  for i in replace.getSplitComma():
+    let
+      nv = i.split("=", maxsplit = 1)
+      name = nv[0]
+      value = if nv.len == 2: nv[1] else: ""
+    gState.replace[name] = value
 
   if pluginSourcePath.nBl:
     gState.loadPlugin(pluginSourcePath)
@@ -205,10 +215,11 @@ when isMainModule:
     "pgrammar": "print grammar",
     "pluginSourcePath": "nim file to build and load as a plugin",
     "pnim": "print Nim output",
+    "prefix": "strip prefix from identifiers",
     "preprocess": "run preprocessor on header",
     "recurse": "process #include files",
+    "replace": "replace X with Y in identifiers, X1=Y1,X2=Y2, @X for regex",
     "source" : "C/C++ source/header",
-    "prefix": "strip prefix from identifiers",
     "stub": "stub out undefined type references as objects",
     "suffix": "strip suffix from identifiers",
     "symOverride": "skip generating specified symbols"
@@ -229,6 +240,7 @@ when isMainModule:
     "prefix": 'E',
     "preprocess": 'p',
     "recurse": 'r',
+    "replace": 'G',
     "stub": 's',
     "suffix": 'F',
     "symOverride": 'O'

@@ -61,6 +61,8 @@ type
 
     code*, convention*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
 
+    replace*: OrderedTableRef[string, string]
+
     feature*: seq[Feature]
 
     onSymbol*, onSymbolOverride*: OnSymbol
