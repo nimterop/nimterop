@@ -247,7 +247,7 @@ proc processShiftExpression(exprParser: ExprParser, node: TSNode, typeofNode: va
   let rightNode = exprParser.processTSNode(right, typeofNode)
 
   result.add leftNode
-  result.add nkCast.newTree(
+  result.add nkCall.newTree(
     typeofNode,
     rightNode
   )
@@ -258,7 +258,7 @@ proc processParenthesizedExpr(exprParser: ExprParser, node: TSNode, typeofNode: 
     result.add(exprParser.processTSNode(node[i], typeofNode))
 
 proc processCastExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
-  result = nkCast.newTree(
+  result = nkCall.newTree(
     exprParser.processTSNode(node[0], typeofNode),
     exprParser.processTSNode(node[1], typeofNode)
   )
@@ -310,7 +310,7 @@ proc processMathExpression(exprParser: ExprParser, node: TSNode, typeofNode: var
     let rightNode = exprParser.processTSNode(right, typeofNode)
 
     res.add leftNode
-    res.add nkCast.newTree(
+    res.add nkCall.newTree(
       typeofNode,
       rightNode
     )

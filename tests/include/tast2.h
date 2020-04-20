@@ -17,13 +17,13 @@ extern "C" {
 #define SHL1 (1u << 1)
 #define SHL2 (1u << 2)
 #define SHL3 (1u << 3)
-#define COERCE 645635634896ull + -35436
-#define COERCE2 645635634896 + -35436
+#define COERCE 645635634896ull + 35436
+#define COERCE2 645635634896 + 35436ul
 #define BINEXPR ~(-(1u << !-1)) ^ (10 >> 1)
 #define BOOL true
 #define MATHEXPR (1 + 2/3*20 - 100)
 #define ANDEXPR (100 & 11000)
-#define CASTEXPR (int) 34
+#define CASTEXPR (char) 34
 
 #define NULLCHAR '\0'
 #define OCTCHAR '\012'
