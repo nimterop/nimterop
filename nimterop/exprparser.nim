@@ -223,7 +223,8 @@ proc processShiftExpression(exprParser: ExprParser, node: TSNode, typeofNode: va
   let
     left = node[0]
     right = node[1]
-  var shiftSym = exprParser.code[left.tsNodeEndByte() ..< right.tsNodeStartByte()].strip()
+
+  let shiftSym = node.tsNodeChild(1).val.strip()
 
   case shiftSym
   of "<<":
@@ -268,7 +269,7 @@ proc processLogicalExpression(exprParser: ExprParser, node: TSNode, typeofNode: 
   let child = node[0]
   var nimSym = ""
 
-  var binarySym = exprParser.code[node.tsNodeStartByte() ..< child.tsNodeStartByte()].strip()
+  let binarySym = node.tsNodeChild(0).val.strip()
   techo "LOG SYM: ", binarySym
 
   case binarySym
@@ -292,7 +293,7 @@ proc processMathExpression(exprParser: ExprParser, node: TSNode, typeofNode: var
       left = node[0]
       right = node[1]
 
-    let mathSym = exprParser.code[left.tsNodeEndByte() ..< right.tsNodeStartByte()].strip()
+    let mathSym = node.tsNodeChild(1).val.strip()
     techo "MATH SYM: ", mathSym
 
     res.add exprParser.state.getIdent(mathSym)
@@ -329,7 +330,7 @@ proc processMathExpression(exprParser: ExprParser, node: TSNode, typeofNode: var
     let child = node[0]
     var nimSym = ""
 
-    let unarySym = exprParser.code[node.tsNodeStartByte() ..< child.tsNodeStartByte()].strip()
+    let unarySym = node.tsNodeChild(0).val.strip()
     techo "MATH SYM: ", unarySym
 
     case unarySym
@@ -372,7 +373,7 @@ proc processBitwiseExpression(exprParser: ExprParser, node: TSNode, typeofNode: 
 
     var nimSym = ""
 
-    var binarySym = exprParser.code[left.tsNodeEndByte() ..< right.tsNodeStartByte()].strip()
+    let binarySym = node.tsNodeChild(1).val.strip()
     techo "BIN SYM: ", binarySym
 
     case binarySym
@@ -409,7 +410,7 @@ proc processBitwiseExpression(exprParser: ExprParser, node: TSNode, typeofNode: 
     let child = node[0]
     var nimSym = ""
 
-    var unarySym = exprParser.code[node.tsNodeStartByte() ..< child.tsNodeStartByte()].strip()
+    let unarySym = node.tsNodeChild(0).val.strip()
     techo "BIN SYM: ", unarySym
 
     # TODO: Support more symbols here
@@ -437,7 +438,9 @@ proc processTSNode(exprParser: ExprParser, node: TSNode, typeofNode: var PNode):
   ## in the processX procs and will drill down to sub nodes.
   result = newNode(nkNone)
   let nodeName = node.getName()
+
   techo "NODE: ", nodeName, ", VAL: ", node.val
+
   case nodeName
   of "number_literal":
     result = exprParser.processNumberLiteral(node)
