@@ -8,6 +8,27 @@ import "."/treesitter/[api, c, cpp]
 
 import "."/[globals, getters, utils]
 
+# This version of exprparser should be able to handle:
+#
+# All integers + integer like expressions (hex, octal, suffixes)
+# All floating point expressions (except for C++'s hex floating point stuff)
+# Strings and character literals, including C's escape characters (not sure if this is the same as C++'s escape characters or not)
+# Math operators (+, -, /, *)
+# Some Unary operators (-, !, ~). ++, --, and & are yet to be implemented
+# Any identifiers
+# C type descriptors (int, char, etc)
+# Boolean values (true, false)
+# Shift expressions (containing anything in this list)
+# Cast expressions (containing anything in this list)
+# Math expressions (containing anything in this list)
+# Sizeof expressions (containing anything in this list)
+# Cast expressions (containing anything in this list)
+# Parentheses expressions (containing anything in this list)
+# Expressions containing other expressions
+#
+# In addition to the above, it should also handle most type coercions, except
+# for where Nim can't (such as uint + -int)
+
 type
   ExprParser* = ref object
     state*: NimState
@@ -413,7 +434,7 @@ proc processBitwiseExpression(exprParser: ExprParser, node: TSNode, typeofNode: 
     let unarySym = node.tsNodeChild(0).val.strip()
     techo "BIN SYM: ", unarySym
 
-    # TODO: Support more symbols here
+    # TODO: Support more symbols here. ++, --, &
     case unarySym
     of "~":
       nimSym = "not"
