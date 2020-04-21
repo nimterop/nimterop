@@ -82,7 +82,7 @@ proc getFileDate(fullpath: string): string =
         &"cmd /c for %a in ({fullpath.sanitizePath}) do echo %~ta"
       elif defined(Linux):
         &"stat -c %y {fullpath.sanitizePath}"
-      elif defined(OSX):
+      elif defined(OSX) or defined(FreeBSD):
         &"stat -f %m {fullpath.sanitizePath}"
 
   (result, ret) = execAction(cmd)

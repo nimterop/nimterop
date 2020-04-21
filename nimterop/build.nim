@@ -358,7 +358,7 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
         "nimgrep --filenames --oneline --nocolor $1 \"$2\" $3"
       elif defined(linux):
         "find $3 $1 -regextype egrep -regex $2"
-      elif defined(osx):
+      elif defined(osx) or defined(FreeBSD):
         "find -E $3 $1 -regex $2"
 
     recursive = ""
@@ -754,7 +754,7 @@ proc getNumProcs(): string =
     getEnv("NUMBER_OF_PROCESSORS").strip()
   elif defined(linux):
     execAction("nproc").output.strip()
-  elif defined(macosx):
+  elif defined(macosx) or defined(FreeBSD):
     execAction("sysctl -n hw.ncpu").output.strip()
   else:
     "1"
@@ -830,7 +830,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
 proc getDynlibExt(): string =
   when defined(windows):
     result = ".dll"
-  elif defined(linux):
+  elif defined(linux) or defined(FreeBSD):
     result = ".so[0-9.]*"
   elif defined(macosx):
     result = ".dylib[0-9.]*"
