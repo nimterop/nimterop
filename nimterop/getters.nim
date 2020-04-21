@@ -745,6 +745,6 @@ proc loadPlugin*(gState: State, sourcePath: string) =
 
 proc expandSymlinkAbs*(path: string): string =
   try:
-    result = path.expandFilename().expandSymlink().normalizedPath()
+    result = path.expandFilename().normalizedPath()
   except:
     result = path
