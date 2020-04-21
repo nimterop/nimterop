@@ -12,6 +12,8 @@ proc getPtrType*(str: string): string =
   result = case str:
     of "cchar":
       "cstring"
+    of "FILE":
+      "File"
     of "object":
       "pointer"
     else:
