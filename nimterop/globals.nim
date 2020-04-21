@@ -49,7 +49,7 @@ type
     recursive*: bool
     children*: seq[ref Ast]
     when not declared(CIMPORT):
-      tonim*: proc (ast: ref Ast, node: TSNode, nimState: NimState)
+      tonim*: proc (ast: ref Ast, node: TSNode, gState: State)
     regex*: Regex
 
   AstTable {.used.} = TableRef[string, seq[ref Ast]]
@@ -70,7 +70,6 @@ type
 
     outputHandle*: File
 
-  NimState {.used.} = ref object
     # All symbols that have been declared so far indexed by nimName
     identifiers*: TableRef[string, string]
 
@@ -92,8 +91,6 @@ type
       # Craeted symbols to generated AST - forward declaration tracking
       identifierNodes*: TableRef[string, PNode]
 
-    gState*: State
-
     currentHeader*, impShort*, sourceFile*: string
 
     data*: seq[tuple[name, val: string]]
@@ -113,8 +110,7 @@ template Bl(s: typed): untyped {.used.} =
   (s.len == 0)
 
 when not declared(CIMPORT):
-  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, NimState,
-    nBl, Bl
+  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, nBl, Bl
 
   # Redirect output to file when required
   template gecho*(args: string) {.dirty.} =
@@ -123,11 +119,6 @@ when not declared(CIMPORT):
     else:
       gState.outputHandle.writeLine(args)
 
-  template necho*(args: string) {.dirty.} =
-    when not declared(gState):
-      let gState = nimState.gState
-    gecho args
-
   template decho*(str: untyped): untyped =
-    if nimState.gState.debug:
-      necho str.getCommented()
+    if gState.debug:
+      gecho str.getCommented()

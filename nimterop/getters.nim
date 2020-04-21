@@ -113,32 +113,32 @@ proc checkIdentifier(name, kind, parent, origName: string) =
   if parent.nBl:
     doAssert name.nBl, &"Blank identifier, originally '{parentStr}{origName}' ({kind}), cannot be empty"
 
-proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent=""): string =
+proc getIdentifier*(gState: State, name: string, kind: NimSymKind, parent=""): string =
   doAssert name.nBl, "Blank identifier error"
 
-  if name notin nimState.gState.symOverride or parent.nBl:
-    if nimState.gState.onSymbol != nil:
+  if name notin gState.symOverride or parent.nBl:
+    if gState.onSymbol != nil:
       # Use onSymbol from plugin provided by user
       var
         sym = Symbol(name: name, parent: parent, kind: kind)
-      nimState.gState.onSymbol(sym)
+      gState.onSymbol(sym)
 
       result = sym.name
     else:
       result = name
 
       # Strip out --prefix from CLI if specified
-      for str in nimState.gState.prefix:
+      for str in gState.prefix:
         if result.startsWith(str):
           result = result[str.len .. ^1]
 
       # Strip out --suffix from CLI if specified
-      for str in nimState.gState.suffix:
+      for str in gState.suffix:
         if result.endsWith(str):
           result = result[0 .. ^(str.len+1)]
 
       # --replace from CLI if specified
-      for name, value in nimState.gState.replace.pairs:
+      for name, value in gState.replace.pairs:
           if name.len > 1 and name[0] == '@':
             result = result.replace(re(name[1 .. ^1]), value)
           else:
@@ -153,58 +153,58 @@ proc getIdentifier*(nimState: NimState, name: string, kind: NimSymKind, parent="
     # Skip identifier since in symOverride
     result = ""
 
-proc getUniqueIdentifier*(nimState: NimState, prefix = ""): string =
+proc getUniqueIdentifier*(gState: State, prefix = ""): string =
   var
-    name = prefix & "_" & nimState.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
+    name = prefix & "_" & gState.sourceFile.extractFilename().multiReplace([(".", ""), ("-", "")])
     nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
     count = 1
 
-  while (nimName & $count) in nimState.identifiers:
+  while (nimName & $count) in gState.identifiers:
     count += 1
 
   return name & $count
 
-proc addNewIdentifer*(nimState: NimState, name: string, override = false): bool =
-  if override or name notin nimState.gState.symOverride:
+proc addNewIdentifer*(gState: State, name: string, override = false): bool =
+  if override or name notin gState.symOverride:
     let
       nimName = name[0] & name[1 .. ^1].replace("_", "").toLowerAscii
 
-    if nimState.identifiers.hasKey(nimName):
-      doAssert name == nimState.identifiers[nimName],
+    if gState.identifiers.hasKey(nimName):
+      doAssert name == gState.identifiers[nimName],
         &"Identifier '{name}' is a stylistic duplicate of identifier " &
-        &"'{nimState.identifiers[nimName]}', use 'cPlugin:onSymbol()' to rename"
+        &"'{gState.identifiers[nimName]}', use 'cPlugin:onSymbol()' to rename"
       result = false
     else:
-      nimState.identifiers[nimName] = name
+      gState.identifiers[nimName] = name
       result = true
 
 # Overrides related
 
-proc getOverride*(nimState: NimState, name: string, kind: NimSymKind): string =
+proc getOverride*(gState: State, name: string, kind: NimSymKind): string =
   # Get cOverride for identifier `name` of `kind` if defined
   doAssert name.nBl, "Blank identifier error"
 
-  if nimState.gState.onSymbolOverride != nil:
+  if gState.onSymbolOverride != nil:
     var
-      nname = nimState.getIdentifier(name, kind, "Override")
+      nname = gState.getIdentifier(name, kind, "Override")
       sym = Symbol(name: nname, kind: kind)
     if nname.nBl:
-      nimState.gState.onSymbolOverride(sym)
+      gState.onSymbolOverride(sym)
 
-      if sym.override.nBl and nimState.addNewIdentifer(nname, override = true):
+      if sym.override.nBl and gState.addNewIdentifer(nname, override = true):
         result = sym.override
 
         if kind != nskProc:
           result = result.replace(re"(?m)^(.*?)$", "  $1")
 
-proc getOverrideFinal*(nimState: NimState, kind: NimSymKind): string =
+proc getOverrideFinal*(gState: State, kind: NimSymKind): string =
   # Get all unused cOverride symbols of `kind`
   let
     typ = $kind
 
-  if nimState.gState.onSymbolOverrideFinal != nil:
-    for i in nimState.gState.onSymbolOverrideFinal(typ):
-      result &= "\n" & nimState.getOverride(i, kind)
+  if gState.onSymbolOverrideFinal != nil:
+    for i in gState.onSymbolOverrideFinal(typ):
+      result &= "\n" & gState.getOverride(i, kind)
 
 proc getKeyword*(kind: NimSymKind): string =
   # Convert `kind` into a Nim keyword
@@ -231,9 +231,6 @@ proc getName*(node: TSNode): string {.inline.} =
 proc getNodeVal*(gState: State, node: TSNode): string =
   if not node.isNil:
     return gState.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
-
-proc getNodeVal*(nimState: NimState, node: TSNode): string =
-  nimState.gState.getNodeVal(node)
 
 proc getAtom*(node: TSNode): TSNode =
   if not node.isNil:
@@ -428,8 +425,8 @@ proc printLisp*(gState: State, root: TSNode): string =
 proc getCommented*(str: string): string =
   "\n# " & str.strip().replace("\n", "\n# ")
 
-proc printTree*(nimState: NimState, pnode: PNode, offset = ""): string =
-  if nimState.gState.debug and pnode.kind != nkNone:
+proc printTree*(gState: State, pnode: PNode, offset = ""): string =
+  if gState.debug and pnode.kind != nkNone:
     result &= "\n# " & offset & $pnode.kind & "("
     case pnode.kind
     of nkCharLit:
@@ -447,7 +444,7 @@ proc printTree*(nimState: NimState, pnode: PNode, offset = ""): string =
     else:
       if pnode.sons.len != 0:
         for i in 0 ..< pnode.sons.len:
-          result &= nimState.printTree(pnode.sons[i], offset & " ")
+          result &= gState.printTree(pnode.sons[i], offset & " ")
           if i != pnode.sons.len - 1:
             result &= ","
         result &= "\n# " & offset & ")"
@@ -456,34 +453,34 @@ proc printTree*(nimState: NimState, pnode: PNode, offset = ""): string =
     if offset.len == 0:
       result &= "\n"
 
-proc printDebug*(nimState: NimState, node: TSNode) =
-  if nimState.gState.debug:
-    necho ("Input => " & nimState.getNodeVal(node)).getCommented() & "\n" &
-          nimState.gState.printLisp(node).getCommented()
+proc printDebug*(gState: State, node: TSNode) =
+  if gState.debug:
+    gecho ("Input => " & gState.getNodeVal(node)).getCommented() & "\n" &
+          gState.printLisp(node).getCommented()
 
-proc printDebug*(nimState: NimState, pnode: PNode) =
-  if nimState.gState.debug:
-    necho ("Output => " & $pnode).getCommented() & "\n" &
-          nimState.printTree(pnode)
+proc printDebug*(gState: State, pnode: PNode) =
+  if gState.debug:
+    gecho ("Output => " & $pnode).getCommented() & "\n" &
+          gState.printTree(pnode)
 
 # Compiler shortcuts
 
-proc getDefaultLineInfo*(nimState: NimState): TLineInfo =
-  result = newLineInfo(nimState.config, nimState.sourceFile.AbsoluteFile, 0, 0)
+proc getDefaultLineInfo*(gState: State): TLineInfo =
+  result = newLineInfo(gState.config, gState.sourceFile.AbsoluteFile, 0, 0)
 
-proc getLineInfo*(nimState: NimState, node: TSNode): TLineInfo =
+proc getLineInfo*(gState: State, node: TSNode): TLineInfo =
   # Get Nim equivalent line:col info from node
   let
-    (line, col) = nimState.gState.getLineCol(node)
+    (line, col) = gState.getLineCol(node)
 
-  result = newLineInfo(nimState.config, nimState.sourceFile.AbsoluteFile, line, col)
+  result = newLineInfo(gState.config, gState.sourceFile.AbsoluteFile, line, col)
 
-proc getIdent*(nimState: NimState, name: string, info: TLineInfo, exported = true): PNode =
+proc getIdent*(gState: State, name: string, info: TLineInfo, exported = true): PNode =
   if name.nBl:
     # Get ident PNode for name + info
     let
-      exp = getIdent(nimState.identCache, "*")
-      ident = getIdent(nimState.identCache, name)
+      exp = getIdent(gState.identCache, "*")
+      ident = getIdent(gState.identCache, name)
 
     if exported:
       result = newNode(nkPostfix)
@@ -492,8 +489,8 @@ proc getIdent*(nimState: NimState, name: string, info: TLineInfo, exported = tru
     else:
       result = newIdentNode(ident, info)
 
-proc getIdent*(nimState: NimState, name: string): PNode =
-  nimState.getIdent(name, nimState.getDefaultLineInfo(), exported = false)
+proc getIdent*(gState: State, name: string): PNode =
+  gState.getIdent(name, gState.getDefaultLineInfo(), exported = false)
 
 proc getIdentName*(node: PNode): string =
   if not node.isNil:
@@ -503,15 +500,15 @@ proc getIdentName*(node: PNode): string =
     if result.Bl and node.len > 0:
       result = node[0].getIdentName()
 
-proc getNameInfo*(nimState: NimState, node: TSNode, kind: NimSymKind, parent = ""):
+proc getNameInfo*(gState: State, node: TSNode, kind: NimSymKind, parent = ""):
   tuple[name, origname: string, info: TLineInfo] =
   # Shortcut to get identifier name and info (node value and line:col)
-  result.origname = nimState.getNodeVal(node)
-  result.name = nimState.getIdentifier(result.origname, kind, parent)
+  result.origname = gState.getNodeVal(node)
+  result.name = gState.getIdentifier(result.origname, kind, parent)
   if result.name.nBl:
     if kind == nskType:
       result.name = result.name.getType()
-    result.info = nimState.getLineInfo(node)
+    result.info = gState.getLineInfo(node)
 
 proc getCurrentHeader*(fullpath: string): string =
   ("header" & fullpath.splitFile().name.multiReplace([(".", ""), ("-", "")]))
@@ -644,7 +641,7 @@ proc getAstChildByName*(ast: ref Ast, name: string): ref Ast =
   if ast.children.len == 1 and ast.children[0].name == ".":
     return ast.children[0]
 
-proc getNimExpression*(nimState: NimState, expr: string, name = ""): string =
+proc getNimExpression*(gState: State, expr: string, name = ""): string =
   # Convert C/C++ expression into Nim - cast identifiers to `name` if specified
   var
     clean = expr.multiReplace([("\n", " "), ("\r", "")])
@@ -691,8 +688,8 @@ proc getNimExpression*(nimState: NimState, expr: string, name = ""): string =
       if ident.nBl:
         # Issue #178
         if ident != "_":
-          ident = nimState.getIdentifier(ident, nskConst, name)
-        if name.nBl and ident in nimState.constIdentifiers:
+          ident = gState.getIdentifier(ident, nskConst, name)
+        if name.nBl and ident in gState.constIdentifiers:
           ident = ident & "." & name
         result &= ident
         ident = ""
@@ -708,15 +705,15 @@ proc getSplitComma*(joined: seq[string]): seq[string] =
   for i in joined:
     result = result.concat(i.split(","))
 
-template includeHeader*(nimState: NimState): bool =
-  nimState.gState.dynlib.Bl and nimState.gState.includeHeader
+template isIncludeHeader*(gState: State): bool =
+  gState.dynlib.Bl and gState.includeHeader
 
-proc getComments*(nimState: NimState, strip = false): string =
-  if not nimState.gState.nocomments and nimState.commentStr.nBl:
-    result = "\n" & nimState.commentStr
+proc getComments*(gState: State, strip = false): string =
+  if not gState.nocomments and gState.commentStr.nBl:
+    result = "\n" & gState.commentStr
     if strip:
       result = result.replace("\n  ", "\n")
-    nimState.commentStr = ""
+    gState.commentStr = ""
 
 proc dll*(path: string): string =
   let

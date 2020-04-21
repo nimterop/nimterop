@@ -5,7 +5,7 @@ import regex
 import "."/[ast, getters, globals, lisp, treesitter/api]
 
 type
-  Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, nimState: NimState) {.nimcall.}]]
+  Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, gState: State) {.nimcall.}]]
 
 proc getPtrType(str: string): string =
   result = case str:
@@ -39,26 +39,26 @@ proc initGrammar(): Grammar =
     (preproc_arg)
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
-      if nimState.gState.debug:
-        nimState.debugStr &= "\n# define X Y"
+    proc (ast: ref Ast, node: TSNode, gState: State) =
+      if gState.debug:
+        gState.debugStr &= "\n# define X Y"
 
       let
-        name = nimState.data[0].val
-        nname = nimState.getIdentifier(name, nskConst)
-        val = nimState.data[1].val.getLit()
+        name = gState.data[0].val
+        nname = gState.getIdentifier(name, nskConst)
+        val = gState.data[1].val.getLit()
 
       if not nname.nBl:
         let
-          override = nimState.getOverride(name, nskConst)
+          override = gState.getOverride(name, nskConst)
         if override.nBl:
-          nimState.constStr &= &"{nimState.getComments()}\n{override}"
+          gState.constStr &= &"{gState.getComments()}\n{override}"
         else:
-          nimState.constStr &= &"{nimState.getComments()}\n  # Const '{name}' skipped"
-          if nimState.gState.debug:
-            nimState.skipStr &= &"\n{nimState.getNodeVal(node)}"
-      elif val.nBl and nimState.addNewIdentifer(nname):
-        nimState.constStr &= &"{nimState.getComments()}\n  {nname}* = {val}"
+          gState.constStr &= &"{gState.getComments()}\n  # Const '{name}' skipped"
+          if gState.debug:
+            gState.skipStr &= &"\n{gState.getNodeVal(node)}"
+      elif val.nBl and gState.addNewIdentifer(nname):
+        gState.constStr &= &"{gState.getComments()}\n  {nname}* = {val}"
   ))
 
   let
@@ -125,25 +125,25 @@ proc initGrammar(): Grammar =
     """
 
   template funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen: untyped): untyped =
-    ptyp = nimState.getIdentifier(nimState.data[i].val, nskType, fname).getType()
+    ptyp = gState.getIdentifier(gState.data[i].val, nskType, fname).getType()
 
     pptr = ""
-    while i+1 < nimState.data.len and nimState.data[i+1].name == "pointer_declarator":
+    while i+1 < gState.data.len and gState.data[i+1].name == "pointer_declarator":
       pptr &= "ptr "
       i += 1
 
-    if i+1 < nimState.data.len and nimState.data[i+1].name == "identifier":
-      pname = nimState.getIdentifier(nimState.data[i+1].val, nskParam, fname)
+    if i+1 < gState.data.len and gState.data[i+1].name == "identifier":
+      pname = gState.getIdentifier(gState.data[i+1].val, nskParam, fname)
       i += 2
     else:
       pname = "a" & $count
       count += 1
       i += 1
 
-    if i < nimState.data.len and nimState.data[i].name in ["identifier", "number_literal"]:
-      flen = nimState.data[i].val
-      if nimState.data[i].name == "identifier":
-        flen = nimState.getIdentifier(flen, nskConst, fname)
+    if i < gState.data.len and gState.data[i].name in ["identifier", "number_literal"]:
+      flen = gState.data[i].val
+      if gState.data[i].name == "identifier":
+        flen = gState.getIdentifier(flen, nskConst, fname)
 
       pout &= &"{pname}: array[{flen}, {getPtrType(pptr&ptyp)}], "
       i += 1
@@ -172,13 +172,13 @@ proc initGrammar(): Grammar =
     {funcGrammar}
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
-      if nimState.gState.debug:
-        nimState.debugStr &= "\n# typedef X Y"
+    proc (ast: ref Ast, node: TSNode, gState: State) =
+      if gState.debug:
+        gState.debugStr &= "\n# typedef X Y"
 
       var
         i = 0
-        typ = nimState.getIdentifier(nimState.data[i].val, nskType, "Parent").getType()
+        typ = gState.getIdentifier(gState.data[i].val, nskType, "Parent").getType()
         name = ""
         nname = ""
         tptr = ""
@@ -186,8 +186,8 @@ proc initGrammar(): Grammar =
         pragmas: seq[string] = @[]
 
       i += 1
-      while i < nimState.data.len and "pointer" in nimState.data[i].name:
-        case nimState.data[i].name:
+      while i < gState.data.len and "pointer" in gState.data[i].name:
+        case gState.data[i].name:
           of "pointer_declarator":
             tptr &= "ptr "
             i += 1
@@ -195,32 +195,32 @@ proc initGrammar(): Grammar =
             aptr &= "ptr "
             i += 1
 
-      if i < nimState.data.len:
-        name = nimState.data[i].val
-        nname = nimState.getIdentifier(name, nskType)
+      if i < gState.data.len:
+        name = gState.data[i].val
+        nname = gState.getIdentifier(name, nskType)
         i += 1
 
-      if nimState.includeHeader():
-        pragmas.add nimState.getImportC(name, nname)
+      if gState.isIncludeHeader():
+        pragmas.add gState.getImportC(name, nname)
 
       let
-        pragma = nimState.getPragma(pragmas)
+        pragma = gState.getPragma(pragmas)
 
       if not nname.nBl:
         let
-          override = nimState.getOverride(name, nskType)
+          override = gState.getOverride(name, nskType)
         if override.nBl:
-          nimState.typeStr &= &"{nimState.getComments()}\n{override}"
-      elif nname notin gTypeMap and typ.nBl and nimState.addNewIdentifer(nname):
-        if i < nimState.data.len and nimState.data[^1].name == "function_declarator":
+          gState.typeStr &= &"{gState.getComments()}\n{override}"
+      elif nname notin gTypeMap and typ.nBl and gState.addNewIdentifer(nname):
+        if i < gState.data.len and gState.data[^1].name == "function_declarator":
           var
             fname = nname
             pout, pname, ptyp, pptr = ""
             count = 1
             flen = ""
 
-          while i < nimState.data.len:
-            if nimState.data[i].name == "function_declarator":
+          while i < gState.data.len:
+            if gState.data[i].name == "function_declarator":
               break
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen)
@@ -229,34 +229,34 @@ proc initGrammar(): Grammar =
             pout = pout[0 .. ^3]
 
           if tptr.nBl or typ != "object":
-            nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = proc({pout}): {getPtrType(tptr&typ)} {{.cdecl.}}"
+            gState.typeStr &= &"{gState.getComments()}\n  {nname}*{pragma} = proc({pout}): {getPtrType(tptr&typ)} {{.cdecl.}}"
           else:
-            nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = proc({pout}) {{.cdecl.}}"
+            gState.typeStr &= &"{gState.getComments()}\n  {nname}*{pragma} = proc({pout}) {{.cdecl.}}"
         else:
-          if i < nimState.data.len and nimState.data[i].name in ["identifier", "number_literal"]:
+          if i < gState.data.len and gState.data[i].name in ["identifier", "number_literal"]:
             var
-              flen = nimState.data[i].val
-            if nimState.data[i].name == "identifier":
-              flen = nimState.getIdentifier(flen, nskConst, nname)
+              flen = gState.data[i].val
+            if gState.data[i].name == "identifier":
+              flen = gState.getIdentifier(flen, nskConst, nname)
 
-            nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = {aptr}array[{flen}, {getPtrType(tptr&typ)}]"
+            gState.typeStr &= &"{gState.getComments()}\n  {nname}*{pragma} = {aptr}array[{flen}, {getPtrType(tptr&typ)}]"
           else:
             if nname == typ:
               pragmas.add "incompleteStruct"
               let
-                pragma = nimState.getPragma(pragmas)
-              nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object"
+                pragma = gState.getPragma(pragmas)
+              gState.typeStr &= &"{gState.getComments()}\n  {nname}*{pragma} = object"
             else:
-              nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = {getPtrType(tptr&typ)}"
+              gState.typeStr &= &"{gState.getComments()}\n  {nname}*{pragma} = {getPtrType(tptr&typ)}"
   ))
 
-  proc pDupTypeCommon(nname: string, fend: int, nimState: NimState, isEnum=false) =
-    if nimState.gState.debug:
-      nimState.debugStr &= "\n#   pDupTypeCommon()"
+  proc pDupTypeCommon(nname: string, fend: int, gState: State, isEnum=false) =
+    if gState.debug:
+      gState.debugStr &= "\n#   pDupTypeCommon()"
 
     var
-      dname = nimState.data[^1].val
-      ndname = nimState.getIdentifier(dname, nskType)
+      dname = gState.data[^1].val
+      ndname = gState.getIdentifier(dname, nskType)
       dptr =
         if fend == 2:
           "ptr "
@@ -265,21 +265,21 @@ proc initGrammar(): Grammar =
 
     if ndname.nBl and ndname != nname:
       if isEnum:
-        if nimState.addNewIdentifer(ndname):
-          nimState.enumStr &= &"{nimState.getComments(true)}\ntype {ndname}* = {dptr}{nname}"
+        if gState.addNewIdentifer(ndname):
+          gState.enumStr &= &"{gState.getComments(true)}\ntype {ndname}* = {dptr}{nname}"
       else:
-        if nimState.addNewIdentifer(ndname):
+        if gState.addNewIdentifer(ndname):
           let
-            pragma = nimState.getPragma(nimState.getImportc(dname, ndname), "bycopy")
-          nimState.typeStr &=
-            &"{nimState.getComments()}\n  {ndname}*{pragma} = {dptr}{nname}"
+            pragma = gState.getPragma(gState.getImportc(dname, ndname), "bycopy")
+          gState.typeStr &=
+            &"{gState.getComments()}\n  {ndname}*{pragma} = {dptr}{nname}"
 
-  proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
-    if nimState.gState.debug:
-      nimState.debugStr &= "\n#   pStructCommon"
+  proc pStructCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, gState: State) =
+    if gState.debug:
+      gState.debugStr &= "\n#   pStructCommon"
 
     var
-      nname = nimState.getIdentifier(name, nskType)
+      nname = gState.getIdentifier(name, nskType)
       prefix = ""
       union = ""
 
@@ -307,25 +307,25 @@ proc initGrammar(): Grammar =
 
     if not nname.nBl:
       let
-        override = nimState.getOverride(name, nskType)
+        override = gState.getOverride(name, nskType)
       if override.nBl:
-        nimState.typeStr &= &"{nimState.getComments()}\n{override}"
-    elif nimState.addNewIdentifer(nname):
-      if nimState.data.len == 1:
-        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}* {{.bycopy{union}.}} = object"
+        gState.typeStr &= &"{gState.getComments()}\n{override}"
+    elif gState.addNewIdentifer(nname):
+      if gState.data.len == 1:
+        gState.typeStr &= &"{gState.getComments()}\n  {nname}* {{.bycopy{union}.}} = object"
       else:
         var
           pragmas: seq[string] = @[]
-        if nimState.includeHeader():
-          pragmas.add nimState.getImportC(prefix & name, nname)
+        if gState.isIncludeHeader():
+          pragmas.add gState.getImportC(prefix & name, nname)
         pragmas.add "bycopy"
         if union.nBl:
           pragmas.add "union"
 
         let
-          pragma = nimState.getPragma(pragmas)
+          pragma = gState.getPragma(pragmas)
 
-        nimState.typeStr &= &"{nimState.getComments()}\n  {nname}*{pragma} = object"
+        gState.typeStr &= &"{gState.getComments()}\n  {nname}*{pragma} = object"
 
       var
         i = fstart
@@ -333,19 +333,19 @@ proc initGrammar(): Grammar =
         fptr = ""
         aptr = ""
         flen = ""
-      while i < nimState.data.len-fend:
+      while i < gState.data.len-fend:
         fptr = ""
         aptr = ""
-        if nimState.data[i].name == "field_declaration":
+        if gState.data[i].name == "field_declaration":
           i += 1
           continue
 
-        if nimState.data[i].name notin ["field_identifier", "pointer_declarator", "array_pointer_declarator"]:
-          ftyp = nimState.getIdentifier(nimState.data[i].val, nskType, nname).getType()
+        if gState.data[i].name notin ["field_identifier", "pointer_declarator", "array_pointer_declarator"]:
+          ftyp = gState.getIdentifier(gState.data[i].val, nskType, nname).getType()
           i += 1
 
-        while i < nimState.data.len-fend and "pointer" in nimState.data[i].name:
-          case nimState.data[i].name:
+        while i < gState.data.len-fend and "pointer" in gState.data[i].name:
+          case gState.data[i].name:
             of "pointer_declarator":
               fptr &= "ptr "
               i += 1
@@ -353,33 +353,33 @@ proc initGrammar(): Grammar =
               aptr &= "ptr "
               i += 1
 
-        fname = nimState.getIdentifier(nimState.data[i].val, nskField, nname)
+        fname = gState.getIdentifier(gState.data[i].val, nskField, nname)
 
-        if i+1 < nimState.data.len-fend and nimState.data[i+1].name in gEnumVals:
+        if i+1 < gState.data.len-fend and gState.data[i+1].name in gEnumVals:
           # Struct field is an array where size is an expression
           var
-            flen = nimState.getNimExpression(nimState.data[i+1].val)
+            flen = gState.getNimExpression(gState.data[i+1].val)
           if "/" in flen:
             flen = &"({flen}).int"
-          nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
+          gState.typeStr &= &"{gState.getComments()}\n    {fname}*: {aptr}array[{flen}, {getPtrType(fptr&ftyp)}]"
           i += 2
-        elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "bitfield_clause":
+        elif i+1 < gState.data.len-fend and gState.data[i+1].name == "bitfield_clause":
           let
-            size = nimState.data[i+1].val
-          nimState.typeStr &= &"{nimState.getComments()}\n    {fname}* {{.bitsize: {size}.}} : {getPtrType(fptr&ftyp)} "
+            size = gState.data[i+1].val
+          gState.typeStr &= &"{gState.getComments()}\n    {fname}* {{.bitsize: {size}.}} : {getPtrType(fptr&ftyp)} "
           i += 2
-        elif i+1 < nimState.data.len-fend and nimState.data[i+1].name == "function_declarator":
+        elif i+1 < gState.data.len-fend and gState.data[i+1].name == "function_declarator":
           var
             pout, pname, ptyp, pptr = ""
             count = 1
 
           i += 2
-          while i < nimState.data.len-fend:
-            if nimState.data[i].name == "function_declarator":
+          while i < gState.data.len-fend:
+            if gState.data[i].name == "function_declarator":
               i += 1
               continue
 
-            if nimState.data[i].name == "field_declaration":
+            if gState.data[i].name == "field_declaration":
               break
 
             funcParamCommon(fname, pname, ptyp, pptr, pout, count, i, flen)
@@ -387,20 +387,20 @@ proc initGrammar(): Grammar =
           if pout.nBl and pout[^2 .. ^1] == ", ":
             pout = pout[0 .. ^3]
           if fptr.nBl or ftyp != "object":
-            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.cdecl.}}"
+            gState.typeStr &= &"{gState.getComments()}\n    {fname}*: proc({pout}): {getPtrType(fptr&ftyp)} {{.cdecl.}}"
           else:
-            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: proc({pout}) {{.cdecl.}}"
+            gState.typeStr &= &"{gState.getComments()}\n    {fname}*: proc({pout}) {{.cdecl.}}"
             i += 1
         else:
           if ftyp == "object":
-            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: pointer"
+            gState.typeStr &= &"{gState.getComments()}\n    {fname}*: pointer"
           else:
-            nimState.typeStr &= &"{nimState.getComments()}\n    {fname}*: {getPtrType(fptr&ftyp)}"
+            gState.typeStr &= &"{gState.getComments()}\n    {fname}*: {getPtrType(fptr&ftyp)}"
           i += 1
 
       if node.tsNodeType() == "type_definition" and
-        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.nBl:
-          pDupTypeCommon(nname, fend, nimState, false)
+        gState.data[^1].name == "type_identifier" and gState.data[^1].val.nBl:
+          pDupTypeCommon(nname, fend, gState, false)
 
   let
     fieldGrammar = &"""
@@ -451,11 +451,11 @@ proc initGrammar(): Grammar =
     {fieldListGrammar}
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
-      if nimState.gState.debug:
-        nimState.debugStr &= "\n# struct X {}"
+    proc (ast: ref Ast, node: TSNode, gState: State) =
+      if gState.debug:
+        gState.debugStr &= "\n# struct X {}"
 
-      pStructCommon(ast, node, nimState.data[0].val, 1, 1, nimState)
+      pStructCommon(ast, node, gState.data[0].val, 1, 1, gState)
   ))
 
   # typedef struct X {}
@@ -474,69 +474,69 @@ proc initGrammar(): Grammar =
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
-      if nimState.gState.debug:
-        nimState.debugStr &= "\n# typedef struct X {}"
+    proc (ast: ref Ast, node: TSNode, gState: State) =
+      if gState.debug:
+        gState.debugStr &= "\n# typedef struct X {}"
 
       var
         fstart = 0
         fend = 1
 
-      if nimState.data[^2].name == "pointer_declarator":
+      if gState.data[^2].name == "pointer_declarator":
         fend = 2
 
-      if nimState.data.len > 1 and
-        nimState.data[0].name == "type_identifier" and
-        nimState.data[1].name notin ["field_identifier", "pointer_declarator"]:
+      if gState.data.len > 1 and
+        gState.data[0].name == "type_identifier" and
+        gState.data[1].name notin ["field_identifier", "pointer_declarator"]:
 
         fstart = 1
-        pStructCommon(ast, node, nimState.data[0].val, fstart, fend, nimState)
+        pStructCommon(ast, node, gState.data[0].val, fstart, fend, gState)
       else:
-        pStructCommon(ast, node, nimState.data[^1].val, fstart, fend, nimState)
+        pStructCommon(ast, node, gState.data[^1].val, fstart, fend, gState)
   ))
 
-  proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, nimState: NimState) =
-    if nimState.gState.debug:
-      nimState.debugStr &= "\n#   pEnumCommon()"
+  proc pEnumCommon(ast: ref Ast, node: TSNode, name: string, fstart, fend: int, gState: State) =
+    if gState.debug:
+      gState.debugStr &= "\n#   pEnumCommon()"
 
     let nname =
       if name.Bl:
-        getUniqueIdentifier(nimState, "Enum")
+        getUniqueIdentifier(gState, "Enum")
       else:
-        nimState.getIdentifier(name, nskType)
+        gState.getIdentifier(name, nskType)
 
-    if nname.nBl and nimState.addNewIdentifer(nname):
-      nimState.enumStr &= &"{nimState.getComments(true)}\ndefineEnum({nname})"
+    if nname.nBl and gState.addNewIdentifer(nname):
+      gState.enumStr &= &"{gState.getComments(true)}\ndefineEnum({nname})"
 
       var
         i = fstart
         count = 0
-      while i < nimState.data.len-fend:
-        if nimState.data[i].name == "enumerator":
+      while i < gState.data.len-fend:
+        if gState.data[i].name == "enumerator":
           i += 1
           continue
 
         let
-          fname = nimState.getIdentifier(nimState.data[i].val, nskEnumField)
+          fname = gState.getIdentifier(gState.data[i].val, nskEnumField)
 
-        if i+1 < nimState.data.len-fend and
-          nimState.data[i+1].name in gEnumVals:
-          if fname.nBl and nimState.addNewIdentifer(fname):
-            nimState.constStr &= &"{nimState.getComments()}\n  {fname}* = ({nimState.getNimExpression(nimState.data[i+1].val)}).{nname}"
+        if i+1 < gState.data.len-fend and
+          gState.data[i+1].name in gEnumVals:
+          if fname.nBl and gState.addNewIdentifer(fname):
+            gState.constStr &= &"{gState.getComments()}\n  {fname}* = ({gState.getNimExpression(gState.data[i+1].val)}).{nname}"
           try:
-            count = nimState.data[i+1].val.parseInt() + 1
+            count = gState.data[i+1].val.parseInt() + 1
           except:
             count += 1
           i += 2
         else:
-          if fname.nBl and nimState.addNewIdentifer(fname):
-            nimState.constStr &= &"{nimState.getComments()}\n  {fname}* = {count}.{nname}"
+          if fname.nBl and gState.addNewIdentifer(fname):
+            gState.constStr &= &"{gState.getComments()}\n  {fname}* = {count}.{nname}"
           i += 1
           count += 1
 
       if node.tsNodeType() == "type_definition" and
-        nimState.data[^1].name == "type_identifier" and nimState.data[^1].val.nBl:
-          pDupTypeCommon(nname, fend, nimState, true)
+        gState.data[^1].name == "type_identifier" and gState.data[^1].val.nBl:
+          pDupTypeCommon(nname, fend, gState, true)
 
   # enum X {}
   result.add(("""
@@ -550,19 +550,19 @@ proc initGrammar(): Grammar =
     )
    )
   """ % gEnumVals.join("|"),
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
-      if nimState.gState.debug:
-        nimState.debugStr &= "\n# enum X {}"
+    proc (ast: ref Ast, node: TSNode, gState: State) =
+      if gState.debug:
+        gState.debugStr &= "\n# enum X {}"
 
       var
         name = ""
         offset = 0
 
-      if nimState.data[0].name == "type_identifier":
-        name = nimState.data[0].val
+      if gState.data[0].name == "type_identifier":
+        name = gState.data[0].val
         offset = 1
 
-      pEnumCommon(ast, node, name, offset, 0, nimState)
+      pEnumCommon(ast, node, name, offset, 0, gState)
   ))
 
   # typedef enum {} X
@@ -578,23 +578,23 @@ proc initGrammar(): Grammar =
     )
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
-      if nimState.gState.debug:
-        nimState.debugStr &= "\n# typedef enum {}"
+    proc (ast: ref Ast, node: TSNode, gState: State) =
+      if gState.debug:
+        gState.debugStr &= "\n# typedef enum {}"
 
       var
         fstart = 0
         fend = 1
 
-      if nimState.data[^2].name == "pointer_declarator":
+      if gState.data[^2].name == "pointer_declarator":
         fend = 2
 
-      if nimState.data[0].name == "type_identifier":
+      if gState.data[0].name == "type_identifier":
         fstart = 1
 
-        pEnumCommon(ast, node, nimState.data[0].val, fstart, fend, nimState)
+        pEnumCommon(ast, node, gState.data[0].val, fstart, fend, gState)
       else:
-        pEnumCommon(ast, node, nimState.data[^1].val, fstart, fend, nimState)
+        pEnumCommon(ast, node, gState.data[^1].val, fstart, fend, gState)
   ))
 
   # typ function(typ param1, ...)
@@ -611,39 +611,39 @@ proc initGrammar(): Grammar =
     {funcGrammar}
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
-      if nimState.gState.debug:
-        nimState.debugStr &= "\n# typ function"
+    proc (ast: ref Ast, node: TSNode, gState: State) =
+      if gState.debug:
+        gState.debugStr &= "\n# typ function"
 
       var
         fptr = ""
         i = 1
 
-      while i < nimState.data.len:
-        if nimState.data[i].name == "function_declarator":
+      while i < gState.data.len:
+        if gState.data[i].name == "function_declarator":
           i += 1
           continue
 
         fptr = ""
-        while i < nimState.data.len and nimState.data[i].name == "pointer_declarator":
+        while i < gState.data.len and gState.data[i].name == "pointer_declarator":
           fptr &= "ptr "
           i += 1
 
         var
-          fname = nimState.data[i].val
-          fnname = nimState.getIdentifier(fname, nskProc)
+          fname = gState.data[i].val
+          fnname = gState.getIdentifier(fname, nskProc)
           pout, pname, ptyp, pptr = ""
           count = 1
           flen = ""
           fVar = false
 
         i += 1
-        if i < nimState.data.len and nimState.data[i].name == "pointer_declarator":
+        if i < gState.data.len and gState.data[i].name == "pointer_declarator":
           fVar = true
           i += 1
 
-        while i < nimState.data.len:
-          if nimState.data[i].name == "function_declarator":
+        while i < gState.data.len:
+          if gState.data[i].name == "function_declarator":
             break
 
           funcParamCommon(fnname, pname, ptyp, pptr, pout, count, i, flen)
@@ -653,24 +653,24 @@ proc initGrammar(): Grammar =
 
         if not fnname.nBl:
           let
-            override = nimState.getOverride(fname, nskProc)
+            override = gState.getOverride(fname, nskProc)
           if override.nBl:
-            nimState.typeStr &= &"{nimState.getComments()}\n{override}"
-        elif nimState.addNewIdentifer(fnname):
+            gState.typeStr &= &"{gState.getComments()}\n{override}"
+        elif gState.addNewIdentifer(fnname):
           let
-            ftyp = nimState.getIdentifier(nimState.data[0].val, nskType, fnname).getType()
-            pragma = nimState.getPragma(nimState.getImportC(fname, fnname), "cdecl")
+            ftyp = gState.getIdentifier(gState.data[0].val, nskType, fnname).getType()
+            pragma = gState.getPragma(gState.getImportC(fname, fnname), "cdecl")
 
           if fptr.nBl or ftyp != "object":
             if fVar:
-              nimState.procStr &= &"{nimState.getComments(true)}\nvar {fnname}*: proc ({pout}): {getPtrType(fptr&ftyp)}{{.cdecl.}}"
+              gState.procStr &= &"{gState.getComments(true)}\nvar {fnname}*: proc ({pout}): {getPtrType(fptr&ftyp)}{{.cdecl.}}"
             else:
-              nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
+              gState.procStr &= &"{gState.getComments(true)}\nproc {fnname}*({pout}): {getPtrType(fptr&ftyp)}{pragma}"
           else:
             if fVar:
-              nimState.procStr &= &"{nimState.getComments(true)}\nvar {fnname}*: proc ({pout}){{.cdecl.}}"
+              gState.procStr &= &"{gState.getComments(true)}\nvar {fnname}*: proc ({pout}){{.cdecl.}}"
             else:
-              nimState.procStr &= &"{nimState.getComments(true)}\nproc {fnname}*({pout}){pragma}"
+              gState.procStr &= &"{gState.getComments(true)}\nproc {fnname}*({pout}){pragma}"
   ))
 
   # // comment
@@ -678,15 +678,15 @@ proc initGrammar(): Grammar =
    (comment
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+    proc (ast: ref Ast, node: TSNode, gState: State) =
       let
-        cmt = $nimState.getNodeVal(node)
+        cmt = $gState.getNodeVal(node)
 
       for line in cmt.splitLines():
         let
           line = line.multiReplace([("//", ""), ("/*", ""), ("*/", "")])
 
-        nimState.commentStr &= &"\n  # {line.strip(leading=false)}"
+        gState.commentStr &= &"\n  # {line.strip(leading=false)}"
   ))
 
   # // unknown
@@ -695,37 +695,37 @@ proc initGrammar(): Grammar =
     (^.*)
    )
   """,
-    proc (ast: ref Ast, node: TSNode, nimState: NimState) =
+    proc (ast: ref Ast, node: TSNode, gState: State) =
       var
         done = false
-      for i in nimState.data:
+      for i in gState.data:
         case $node.tsNodeType()
         of "declaration":
           if i.name == "identifier":
             let
-              override = nimState.getOverride(i.val, nskProc)
+              override = gState.getOverride(i.val, nskProc)
 
             if override.nBl:
-              nimState.procStr &= &"{nimState.getComments(true)}\n{override}"
+              gState.procStr &= &"{gState.getComments(true)}\n{override}"
               done = true
               break
             else:
-              nimState.procStr &= &"{nimState.getComments(true)}\n# Declaration '{i.val}' skipped"
+              gState.procStr &= &"{gState.getComments(true)}\n# Declaration '{i.val}' skipped"
 
         else:
           if i.name == "type_identifier":
             let
-              override = nimState.getOverride(i.val, nskType)
+              override = gState.getOverride(i.val, nskType)
 
             if override.nBl:
-              nimState.typeStr &= &"{nimState.getComments()}\n{override}"
+              gState.typeStr &= &"{gState.getComments()}\n{override}"
               done = true
               break
             else:
-              nimState.typeStr &= &"{nimState.getComments()}\n  # Type '{i.val}' skipped"
+              gState.typeStr &= &"{gState.getComments()}\n  # Type '{i.val}' skipped"
 
-      if nimState.gState.debug and not done:
-        nimState.skipStr &= &"\n{nimState.getNodeVal(node)}"
+      if gState.debug and not done:
+        gState.skipStr &= &"\n{gState.getNodeVal(node)}"
   ))
 
 proc initRegex(ast: ref Ast) =

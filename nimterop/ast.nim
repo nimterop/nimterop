@@ -4,27 +4,27 @@ import regex
 
 import "."/[getters, globals, treesitter/api]
 
-proc getHeaderPragma*(nimState: NimState): string =
+proc getHeaderPragma*(gState: State): string =
   result =
-    if nimState.includeHeader():
-      &", header: {nimState.currentHeader}"
+    if gState.isIncludeHeader():
+      &", header: {gState.currentHeader}"
     else:
       ""
 
-proc getDynlib*(nimState: NimState): string =
+proc getDynlib*(gState: State): string =
   result =
-    if nimState.gState.dynlib.nBl:
-      &", dynlib: {nimState.gState.dynlib}"
+    if gState.dynlib.nBl:
+      &", dynlib: {gState.dynlib}"
     else:
       ""
 
-proc getImportC*(nimState: NimState, origName, nimName: string): string =
+proc getImportC*(gState: State, origName, nimName: string): string =
   if nimName != origName:
-    result = &"importc: \"{origName}\"{nimState.getHeaderPragma()}"
+    result = &"importc: \"{origName}\"{gState.getHeaderPragma()}"
   else:
-    result = nimState.impShort
+    result = gState.impShort
 
-proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
+proc getPragma*(gState: State, pragmas: varargs[string]): string =
   result = ""
   for pragma in pragmas.items():
     if pragma.nBl:
@@ -32,15 +32,15 @@ proc getPragma*(nimState: NimState, pragmas: varargs[string]): string =
   if result.nBl:
     result = " {." & result[0 .. ^3] & ".}"
 
-  result = result.replace(nimState.impShort & ", cdecl", nimState.impShort & "C")
+  result = result.replace(gState.impShort & ", cdecl", gState.impShort & "C")
 
   let
-    dy = nimState.getDynlib()
+    dy = gState.getDynlib()
 
   if ", cdecl" in result and dy.nBl:
     result = result.replace(".}", dy & ".}")
 
-proc saveNodeData(node: TSNode, nimState: NimState): bool =
+proc saveNodeData(node: TSNode, gState: State): bool =
   let name = $node.tsNodeType()
 
   # Atoms are nodes whose values are to be saved
@@ -52,7 +52,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
       ppppname = node.getPxName(4)
 
     var
-      val = nimState.getNodeVal(node)
+      val = gState.getNodeVal(node)
 
     # Skip since value already obtained from parent atom
     if name == "primitive_type" and pname == "sized_type_specifier":
@@ -64,7 +64,7 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
 
     # Add reference point in saved data for bitfield_clause
     if name in ["number_literal"] and pname == "bitfield_clause":
-      nimState.data.add(("bitfield_clause", val))
+      gState.data.add(("bitfield_clause", val))
       return true
 
     # Process value as a type
@@ -74,52 +74,52 @@ proc saveNodeData(node: TSNode, nimState: NimState): bool =
     if node.tsNodePrevNamedSibling().tsNodeIsNull():
       if pname == "pointer_declarator":
         if ppname notin ["function_declarator", "array_declarator"]:
-          nimState.data.add(("pointer_declarator", ""))
+          gState.data.add(("pointer_declarator", ""))
         elif ppname == "array_declarator":
-          nimState.data.add(("array_pointer_declarator", ""))
+          gState.data.add(("array_pointer_declarator", ""))
 
         # Double pointer
         if ppname == "pointer_declarator":
-          nimState.data.add(("pointer_declarator", ""))
+          gState.data.add(("pointer_declarator", ""))
       elif pname in ["function_declarator", "array_declarator"]:
         if ppname == "pointer_declarator":
-          nimState.data.add(("pointer_declarator", ""))
+          gState.data.add(("pointer_declarator", ""))
           if pppname == "pointer_declarator":
-            nimState.data.add(("pointer_declarator", ""))
+            gState.data.add(("pointer_declarator", ""))
 
-    nimState.data.add((name, val))
+    gState.data.add((name, val))
 
     if pname == "pointer_declarator" and
       ppname == "function_declarator":
       if name == "field_identifier":
         if pppname == "pointer_declarator":
-          nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
+          gState.data.insert(("pointer_declarator", ""), gState.data.len-1)
           if ppppname == "pointer_declarator":
-            nimState.data.insert(("pointer_declarator", ""), nimState.data.len-1)
-        nimState.data.add(("function_declarator", ""))
+            gState.data.insert(("pointer_declarator", ""), gState.data.len-1)
+        gState.data.add(("function_declarator", ""))
       elif name == "identifier":
-        nimState.data.add(("pointer_declarator", ""))
+        gState.data.add(("pointer_declarator", ""))
 
   # Save node value for a top-level expression
   elif name in gExpressions and name != "escape_sequence":
     if $node.tsNodeParent.tsNodeType() notin gExpressions:
-      nimState.data.add((name, nimState.getNodeVal(node)))
+      gState.data.add((name, gState.getNodeVal(node)))
 
   elif name in ["abstract_pointer_declarator", "enumerator", "field_declaration", "function_declarator"]:
-    nimState.data.add((name.replace("abstract_", ""), ""))
+    gState.data.add((name.replace("abstract_", ""), ""))
 
   return true
 
-proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
+proc searchAstForNode(ast: ref Ast, node: TSNode, gState: State): bool =
   let
     childNames = node.getTSNodeNamedChildNames().join()
 
   if ast.isNil:
     return
 
-  if nimState.gState.debug:
-    nimState.nodeBranch.add $node.tsNodeType()
-    necho "#" & spaces(nimState.nodeBranch.len * 2) & nimState.nodeBranch[^1]
+  if gState.debug:
+    gState.nodeBranch.add $node.tsNodeType()
+    gecho "#" & spaces(gState.nodeBranch.len * 2) & gState.nodeBranch[^1]
 
   if ast.children.nBl:
     if childNames.contains(ast.regex) or
@@ -137,26 +137,26 @@ proc searchAstForNode(ast: ref Ast, node: TSNode, nimState: NimState): bool =
                 else:
                   ast
 
-            if not searchAstForNode(astChild, nodeChild, nimState):
+            if not searchAstForNode(astChild, nodeChild, gState):
               flag = false
               break
 
         if flag:
-          result = node.saveNodeData(nimState)
+          result = node.saveNodeData(gState)
       else:
-        result = node.saveNodeData(nimState)
+        result = node.saveNodeData(gState)
     else:
-      if nimState.gState.debug:
-        necho "#" & spaces(nimState.nodeBranch.len * 2) & &"  {ast.getRegexForAstChildren()} !=~ {childNames}"
+      if gState.debug:
+        gecho "#" & spaces(gState.nodeBranch.len * 2) & &"  {ast.getRegexForAstChildren()} !=~ {childNames}"
   elif node.getTSNodeNamedChildCountSansComments() == 0:
-    result = node.saveNodeData(nimState)
+    result = node.saveNodeData(gState)
 
-  if nimState.gState.debug:
-    discard nimState.nodeBranch.pop()
-    if nimstate.nodeBranch.Bl:
-      necho ""
+  if gState.debug:
+    discard gState.nodeBranch.pop()
+    if gState.nodeBranch.Bl:
+      gecho ""
 
-proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
+proc searchAst(root: TSNode, astTable: AstTable, gState: State) =
   var
     node = root
     nextnode: TSNode
@@ -168,14 +168,14 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
         name = $node.tsNodeType()
       if name in astTable:
         for ast in astTable[name]:
-          if nimState.gState.debug:
-            necho "\n#  " & nimState.getNodeVal(node).replace("\n", "\n#  ") & "\n"
-          if searchAstForNode(ast, node, nimState):
-            ast.tonim(ast, node, nimState)
-            if nimState.gState.debug:
-              nimState.debugStr &= "\n# " & nimState.data.join("\n# ") & "\n"
+          if gState.debug:
+            gecho "\n#  " & gState.getNodeVal(node).replace("\n", "\n#  ") & "\n"
+          if searchAstForNode(ast, node, gState):
+            ast.tonim(ast, node, gState)
+            if gState.debug:
+              gState.debugStr &= "\n# " & gState.data.join("\n# ") & "\n"
             break
-        nimState.data = @[]
+        gState.data = @[]
     else:
       break
 
@@ -204,48 +204,46 @@ proc searchAst(root: TSNode, astTable: AstTable, nimState: NimState) =
 
 proc printNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable) =
   var
-    nimState = new(NimState)
     fp = fullpath.replace("\\", "/")
 
-  nimState.identifiers = newTable[string, string]()
+  gState.identifiers = newTable[string, string]()
 
-  nimState.gState = gState
-  nimState.currentHeader = getCurrentHeader(fullpath)
-  nimState.impShort = nimState.currentHeader.replace("header", "imp")
-  nimState.sourceFile = fullpath
+  gState.currentHeader = getCurrentHeader(fullpath)
+  gState.impShort = gState.currentHeader.replace("header", "imp")
+  gState.sourceFile = fullpath
 
-  if nimState.includeHeader():
-    nimState.constStr &= &"\n  {nimState.currentHeader} {{.used.}} = \"{fp}\""
+  if gState.isIncludeHeader():
+    gState.constStr &= &"\n  {gState.currentHeader} {{.used.}} = \"{fp}\""
 
-  root.searchAst(astTable, nimState)
+  root.searchAst(astTable, gState)
 
-  if nimState.enumStr.nBl:
-    necho &"{nimState.enumStr}\n"
+  if gState.enumStr.nBl:
+    gecho &"{gState.enumStr}\n"
 
-  nimState.constStr = nimState.getOverrideFinal(nskConst) & nimState.constStr
-  if nimState.constStr.nBl:
-    necho &"const{nimState.constStr}\n"
+  gState.constStr = gState.getOverrideFinal(nskConst) & gState.constStr
+  if gState.constStr.nBl:
+    gecho &"const{gState.constStr}\n"
 
-  necho &"""
-{{.pragma: {nimState.impShort}, importc{nimState.getHeaderPragma()}.}}
-{{.pragma: {nimState.impShort}C, {nimState.impShort}, cdecl{nimState.getDynlib()}.}}
+  gecho &"""
+{{.pragma: {gState.impShort}, importc{gState.getHeaderPragma()}.}}
+{{.pragma: {gState.impShort}C, {gState.impShort}, cdecl{gState.getDynlib()}.}}
 """
 
-  nimState.typeStr = nimState.getOverrideFinal(nskType) & nimState.typeStr
-  if nimState.typeStr.nBl:
-    necho &"type{nimState.typeStr}\n"
+  gState.typeStr = gState.getOverrideFinal(nskType) & gState.typeStr
+  if gState.typeStr.nBl:
+    gecho &"type{gState.typeStr}\n"
 
-  nimState.procStr = nimState.getOverrideFinal(nskProc) & nimState.procStr
-  if nimState.procStr.nBl:
-    necho &"{nimState.procStr}\n"
+  gState.procStr = gState.getOverrideFinal(nskProc) & gState.procStr
+  if gState.procStr.nBl:
+    gecho &"{gState.procStr}\n"
 
-  if nimState.gState.debug:
-    if nimState.debugStr.nBl:
-      necho nimState.debugStr
+  if gState.debug:
+    if gState.debugStr.nBl:
+      gecho gState.debugStr
 
-    if nimState.skipStr.nBl:
+    if gState.skipStr.nBl:
       let
-        hash = nimState.skipStr.hash().abs()
+        hash = gState.skipStr.hash().abs()
         sname = getTempDir() / &"nimterop_{$hash}.h"
-      necho &"# Writing skipped definitions to {sname}\n"
-      writeFile(sname, nimState.skipStr)
+      gecho &"# Writing skipped definitions to {sname}\n"
+      writeFile(sname, gState.skipStr)
