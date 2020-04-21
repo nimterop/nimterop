@@ -529,9 +529,10 @@ iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: So
   # struct ABC { int w, h; };
   #
   # This is not applicable for procs.
-  let
+  var
     start = getStartAtom(node)
 
+  let
     # node[start] - param type
     (tname0, _, tinfo) = nimState.getNameInfo(node[start].getAtom(), nskType, parent = name)
 
@@ -543,6 +544,10 @@ iterator newIdentDefs(nimState: NimState, name: string, node: TSNode, offset: So
         tname0
 
     tident = nimState.getIdent(tname, tinfo, exported = false)
+
+  # Skip qualifiers after type
+  while start < node.len - 1 and node[start+1].getName() == "type_qualifier":
+    start += 1
 
   if start == node.len - 1:
     # Only for proc with no named param - create a param name based on offset
