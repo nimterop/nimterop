@@ -494,7 +494,7 @@ proc processTSNode(exprParser: ExprParser, node: TSNode, typeofNode: var PNode):
   # Why are these node types named true/false?
   of "true", "false":
     result = exprParser.state.parseString(node.val)
-  of "type_descriptor":
+  of "type_descriptor", "sized_type_specifier":
     let ty = getType(node.val)
     result = exprParser.getIdent(ty, nskType, parent=node.getName())
     if result.kind == nkNone:
