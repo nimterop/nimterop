@@ -7,6 +7,7 @@ const
   pcreH = baseDir/"pcre.h.in"
 
 static:
+  cSkipSymbol @["PCRE_UCHAR16", "PCRE_UCHAR32"]
   if not pcreH.fileExists():
     downloadUrl("https://github.com/svn2github/pcre/raw/master/pcre.h.in", baseDir)
   cDebug()
