@@ -6,7 +6,7 @@ import compiler/[ast, renderer]
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[globals, getters, utils]
+import "."/[globals, getters, comphelp, tshelp]
 
 # This version of exprparser should be able to handle:
 #
@@ -41,9 +41,9 @@ proc newExprParser*(state: NimState, code: string, name = ""): ExprParser =
   ExprParser(state: state, code: code, name: name)
 
 template techo(msg: varargs[string, `$`]) =
-  if exprParser.state.gState.debug:
+  block:
     let nimState {.inject.} = exprParser.state
-    necho join(msg, "").getCommented
+    decho join(msg, "")
 
 template val(node: TSNode): string =
   exprParser.code.getNodeVal(node)
@@ -60,9 +60,11 @@ proc getIdent(exprParser: ExprParser, identName: string, kind = nskConst, parent
   if ident != "_":
     # Process the identifier through cPlugin
     ident = exprParser.state.getIdentifier(ident, kind, parent)
-  if exprParser.name.nBl and ident in exprParser.state.constIdentifiers:
-    ident = ident & "." & exprParser.name
-  if ident != "":
+  if kind == nskType:
+    result = exprParser.state.getIdent(ident)
+  elif ident.nBl and ident in exprParser.state.constIdentifiers:
+    if exprParser.name.nBl:
+      ident = ident & "." & exprParser.name
     result = exprParser.state.getIdent(ident)
 
 proc getIdent(exprParser: ExprParser, node: TSNode, kind = nskConst, parent = ""): PNode =
@@ -70,29 +72,6 @@ proc getIdent(exprParser: ExprParser, node: TSNode, kind = nskConst, parent = ""
   ##
   ## Returns PNode(nkNone) if the identifier is blank
   exprParser.getIdent(node.val, kind, parent)
-
-template withCodeAst(exprParser: ExprParser, body: untyped): untyped =
-  ## A simple template to inject the TSNode into a body of code
-  var parser = tsParserNew()
-  defer:
-    parser.tsParserDelete()
-
-  doAssert exprParser.code.nBl, "Empty code"
-  if exprParser.mode == "c":
-    doAssert parser.tsParserSetLanguage(treeSitterC()), "Failed to load C parser"
-  elif exprParser.mode == "cpp":
-    doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
-  else:
-    doAssert false, &"Invalid parser {exprParser.mode}"
-
-  var
-    tree = parser.tsParserParseString(nil, exprParser.code.cstring, exprParser.code.len.uint32)
-    root {.inject.} = tree.tsTreeRootNode()
-
-  body
-
-  defer:
-    tree.tsTreeDelete()
 
 proc parseChar(charStr: string): uint8 {.inline.} =
   ## Parses a character literal out of a string. This is needed
@@ -161,37 +140,36 @@ proc getNumNode(number, suffix: string): PNode {.inline.} =
         result = newFloatNode(nkFloat64Lit, parseFloat(number[0 ..< number.len - 1]))
       else:
         result = newFloatNode(nkFloatLit, parseFloat(number))
-      return
     except ValueError:
       raise newException(ExprParseError, &"Could not parse float value \"{number}\".")
-
-  case suffix
-  of "u", "U":
-    result = newNode(nkUintLit)
-  of "l", "L":
-    result = newNode(nkInt32Lit)
-  of "ul", "UL":
-    result = newNode(nkUint32Lit)
-  of "ll", "LL":
-    result = newNode(nkInt64Lit)
-  of "ull", "ULL":
-    result = newNode(nkUint64Lit)
   else:
-    result = newNode(nkIntLit)
+    case suffix
+    of "u", "U":
+      result = newNode(nkUintLit)
+    of "l", "L":
+      result = newNode(nkInt32Lit)
+    of "ul", "UL":
+      result = newNode(nkUint32Lit)
+    of "ll", "LL":
+      result = newNode(nkInt64Lit)
+    of "ull", "ULL":
+      result = newNode(nkUint64Lit)
+    else:
+      result = newNode(nkIntLit)
 
-  # I realize these regex are wasteful on performance, but
-  # couldn't come up with a better idea.
-  if number.contains(re"0[xX]"):
-    result.intVal = parseHexInt(number)
-    result.flags = {nfBase16}
-  elif number.contains(re"0[bB]"):
-    result.intVal = parseBinInt(number)
-    result.flags = {nfBase2}
-  elif number.contains(re"0[oO]"):
-    result.intVal = parseOctInt(number)
-    result.flags = {nfBase8}
-  else:
-    result.intVal = parseInt(number)
+    # I realize these regex are wasteful on performance, but
+    # couldn't come up with a better idea.
+    if number.contains(re"0[xX]"):
+      result.intVal = parseHexInt(number)
+      result.flags = {nfBase16}
+    elif number.contains(re"0[bB]"):
+      result.intVal = parseBinInt(number)
+      result.flags = {nfBase2}
+    elif number.contains(re"0[oO]"):
+      result.intVal = parseOctInt(number)
+      result.flags = {nfBase8}
+    else:
+      result.intVal = parseInt(number)
 
 proc processNumberLiteral(exprParser: ExprParser, node: TSNode): PNode =
   ## Parse a number literal from a TSNode. Can be a float, hex, long, etc
@@ -285,168 +263,112 @@ proc processCastExpression(exprParser: ExprParser, node: TSNode, typeofNode: var
     exprParser.processTSNode(node[1], typeofNode)
   )
 
-proc processLogicalExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
-  result = newNode(nkPar)
-  let child = node[0]
-  var nimSym = ""
-
-  let binarySym = node.tsNodeChild(0).val.strip()
-  techo "LOG SYM: ", binarySym
-
-  case binarySym
-  of "!":
-    nimSym = "not"
+proc getNimUnarySym(csymbol: string): string =
+  ## Get the Nim equivalent of a unary C symbol
+  ##
+  ## TODO: Add ++, --,
+  case csymbol
+  of "+", "-":
+    result = csymbol
+  of "~", "!":
+    result = "not"
   else:
-    raise newException(ExprParseError, &"Unsupported logical symbol \"{binarySym}\"")
+    raise newException(ExprParseError, &"Unsupported unary symbol \"{csymbol}\"")
 
-  techo "LOG CHILD: ", child.val, ", nim: ", nimSym
-  result.add nkPrefix.newTree(
-    exprParser.state.getIdent(nimSym),
-    exprParser.processTSNode(child, typeofNode)
+proc getNimBinarySym(csymbol: string): string =
+  case csymbol
+  of "|", "||":
+    result = "or"
+  of "&", "&&":
+    result = "and"
+  of "^":
+    result = "xor"
+  of "==", "!=",
+     "+", "-", "/", "*",
+     ">", "<", ">=", "<=":
+    result = csymbol
+  of "%":
+    result = "mod"
+  else:
+    raise newException(ExprParseError, &"Unsupported binary symbol \"{csymbol}\"")
+
+proc processBinaryExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
+  # Node has left and right children ie: (2 + 7)
+  result = newNode(nkInfix)
+
+  let
+    left = node[0]
+    right = node[1]
+    binarySym = node.tsNodeChild(1).val.strip()
+    nimSym = getNimBinarySym(binarySym)
+
+  result.add exprParser.state.getIdent(nimSym)
+  let leftNode = exprParser.processTSNode(left, typeofNode)
+
+  if typeofNode.isNil:
+    typeofNode = nkCall.newTree(
+      exprParser.state.getIdent("typeof"),
+      leftNode
+    )
+
+  let rightNode = exprParser.processTSNode(right, typeofNode)
+
+  result.add leftNode
+  result.add nkCall.newTree(
+    typeofNode,
+    rightNode
   )
 
-proc processMathExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
+proc processUnaryExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
+  result = newNode(nkPar)
+
+  let
+    child = node[0]
+    unarySym = node.tsNodeChild(0).val.strip()
+    nimSym = getNimUnarySym(unarySym)
+
+  if nimSym == "-":
+    # Special case. The minus symbol must be in front of an integer,
+    # so we have to make a gentle cast here to coerce it to one.
+    # Might be bad because we are overwriting the type
+    # There's probably a better way of doing this
+    if typeofNode.isNil:
+      typeofNode = exprParser.state.getIdent("int64")
+
+    result.add nkPrefix.newTree(
+      exprParser.state.getIdent(unarySym),
+      nkPar.newTree(
+        nkCall.newTree(
+          exprParser.state.getIdent("int64"),
+          exprParser.processTSNode(child, typeofNode)
+        )
+      )
+    )
+  else:
+    result.add nkPrefix.newTree(
+      exprParser.state.getIdent(nimSym),
+      exprParser.processTSNode(child, typeofNode)
+    )
+
+proc processUnaryOrBinaryExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
   if node.len > 1:
     # Node has left and right children ie: (2 + 7)
-    var
-      res = newNode(nkInfix)
-    let
-      left = node[0]
-      right = node[1]
-
-    let mathSym = node.tsNodeChild(1).val.strip()
-    techo "MATH SYM: ", mathSym
-
-    res.add exprParser.state.getIdent(mathSym)
-    let leftNode = exprParser.processTSNode(left, typeofNode)
-
-    # If the typeofNode is nil, set it
-    # to be the leftNode because C's type coercion
-    # happens left to right, and we want to emulate it
-    if typeofNode.isNil:
-      typeofNode = nkCall.newTree(
-        exprParser.state.getIdent("typeof"),
-        leftNode
-      )
-
-    let rightNode = exprParser.processTSNode(right, typeofNode)
-
-    res.add leftNode
-    res.add nkCall.newTree(
-      typeofNode,
-      rightNode
-    )
 
     # Make sure the statement is of the same type as the left
     # hand argument, since some expressions return a differing
     # type than the input types (2/3 == float)
+    let binExpr = processBinaryExpression(exprParser, node, typeofNode)
+    # Note that this temp var binExpr is needed for some reason, or else we get a segfault
     result = nkCall.newTree(
       typeofNode,
-      res
+      binexpr
     )
 
   elif node.len() == 1:
     # Node has only one child, ie -(20 + 7)
-    result = newNode(nkPar)
-    let child = node[0]
-    var nimSym = ""
-
-    let unarySym = node.tsNodeChild(0).val.strip()
-    techo "MATH SYM: ", unarySym
-
-    case unarySym
-    of "+":
-      nimSym = "+"
-    of "-":
-      # Special case. The minus symbol must be in front of an integer,
-      # so we have to make a gental cast here to coerce it to one.
-      # Might be bad because we are overwriting the type
-      # There's probably a better way of doing this
-      if typeofNode.isNil:
-        typeofNode = exprParser.state.getIdent("int64")
-      result.add nkPrefix.newTree(
-        exprParser.state.getIdent(unarySym),
-        nkPar.newTree(
-          nkCall.newTree(
-            exprParser.state.getIdent("int64"),
-            exprParser.processTSNode(child, typeofNode)
-          )
-        )
-      )
-      return
-    else:
-      raise newException(ExprParseError, &"Unsupported unary symbol \"{unarySym}\"")
-
-    result.add nkPrefix.newTree(
-      exprParser.state.getIdent(nimSym),
-      exprParser.processTSNode(child, typeofNode)
-    )
+    result = processUnaryExpression(exprParser, node, typeofNode)
   else:
-    raise newException(ExprParseError, &"Invalid bitwise_expression \"{node.val}\"")
-
-proc processBitwiseExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
-  if node.len() > 1:
-    result = newNode(nkInfix)
-
-    let
-      left = node[0]
-      right = node[1]
-
-    var nimSym = ""
-
-    let binarySym = node.tsNodeChild(1).val.strip()
-    techo "BIN SYM: ", binarySym
-
-    case binarySym
-    of "|", "||":
-      nimSym = "or"
-    of "&", "&&":
-      nimSym = "and"
-    of "^":
-      nimSym = "xor"
-    of "==", "!=":
-      nimSym = binarySym
-    else:
-      raise newException(ExprParseError, &"Unsupported binary symbol \"{binarySym}\"")
-
-    result.add exprParser.state.getIdent(nimSym)
-    let leftNode = exprParser.processTSNode(left, typeofNode)
-
-    if typeofNode.isNil:
-      typeofNode = nkCall.newTree(
-        exprParser.state.getIdent("typeof"),
-        leftNode
-      )
-
-    let rightNode = exprParser.processTSNode(right, typeofNode)
-
-    result.add leftNode
-    result.add nkCall.newTree(
-      typeofNode,
-      rightNode
-    )
-
-  elif node.len() == 1:
-    result = newNode(nkPar)
-    let child = node[0]
-    var nimSym = ""
-
-    let unarySym = node.tsNodeChild(0).val.strip()
-    techo "BIN SYM: ", unarySym
-
-    # TODO: Support more symbols here. ++, --, &
-    case unarySym
-    of "~":
-      nimSym = "not"
-    else:
-      raise newException(ExprParseError, &"Unsupported unary symbol \"{unarySym}\"")
-
-    result.add nkPrefix.newTree(
-      exprParser.state.getIdent(nimSym),
-      exprParser.processTSNode(child, typeofNode)
-    )
-  else:
-    raise newException(ExprParseError, &"Invalid bitwise_expression \"{node.val}\"")
+    raise newException(ExprParseError, &"Invalid {node.getName()} \"{node.val}\"")
 
 proc processSizeofExpression(exprParser: ExprParser, node: TSNode, typeofNode: var PNode): PNode =
   result = nkCall.newTree(
@@ -464,45 +386,85 @@ proc processTSNode(exprParser: ExprParser, node: TSNode, typeofNode: var PNode):
 
   case nodeName
   of "number_literal":
+    # Input -> 0x1234FE, 1231, 123u, 123ul, 123ull, 1.334f
+    # Output -> 0x1234FE, 1231, 123'u, 123'u32, 123'u64, 1.334
     result = exprParser.processNumberLiteral(node)
   of "string_literal":
+    # Input -> "foo\0\x42"
+    # Output -> "foo\0"
     result = exprParser.processStringLiteral(node)
   of "char_literal":
+    # Input -> 'F', '\034' // Octal, '\x5A' // Hex, '\r' // escape sequences
+    # Output ->
     result = exprParser.processCharacterLiteral(node)
   of "expression_statement", "ERROR", "translation_unit":
-    # This may be wrong. What can be in an expression?
-    if node.len > 0:
+    # Note that we're parsing partial expressions, so the TSNode might contain
+    # an ERROR node. If that's the case, they usually contain children with
+    # partial results, which will contain parsed expressions
+    #
+    # Input (top level statement) -> ((1 + 3 - IDENT) - (int)400.0)
+    # Output -> (1 + typeof(1)(3) - typeof(1)(IDENT) - typeof(1)(cast[int](400.0))) # Type casting in case some args differ
+    if node.len == 1:
       result = exprParser.processTSNode(node[0], typeofNode)
+    elif node.len > 1:
+      result = newNode(nkStmtListExpr)
+      for i in 0 ..< node.len:
+        result.add exprParser.processTSNode(node[i], typeofNode)
     else:
       raise newException(ExprParseError, &"Node type \"{nodeName}\" has no children")
   of "parenthesized_expression":
+    # Input -> (IDENT - OTHERIDENT)
+    # Output -> (IDENT - typeof(IDENT)(OTHERIDENT)) # Type casting in case OTHERIDENT is a slightly different type (uint vs int)
     result = exprParser.processParenthesizedExpr(node, typeofNode)
   of "sizeof_expression":
+    # Input -> sizeof(char)
+    # Output -> sizeof(cchar)
     result = exprParser.processSizeofExpression(node, typeofNode)
   # binary_expression from the new treesitter upgrade should work here
   # once we upgrade
-  of "bitwise_expression", "equality_expression", "binary_expression":
-    result = exprParser.processBitwiseExpression(node, typeofNode)
-  of "math_expression":
-    result = exprParser.processMathExpression(node, typeofNode)
+  of "math_expression", "logical_expression", "relational_expression",
+     "bitwise_expression", "equality_expression", "binary_expression":
+    # Input -> a == b, a != b, !a, ~a, a < b, a > b, a <= b, a >= b
+    # Output ->
+    #   typeof(a)(a == typeof(a)(b))
+    #   typeof(a)(a != typeof(a)(b))
+    #   (not a)
+    #   (not a)
+    #   typeof(a)(a < typeof(a)(b))
+    #   typeof(a)(a > typeof(a)(b))
+    #   typeof(a)(a <= typeof(a)(b))
+    #   typeof(a)(a >= typeof(a)(b))
+    result = exprParser.processUnaryOrBinaryExpression(node, typeofNode)
   of "shift_expression":
+    # Input -> a >> b, a << b
+    # Output -> a shr typeof(a)(b), a shl typeof(a)(b)
     result = exprParser.processShiftExpression(node, typeofNode)
   of "cast_expression":
+    # Input -> (int) a
+    # Output -> cast[cint](a)
     result = exprParser.processCastExpression(node, typeofNode)
-  of "logical_expression":
-    result = exprParser.processLogicalExpression(node, typeofNode)
   # Why are these node types named true/false?
   of "true", "false":
+    # Input -> true, false
+    # Output -> true, false
     result = exprParser.state.parseString(node.val)
   of "type_descriptor", "sized_type_specifier":
+    # Input -> int, unsigned int, long int, etc
+    # Output -> cint, cuint, clong, etc
     let ty = getType(node.val)
-    result = exprParser.getIdent(ty, nskType, parent=node.getName())
-    if result.kind == nkNone:
-      result = exprParser.state.getIdent(ty)
+    if ty.len > 0:
+      # If ty is not empty, one of C's builtin types has been found
+      result = exprParser.getIdent(ty, nskType, parent=node.getName())
+    else:
+      result = exprParser.getIdent(node.val, nskType, parent=node.getName())
+      if result.kind == nkNone:
+        raise newException(ExprParseError, &"Missing type specifier \"{node.val}\"")
   of "identifier":
+    # Input -> IDENT
+    # Output -> IDENT (if found in sym table, else error)
     result = exprParser.getIdent(node, parent=node.getName())
     if result.kind == nkNone:
-      raise newException(ExprParseError, &"Could not get identifier \"{node.val}\"")
+      raise newException(ExprParseError, &"Missing identifier \"{node.val}\"")
   else:
     raise newException(ExprParseError, &"Unsupported node type \"{nodeName}\" for node \"{node.val}\"")
 
@@ -512,11 +474,11 @@ proc parseCExpression*(state: NimState, code: string, name = ""): PNode =
   ## Convert the C string to a nim PNode tree
   result = newNode(nkNone)
   # This is used for keeping track of the type of the first
-  # symbol
+  # symbol used for type casting
   var tnode: PNode = nil
   let exprParser = newExprParser(state, code, name)
   try:
-    withCodeAst(exprParser):
+    withCodeAst(exprParser.code, exprParser.mode):
       result = exprParser.processTSNode(root, tnode)
   except ExprParseError as e:
     techo e.msg

@@ -2,15 +2,10 @@ import os, osproc, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, ast2, globals, getters, grammar, build]
+import "."/[ast, ast2, globals, getters, grammar, build, tshelp]
 
 proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), &"Invalid path {path}"
-
-  var parser = tsParserNew()
-
-  defer:
-    parser.tsParserDelete()
 
   if gState.mode.Bl:
     gState.mode = getCompilerMode(path)
@@ -20,6 +15,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
   else:
     gState.code = readFile(path)
 
+<<<<<<< HEAD
   doAssert gState.code.nBl, "Empty file or preprocessor error"
 
   if gState.mode == "c":
@@ -45,6 +41,18 @@ proc process(gState: State, path: string, astTable: AstTable) =
       ast.parseNim(gState, path, root, astTable)
   elif gState.preprocess:
     gecho gState.code
+=======
+  withCodeAst(gState.code, gState.mode):
+    if gState.past:
+      gecho gState.printLisp(root)
+    elif gState.pnim:
+      if Feature.ast2 in gState.feature:
+        ast2.printNim(gState, path, root)
+      else:
+        ast.printNim(gState, path, root, astTable)
+    elif gState.preprocess:
+      gecho gState.code
+>>>>>>> Update based on comments from review. Need to add more docs and reorg to use gstate
 
 # CLI processing with default values
 proc main(

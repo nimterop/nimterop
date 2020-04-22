@@ -1,10 +1,12 @@
 import macros, os, sequtils, sets, strformat, strutils, tables, times
 
+import options as opts
+
 import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
 import "."/treesitter/api
 
-import "."/[globals, getters, exprparser, utils]
+import "."/[globals, getters, exprparser, comphelp]
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -16,9 +18,6 @@ proc getPtrType*(str: string): string =
       "File"
     else:
       str
-
-proc getLit*(nimState: NimState, str: string, expression = false): PNode =
-  result = nimState.parseCExpression(str)
 
 proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimSymKind): PNode =
   # Check if symbol `origname` of `kind` and `origname` has any cOverride defined
@@ -101,7 +100,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
       else:
         gState.getNodeVal(node[1])
     valident =
-      gState.getLit(val)
+      gState.parseCExpression(val)
 
   if name.Bl:
     # Name skipped or overridden since blank
@@ -962,7 +961,7 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
       # type name[X] => array[X, type]
       let
         # Size of array could be a Nim expression
-        size = gState.getLit(gState.getNodeVal(cnode[1]), expression = true)
+        size = gState.parseCExpression(gState.getNodeVal(cnode[1]))
       if size.kind != nkNone:
         result = gState.newArrayTree(cnode, result, size)
         cnode = cnode[0]
@@ -1367,6 +1366,7 @@ proc addEnum(gState: State, node: TSNode) =
       # Create const for fields
       var
         fnames: HashSet[string]
+        fvalSections: seq[tuple[fname: string, fval: string, cexpr: Option[TSNode]]]
       for i in 0 .. enumlist.len - 1:
         let
           en = enumlist[i]
@@ -1385,19 +1385,24 @@ proc addEnum(gState: State, node: TSNode) =
             fval = &"({prev} + 1).{name}"
 
           if en.len > 1 and en[1].getName() in gEnumVals:
-            # Explicit value
-            fval = "(" & $gState.parseCExpression(gState.getNodeVal(en[1]), name) & ")." & name
-
-          # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
-          gState.constSection.add gState.parseString(&"const {fname}* = {fval}")[0][0]
+            fvalSections.add((fname, "", some(en[1])))
+          else:
+            fvalSections.add((fname, fval, none(TSNode)))
 
           fnames.incl fname
-
           prev = fname
 
       # Add fields to list of consts after processing enum so that we don't cast
       # enum field to itself
       gState.constIdentifiers.incl fnames
+
+      # parseCExpression requires all const identifiers to be present for the enum
+      for (fname, fval, cexprNode) in fvalSections:
+        var fval = fval
+        if cexprNode.isSome:
+          fval = "(" & $nimState.parseCExpression(nimState.getNodeVal(cexprNode.get()), name) & ")." & name
+        # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
+        nimState.constSection.add nimState.parseString(&"const {fname}* = {fval}")[0][0]
 
       # Add other names
       if node.getName() == "type_definition" and node.len > 1:
@@ -1486,7 +1491,6 @@ proc addProc(gState: State, node, rnode: TSNode) =
       # Parameter list
       plist = node.anyChildInTree("parameter_list")
 
-    var
       procDef = newNode(nkProcDef)
 
     # proc X(a1: Y, a2: Z): P {.pragma.}

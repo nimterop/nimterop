@@ -12,7 +12,6 @@ static:
 const
   path = currentSourcePath.parentDir() / "include" / "tast2.h"
 
-
 when defined(HEADER):
   cDefine("HEADER")
   const
