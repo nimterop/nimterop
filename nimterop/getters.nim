@@ -510,20 +510,6 @@ proc getNameInfo*(gState: State, node: TSNode, kind: NimSymKind, parent = ""):
 proc getCurrentHeader*(fullpath: string): string =
   ("header" & fullpath.splitFile().name.multiReplace([(".", ""), ("-", "")]))
 
-proc removeStatic(content: string): string =
-  ## Replace static function bodies with a semicolon and commented
-  ## out body
-  return content.replace(
-    re"(?msU)static inline ([^)]+\))([^}]+\})",
-    proc (m: RegexMatch, s: string): string =
-      let funcDecl = s[m.group(0)[0]]
-      let body = s[m.group(1)[0]].strip()
-      result = ""
-
-      result.add("$#;" % [funcDecl])
-      result.add(body.replace(re"(?m)^(.*\n?)", "//$1"))
-  )
-
 proc getPreprocessor*(gState: State, fullpath: string): string =
   var
     cmts = if gState.nocomments: "" else: "-CC"
@@ -731,7 +717,7 @@ proc loadPlugin*(gState: State, sourcePath: string) =
     pdll = sourcePath.dll
   if not fileExists(pdll) or
     sourcePath.getLastModificationTime() > pdll.getLastModificationTime():
-    discard execAction(&"{gState.nim.sanitizePath} c --app:lib {sourcePath.sanitizePath}")
+    discard execAction(&"{gState.nim.sanitizePath} c --app:lib --gc:markAndSweep {sourcePath.sanitizePath}")
   doAssert fileExists(pdll), "No plugin binary generated for " & sourcePath
 
   let lib = loadLib(pdll)

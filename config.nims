@@ -5,8 +5,8 @@ else:
   switch("gcc.linkerexe", "g++")
 
 # Workaround for NilAccessError crash on Windows #98
-when defined(Windows):
-  switch("gc", "markAndSweep")
+# Could also help for OSX/Linux crash
+switch("gc", "markAndSweep")
 
 # Retain stackTrace for clear errors
 switch("stackTrace", "on")
