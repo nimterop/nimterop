@@ -1,4 +1,4 @@
-import os, osproc, segfaults, strformat, strutils, tables, times
+import os, osproc, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
