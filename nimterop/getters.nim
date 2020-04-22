@@ -351,13 +351,10 @@ proc inChildren*(node: TSNode, ntype: string): bool =
 
 proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
   # Get line number and column info for node
-  result.line = 1
-  result.col = 1
-  for i in 0 .. node.tsNodeStartByte().int-1:
-    if gState.code[i] == '\n':
-      result.col = 0
-      result.line += 1
-    result.col += 1
+  let
+    point = node.tsNodeStartPoint()
+  result.line = point.row.int + 1
+  result.col = point.column.int + 1
 
 proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
   for i in 0 ..< node.len:
@@ -542,6 +539,14 @@ proc getPreprocessor*(gState: State, fullpath: string): string =
   for def in gState.defines:
     cmd &= &"-D{def} "
 
+  # Remove gcc special calls
+  if defined(posix):
+    cmd &= "-D__attribute__\\(x\\)= "
+  else:
+    cmd &= "-D__attribute__(x)= "
+
+  cmd &= "-D__restrict= "
+
   cmd &= &"{fullpath.sanitizePath}"
 
   # Include content only from file
@@ -570,9 +575,7 @@ proc getPreprocessor*(gState: State, fullpath: string): string =
           if "#undef" in line:
             continue
           rdata.add line
-  return rdata.join("\n").
-    replace("__restrict", "").
-    replace(re"__attribute__[ ]*\(\(.*?\)\)([ ,;])", "$1")
+  return rdata.join("\n")
 
 converter toString*(kind: Kind): string =
   return case kind:

@@ -1,4 +1,4 @@
-import os, osproc, strformat, strutils, tables, times
+import os, osproc, segfaults, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
@@ -40,9 +40,9 @@ proc process(gState: State, path: string, astTable: AstTable) =
     gecho gState.printLisp(root)
   elif gState.pnim:
     if Feature.ast2 in gState.feature:
-      ast2.printNim(gState, path, root)
+      ast2.parseNim(gState, path, root)
     else:
-      ast.printNim(gState, path, root, astTable)
+      ast.parseNim(gState, path, root, astTable)
   elif gState.preprocess:
     gecho gState.code
 
@@ -137,17 +137,28 @@ proc main(
 
   # Process grammar into AST
   let
-    astTable = parseGrammar()
+    astTable =
+      if Feature.ast2 notin gState.feature:
+        parseGrammar()
+      else:
+        nil
 
   if pgrammar:
-    # Print AST of grammar
-    gState.printGrammar(astTable)
+    if Feature.ast2 notin gState.feature:
+      # Print AST of grammar
+      gState.printGrammar(astTable)
   elif source.nBl:
     # Print source after preprocess or Nim output
     if gState.pnim:
       gState.printNimHeader()
+      gState.initNim()
     for src in source:
       gState.process(src.expandSymlinkAbs(), astTable)
+    if gState.pnim:
+      if Feature.ast2 in gState.feature:
+        ast2.printNim(gState)
+      else:
+        ast.printNim(gState)
 
   # Close outputFile
   if outputFile.len != 0:
