@@ -17,6 +17,8 @@ proc getPtrType(str: string): string =
       "pointer"
     of "ptr ptr object":
       "ptr pointer"
+    of "ptr FILE":
+      "File"
     else:
       str
 
