@@ -26,6 +26,6 @@ install:
   - source travis.sh
 
 script:
-  - nimble --verbose install -y
-  - nimble --verbose test
-  - nimble --verbose --nimbleDir:`pwd`/build/fakenimble install nimterop -y
+  - nimble develop -y
+  - nimble test
+  - nimble --verbose --nimbleDir:`pwd`/build/fakenimble install nimterop@#head -y
