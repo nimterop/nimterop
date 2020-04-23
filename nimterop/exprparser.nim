@@ -35,6 +35,11 @@ type
 template val(node: TSNode): string =
   gState.currentExpr.getNodeVal(node)
 
+proc printDebugExpr*(gState: State, node: TSNode) =
+  if gState.debug:
+    gecho ("Input => " & node.val).getCommented()
+    gecho gState.currentExpr.printLisp(node).getCommented()
+
 proc getExprIdent*(gState: State, identName: string, kind = nskConst, parent = ""): PNode =
   ## Gets a cPlugin transformed identifier from `identName`
   ##
@@ -187,10 +192,29 @@ proc processNumberLiteral(gState: State, node: TSNode): PNode =
     raise newException(ExprParseError, &"Could not find a number in number_literal: \"{nodeVal}\"")
 
 proc processCharacterLiteral(gState: State, node: TSNode): PNode =
+  # Input => 'G'
+  #
+  # (char_literal 1 1 3 "'G'")
+  #
+  # Output => 'G'
+  #
+  # nkCharLit("G")
   let val = node.val
   result = getCharLit(val[1 ..< val.len - 1])
 
 proc processStringLiteral(gState: State, node: TSNode): PNode =
+  # Input => "\n\rfoobar\0\'"
+  #
+  # (string_literal 1 1 16 ""\n\rfoobar\0\'""
+  #  (escape_sequence 1 2 2 "\n")
+  #  (escape_sequence 1 4 2 "\r")
+  #  (escape_sequence 1 12 2 "\0")
+  #  (escape_sequence 1 14 2 "\'")
+  # )
+  #
+  # Output => "\n\cfoobar\x00\'"
+  #
+  # nkStrLit("\x0A\x0Dfoobar\x00\'")
   let
     nodeVal = node.val
     strVal = nodeVal[1 ..< nodeVal.len - 1]
@@ -209,6 +233,26 @@ proc processStringLiteral(gState: State, node: TSNode): PNode =
 proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode
 
 proc processShiftExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
+  # Input => a >> b
+  #
+  # (shift_expression 1 2 6
+  #  (identifier 1 2 1 "a")
+  #  (identifier 1 7 1 "b")
+  # )
+  #
+  # Output => a shr typeof(a)(b)
+  #
+  # nkInfix(
+  #  nkIdent("shr"),
+  #  nkIdent("a"),
+  #  nkCall(
+  #   nkCall(
+  #    nkIdent("typeof"),
+  #    nkIdent("a")
+  #   ),
+  #   nkIdent("b")
+  #  )
+  # )
   result = newNode(nkInfix)
   let
     left = node[0]
@@ -244,11 +288,56 @@ proc processShiftExpression(gState: State, node: TSNode, typeofNode: var PNode):
   )
 
 proc processParenthesizedExpr(gState: State, node: TSNode, typeofNode: var PNode): PNode =
+  # Input => (a + b)
+  #
+  # (parenthesized_expression 1 1 7
+  #  (math_expression 1 2 5
+  #   (identifier 1 2 1 "a")
+  #   (identifier 1 6 1 "b")
+  #  )
+  # )
+  #
+  # Output => (typeof(a)(a + typeof(a)(b)))
+  #
+  # nkPar(
+  #  nkCall(
+  #   nkCall(
+  #    nkIdent("typeof"),
+  #    nkIdent("a")
+  #   ),
+  #   nkInfix(
+  #    nkIdent("+"),
+  #    nkIdent("a"),
+  #    nkCall(
+  #     nkCall(
+  #      nkIdent("typeof"),
+  #      nkIdent("a")
+  #     ),
+  #     nkIdent("b")
+  #    )
+  #   )
+  #  )
+  # )
   result = newNode(nkPar)
   for i in 0 ..< node.len():
     result.add(gState.processTSNode(node[i], typeofNode))
 
 proc processCastExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
+  # Input => (int)a
+  #
+  # (cast_expression 1 1 6 "(int)a"
+  #  (type_descriptor 1 2 3 "int"
+  #   (primitive_type 1 2 3 "int")
+  #  )
+  #  (identifier 1 6 1 "a")
+  # )
+  #
+  # Output => cast[cint](a)
+  #
+  # nkCast(
+  #  nkIdent("cint"),
+  #  nkIdent("a")
+  # )
   result = nkCast.newTree(
     gState.processTSNode(node[0], typeofNode),
     gState.processTSNode(node[1], typeofNode)
@@ -285,6 +374,27 @@ proc getNimBinarySym(csymbol: string): string =
 
 proc processBinaryExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   # Node has left and right children ie: (2 + 7)
+  #
+  # Input => a == b
+  #
+  # (equality_expression 1 1 6
+  #  (identifier 1 1 1 "a")
+  #  (identifier 1 6 1 "b")
+  # )
+  #
+  # Output => a == typeof(a)(b)
+  #
+  # nkInfix(
+  #  nkIdent("=="),
+  #  nkIdent("a"),
+  #  nkCall(
+  #   nkCall(
+  #    nkIdent("typeof"),
+  #    nkIdent("a")
+  #   ),
+  #   nkIdent("b")
+  #  )
+  # )
   result = newNode(nkInfix)
 
   let
@@ -311,6 +421,20 @@ proc processBinaryExpression(gState: State, node: TSNode, typeofNode: var PNode)
   )
 
 proc processUnaryExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
+  # Input => !a
+  #
+  # (logical_expression 1 1 2 "!a"
+  #  (identifier 1 2 1 "a")
+  # )
+  #
+  # Output => (not a)
+  #
+  # nkPar(
+  #  nkPrefix(
+  #   nkIdent("not"),
+  #   nkIdent("a")
+  #  )
+  # )
   result = newNode(nkPar)
 
   let
@@ -342,6 +466,7 @@ proc processUnaryExpression(gState: State, node: TSNode, typeofNode: var PNode):
     )
 
 proc processUnaryOrBinaryExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
+  ## Processes both unary (-1, ~true, !something) and binary (a + b, c * d) expressions
   if node.len > 1:
     # Node has left and right children ie: (2 + 7)
 
@@ -362,6 +487,20 @@ proc processUnaryOrBinaryExpression(gState: State, node: TSNode, typeofNode: var
     raise newException(ExprParseError, &"Invalid {node.getName()} \"{node.val}\"")
 
 proc processSizeofExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
+  # Input => sizeof(int)
+  #
+  # (sizeof_expression 1 1 11 "sizeof(int)"
+  #  (type_descriptor 1 8 3 "int"
+  #   (primitive_type 1 8 3 "int")
+  #  )
+  # )
+  #
+  # Output => sizeof(cint)
+  #
+  # nkCall(
+  #  nkIdent("sizeof"),
+  #  nkIdent("cint")
+  # )
   result = nkCall.newTree(
     gState.getIdent("sizeof"),
     gState.processTSNode(node[0], typeofNode)
@@ -385,8 +524,8 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
     # Output -> "foo\0"
     result = gState.processStringLiteral(node)
   of "char_literal":
-    # Input -> 'F', '\034' // Octal, '\x5A' // Hex, '\r' // escape sequences
-    # Output ->
+    # Input -> 'F', '\060' // Octal, '\x5A' // Hex, '\r' // escape sequences
+    # Output -> 'F', '0', 'Z', '\r'
     result = gState.processCharacterLiteral(node)
   of "expression_statement", "ERROR", "translation_unit":
     # Note that we're parsing partial expressions, so the TSNode might contain

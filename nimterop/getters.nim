@@ -436,13 +436,13 @@ proc printTree*(gState: State, pnode: PNode, offset = ""): string =
     result &= "\n# " & offset & $pnode.kind & "("
     case pnode.kind
     of nkCharLit:
-      result &= "'" & pnode.intVal.char & "')"
+      result &= ($pnode.intVal.char).escape & ")"
     of nkIntLit..nkUInt64Lit:
       result &= $pnode.intVal & ")"
     of nkFloatLit..nkFloat128Lit:
       result &= $pnode.floatVal & ")"
     of nkStrLit..nkTripleStrLit:
-      result &= "\"" & pnode.strVal & "\")"
+      result &= pnode.strVal.escape & ")"
     of nkSym:
       result &= $pnode.sym & ")"
     of nkIdent:
@@ -460,16 +460,14 @@ proc printTree*(gState: State, pnode: PNode, offset = ""): string =
       result &= "\n"
 
 proc printDebug*(gState: State, node: TSNode) =
-  # This causes random segfaults for some reason on macOS Catalina
   if gState.debug:
     gecho ("Input => " & gState.getNodeVal(node)).getCommented()
     gecho gState.printLisp(node).getCommented()
 
 proc printDebug*(gState: State, pnode: PNode) =
-  # This causes random segfaults for some reason on macOS Catalina
   if gState.debug and pnode.kind != nkNone:
     gecho ("Output => " & $pnode).getCommented()
-    gecho gState.printTree(pnode).getCommented()
+    gecho gState.printTree(pnode)
 
 # Compiler shortcuts
 
