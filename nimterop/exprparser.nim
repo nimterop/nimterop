@@ -232,61 +232,6 @@ proc processStringLiteral(gState: State, node: TSNode): PNode =
 
 proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode
 
-proc processShiftExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
-  # Input => a >> b
-  #
-  # (shift_expression 1 2 6
-  #  (identifier 1 2 1 "a")
-  #  (identifier 1 7 1 "b")
-  # )
-  #
-  # Output => a shr typeof(a)(b)
-  #
-  # nkInfix(
-  #  nkIdent("shr"),
-  #  nkIdent("a"),
-  #  nkCall(
-  #   nkCall(
-  #    nkIdent("typeof"),
-  #    nkIdent("a")
-  #   ),
-  #   nkIdent("b")
-  #  )
-  # )
-  result = newNode(nkInfix)
-  let
-    left = node[0]
-    right = node[1]
-
-  let shiftSym = node.tsNodeChild(1).val.strip()
-
-  case shiftSym
-  of "<<":
-    result.add gState.getIdent("shl")
-  of ">>":
-    result.add gState.getIdent("shr")
-  else:
-    raise newException(ExprParseError, &"Unsupported shift symbol \"{shiftSym}\"")
-
-  let leftNode = gState.processTSNode(left, typeofNode)
-
-  # If the typeofNode is nil, set it
-  # to be the leftNode because C's type coercion
-  # happens left to right, and we want to emulate it
-  if typeofNode.isNil:
-    typeofNode = nkCall.newTree(
-      gState.getIdent("typeof"),
-      leftNode
-    )
-
-  let rightNode = gState.processTSNode(right, typeofNode)
-
-  result.add leftNode
-  result.add nkCall.newTree(
-    typeofNode,
-    rightNode
-  )
-
 proc processParenthesizedExpr(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   # Input => (a + b)
   #
@@ -369,6 +314,10 @@ proc getNimBinarySym(csymbol: string): string =
     result = csymbol
   of "%":
     result = "mod"
+  of "<<":
+    result = "shl"
+  of ">>":
+    result = "shr"
   else:
     raise newException(ExprParseError, &"Unsupported binary symbol \"{csymbol}\"")
 
@@ -419,6 +368,15 @@ proc processBinaryExpression(gState: State, node: TSNode, typeofNode: var PNode)
     typeofNode,
     rightNode
   )
+  if binarySym == "/":
+    # Special case. Nim's operators generally output
+    # the same type they take in, except for division.
+    # So we need to emulate C here and cast the whole
+    # expression to the type of the first arg
+    result = nkCall.newTree(
+      typeofNode,
+      result
+    )
 
 proc processUnaryExpression(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   # Input => !a
@@ -469,17 +427,7 @@ proc processUnaryOrBinaryExpression(gState: State, node: TSNode, typeofNode: var
   ## Processes both unary (-1, ~true, !something) and binary (a + b, c * d) expressions
   if node.len > 1:
     # Node has left and right children ie: (2 + 7)
-
-    # Make sure the statement is of the same type as the left
-    # hand argument, since some expressions return a differing
-    # type than the input types (2/3 == float)
-    let binExpr = processBinaryExpression(gState, node, typeofNode)
-    # Note that this temp var binExpr is needed for some reason, or else we get a segfault
-    result = nkCall.newTree(
-      typeofNode,
-      binexpr
-    )
-
+    result = processBinaryExpression(gState, node, typeofNode)
   elif node.len() == 1:
     # Node has only one child, ie -(20 + 7)
     result = processUnaryExpression(gState, node, typeofNode)
@@ -553,8 +501,9 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   # binary_expression from the new treesitter upgrade should work here
   # once we upgrade
   of "math_expression", "logical_expression", "relational_expression",
-     "bitwise_expression", "equality_expression", "binary_expression":
-    # Input -> a == b, a != b, !a, ~a, a < b, a > b, a <= b, a >= b
+     "bitwise_expression", "equality_expression", "binary_expression",
+     "shift_expression":
+    # Input -> a == b, a != b, !a, ~a, a < b, a > b, a <= b, a >= b, a >> b, a << b
     # Output ->
     #   typeof(a)(a == typeof(a)(b))
     #   typeof(a)(a != typeof(a)(b))
@@ -564,11 +513,9 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
     #   typeof(a)(a > typeof(a)(b))
     #   typeof(a)(a <= typeof(a)(b))
     #   typeof(a)(a >= typeof(a)(b))
+    #   a shr typeof(a)(b)
+    #   a shl typeof(a)(b)
     result = gState.processUnaryOrBinaryExpression(node, typeofNode)
-  of "shift_expression":
-    # Input -> a >> b, a << b
-    # Output -> a shr typeof(a)(b), a shl typeof(a)(b)
-    result = gState.processShiftExpression(node, typeofNode)
   of "cast_expression":
     # Input -> (int) a
     # Output -> cast[cint](a)

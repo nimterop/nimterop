@@ -115,6 +115,18 @@ assert ULLEXPR == (1234.uint64 shl 3)
 assert LEXPR == (1234.int32 shl 4)
 assert LLEXPR == (1234.int64 shl 5)
 
+assert a == 100
+assert b == 200
+
+assert EQ1 == (a <= b)
+assert EQ2 == (a >= b)
+assert EQ3 == (a > b)
+assert EQ4 == (a < b)
+assert EQ5 == (a != b)
+assert EQ6 == (a == b)
+
+assert SIZEOF == 1
+
 assert COERCE == 645635670332'u64
 assert COERCE2 == 645635670332'i64
 
@@ -303,7 +315,7 @@ var a21p: A21p
 a21p = addr a20
 
 assert A22 is object
-testFields(A22, "f1|f2!ptr ptr cint|array[type(123)(255), ptr cint]")
+testFields(A22, "f1|f2!ptr ptr cint|array[123 + type(123)(132), ptr cint]")
 checkPragmas(A22, pHeaderBy, istype = false)
 var a22: A22
 a22.f1 = addr a15.a2[0]
