@@ -10,6 +10,9 @@ const
   basePath = cryptoPath.parentDir
   FLAGS {.strdefine.} = ""
 
+static:
+  cSkipSymbol(@["ERR_load_crypto_strings", "OpenSSLDie"])
+
 cPlugin:
   import strutils
 
@@ -20,10 +23,11 @@ cPlugin:
       "AES_ENCRYPT", "AES_DECRYPT",
       "BIO_CTRL_PENDING", "BIO_CTRL_WPENDING",
       "BN_F_BNRAND", "BN_F_BNRAND_RANGE",
-      "CRYPTO_THREADID",
+      "CRYPTO_LOCK", "CRYPTO_NUM_LOCKS", "CRYPTO_THREADID",
       "EVP_CIPHER",
       "OPENSSL_VERSION",
       "PKCS7_ENCRYPT", "PKCS7_STREAM",
+      "SSLEAY_VERSION",
       "SSL_TXT_ADH", "SSL_TXT_AECDH", "SSL_TXT_kECDHE"
     ]:
       sym.name = "C_" & sym.name
