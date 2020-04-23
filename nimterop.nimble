@@ -51,6 +51,9 @@ task test, "Test":
   execTest "tests/tpcre.nim"
   execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
 
+  execTest "tests/rsa.nim"
+  execTest "tests/rsa.nim", "-d:FLAGS=\"-H\""
+
   # Platform specific tests
   when defined(Windows):
     execTest "tests/tmath.nim"

@@ -91,6 +91,11 @@ proc getCacheValue(fullpath: string): string =
   if not gStateCT.nocache:
     result = fullpath.getFileDate()
 
+proc getCacheValue(fullpaths: seq[string]): string =
+  if not gStateCT.nocache:
+    for fullpath in fullpaths:
+      result &= getCacheValue(fullpath)
+
 proc getToastError(output: string): string =
   # Filter out preprocessor errors
   for line in output.splitLines():
@@ -121,7 +126,7 @@ proc getNimCheckError(output: string): tuple[tmpFile, errors: string] =
 
   result.errors = "\n\n" & check
 
-proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
+proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = "",
   mode = "c", flags = "", noNimout = false): string =
   var
     ret = 0
@@ -158,11 +163,12 @@ proc getToast(fullpath: string, recurse: bool = false, dynlib: string = "",
     if gStateCT.pluginSourcePath.nBl:
       cmd.add &" --pluginSourcePath={gStateCT.pluginSourcePath.sanitizePath}"
 
-  cmd.add &" {fullpath.sanitizePath}"
+  for fullpath in fullpaths:
+    cmd.add &" {fullpath.sanitizePath}"
 
   # see https://github.com/nimterop/nimterop/issues/69
   (result, ret) = execAction(cmd, die = false, cache = (not gStateCT.nocache),
-                             cacheKey = getCacheValue(fullpath))
+                             cacheKey = getCacheValue(fullpaths))
   doAssert ret == 0, getToastError(result)
 
 macro cOverride*(body): untyped =
@@ -555,6 +561,46 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
   if gStateCT.debug:
     echo result.repr
 
+macro cImport*(filenames: static seq[string], recurse: static bool = false, dynlib: static string = "",
+  mode: static string = "c", flags: static string = ""): untyped =
+  ## Import multiple headers in one shot
+  ##
+  ## This macro is preferable over multiple individual `cImport()` calls, especially
+  ## when the headers might `#include` the same headers and result in duplicate symbols.
+  result = newNimNode(nnkStmtList)
+
+  var
+    fullpaths: seq[string]
+
+  for filename in filenames:
+    fullpaths.add findPath(filename)
+
+  # In case cOverride called after cPlugin
+  if gStateCT.pluginSourcePath.Bl:
+    cPluginHelper(gStateCT.pluginSource)
+
+  echo "# Importing " & fullpaths.join(", ").sanitizePath
+
+  let
+    output = getToast(fullpaths, recurse, dynlib, mode, flags)
+
+  # Reset plugin and overrides for next cImport
+  if gStateCT.overrides.nBl:
+    gStateCT.pluginSourcePath = ""
+    gStateCT.overrides = ""
+
+  if gStateCT.debug:
+    echo output
+
+  try:
+    let body = parseStmt(output)
+
+    result.add body
+  except:
+    let
+      (tmpFile, errors) = getNimCheckError(output)
+    doAssert false, errors & "\n\nNimterop codegen limitation or error - review 'nim check' output above generated for " & tmpFile
+
 macro cImport*(filename: static string, recurse: static bool = false, dynlib: static string = "",
   mode: static string = "c", flags: static string = ""): untyped =
   ## Import all supported definitions from specified header file. Generated
@@ -590,8 +636,8 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   ## with `cCompile() <cimport.html#cCompile.m%2C%2Cstring%2Cstring>`_, or the
   ## `{.passL.}` pragma can be used to specify the static lib to link.
   ##
-  ## `mode` is purely for forward compatibility when toast adds C++ support. It can
-  ## be ignored for the foreseeable future.
+  ## `mode` selects the preprocessor and tree-sitter parser to be used to process
+  ## the header.
   ##
   ## `flags` can be used to pass any other command line arguments to `toast`. A
   ## good example would be `--prefix` and `--suffix` which strip leading and
@@ -600,37 +646,8 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   ## `cImport()` consumes and resets preceding `cOverride()` calls. `cPlugin()`
   ## is retained for the next `cImport()` call unless a new `cPlugin()` call is
   ## defined.
-
-  result = newNimNode(nnkStmtList)
-
-  let
-    fullpath = findPath(filename)
-
-  # In case cOverride called after cPlugin
-  if gStateCT.pluginSourcePath.Bl:
-    cPluginHelper(gStateCT.pluginSource)
-
-  echo "# Importing " & fullpath.sanitizePath
-
-  let
-    output = getToast(fullpath, recurse, dynlib, mode, flags)
-
-  # Reset plugin and overrides for next cImport
-  if gStateCT.overrides.nBl:
-    gStateCT.pluginSourcePath = ""
-    gStateCT.overrides = ""
-
-  if gStateCT.debug:
-    echo output
-
-  try:
-    let body = parseStmt(output)
-
-    result.add body
-  except:
-    let
-      (tmpFile, errors) = getNimCheckError(output)
-    doAssert false, errors & "\n\nNimterop codegen limitation or error - review 'nim check' output above generated for " & tmpFile
+  return quote do:
+    cImport(@[`filename`], bool(`recurse`), `dynlib`, `mode`, `flags`)
 
 macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: static string = "",
   mode: static string = "c", flags: static string = ""): untyped =
@@ -661,7 +678,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
   echo "# Importing " & fullpath & " with c2nim"
 
   let
-    output = getToast(fullpath, recurse, dynlib, noNimout = true)
+    output = getToast(@[fullpath], recurse, dynlib, noNimout = true)
     hash = output.hash().abs()
     hpath = getProjectCacheDir("c2nimCache", forceClean = false) / "nimterop_" & $hash & ".h"
     npath = hpath[0 .. hpath.rfind('.')] & "nim"
