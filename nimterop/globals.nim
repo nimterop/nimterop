@@ -1,4 +1,4 @@
-import sequtils, sets, tables
+import sequtils, sets, tables, strutils
 
 import regex
 
@@ -93,6 +93,9 @@ type
 
     currentHeader*, impShort*, sourceFile*: string
 
+    # Used for the exprparser.nim module
+    currentExpr*, currentTyCastName*: string
+
     data*: seq[tuple[name, val: string]]
 
     nodeBranch*: seq[string]
@@ -119,6 +122,6 @@ when not declared(CIMPORT):
     else:
       gState.outputHandle.writeLine(args)
 
-  template decho*(str: untyped): untyped =
+  template decho*(args: varargs[string, `$`]): untyped =
     if gState.debug:
-      gecho str.getCommented()
+      gecho join(args, "").getCommented()

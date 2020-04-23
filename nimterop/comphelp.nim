@@ -7,12 +7,12 @@ proc handleError*(conf: ConfigRef, info: TLineInfo, msg: TMsgKind, arg: string) 
   if msg < warnMin:
     raise newException(Exception, msgKindToString(msg))
 
-proc parseString*(nimState: NimState, str: string): PNode =
+proc parseString*(gState: State, str: string): PNode =
   # Parse a string into Nim AST - use custom error handler that raises
   # an exception rather than exiting on failure
   try:
     result = parseString(
-      str, nimState.identCache, nimState.config, errorHandler = handleError
+      str, gState.identCache, gState.config, errorHandler = handleError
     )
   except:
     decho getCurrentExceptionMsg()

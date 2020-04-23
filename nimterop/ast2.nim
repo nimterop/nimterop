@@ -104,9 +104,9 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
 
   if name.Bl:
     # Name skipped or overridden since blank
-    result = nimState.getOverrideOrSkip(node, origname, nskConst)
+    result = gState.getOverrideOrSkip(node, origname, nskConst)
   elif valident.kind != nkNone:
-    if nimState.addNewIdentifer(name):
+    if gState.addNewIdentifer(name):
       # const X* = Y
       #
       # nkConstDef(
@@ -1400,9 +1400,9 @@ proc addEnum(gState: State, node: TSNode) =
       for (fname, fval, cexprNode) in fvalSections:
         var fval = fval
         if cexprNode.isSome:
-          fval = "(" & $nimState.parseCExpression(nimState.getNodeVal(cexprNode.get()), name) & ")." & name
+          fval = "(" & $gState.parseCExpression(gState.getNodeVal(cexprNode.get()), name) & ")." & name
         # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
-        nimState.constSection.add nimState.parseString(&"const {fname}* = {fval}")[0][0]
+        gState.constSection.add gState.parseString(&"const {fname}* = {fval}")[0][0]
 
       # Add other names
       if node.getName() == "type_definition" and node.len > 1:
