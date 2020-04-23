@@ -115,15 +115,15 @@ assert ULLEXPR == (1234.uint64 shl 3)
 assert LEXPR == (1234.int32 shl 4)
 assert LLEXPR == (1234.int64 shl 5)
 
-assert a == 100
-assert b == 200
+assert AVAL == 100
+assert BVAL == 200
 
-assert EQ1 == (a <= b)
-assert EQ2 == (a >= b)
-assert EQ3 == (a > b)
-assert EQ4 == (a < b)
-assert EQ5 == (a != b)
-assert EQ6 == (a == b)
+assert EQ1 == (AVAL <= BVAL)
+assert EQ2 == (AVAL >= BVAL)
+assert EQ3 == (AVAL > BVAL)
+assert EQ4 == (AVAL < BVAL)
+assert EQ5 == (AVAL != BVAL)
+assert EQ6 == (AVAL == BVAL)
 
 assert SIZEOF == 1
 

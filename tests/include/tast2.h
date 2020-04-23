@@ -24,14 +24,14 @@ extern "C" {
 #define MATHEXPR (1 + 2/3*20 - 100)
 #define ANDEXPR (100 & 11000)
 #define CASTEXPR (char) 34
-#define a 100
-#define b 200
-#define EQ1 a <= b
-#define EQ2 a >= b
-#define EQ3 a > b
-#define EQ4 a < b
-#define EQ5 a != b
-#define EQ6 a == b
+#define AVAL 100
+#define BVAL 200
+#define EQ1 AVAL <= BVAL
+#define EQ2 AVAL >= BVAL
+#define EQ3 AVAL > BVAL
+#define EQ4 AVAL < BVAL
+#define EQ5 AVAL != BVAL
+#define EQ6 AVAL == BVAL
 
 #define SIZEOF sizeof(char)
 

@@ -14,9 +14,11 @@ when defined(windows):
 
 static:
   when (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
-    cSkipSymbol @["mingw_choose_expr", "EXCEPTION_DEFINED", "COMPLEX_DEFINED", "matherr", "HUGE", "FP_ILOGB0", "FP_ILOGBNAN"]
+    # FP_ILOGB0 and FP_ILOGBNAN are casts that are unsupported
+    # on lower Nim VMs
+    cSkipSymbol @["math_errhandling", "FP_ILOGB0", "FP_ILOGBNAN"]
   else:
-    cSkipSymbol @["mingw_choose_expr", "EXCEPTION_DEFINED", "COMPLEX_DEFINED", "matherr", "HUGE"]
+    cSkipSymbol @["math_errhandling"]
   cDebug()
   cDisableCaching()
   cAddStdDir()
