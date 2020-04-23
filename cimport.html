@@ -146,6 +146,9 @@ function main() {
   <li><a class="reference" href="#cCompile.m%2C%2Cstring%2Cstring"
     title="cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cImport.m%2C%2Cstring%2Cstring%2Cstring"
+    title="cImport(filenames: static seq[string]; recurse: static bool = false;
+        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped"><wbr />c<wbr />Import<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cImport.m%2C%2Cstring%2Cstring%2Cstring_2"
     title="cImport(filename: static string; recurse: static bool = false;
         dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped"><wbr />c<wbr />Import<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#c2nImport.m%2C%2Cstring%2Cstring%2Cstring"
@@ -356,7 +359,18 @@ Add an include directory that is forwarded to the C/C++ preprocessor if called w
 
 </dd>
 <a id="cImport.m,,string,string,string"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cImport.m%2C%2Cstring%2Cstring%2Cstring"><span class="Identifier">cImport</span></a><span class="Other">(</span><span class="Identifier">filename</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span>
+<dt><pre><span class="Keyword">macro</span> <a href="#cImport.m%2C%2Cstring%2Cstring%2Cstring"><span class="Identifier">cImport</span></a><span class="Other">(</span><span class="Identifier">filenames</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">recurse</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span>
+             <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">mode</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">;</span>
+             <span class="Identifier">flags</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Import multiple headers in one shot</p>
+<p>This macro is preferable over multiple individual <tt class="docutils literal"><span class="pre">cImport()</span></tt> calls, especially when the headers might <tt class="docutils literal"><span class="pre">#include</span></tt> the same headers and result in duplicate symbols.</p>
+
+
+</dd>
+<a id="cImport.m,,string,string,string_2"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cImport.m%2C%2Cstring%2Cstring%2Cstring_2"><span class="Identifier">cImport</span></a><span class="Other">(</span><span class="Identifier">filename</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">recurse</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span>
              <span class="Identifier">dynlib</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">mode</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">;</span>
              <span class="Identifier">flags</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
@@ -377,7 +391,7 @@ Add an include directory that is forwarded to the C/C++ preprocessor if called w
       <span class="StringLit">&quot;libpcre.so(.3|.1|)&quot;</span>
 
 <span class="Identifier">cImport</span><span class="Punctuation">(</span><span class="StringLit">&quot;pcre.h&quot;</span><span class="Punctuation">,</span> <span class="Identifier">dynlib</span><span class="Operator">=</span><span class="StringLit">&quot;dynpcre&quot;</span><span class="Punctuation">)</span></pre><p>If <tt class="docutils literal"><span class="pre">dynlib</span></tt> is not specified, the C/C++ implementation files can be compiled in with <a class="reference external" href="cimport.html#cCompile.m%2C%2Cstring%2Cstring">cCompile()</a>, or the <tt class="docutils literal"><span class="pre">{.passL.}</span></tt> pragma can be used to specify the static lib to link.</p>
-<p><tt class="docutils literal"><span class="pre">mode</span></tt> is purely for forward compatibility when toast adds C++ support. It can be ignored for the foreseeable future.</p>
+<p><tt class="docutils literal"><span class="pre">mode</span></tt> selects the preprocessor and tree-sitter parser to be used to process the header.</p>
 <p><tt class="docutils literal"><span class="pre">flags</span></tt> can be used to pass any other command line arguments to <tt class="docutils literal"><span class="pre">toast</span></tt>. A good example would be <tt class="docutils literal"><span class="pre">--prefix</span></tt> and <tt class="docutils literal"><span class="pre">--suffix</span></tt> which strip leading and trailing strings from identifiers, <tt class="docutils literal"><span class="pre">_</span></tt> being quite common.</p>
 <p><tt class="docutils literal"><span class="pre">cImport()</span></tt> consumes and resets preceding <tt class="docutils literal"><span class="pre">cOverride()</span></tt> calls. <tt class="docutils literal"><span class="pre">cPlugin()</span></tt> is retained for the next <tt class="docutils literal"><span class="pre">cImport()</span></tt> call unless a new <tt class="docutils literal"><span class="pre">cPlugin()</span></tt> call is defined.</p>
 
@@ -413,7 +427,7 @@ Add an include directory that is forwarded to the C/C++ preprocessor if called w
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-04-13 15:31:35 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-04-23 18:28:08 UTC</small>
       </div>
     </div>
   </div>
