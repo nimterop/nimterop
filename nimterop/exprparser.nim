@@ -547,24 +547,29 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
 
   decho "NODE RESULT: ", result
 
-proc parseCExpression*(gState: State, code: string, name = ""): PNode =
-  ## Convert the C string to a nim PNode tree
-  gState.currentExpr = code
-  gState.currentTyCastName = name
+proc parseCExpression*(gState: State, codeRoot: TSNode, name = ""): PNode =
+  ## Parse a c expression from a root ts node
 
-  result = newNode(nkNone)
-  # This is used for keeping track of the type of the first
+  # This var is used for keeping track of the type of the first
   # symbol used for type casting
   var tnode: PNode = nil
+  result = newNode(nkNone)
   try:
-    withCodeAst(gState.currentExpr, gState.mode):
-      result = gState.processTSNode(root, tnode)
+    result = gState.processTSNode(codeRoot, tnode)
   except ExprParseError as e:
     decho e.msg
     result = newNode(nkNone)
   except Exception as e:
     decho "UNEXPECTED EXCEPTION: ", e.msg
     result = newNode(nkNone)
+
+proc parseCExpression*(gState: State, code: string, name = ""): PNode =
+  ## Convert the C string to a nim PNode tree
+  gState.currentExpr = code
+  gState.currentTyCastName = name
+
+  withCodeAst(gState.currentExpr, gState.mode):
+    result = gState.parseCExpression(root, name)
 
   # Clear the state
   gState.currentExpr = ""

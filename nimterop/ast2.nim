@@ -4,9 +4,9 @@ import options as opts
 
 import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
-import "."/treesitter/api
+import "."/treesitter/[api, c, cpp]
 
-import "."/[globals, getters, exprparser, comphelp]
+import "."/[globals, getters, exprparser, comphelp, tshelp]
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -99,8 +99,30 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
         fval
       else:
         gState.getNodeVal(node[1])
-    valident =
-      gState.parseCExpression(val)
+  var valident = newNode(nkNone)
+
+  withCodeAst(val, gState.mode):
+    # This section is a hack for determining that the first
+    # node is a type, which shouldn't be accepted by a const
+    # def section. Need to replace this with some other mechanism
+    # to handle type aliases
+    var maybeTyNode: TSNode
+    # Take the very first node, which may be 2 levels
+    # down if there is an error node
+    if root.len > 0 and root[0].getName() == "ERROR":
+      maybeTyNode = root[0][0]
+    elif root.len > 0:
+      maybeTyNode = root[0]
+
+    if not maybeTyNode.isNil:
+      let name = maybeTyNode.getName()
+      case name
+      of "type_descriptor", "sized_type_specifier":
+        discard
+      else:
+        # Can't do gState.parseCExpression(root) here for some reason?
+        # get a SEGFAULT if we use root
+        valident = gState.parseCExpression(val)
 
   if name.Bl:
     # Name skipped or overridden since blank
