@@ -41,6 +41,7 @@ proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimS
       result = pnode[0][0]
   else:
     gecho &"\n# $1'{origname}' skipped" % skind
+    gState.skippedSyms.incl origname
     if gState.debug:
       gState.skipStr &= &"\n{gState.getNodeVal(node)}"
 
@@ -99,6 +100,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
         fval
       else:
         gState.getNodeVal(node[1])
+
   var valident = newNode(nkNone)
 
   withCodeAst(val, gState.mode):
@@ -151,6 +153,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
       gecho &"# const '{origname}' is duplicate, skipped"
   else:
     gecho &"# const '{origname}' has invalid value '{val}'"
+    gState.skippedSyms.incl origname
 
 proc addConst(gState: State, node: TSNode) =
   # Add a const to the AST

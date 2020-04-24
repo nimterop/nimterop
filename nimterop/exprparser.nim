@@ -45,16 +45,17 @@ proc getExprIdent*(gState: State, identName: string, kind = nskConst, parent = "
   ##
   ## Returns PNode(nkNone) if the identifier is blank
   result = newNode(nkNone)
-  var ident = identName
-  if ident != "_":
-    # Process the identifier through cPlugin
-    ident = gState.getIdentifier(ident, kind, parent)
-  if kind == nskType:
-    result = gState.getIdent(ident)
-  elif ident.nBl and ident in gState.constIdentifiers:
-    if gState.currentTyCastName.nBl:
-      ident = ident & "." & gState.currentTyCastName
-    result = gState.getIdent(ident)
+  if identName notin gState.skippedSyms:
+    var ident = identName
+    if ident != "_":
+      # Process the identifier through cPlugin
+      ident = gState.getIdentifier(ident, kind, parent)
+    if kind == nskType:
+      result = gState.getIdent(ident)
+    elif ident.nBl and ident in gState.constIdentifiers:
+      if gState.currentTyCastName.nBl:
+        ident = ident & "." & gState.currentTyCastName
+      result = gState.getIdent(ident)
 
 proc getExprIdent*(gState: State, node: TSNode, kind = nskConst, parent = ""): PNode =
   ## Gets a cPlugin transformed identifier from `identName`
@@ -534,8 +535,8 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
       result = gState.getExprIdent(ty, nskType, parent=node.getName())
     else:
       result = gState.getExprIdent(node.val, nskType, parent=node.getName())
-      if result.kind == nkNone:
-        raise newException(ExprParseError, &"Missing type specifier \"{node.val}\"")
+    if result.kind == nkNone:
+      raise newException(ExprParseError, &"Missing type specifier \"{node.val}\"")
   of "identifier":
     # Input -> IDENT
     # Output -> IDENT (if found in sym table, else error)

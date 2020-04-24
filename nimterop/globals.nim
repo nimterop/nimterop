@@ -76,6 +76,9 @@ type
     # All const names for enum casting
     constIdentifiers*: HashSet[string]
 
+    # All symbols that have been skipped
+    skippedSyms*: HashSet[string]
+
     # Legacy ast fields, remove when ast2 becomes default
     constStr*, enumStr*, procStr*, typeStr*: string
 
