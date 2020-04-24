@@ -486,9 +486,17 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
     if node.len == 1:
       result = gState.processTSNode(node[0], typeofNode)
     elif node.len > 1:
-      result = newNode(nkStmtListExpr)
+      let res = newNode(nkStmtListExpr)
       for i in 0 ..< node.len:
-        result.add gState.processTSNode(node[i], typeofNode)
+        let node = gState.processTSNode(node[i], typeofNode)
+        if node.kind != nkNone:
+          res.add node
+      if res.len == 1:
+        result = res[0]
+      elif res.len > 1:
+        result = res
+      else:
+        result = newNode(nkNone)
     else:
       raise newException(ExprParseError, &"Node type \"{nodeName}\" has no children")
   of "parenthesized_expression":
@@ -543,6 +551,8 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
     result = gState.getExprIdent(node, parent=node.getName())
     if result.kind == nkNone:
       raise newException(ExprParseError, &"Missing identifier \"{node.val}\"")
+  of "comment":
+    discard
   else:
     raise newException(ExprParseError, &"Unsupported node type \"{nodeName}\" for node \"{node.val}\"")
 

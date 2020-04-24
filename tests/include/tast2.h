@@ -35,8 +35,8 @@ extern "C" {
 
 #define SIZEOF sizeof(char)
 
-#define NULLCHAR '\0'
-#define OCTCHAR '\012'
+#define NULLCHAR '\0'/* comments should not break things*/
+#define OCTCHAR '\012' // nor should this comment
 #define HEXCHAR '\xFE'
 #define TRICKYSTR "\x4E\034\nfoo\0\'\"\r\v\a\b\e\f\t\\\?bar"
 
