@@ -486,17 +486,17 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
     if node.len == 1:
       result = gState.processTSNode(node[0], typeofNode)
     elif node.len > 1:
-      let res = newNode(nkStmtListExpr)
+      var nodes: seq[PNode]
       for i in 0 ..< node.len:
-        let node = gState.processTSNode(node[i], typeofNode)
-        if node.kind != nkNone:
-          res.add node
-      if res.len == 1:
-        result = res[0]
-      elif res.len > 1:
-        result = res
-      else:
-        result = newNode(nkNone)
+        let subNode = gState.processTSNode(node[i], typeofNode)
+        if subNode.kind != nkNone:
+          nodes.add(subNode)
+          # Multiple nodes can get tricky. Don't support them yet, unless they
+          # have at most one valid node
+          if nodes.len > 1:
+            raise newException(ExprParseError, &"Node type \"{nodeName}\" with val ({node.val}) has more than one non empty node")
+      if nodes.len == 1:
+        result = nodes[0]
     else:
       raise newException(ExprParseError, &"Node type \"{nodeName}\" has no children")
   of "parenthesized_expression":
