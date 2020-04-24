@@ -34,6 +34,8 @@ extern "C" {
 #define EQ6 AVAL == BVAL
 
 #define SIZEOF sizeof(char)
+#define REG_STR "regular string"
+#define NOTSUPPORTEDSTR "not a " REG_STR
 
 #define NULLCHAR '\0'/* comments should not break things*/
 #define OCTCHAR '\012' // nor should this comment

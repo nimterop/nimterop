@@ -109,6 +109,8 @@ assert C == 0x10
 assert D == "hello"
 assert E == 'c'
 
+assert not defined(NOTSUPPORTEDSTR)
+
 assert UEXPR == (1234.uint shl 1)
 assert ULEXPR == (1234.uint32 shl 2)
 assert ULLEXPR == (1234.uint64 shl 3)
