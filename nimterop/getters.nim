@@ -639,7 +639,7 @@ proc getNameKind*(name: string): tuple[name: string, kind: Kind, recursive: bool
 
 proc getCommentVal*(gState: State, commentNode: Option[TSNode]): string =
   if commentNode.isSome():
-    result = gState.getNodeVal(commentNode.get()).replace(re" *(/\*\*|\*\*/|\*/|\*)", "").strip()
+    result = "::\n  " & gState.getNodeVal(commentNode.get()).replace(re" *(/\*\*|\*\*/|\*/|\*)", "").replace("\n", "\n  ").strip()
 
 template findComment(procName: untyped): untyped =
   result = none(TSNode)
@@ -651,10 +651,10 @@ template findComment(procName: untyped): untyped =
     sibling = sibling.`procName`()
     i += 1
 
-proc getPrevCommentNode*(node: TSNode, maxSearch=4): Option[TSNode] =
+proc getPrevCommentNode*(node: TSNode, maxSearch=1): Option[TSNode] =
   findComment(tsNodePrevNamedSibling)
 
-proc getNextCommentNode*(node: TSNode, maxSearch=4): Option[TSNode] =
+proc getNextCommentNode*(node: TSNode, maxSearch=1): Option[TSNode] =
   findComment(tsNodeNextNamedSibling)
 
 proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
