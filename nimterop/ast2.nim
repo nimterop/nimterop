@@ -1393,14 +1393,18 @@ proc addEnum(gState: State, node: TSNode) =
         fnames: HashSet[string]
         # Hold all of field information so that we can add all of them
         # after the const identifiers has been updated
-        fieldDeclarations: seq[tuple[fname: string, fval: string, cexpr: Option[TSNode]]]
+        fieldDeclarations: seq[tuple[fname: string, fval: string, cexpr: Option[TSNode], comment: Option[TSNode]]]
       for i in 0 .. enumlist.len - 1:
         let
           en = enumlist[i]
         if en.getName() == "comment":
           continue
+
         let
-          fname = gState.getIdentifier(gState.getNodeVal(en.getAtom()), nskEnumField)
+          atom = en.getAtom()
+          commentNode = en.getInlineCommentNode()
+          fname = gState.getIdentifier(gState.getNodeVal(atom), nskEnumField)
+
         if fname.nBl and gState.addNewIdentifer(fname):
           var
             fval = ""
@@ -1412,9 +1416,9 @@ proc addEnum(gState: State, node: TSNode) =
             fval = &"({prev} + 1).{name}"
 
           if en.len > 1 and en[1].getName() in gEnumVals:
-            fieldDeclarations.add((fname, "", some(en[1])))
+            fieldDeclarations.add((fname, "", some(en[1]), commentNode))
           else:
-            fieldDeclarations.add((fname, fval, none(TSNode)))
+            fieldDeclarations.add((fname, fval, none(TSNode), commentNode))
 
           fnames.incl fname
           prev = fname
@@ -1424,18 +1428,20 @@ proc addEnum(gState: State, node: TSNode) =
       gState.constIdentifiers.incl fnames
 
       # parseCExpression requires all const identifiers to be present for the enum
-      for (fname, fval, cexprNode) in fieldDeclarations:
+      for (fname, fval, cexprNode, commentNode) in fieldDeclarations:
         var fval = fval
         if cexprNode.isSome:
           fval = "(" & $gState.parseCExpression(gState.getNodeVal(cexprNode.get()), name) & ")." & name
         # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
-        gState.constSection.add gState.parseString(&"const {fname}* = {fval}")[0][0]
+        let constNode = gState.parseString(&"const {fname}* = {fval}")[0][0]
+        constNode.comment = gState.getCommentVal(commentNode)
+        gState.constSection.add constNode
 
       # Add other names
       if node.getName() == "type_definition" and node.len > 1:
         gState.addTypeTyped(node, ftname = name, offset = offset)
 
-proc addProcVar(gState: State, node, rnode: TSNode) =
+proc addProcVar(gState: State, node, rnode: TSNode, commentNode: Option[TSNode]) =
   # Add a proc variable
   decho("addProcVar()")
   let
@@ -1488,12 +1494,13 @@ proc addProcVar(gState: State, node, rnode: TSNode) =
     #  nkEmpty()
     # )
 
+    identDefs.comment = gState.getCommentVal(commentNode)
     # nkVarSection.add
     gState.varSection.add identDefs
 
     gState.printDebug(identDefs)
 
-proc addProc(gState: State, node, rnode: TSNode) =
+proc addProc(gState: State, node, rnode: TSNode, commentNode: Option[TSNode]) =
   # Add a proc
   #
   # `node` is the `nth` child of (declaration)
@@ -1599,6 +1606,8 @@ proc addProc(gState: State, node, rnode: TSNode) =
     procDef.add newNode(nkEmpty)
     procDef.add newNode(nkEmpty)
 
+    procDef.comment = gState.getCommentVal(commentNode)
+
     # nkProcSection.add
     gState.procSection.add procDef
 
@@ -1609,18 +1618,20 @@ proc addDecl(gState: State, node: TSNode) =
   decho("addDecl()")
   gState.printDebug(node)
 
+
   let
     start = getStartAtom(node)
+    commentNode = node.getCommentNode()
 
   for i in start+1 ..< node.len:
     if not node[i].firstChildInTree("function_declarator").isNil:
       # Proc declaration - var or actual proc
       if node[i].getAtom().getPxName(1) == "pointer_declarator":
         # proc var
-        gState.addProcVar(node[i], node[start])
+        gState.addProcVar(node[i], node[start], commentNode)
       else:
         # proc
-        gState.addProc(node[i], node[start])
+        gState.addProc(node[i], node[start], commentNode)
     else:
       # Regular var
       discard
@@ -1632,11 +1643,14 @@ proc addDef(gState: State, node: TSNode) =
   # and will fail at link time
   decho("addDef()")
   gState.printDebug(node)
+
   let
     start = getStartAtom(node)
+    commentNode = node.getCommentNode()
+
   if node[start+1].getName() == "function_declarator":
     if gState.isIncludeHeader():
-      gState.addProc(node[start+1], node[start])
+      gState.addProc(node[start+1], node[start], commentNode)
     else:
       gecho &"\n# proc '$1' skipped - static inline procs require 'includeHeader'" %
         gState.getNodeVal(node[start+1].getAtom())
