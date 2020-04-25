@@ -1,4 +1,4 @@
-import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
+import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times, options
 
 import regex
 
@@ -456,6 +456,9 @@ proc printLisp*(gState: State, root: TSNode): string =
 proc getCommented*(str: string): string =
   "\n# " & str.strip().replace("\n", "\n# ")
 
+proc getDocStrCommented*(str: string): string =
+  "\n## " & str.strip().replace("\n", "\n## ")
+
 proc printTree*(gState: State, pnode: PNode, offset = ""): string =
   if not pnode.isNil and gState.debug and pnode.kind != nkNone:
     result &= "\n# " & offset & $pnode.kind & "("
@@ -633,6 +636,22 @@ proc getNameKind*(name: string): tuple[name: string, kind: Kind, recursive: bool
 
   if result.kind != exactlyOne:
     result.name = result.name[0 .. ^2]
+
+proc getCommentVal*(gState: State, commentNode: Option[TSNode]): string =
+  if commentNode.isSome():
+    result = gState.getNodeVal(commentNode.get()).replace(re"( *(/\*\*|\*\*/|\*/|\*))", "").strip()
+
+proc getCommentNode*(node: TSNode): Option[TSNode] =
+  result = none(TSNode)
+  let prevSibling = node.tsNodePrevNamedSibling()
+  if not prevSibling.isNil and prevSibling.getName() == "comment":
+    result = some(prevSibling)
+
+proc getInlineCommentNode*(node: TSNode): Option[TSNode] =
+  result = none(TSNode)
+  let nextSibling = node.tsNodeNextNamedSibling()
+  if not nextSibling.isNil and nextSibling.getName() == "comment":
+    result = some(nextSibling)
 
 proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
   if node.tsNodeNamedChildCount() != 0:
