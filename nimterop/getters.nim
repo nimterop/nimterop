@@ -639,19 +639,23 @@ proc getNameKind*(name: string): tuple[name: string, kind: Kind, recursive: bool
 
 proc getCommentVal*(gState: State, commentNode: Option[TSNode]): string =
   if commentNode.isSome():
-    result = gState.getNodeVal(commentNode.get()).replace(re"( *(/\*\*|\*\*/|\*/|\*))", "").strip()
+    result = gState.getNodeVal(commentNode.get()).replace(re" *(/\*\*|\*\*/|\*/|\*)", "").strip()
 
-proc getCommentNode*(node: TSNode): Option[TSNode] =
+template findComment(procName: untyped): untyped =
   result = none(TSNode)
-  let prevSibling = node.tsNodePrevNamedSibling()
-  if not prevSibling.isNil and prevSibling.getName() == "comment":
-    result = some(prevSibling)
+  var sibling = node.`procName`()
+  var i = 0
+  while not sibling.isNil and i < maxSearch:
+    if sibling.getName() == "comment":
+      return some(sibling)
+    sibling = sibling.`procName`()
+    i += 1
 
-proc getInlineCommentNode*(node: TSNode): Option[TSNode] =
-  result = none(TSNode)
-  let nextSibling = node.tsNodeNextNamedSibling()
-  if not nextSibling.isNil and nextSibling.getName() == "comment":
-    result = some(nextSibling)
+proc getPrevCommentNode*(node: TSNode, maxSearch=4): Option[TSNode] =
+  findComment(tsNodePrevNamedSibling)
+
+proc getNextCommentNode*(node: TSNode, maxSearch=4): Option[TSNode] =
+  findComment(tsNodeNextNamedSibling)
 
 proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
   if node.tsNodeNamedChildCount() != 0:
