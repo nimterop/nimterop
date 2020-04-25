@@ -4,7 +4,7 @@ import options as opts
 
 import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
-import "."/treesitter/[api, c, cpp]
+import "."/treesitter/api
 
 import "."/[globals, getters, exprparser, comphelp, tshelp]
 
@@ -1391,7 +1391,9 @@ proc addEnum(gState: State, node: TSNode) =
       # Create const for fields
       var
         fnames: HashSet[string]
-        fvalSections: seq[tuple[fname: string, fval: string, cexpr: Option[TSNode]]]
+        # Hold all of field information so that we can add all of them
+        # after the const identifiers has been updated
+        fieldDeclarations: seq[tuple[fname: string, fval: string, cexpr: Option[TSNode]]]
       for i in 0 .. enumlist.len - 1:
         let
           en = enumlist[i]
@@ -1410,9 +1412,9 @@ proc addEnum(gState: State, node: TSNode) =
             fval = &"({prev} + 1).{name}"
 
           if en.len > 1 and en[1].getName() in gEnumVals:
-            fvalSections.add((fname, "", some(en[1])))
+            fieldDeclarations.add((fname, "", some(en[1])))
           else:
-            fvalSections.add((fname, fval, none(TSNode)))
+            fieldDeclarations.add((fname, fval, none(TSNode)))
 
           fnames.incl fname
           prev = fname
@@ -1422,7 +1424,7 @@ proc addEnum(gState: State, node: TSNode) =
       gState.constIdentifiers.incl fnames
 
       # parseCExpression requires all const identifiers to be present for the enum
-      for (fname, fval, cexprNode) in fvalSections:
+      for (fname, fval, cexprNode) in fieldDeclarations:
         var fval = fval
         if cexprNode.isSome:
           fval = "(" & $gState.parseCExpression(gState.getNodeVal(cexprNode.get()), name) & ")." & name

@@ -1,11 +1,9 @@
-template withCodeAst*(inputCode: string, inputMode: string, body: untyped): untyped =
-  ## A simple template to inject the TSNode into a body of code
+import "."/treesitter/[c, cpp]
 
-  # This section is needed to be able to reference
-  # mode in strformat calls
-  let
-    code = inputCode
-    mode {.inject.} = inputMode
+template withCodeAst*(code: string, mode: string, body: untyped): untyped =
+  ## A simple template to inject the TSNode into a body of code
+  mixin treeSitterC
+  mixin treeSitterCpp
 
   var parser = tsParserNew()
   defer:
@@ -18,7 +16,7 @@ template withCodeAst*(inputCode: string, inputMode: string, body: untyped): unty
   elif mode == "cpp":
     doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
   else:
-    doAssert false, &"Invalid parser {mode}"
+    doAssert false, "Invalid parser " & mode
 
   var
     tree = parser.tsParserParseString(nil, code.cstring, code.len.uint32)

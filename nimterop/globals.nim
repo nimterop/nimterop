@@ -76,7 +76,9 @@ type
     # All const names for enum casting
     constIdentifiers*: HashSet[string]
 
-    # All symbols that have been skipped
+    # All symbols that have been skipped due to
+    # being unwrappable or the user provided
+    # override is blank
     skippedSyms*: HashSet[string]
 
     # Legacy ast fields, remove when ast2 becomes default
