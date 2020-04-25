@@ -1,4 +1,5 @@
 import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times, options
+import algorithm
 
 import regex
 
@@ -637,12 +638,13 @@ proc getNameKind*(name: string): tuple[name: string, kind: Kind, recursive: bool
   if result.kind != exactlyOne:
     result.name = result.name[0 .. ^2]
 
-proc getCommentVal*(gState: State, commentNode: Option[TSNode]): string =
-  if commentNode.isSome():
-    result = "::\n  " & gState.getNodeVal(commentNode.get()).replace(re" *(/\*\*|\*\*/|\*/|\*)", "").replace("\n", "\n  ").strip()
+proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
+  if commentNodes.len > 0:
+    result = "::"
+    for commentNode in commentNodes:
+      result &= "\n  " & gState.getNodeVal(commentNode).replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "").replace("\n", "\n  ").strip()
 
 template findComment(procName: untyped): untyped =
-  result = none(TSNode)
   var sibling = node.`procName`()
   var i = 0
   while not sibling.isNil and i < maxSearch:
@@ -651,11 +653,33 @@ template findComment(procName: untyped): untyped =
     sibling = sibling.`procName`()
     i += 1
 
-proc getPrevCommentNode*(node: TSNode, maxSearch=1): Option[TSNode] =
-  findComment(tsNodePrevNamedSibling)
+proc getPrevCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
+  ## Here we want to go until the node we get is not a comment
+  ## for cases with multiple ``//`` comments instead of one ``/* */``
+  ## section
+  var sibling = node.tsNodePrevNamedSibling()
+  var i = 0
+  while not sibling.isNil and i < maxSearch:
+    while not sibling.isNil and sibling.getName() == "comment":
+      result.add(sibling)
+      sibling = sibling.tsNodePrevNamedSibling()
+    if sibling.isNil:
+      result.reverse
+      return
+    sibling = sibling.tsNodePrevNamedSibling()
+    i += 1
 
-proc getNextCommentNode*(node: TSNode, maxSearch=1): Option[TSNode] =
-  findComment(tsNodeNextNamedSibling)
+  result.reverse
+
+proc getNextCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
+  ## We only want to search for the next comment node (ie: inline)
+  var sibling = node.tsNodeNextNamedSibling()
+  var i = 0
+  while not sibling.isNil and i < maxSearch:
+    if sibling.getName() == "comment":
+      return @[sibling]
+    sibling = sibling.tsNodeNextNamedSibling()
+    i += 1
 
 proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
   if node.tsNodeNamedChildCount() != 0:
