@@ -1017,6 +1017,7 @@ proc addTypeArray(gState: State, node: TSNode) =
     # node[start] = identifier = type name
     (tname, _, info) = gState.getNameInfo(node[start].getAtom(), nskType, parent = "addTypeArray")
     tident = gState.getIdent(tname, info, exported = false)
+    commentNodes = gState.getPrevCommentNodes(node)
 
   # Could have multiple types, comma separated
   for i in start+1 ..< node.len:
@@ -1050,6 +1051,7 @@ proc addTypeArray(gState: State, node: TSNode) =
       #  )
       # )
 
+      typeDef.comment = gState.getCommentsStr(commentNodes)
       # nkTypeSection.add
       gState.typeSection.add typeDef
 
