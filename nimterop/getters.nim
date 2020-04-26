@@ -644,12 +644,16 @@ proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
   if commentNodes.len > 0:
     result = "::"
     for commentNode in commentNodes:
-      result &= "\n  " & gState.getNodeVal(commentNode).replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "").replace("\n", "\n  ").strip()
+      result &= "\n  " & gState.getNodeVal(commentNode).
+                          replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "").replace("\n", "\n  ").strip()
 
-proc getPrevCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
+proc getPrevCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
   ## Here we want to go until the node we get is not a comment
   ## for cases with multiple ``//`` comments instead of one ``/* */``
   ## section
+  if gState.nocomments:
+    return
+
   var sibling = node.tsNodePrevNamedSibling()
   var i = 0
 
@@ -670,9 +674,11 @@ proc getPrevCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
   # reverse the comments because we got them in reverse order
   result.reverse
 
-proc getNextCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
+proc getNextCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
   ## Searches the next nodes up to maxSearch nodes away for a comment
 
+  if gState.nocomments:
+    return
   # We only want to search for the next comment node (ie: inline)
   # but we want to keep the same interface as getPrevCommentNodes,
   # so we keep a returned seq but only store one element
