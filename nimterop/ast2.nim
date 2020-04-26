@@ -691,7 +691,7 @@ proc newRecListTree(gState: State, name: string, node: TSNode): PNode =
         let
           fdecl = node[i].anyChildInTree("field_declaration_list")
           edecl = node[i].anyChildInTree("enumerator_list")
-          commentNodes = node[i].getNextCommentNodes()
+          commentNodes = gState.getNextCommentNodes(node[i])
 
           # `tname` is name of nested struct / union / enum just
           # added, passed on as type name for field in `newIdentDefs()`
@@ -727,7 +727,7 @@ proc addTypeObject(gState: State, node: TSNode, typeDef: PNode = nil, fname = ""
   # If `fname` is set, use it as the name when creating new PNode
   # If `istype` is set, this is a typedef, else struct/union
   decho("addTypeObject()")
-  let commentNodes = node.tsNodeParent().getPrevCommentNodes()
+  let commentNodes = gState.getPrevCommentNodes(node.tsNodeParent())
 
   let
     # Object has fields or not
@@ -853,7 +853,7 @@ proc addTypeObject(gState: State, node: TSNode, typeDef: PNode = nil, fname = ""
       # Current node has fields
       let
         origname = gState.getNodeVal(node.getAtom())
-        commentNodes = node.getNextCommentNodes()
+        commentNodes = gState.getNextCommentNodes(node)
 
         # Fix issue #185
         name =
@@ -898,7 +898,7 @@ proc addTypeTyped(gState: State, node: TSNode, ftname = "", offset = 0) =
   decho("addTypeTyped()")
   let
     start = getStartAtom(node)
-    commentNodes = node.getPrevCommentNodes()
+    commentNodes = gState.getPrevCommentNodes(node)
   for i in start+1+offset ..< node.len:
     # Add a type of a specific type
     let
@@ -1403,7 +1403,7 @@ proc addEnum(gState: State, node: TSNode) =
       #   nkIdent(name) <- set the comment here
       #  )
       # )
-      defineNode[0][1].comment = gState.getCommentsStr(node.getPrevCommentNodes())
+      defineNode[0][1].comment = gState.getCommentsStr(gState.getPrevCommentNodes(node))
       gState.enumSection.add defineNode
 
       # Create const for fields
@@ -1420,7 +1420,7 @@ proc addEnum(gState: State, node: TSNode) =
 
         let
           atom = en.getAtom()
-          commentNodes = en.getNextCommentNodes()
+          commentNodes = gState.getNextCommentNodes(en)
           fname = gState.getIdentifier(gState.getNodeVal(atom), nskEnumField)
 
         if fname.nBl and gState.addNewIdentifer(fname):
@@ -1638,7 +1638,7 @@ proc addDecl(gState: State, node: TSNode) =
 
   let
     start = getStartAtom(node)
-    commentNodes = node.getPrevCommentNodes()
+    commentNodes = gState.getPrevCommentNodes(node)
 
   for i in start+1 ..< node.len:
     if not node[i].firstChildInTree("function_declarator").isNil:
@@ -1663,7 +1663,7 @@ proc addDef(gState: State, node: TSNode) =
 
   let
     start = getStartAtom(node)
-    commentNodes = node.getPrevCommentNodes()
+    commentNodes = gState.getPrevCommentNodes(node)
 
   if node[start+1].getName() == "function_declarator":
     if gState.isIncludeHeader():
