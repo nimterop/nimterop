@@ -1,4 +1,4 @@
-import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times, options
+import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 import algorithm
 
 import regex
@@ -643,15 +643,6 @@ proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
     result = "::"
     for commentNode in commentNodes:
       result &= "\n  " & gState.getNodeVal(commentNode).replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "").replace("\n", "\n  ").strip()
-
-template findComment(procName: untyped): untyped =
-  var sibling = node.`procName`()
-  var i = 0
-  while not sibling.isNil and i < maxSearch:
-    if sibling.getName() == "comment":
-      return some(sibling)
-    sibling = sibling.`procName`()
-    i += 1
 
 proc getPrevCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
   ## Here we want to go until the node we get is not a comment
