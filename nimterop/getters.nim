@@ -639,6 +639,8 @@ proc getNameKind*(name: string): tuple[name: string, kind: Kind, recursive: bool
     result.name = result.name[0 .. ^2]
 
 proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
+  ## Generate a comment from a set of comment nodes. Comment is guaranteed
+  ## to be able to be rendered using nim doc
   if commentNodes.len > 0:
     result = "::"
     for commentNode in commentNodes:
@@ -650,25 +652,37 @@ proc getPrevCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
   ## section
   var sibling = node.tsNodePrevNamedSibling()
   var i = 0
+
+  # Search for the starting comment up to maxSearch nodes away
   while not sibling.isNil and i < maxSearch:
+    # Once a comment is found, find all of the comments right next to
+    # it so that we can get multiple // style comments
     while not sibling.isNil and sibling.getName() == "comment":
       result.add(sibling)
       sibling = sibling.tsNodePrevNamedSibling()
+
     if sibling.isNil:
-      result.reverse
-      return
+      break
+
     sibling = sibling.tsNodePrevNamedSibling()
     i += 1
 
+  # reverse the comments because we got them in reverse order
   result.reverse
 
 proc getNextCommentNodes*(node: TSNode, maxSearch=1): seq[TSNode] =
-  ## We only want to search for the next comment node (ie: inline)
+  ## Searches the next nodes up to maxSearch nodes away for a comment
+
+  # We only want to search for the next comment node (ie: inline)
+  # but we want to keep the same interface as getPrevCommentNodes,
+  # so we keep a returned seq but only store one element
   var sibling = node.tsNodeNextNamedSibling()
   var i = 0
+  # Search for the comment up to maxSearch nodes away
   while not sibling.isNil and i < maxSearch:
     if sibling.getName() == "comment":
-      return @[sibling]
+      result.add sibling
+      break
     sibling = sibling.tsNodeNextNamedSibling()
     i += 1
 
