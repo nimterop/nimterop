@@ -2,15 +2,10 @@ import os, osproc, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, ast2, globals, getters, grammar, build]
+import "."/[ast, ast2, globals, getters, grammar, build, tshelp]
 
 proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), &"Invalid path {path}"
-
-  var parser = tsParserNew()
-
-  defer:
-    parser.tsParserDelete()
 
   if gState.mode.Bl:
     gState.mode = getCompilerMode(path)
@@ -20,31 +15,16 @@ proc process(gState: State, path: string, astTable: AstTable) =
   else:
     gState.code = readFile(path)
 
-  doAssert gState.code.nBl, "Empty file or preprocessor error"
-
-  if gState.mode == "c":
-    doAssert parser.tsParserSetLanguage(treeSitterC()), "Failed to load C parser"
-  elif gState.mode == "cpp":
-    doAssert parser.tsParserSetLanguage(treeSitterCpp()), "Failed to load C++ parser"
-  else:
-    doAssert false, &"Invalid parser {gState.mode}"
-
-  var
-    tree = parser.tsParserParseString(nil, gState.code.cstring, gState.code.len.uint32)
-    root = tree.tsTreeRootNode()
-
-  defer:
-    tree.tsTreeDelete()
-
-  if gState.past:
-    gecho gState.printLisp(root)
-  elif gState.pnim:
-    if Feature.ast2 in gState.feature:
-      ast2.parseNim(gState, path, root)
-    else:
-      ast.parseNim(gState, path, root, astTable)
-  elif gState.preprocess:
-    gecho gState.code
+  withCodeAst(gState.code, gState.mode):
+    if gState.past:
+      gecho gState.printLisp(root)
+    elif gState.pnim:
+      if Feature.ast2 in gState.feature:
+        ast2.parseNim(gState, path, root)
+      else:
+        ast.parseNim(gState, path, root, astTable)
+    elif gState.preprocess:
+      gecho gState.code
 
 # CLI processing with default values
 proc main(

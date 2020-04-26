@@ -8,6 +8,42 @@ extern "C" {
 #define D "hello"
 #define E 'c'
 
+#define UEXPR (1234u << 1)
+#define ULEXPR (1234ul << 2)
+#define ULLEXPR (1234ull << 3)
+#define LEXPR (1234l << 4)
+#define LLEXPR (1234ll << 5)
+
+#define SHL1 (1u << 1)
+#define SHL2 (1u << 2)
+#define SHL3 (1u << 3)
+#define COERCE 645635634896ull + 35436
+#define COERCE2 645635634896 + 35436ul
+#define BINEXPR ~(-(1u << !-1)) ^ (10 >> 1)
+#define BOOL true
+#define MATHEXPR (1 + 2/3*20 - 100)
+#define ANDEXPR (100 & 11000)
+#define CASTEXPR (char) 34
+#define AVAL 100
+#define BVAL 200
+#define EQ1 AVAL <= BVAL
+#define EQ2 AVAL >= BVAL
+#define EQ3 AVAL > BVAL
+#define EQ4 AVAL < BVAL
+#define EQ5 AVAL != BVAL
+#define EQ6 AVAL == BVAL
+
+#define SIZEOF sizeof(char)
+#define REG_STR "regular string"
+#define NOTSUPPORTEDSTR "not a " REG_STR
+
+#define NULLCHAR '\0'/* comments should not break things*/
+#define OCTCHAR '\012' // nor should this comment
+#define HEXCHAR '\xFE'
+#define TRICKYSTR "\x4E\034\nfoo\0\'\"\r\v\a\b\e\f\t\\\?bar"
+
+#define ALLSHL (SHL1 | SHL2 | SHL3)
+
 struct A0;
 struct A1 {};
 typedef struct A2;

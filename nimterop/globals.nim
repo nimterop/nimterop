@@ -1,4 +1,4 @@
-import sequtils, sets, tables
+import sequtils, sets, tables, strutils
 
 import regex
 
@@ -76,6 +76,11 @@ type
     # All const names for enum casting
     constIdentifiers*: HashSet[string]
 
+    # All symbols that have been skipped due to
+    # being unwrappable or the user provided
+    # override is blank
+    skippedSyms*: HashSet[string]
+
     # Legacy ast fields, remove when ast2 becomes default
     constStr*, enumStr*, procStr*, typeStr*: string
 
@@ -92,6 +97,9 @@ type
       identifierNodes*: TableRef[string, PNode]
 
     currentHeader*, impShort*, sourceFile*: string
+
+    # Used for the exprparser.nim module
+    currentExpr*, currentTyCastName*: string
 
     data*: seq[tuple[name, val: string]]
 
@@ -113,12 +121,12 @@ when not declared(CIMPORT):
   export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, nBl, Bl
 
   # Redirect output to file when required
-  template gecho*(args: string) {.dirty.} =
+  template gecho*(args: string) =
     if gState.outputHandle.isNil:
       echo args
     else:
       gState.outputHandle.writeLine(args)
 
-  template decho*(str: untyped): untyped =
+  template decho*(args: varargs[string, `$`]): untyped =
     if gState.debug:
-      gecho str.getCommented()
+      gecho join(args, "").getCommented()

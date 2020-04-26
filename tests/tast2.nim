@@ -3,6 +3,10 @@ import macros, os, sets, strutils
 import nimterop/[cimport]
 
 static:
+  # Skip casting on lower nim compilers because
+  # the VM does not support it
+  when (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
+    cSkipSymbol @["CASTEXPR"]
   cDebug()
 
 const
@@ -93,17 +97,59 @@ macro testFields(t: typed, fields: static[string] = "") =
     for i in 0 ..< rl.len:
       let
         name = ($rl[i][0]).strip(chars = {'*'})
-        typ = ($(rl[i][1].repr())).replace("\n", "").replace("  ", "")
+        typ = ($(rl[i][1].repr())).replace("\n", "").replace("  ", "").replace("typeof", "type")
         n = names.find(name)
       assert n != -1, $t & "." & name & " invalid"
-      assert types[n] == typ,
-        "typeof(" & $t & ":" & name & ") != " & types[n] & ", is " & typ
+      assert types[n].replace("typeof", "type") == typ,
+        "typeof(" & $t & ":" & name & ") != " & types[n].replace("typeof", "type") & ", is " & typ
 
 assert A == 2
 assert B == 1.0
 assert C == 0x10
 assert D == "hello"
 assert E == 'c'
+
+assert not defined(NOTSUPPORTEDSTR)
+
+assert UEXPR == (1234.uint shl 1)
+assert ULEXPR == (1234.uint32 shl 2)
+assert ULLEXPR == (1234.uint64 shl 3)
+assert LEXPR == (1234.int32 shl 4)
+assert LLEXPR == (1234.int64 shl 5)
+
+assert AVAL == 100
+assert BVAL == 200
+
+assert EQ1 == (AVAL <= BVAL)
+assert EQ2 == (AVAL >= BVAL)
+assert EQ3 == (AVAL > BVAL)
+assert EQ4 == (AVAL < BVAL)
+assert EQ5 == (AVAL != BVAL)
+assert EQ6 == (AVAL == BVAL)
+
+assert SIZEOF == 1
+
+assert COERCE == 645635670332'u64
+assert COERCE2 == 645635670332'i64
+
+assert BINEXPR == 5
+assert BOOL == true
+assert MATHEXPR == -99
+assert ANDEXPR == 96
+
+when (NimMajor, NimMinor, NimPatch) >= (1, 0, 0):
+  assert CASTEXPR == 34.chr
+
+assert TRICKYSTR == "N\x1C\nfoo\x00\'\"\c\v\a\b\e\f\t\\\\?bar"
+assert NULLCHAR == '\0'
+assert OCTCHAR == '\n'
+assert HEXCHAR.int == 0xFE
+
+assert SHL1 == (1.uint shl 1)
+assert SHL2 == (1.uint shl 2)
+assert SHL3 == (1.uint shl 3)
+
+assert ALLSHL == (SHL1 or SHL2 or SHL3)
 
 assert A0 is object
 testFields(A0, "f1!cint")
@@ -271,7 +317,7 @@ var a21p: A21p
 a21p = addr a20
 
 assert A22 is object
-testFields(A22, "f1|f2!ptr ptr cint|array[123 + 132, ptr cint]")
+testFields(A22, "f1|f2!ptr ptr cint|array[123 + type(123)(132), ptr cint]")
 checkPragmas(A22, pHeaderBy, istype = false)
 var a22: A22
 a22.f1 = addr a15.a2[0]

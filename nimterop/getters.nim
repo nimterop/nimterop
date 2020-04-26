@@ -221,16 +221,19 @@ proc len*(node: TSNode): int =
     result = node.tsNodeNamedChildCount().int
 
 proc `[]`*(node: TSNode, i: SomeInteger): TSNode =
-  if i < node.len:
+  if i < type(i)(node.len()):
     result = node.tsNodeNamedChild(i.uint32)
 
 proc getName*(node: TSNode): string {.inline.} =
   if not node.isNil:
     return $node.tsNodeType()
 
-proc getNodeVal*(gState: State, node: TSNode): string =
+proc getNodeVal*(code: var string, node: TSNode): string =
   if not node.isNil:
-    return gState.code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
+    return code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
+
+proc getNodeVal*(gState: State, node: TSNode): string =
+  gState.code.getNodeVal(node)
 
 proc getAtom*(node: TSNode): TSNode =
   if not node.isNil:
@@ -349,12 +352,15 @@ proc inChildren*(node: TSNode, ntype: string): bool =
       result = true
       break
 
-proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
+proc getLineCol*(code: var string, node: TSNode): tuple[line, col: int] =
   # Get line number and column info for node
   let
     point = node.tsNodeStartPoint()
   result.line = point.row.int + 1
   result.col = point.column.int + 1
+
+proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
+  getLineCol(gState.code, node)
 
 proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
   for i in 0 ..< node.len:
@@ -374,7 +380,7 @@ proc getPxName*(node: TSNode, offset: int): string =
   if count == offset and not np.isNil:
     return np.getName()
 
-proc printLisp*(gState: State, root: TSNode): string =
+proc printLisp*(code: var string, root: TSNode): string =
   var
     node = root
     nextnode: TSNode
@@ -384,18 +390,18 @@ proc printLisp*(gState: State, root: TSNode): string =
     if not node.isNil and depth > -1:
       result &= spaces(depth)
       let
-        (line, col) = gState.getLineCol(node)
+        (line, col) = code.getLineCol(node)
       result &= &"({$node.tsNodeType()} {line} {col} {node.tsNodeEndByte() - node.tsNodeStartByte()}"
       let
-        val = gState.getNodeVal(node)
+        val = code.getNodeVal(node)
       if "\n" notin val and " " notin val:
         result &= &" \"{val}\""
     else:
       break
 
-    if node.tsNodeNamedChildCount() != 0:
+    if node.len() != 0:
       result &= "\n"
-      nextnode = node.tsNodeNamedChild(0)
+      nextnode = node[0]
       depth += 1
     else:
       result &= ")\n"
@@ -419,21 +425,24 @@ proc printLisp*(gState: State, root: TSNode): string =
     if node == root:
       break
 
+proc printLisp*(gState: State, root: TSNode): string =
+  printLisp(gState.code, root)
+
 proc getCommented*(str: string): string =
   "\n# " & str.strip().replace("\n", "\n# ")
 
 proc printTree*(gState: State, pnode: PNode, offset = ""): string =
-  if gState.debug and pnode.kind != nkNone:
+  if not pnode.isNil and gState.debug and pnode.kind != nkNone:
     result &= "\n# " & offset & $pnode.kind & "("
     case pnode.kind
     of nkCharLit:
-      result &= "'" & pnode.intVal.char & "')"
+      result &= ($pnode.intVal.char).escape & ")"
     of nkIntLit..nkUInt64Lit:
       result &= $pnode.intVal & ")"
     of nkFloatLit..nkFloat128Lit:
       result &= $pnode.floatVal & ")"
     of nkStrLit..nkTripleStrLit:
-      result &= "\"" & pnode.strVal & "\")"
+      result &= pnode.strVal.escape & ")"
     of nkSym:
       result &= $pnode.sym & ")"
     of nkIdent:
@@ -452,13 +461,13 @@ proc printTree*(gState: State, pnode: PNode, offset = ""): string =
 
 proc printDebug*(gState: State, node: TSNode) =
   if gState.debug:
-    gecho ("Input => " & gState.getNodeVal(node)).getCommented() & "\n" &
-          gState.printLisp(node).getCommented()
+    gecho ("Input => " & gState.getNodeVal(node)).getCommented()
+    gecho gState.printLisp(node).getCommented()
 
 proc printDebug*(gState: State, pnode: PNode) =
-  if gState.debug:
-    gecho ("Output => " & $pnode).getCommented() & "\n" &
-          gState.printTree(pnode)
+  if gState.debug and pnode.kind != nkNone:
+    gecho ("Output => " & $pnode).getCommented()
+    gecho gState.printTree(pnode)
 
 # Compiler shortcuts
 

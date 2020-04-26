@@ -1,12 +1,12 @@
 import macros, os, sequtils, sets, strformat, strutils, tables, times
 
-import regex
+import options as opts
 
-import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, parser, renderer]
+import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
 import "."/treesitter/api
 
-import "."/[globals, getters]
+import "."/[globals, getters, exprparser, comphelp, tshelp]
 
 proc getPtrType*(str: string): string =
   result = case str:
@@ -18,55 +18,6 @@ proc getPtrType*(str: string): string =
       "File"
     else:
       str
-
-proc handleError*(conf: ConfigRef, info: TLineInfo, msg: TMsgKind, arg: string) =
-  # Raise exception in parseString() instead of exiting for errors
-  if msg < warnMin:
-    raise newException(Exception, msgKindToString(msg))
-
-proc parseString(gState: State, str: string): PNode =
-  # Parse a string into Nim AST - use custom error handler that raises
-  # an exception rather than exiting on failure
-  try:
-    result = parseString(
-      str, gState.identCache, gState.config, errorHandler = handleError
-    )
-  except:
-    decho getCurrentExceptionMsg()
-
-proc getLit*(gState: State, str: string, expression = false): PNode =
-  # Used to convert #define literals into const and expressions
-  # in array sizes
-  #
-  # `expression` is true when `str` should be converted into a Nim expression
-  let
-    str = str.replace(re"/[/*].*?(?:\*/)?$", "").strip()
-
-  if str.contains(re"^[\-]?[\d]+$"):              # decimal
-    result = newIntNode(nkIntLit, parseInt(str))
-
-  elif str.contains(re"^[\-]?[\d]*[.]?[\d]+$"):   # float
-    result = newFloatNode(nkFloatLit, parseFloat(str))
-
-  elif str.contains(re"^0x[\da-fA-F]+$"):         # hexadecimal
-    result = gState.parseString(str)
-
-  elif str.contains(re"^'[[:ascii:]]'$"):         # char
-    result = newNode(nkCharLit)
-    result.intVal = str[1].int64
-
-  elif str.contains(re"""^"[[:ascii:]]+"$"""):    # char *
-    result = newStrNode(nkStrLit, str[1 .. ^2])
-
-  else:
-    let
-      str =
-        if expression: gState.getNimExpression(str)
-        else: str
-    result = gState.parseString(str)
-
-  if result.isNil:
-    result = newNode(nkNilLit)
 
 proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimSymKind): PNode =
   # Check if symbol `origname` of `kind` and `origname` has any cOverride defined
@@ -90,6 +41,7 @@ proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimS
       result = pnode[0][0]
   else:
     gecho &"\n# $1'{origname}' skipped" % skind
+    gState.skippedSyms.incl origname
     if gState.debug:
       gState.skipStr &= &"\n{gState.getNodeVal(node)}"
 
@@ -148,15 +100,36 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
         fval
       else:
         gState.getNodeVal(node[1])
-    valident =
-      gState.getLit(val)
+
+  var valident = newNode(nkNone)
+
+  withCodeAst(val, gState.mode):
+    # This section is a hack for determining that the first
+    # node is a type, which shouldn't be accepted by a const
+    # def section. Need to replace this with some other mechanism
+    # to handle type aliases
+    var maybeTyNode: TSNode
+    # Take the very first node, which may be 2 levels
+    # down if there is an error node
+    if root.len > 0 and root[0].getName() == "ERROR":
+      maybeTyNode = root[0][0]
+    elif root.len > 0:
+      maybeTyNode = root[0]
+
+    if not maybeTyNode.isNil:
+      let name = maybeTyNode.getName()
+      case name
+      of "type_descriptor", "sized_type_specifier":
+        discard
+      else:
+        # Can't do gState.parseCExpression(root) here for some reason?
+        # get a SEGFAULT if we use root
+        valident = gState.parseCExpression(val)
 
   if name.Bl:
     # Name skipped or overridden since blank
     result = gState.getOverrideOrSkip(node, origname, nskConst)
-  elif valident.kind in {nkCharLit .. nkStrLit} or
-    (valident.kind == nkStmtList and valident.len > 0 and
-    valident[0].kind in {nkCharLit .. nkStrLit}):
+  elif valident.kind != nkNone:
     if gState.addNewIdentifer(name):
       # const X* = Y
       #
@@ -180,6 +153,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
       gecho &"# const '{origname}' is duplicate, skipped"
   else:
     gecho &"# const '{origname}' has invalid value '{val}'"
+    gState.skippedSyms.incl origname
 
 proc addConst(gState: State, node: TSNode) =
   # Add a const to the AST
@@ -1012,8 +986,8 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
       # type name[X] => array[X, type]
       let
         # Size of array could be a Nim expression
-        size = gState.getLit(gState.getNodeVal(cnode[1]), expression = true)
-      if size.kind != nkNilLit:
+        size = gState.parseCExpression(gState.getNodeVal(cnode[1]))
+      if size.kind != nkNone:
         result = gState.newArrayTree(cnode, result, size)
         cnode = cnode[0]
     elif cnode.len == 1:
@@ -1417,6 +1391,9 @@ proc addEnum(gState: State, node: TSNode) =
       # Create const for fields
       var
         fnames: HashSet[string]
+        # Hold all of field information so that we can add all of them
+        # after the const identifiers has been updated
+        fieldDeclarations: seq[tuple[fname: string, fval: string, cexpr: Option[TSNode]]]
       for i in 0 .. enumlist.len - 1:
         let
           en = enumlist[i]
@@ -1435,19 +1412,24 @@ proc addEnum(gState: State, node: TSNode) =
             fval = &"({prev} + 1).{name}"
 
           if en.len > 1 and en[1].getName() in gEnumVals:
-            # Explicit value
-            fval = "(" & gState.getNimExpression(gState.getNodeVal(en[1]), name) & ")." & name
-
-          # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
-          gState.constSection.add gState.parseString(&"const {fname}* = {fval}")[0][0]
+            fieldDeclarations.add((fname, "", some(en[1])))
+          else:
+            fieldDeclarations.add((fname, fval, none(TSNode)))
 
           fnames.incl fname
-
           prev = fname
 
       # Add fields to list of consts after processing enum so that we don't cast
       # enum field to itself
       gState.constIdentifiers.incl fnames
+
+      # parseCExpression requires all const identifiers to be present for the enum
+      for (fname, fval, cexprNode) in fieldDeclarations:
+        var fval = fval
+        if cexprNode.isSome:
+          fval = "(" & $gState.parseCExpression(gState.getNodeVal(cexprNode.get()), name) & ")." & name
+        # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
+        gState.constSection.add gState.parseString(&"const {fname}* = {fval}")[0][0]
 
       # Add other names
       if node.getName() == "type_definition" and node.len > 1:

@@ -13,6 +13,12 @@ when defined(windows):
       complex = object
 
 static:
+  when (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
+    # FP_ILOGB0 and FP_ILOGBNAN are casts that are unsupported
+    # on lower Nim VMs
+    cSkipSymbol @["math_errhandling", "FP_ILOGB0", "FP_ILOGBNAN"]
+  else:
+    cSkipSymbol @["math_errhandling"]
   cDebug()
   cDisableCaching()
   cAddStdDir()
