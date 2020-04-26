@@ -457,9 +457,6 @@ proc printLisp*(gState: State, root: TSNode): string =
 proc getCommented*(str: string): string =
   "\n# " & str.strip().replace("\n", "\n# ")
 
-proc getDocStrCommented*(str: string): string =
-  "\n## " & str.strip().replace("\n", "\n## ")
-
 proc printTree*(gState: State, pnode: PNode, offset = ""): string =
   if not pnode.isNil and gState.debug and pnode.kind != nkNone:
     result &= "\n# " & offset & $pnode.kind & "("
