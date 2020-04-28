@@ -726,7 +726,13 @@ proc loadPlugin*(gState: State, sourcePath: string) =
     pdll = sourcePath.dll
   if not fileExists(pdll) or
     sourcePath.getLastModificationTime() > pdll.getLastModificationTime():
-    discard execAction(&"{gState.nim.sanitizePath} c --app:lib --gc:markAndSweep {sourcePath.sanitizePath}")
+    let
+      # Get Nim configuration flags if not already specified in a .cfg file
+      flags =
+        if fileExists(sourcePath & ".cfg"): ""
+        else: getNimConfigFlags(getCurrentDir())
+      cmd = &"{gState.nim.sanitizePath} c --app:lib --gc:markAndSweep {flags} {sourcePath.sanitizePath}"
+    discard execAction(cmd)
   doAssert fileExists(pdll), "No plugin binary generated for " & sourcePath
 
   let lib = loadLib(pdll)

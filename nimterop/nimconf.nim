@@ -171,29 +171,41 @@ proc getNimConfig*(projectDir = ""): Config =
 
   result.nimcacheDir = getNimcacheDir(projectDir)
 
-proc writeNimConfig*(cfg: Config, cfgFile: string) =
-  # Write Nim configuration to file
-  var
-    cfgOut = &"--nimcache:\"{cfg.nimcacheDir}\"\n"
+proc getNimConfigFlags(cfg: Config): string =
+  # Convert configuration into Nim flags for cfg file or command line
+  result = &"--nimcache:\"{cfg.nimcacheDir}\"\n"
 
   if (cfg.NimMajor, cfg.NimMinor, cfg.NimPatch) >= (1, 2, 0):
     # --clearNimbleCache if Nim v1.2.0+
-    cfgOut &= "--clearNimblePath\n"
+    result &= "--clearNimblePath\n"
 
   # Add `nimblePaths` if detected - v1.2.0+
   for path in cfg.nimblePaths:
-    cfgOut &= &"--nimblePath:\"{path}\"\n"
+    result &= &"--nimblePath:\"{path}\"\n"
 
   # Add `paths` in all cases if any detected
   for path in cfg.paths:
-    cfgOut &= &"--path:\"{path}\"\n"
+    result &= &"--path:\"{path}\"\n"
 
   when defined(windows):
-    cfgOut = cfgOut.replace("\\", "/")
+    result = result.replace("\\", "/")
 
-  writeFile(cfgFile, cfgOut)
-
-proc writeNimConfig*(cfgFile: string, projectDir = "") =
+proc getNimConfigFlags*(projectDir = ""): string =
+  ## Get Nim command line configuration flags for `projectDir`
+  ##
+  ## If `projectDir` is not specified, it is detected if compile time or
+  ## current directory is used.
   let
     cfg = getNimConfig(projectDir)
-  writeNimConfig(cfg, cfgFile)
+    cfgOut = getNimConfigFlags(cfg)
+  return cfgOut.replace("\n", " ")
+
+proc writeNimConfig*(cfgFile: string, projectDir = "") =
+  ## Write Nim configuration for `projectDir` to specified `cfgFile`
+  ##
+  ## If `projectDir` is not specified, it is detected if compile time or
+  ## current directory is used.
+  let
+    cfg = getNimConfig(projectDir)
+    cfgOut = getNimConfigFlags(cfg)
+  writeFile(cfgFile, cfgOut)
