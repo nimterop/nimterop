@@ -139,6 +139,10 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="build: cmake(path, check, flags: string)" href="build.html#cmake%2Cstring%2Cstring%2Cstring">build: cmake(path, check, flags: string)</a></li>
           </ul></dd>
+<dt><a name="Config" href="#Config"><span>Config:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: Config" href="build.html#Config">build: Config</a></li>
+          </ul></dd>
 <dt><a name="configure" href="#configure"><span>configure:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: configure(path, check: string; flags = &quot;&quot;)" href="build.html#configure%2Cstring%2Cstring%2Cstring">build: configure(path, check: string; flags = &quot;&quot;)</a></li>
@@ -251,9 +255,25 @@ function main() {
           conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;
           makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;): untyped</a></li>
           </ul></dd>
+<dt><a name="getNimcacheDir" href="#getNimcacheDir"><span>getNimcacheDir:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getNimcacheDir(projectDir = &quot;&quot;): string" href="build.html#getNimcacheDir%2Cstring">build: getNimcacheDir(projectDir = &quot;&quot;): string</a></li>
+          </ul></dd>
+<dt><a name="getNimConfig" href="#getNimConfig"><span>getNimConfig:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getNimConfig(projectDir = &quot;&quot;): Config" href="build.html#getNimConfig%2Cstring">build: getNimConfig(projectDir = &quot;&quot;): Config</a></li>
+          </ul></dd>
+<dt><a name="getNimConfigFlags" href="#getNimConfigFlags"><span>getNimConfigFlags:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getNimConfigFlags(projectDir = &quot;&quot;): string" href="build.html#getNimConfigFlags%2Cstring">build: getNimConfigFlags(projectDir = &quot;&quot;): string</a></li>
+          </ul></dd>
 <dt><a name="getProjectCacheDir" href="#getProjectCacheDir"><span>getProjectCacheDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getProjectCacheDir(name: string; forceClean = true): string" href="build.html#getProjectCacheDir%2Cstring">build: getProjectCacheDir(name: string; forceClean = true): string</a></li>
+          </ul></dd>
+<dt><a name="getProjectDir" href="#getProjectDir"><span>getProjectDir:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getProjectDir(): string" href="build.html#getProjectDir">build: getProjectDir(): string</a></li>
           </ul></dd>
 <dt><a name="gitCheckout" href="#gitCheckout"><span>gitCheckout:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -375,12 +395,16 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="types: wchar_t" href="types.html#wchar_t">types: wchar_t</a></li>
           </ul></dd>
+<dt><a name="writeNimConfig" href="#writeNimConfig"><span>writeNimConfig:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)" href="build.html#writeNimConfig%2Cstring%2Cstring">build: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)</a></li>
+          </ul></dd>
 </dl>
     <div class="row">
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-04-23 18:28:08 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-04-28 20:29:33 UTC</small>
       </div>
     </div>
   </div>

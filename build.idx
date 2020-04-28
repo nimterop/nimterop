@@ -1,4 +1,10 @@
 sanitizePath	build.html#sanitizePath,string	build: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string	
+Config	build.html#Config	build: Config	
+getProjectDir	build.html#getProjectDir	build: getProjectDir(): string	
+getNimcacheDir	build.html#getNimcacheDir,string	build: getNimcacheDir(projectDir = &quot;&quot;): string	
+getNimConfig	build.html#getNimConfig,string	build: getNimConfig(projectDir = &quot;&quot;): Config	
+getNimConfigFlags	build.html#getNimConfigFlags,string	build: getNimConfigFlags(projectDir = &quot;&quot;): string	
+writeNimConfig	build.html#writeNimConfig,string,string	build: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)	
 sleep	build.html#sleep,int	build: sleep(milsecs: int)	
 getCurrentNimCompiler	build.html#getCurrentNimCompiler	build: getCurrentNimCompiler(): string	
 execAction	build.html#execAction,string,int,string	build: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;): tuple[\n    output: string, ret: int]	
