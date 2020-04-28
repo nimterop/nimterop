@@ -2,8 +2,11 @@ import macros, strformat
 
 from os import parentDir, getCurrentCompilerExe, DirSep
 
+when defined(nimdoc) or (NimMajor, NimMinor) >= (1, 3):
+  from os import paramCount, paramStr
+
 when defined(nimdoc):
-  from os import getCurrentDir, paramCount, paramStr
+  from os import getCurrentDir
 
 proc getNimRootDir(): string =
   #[

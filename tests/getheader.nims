@@ -11,6 +11,7 @@ proc testCall(cmd, output: string, exitCode: int, delete = true) =
   if not delete:
     ccmd = ccmd.replace(" -f ", " ")
 
+  echo ccmd
   var
     (outp, exitC) = gorgeEx(ccmd)
   echo outp

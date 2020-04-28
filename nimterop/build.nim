@@ -4,10 +4,31 @@ import os except findExe, sleep
 
 import regex
 
+proc fixCmd(cmd: string): string =
+  when defined(Windows):
+    # Replace 'cd d:\abc' with 'd: && cd d:\abc`
+    var filteredCmd = cmd
+    if cmd.toLower().startsWith("cd"):
+      var
+        colonIndex = cmd.find(":")
+        driveLetter = cmd.substr(colonIndex-1, colonIndex)
+      if (driveLetter[0].isAlphaAscii() and
+          driveLetter[1] == ':' and
+          colonIndex == 4):
+        filteredCmd = &"{driveLetter} && {cmd}"
+    result = "cmd /c " & filteredCmd
+  elif defined(posix):
+    result = cmd
+  else:
+    doAssert false
+
 proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
   if not noQuote:
     result = result.quoteShell
+
+# Nim cfg file related functionality
+include "."/nimconf
 
 proc sleep*(milsecs: int) =
   ## Sleep at compile time
@@ -20,14 +41,9 @@ proc sleep*(milsecs: int) =
 
   discard gorgeEx(cmd & $(milsecs / 1000))
 
-proc getOsCacheDir(): string =
-  when defined(posix):
-    result = getEnv("XDG_CACHE_HOME", getHomeDir() / ".cache") / "nim"
-  else:
-    result = getHomeDir() / "nimcache"
-
 proc getNimteropCacheDir(): string =
-  result = getOsCacheDir() / "nimterop"
+  # Get location to cache all nimterop artifacts
+  result = getNimcacheDir() / "nimterop"
 
 proc getCurrentNimCompiler*(): string =
   result = getCurrentCompilerExe()
@@ -46,24 +62,8 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
   ## `die = false` - return on errors
   ## `cache = true` - cache results unless cleared with -f
   ## `cacheKey` - key to create unique cache entry
-  var
-    ccmd = ""
-  when defined(Windows):
-    # Replace 'cd d:\abc' with 'd: && cd d:\abc`
-    var filteredCmd = cmd
-    if cmd.toLower().startsWith("cd"):
-      var
-        colonIndex = cmd.find(":")
-        driveLetter = cmd.substr(colonIndex-1, colonIndex)
-      if (driveLetter[0].isAlphaAscii() and
-          driveLetter[1] == ':' and
-          colonIndex == 4):
-        filteredCmd = &"{driveLetter} && {cmd}"
-    ccmd = "cmd /c " & filteredCmd
-  elif defined(posix):
-    ccmd = cmd
-  else:
-    doAssert false
+  let
+    ccmd = fixCmd(cmd)
 
   when nimvm:
     # Cache results for speedup if cache = true

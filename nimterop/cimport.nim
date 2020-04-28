@@ -286,6 +286,7 @@ proc cPluginHelper(body: string, imports = "import macros, nimterop/plugin\n\n")
     if not fileExists(path) or gStateCT.nocache or compileOption("forceBuild"):
       mkDir(path.parentDir())
       writeFile(path, data)
+      writeNimConfig(path & ".cfg")
 
     doAssert fileExists(path), "Unable to write plugin file: " & path
 

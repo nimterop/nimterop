@@ -12,7 +12,7 @@ The nimterop wrapping functionality is still limited to C but is constantly expa
 
 Nimterop has seen some adoption within the community and the simplicity and success of this approach justifies additional investment of time and effort. Regardless, the goal is to make interop seamless so nimterop will focus on wrapping headers and not the outright conversion of C/C++ implementation.
 
-### Installation
+## Installation
 
 Nimterop can be installed via [Nimble](https://github.com/nim-lang/nimble):
 
@@ -28,11 +28,11 @@ nimble build
 
 This will download and install nimterop in the standard Nimble package location, typically `~/.nimble`. Once installed, it can be imported into any Nim program.
 
-### Usage
+## Usage
 
 Detailed documentation can be found [here](https://nimterop.github.io/nimterop/theindex.html). Also, check out the [wiki](https://github.com/nimterop/nimterop/wiki/Wrappers) for a list of all known wrappers that have been created using nimterop. They will provide real world examples of how to wrap libraries. Please do add your project once you are done so that others can benefit from your work.
 
-#### Build API
+### Build API
 
 Creating a wrapper has two parts, the first is to setup the C library. This includes downloading it or finding it if already installed, and building it if applicable. The `getHeader()` high-level API provides all of this functionality as a convenience. Following is an example of using the high-level `getHeader()` API to perform all building and linking automatically:
 
@@ -103,7 +103,7 @@ The `-d:xxxYYY` Nim define flags have already been described above and can be sp
 
 If more fine-tuned control is desired over the build process, it is possible to manually control all steps that `getHeader()` performs by directly using the API provided by [build](https://nimterop.github.io/nimterop/build.html). Note also that there is no requirement to use these APIs to setup the library. Any other established mechanisms can be used to do so any limitations imposed by Nimterop are unintentional and feedback is most welcome.
 
-#### Wrapper API
+### Wrapper API
 
 Once the C library is setup, the next step is to create wrappers that inform Nim of all the types and functions that are available. Following is a simple example covering the API:
 
@@ -152,7 +152,7 @@ __Compiling source__
 
 The job of building and compiling the underlying C library is best left to the build mechanism selected by the library author so using `getHeader()` is recommended. For simpler projects with a few `.c` files though, `cCompile()` should be more than enough. It is not recommended for larger projects which heavily rely on functionality offered by build tools. Recreating reliable logic in Nim can be tedious and one can expect minimal support from that author if their tested build mechanism is not used.
 
-#### Command line API
+### Command line API
 
 The `toast` binary can also be used directly on the CLI, similar to `c2nim`. The `cPlugin()` interface
 
@@ -190,7 +190,7 @@ Options:
   -O=, --symOverride=  strings   {}       skip generating specified symbols
 ```
 
-### Why nimterop
+## Why nimterop
 
 Nim has one of the best FFI you can find - importing C/C++ is supported out of the box. All you need to provide is type and proc definitions for Nim to interop with C/C++ binaries. Generation of these wrappers is easy for simple libraries but can quickly get out of hand. [c2nim](https://github.com/nim-lang/c2nim) greatly helps here by parsing and converting C/C++ into Nim but is limited due to the complex and constantly evolving C/C++ grammar. [nimgen](https://github.com/genotrance/nimgen) mainly focused on automating the wrapping process with `c2nim` and filled some holes but is again limited to `c2nim` capabilities.
 
@@ -212,10 +212,10 @@ The con of this approach of delegating to the preprocessor is that the Nim wrapp
 
 This is part of the reason why Nimterop provides a wrapper API so that the generation of wrappers is Nim code that can be rendered as part of the build process on the target platform. It helps to think of Nimterop as a build time tool like `cmake` that renders artifacts on the target rather than a tool whose generated artifacts should be checked into source control. Regardless, both the wrapper API and the `toast` command line still allow saving the wrapper output to a file to be stored in source control since it might work well enough for many projects.
 
-__Credits__
+## Credits
 
 Nimterop depends on [tree-sitter](http://tree-sitter.github.io/tree-sitter/) and all licensing terms of [tree-sitter](https://github.com/tree-sitter/tree-sitter/blob/master/LICENSE) apply to the usage of this package. The tree-sitter functionality is pulled and wrapped using nimterop itself.
 
-__Feedback__
+## Feedback
 
 Nimterop is a work in progress and any feedback or suggestions are welcome. It is hosted on [GitHub](https://github.com/nimterop/nimterop) with an MIT license so issues, forks and PRs are most appreciated.
