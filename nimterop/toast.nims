@@ -1,3 +1,5 @@
+import os
+
 # Workaround for C++ scanner.cc causing link error with other C obj files
 when defined(MacOSX):
   switch("clang.linkerexe", "g++")
@@ -18,3 +20,6 @@ switch("path", "$nim")
 # Case objects
 when not defined(danger):
   switch("define", "nimOldCaseObjects")
+
+# Prevent outdir override
+switch("out", currentSourcePath.parentDir() / "toast".addFileExt(ExeExt))

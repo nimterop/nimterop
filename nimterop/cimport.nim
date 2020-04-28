@@ -100,6 +100,8 @@ proc getToastError(output: string): string =
   # Filter out preprocessor errors
   for line in output.splitLines():
     if "fatal error:" in line.toLowerAscii:
+      if result.len == 0:
+        result = "\n\nFailed in preprocessing, check if `cIncludeDir()` is needed or compiler `mode` is correct (c/cpp)"
       result &= "\n\nERROR:$1\n" % line.split("fatal error:")[1]
 
   # Toast error
@@ -135,7 +137,7 @@ proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = ""
   let toastExe = toastExePath()
   doAssert fileExists(toastExe), "toast not compiled: " & toastExe.sanitizePath &
     " make sure 'nimble build' or 'nimble install' built it"
-  cmd &= &"{toastExe} --preprocess"
+  cmd &= &"{toastExe} --preprocess -m:{mode}"
 
   if recurse:
     cmd.add " --recurse"
@@ -679,7 +681,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
   echo "# Importing " & fullpath & " with c2nim"
 
   let
-    output = getToast(@[fullpath], recurse, dynlib, noNimout = true)
+    output = getToast(@[fullpath], recurse, dynlib, mode, noNimout = true)
     hash = output.hash().abs()
     hpath = getProjectCacheDir("c2nimCache", forceClean = false) / "nimterop_" & $hash & ".h"
     npath = hpath[0 .. hpath.rfind('.')] & "nim"

@@ -733,7 +733,7 @@ proc loadPlugin*(gState: State, sourcePath: string) =
         else: getNimConfigFlags(getCurrentDir())
 
       # Always set output to same directory as source, prevents override
-      outflags = &"--out:\"{pdll.extractFilename()}\" --outdir:\"{pdll.parentDir()}\""
+      outflags = &"--out:\"{pdll}\""
 
       # Compile plugin as library with `markAndSweep` GC
       cmd = &"{gState.nim.sanitizePath} c --app:lib --gc:markAndSweep {flags} {outflags} {sourcePath.sanitizePath}"

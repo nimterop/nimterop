@@ -7,7 +7,6 @@ license     = "MIT"
 
 bin = @["nimterop/toast"]
 installDirs = @["nimterop"]
-installFiles = @["config.nims"]
 
 # Dependencies
 requires "nim >= 0.20.2", "regex >= 0.14.1", "cligen >= 0.9.45"
