@@ -26,4 +26,4 @@ when isMainModule:
 
   echo outp
   writeFile(outf, outd & outp)
-  quit(ret)
+  quit(ret mod 255)
