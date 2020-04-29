@@ -7,7 +7,6 @@ static:
   # the VM does not support it
   when (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
     cSkipSymbol @["CASTEXPR"]
-  cDebug()
 
 const
   path = currentSourcePath.parentDir() / "include" / "tast2.h"

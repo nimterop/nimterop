@@ -19,7 +19,6 @@ static:
     cSkipSymbol @["math_errhandling", "FP_ILOGB0", "FP_ILOGBNAN"]
   else:
     cSkipSymbol @["math_errhandling"]
-  cDebug()
   cDisableCaching()
   cAddStdDir()
 

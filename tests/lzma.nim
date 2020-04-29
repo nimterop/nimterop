@@ -7,7 +7,6 @@ const
   flags = "--prefix=___,__,_ --suffix=__,_"
 
 static:
-  cDebug()
   cSkipSymbol(@[
     "PRIX8", "PRIX16", "PRIX32",
     "PRIXLEAST8", "PRIXLEAST16", "PRIXLEAST32",

@@ -5,9 +5,6 @@ import nimterop/[build, cimport]
 const
   baseDir = getProjectCacheDir("nimterop" / "tests" / "zlib")
 
-static:
-  cDebug()
-
 proc zlibPreBuild(outdir, path: string) =
   let
     mf = outdir / "Makefile"

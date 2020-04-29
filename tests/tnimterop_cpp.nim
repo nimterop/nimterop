@@ -3,7 +3,6 @@ import nimterop/cimport
 import nimterop/paths
 
 static:
-  cDebug()
   cDisableCaching()
   cAddSearchDir testsIncludeDir()
 

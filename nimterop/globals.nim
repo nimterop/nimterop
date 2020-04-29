@@ -106,7 +106,7 @@ type
     nodeBranch*: seq[string]
 
   Feature* = enum
-    ast2
+    ast1, ast2
 
 var
   gStateCT {.compiletime, used.} = new(State)
@@ -123,7 +123,7 @@ when not declared(CIMPORT):
   # Redirect output to file when required
   template gecho*(args: string) =
     if gState.outputHandle.isNil:
-      echo args
+      stdout.writeLine(args)
     else:
       gState.outputHandle.writeLine(args)
 

@@ -21,7 +21,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
     elif gState.pnim:
       if Feature.ast2 in gState.feature:
         ast2.parseNim(gState, path, root)
-      else:
+      elif Feature.ast1 in gState.feature:
         ast.parseNim(gState, path, root, astTable)
     elif gState.preprocess:
       gecho gState.code
@@ -33,7 +33,7 @@ proc main(
     debug = false,
     defines: seq[string] = @[],
     dynlib: string = "",
-    feature: seq[Feature] = @[],
+    feature: seq[Feature] = @[Feature.ast1],
     includeHeader = false,
     includeDirs: seq[string] = @[],
     mode = "",
@@ -118,13 +118,13 @@ proc main(
   # Process grammar into AST
   let
     astTable =
-      if Feature.ast2 notin gState.feature:
+      if Feature.ast1 in gState.feature:
         parseGrammar()
       else:
         nil
 
   if pgrammar:
-    if Feature.ast2 notin gState.feature:
+    if Feature.ast1 in gState.feature:
       # Print AST of grammar
       gState.printGrammar(astTable)
   elif source.nBl:
@@ -137,8 +137,10 @@ proc main(
     if gState.pnim:
       if Feature.ast2 in gState.feature:
         ast2.printNim(gState)
-      else:
+      elif Feature.ast1 in gState.feature:
         ast.printNim(gState)
+        gecho """{.hint: "The legacy wrapper generation algorithm is deprecated and will be removed in the next release of Nimterop.".}"""
+        gecho """{.hint: "Refer to CHANGES.md for details on migrating to the new backend.".}"""
 
   # Close outputFile
   if outputFile.len != 0:
