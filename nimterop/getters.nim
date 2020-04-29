@@ -1,5 +1,4 @@
 import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
-import algorithm
 
 import regex
 
@@ -572,30 +571,30 @@ proc getPreprocessor*(gState: State, fullpath: string): string =
 
   # Include content only from file
   for line in execAction(cmd).output.splitLines():
-    if line.strip() != "":
-      if line.len > 1 and line[0 .. 1] == "# ":
-        start = false
+    # We want to keep blank lines here for comment processing
+    if line.len > 1 and line[0 .. 1] == "# ":
+      start = false
+      let
+        saniLine = line.sanitizePath(noQuote = true)
+      if sfile in saniLine:
+        start = true
+      elif not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
+        start = true
+      elif gState.recurse:
         let
-          saniLine = line.sanitizePath(noQuote = true)
-        if sfile in saniLine:
+          pDir = sfile.expandFilename().parentDir().sanitizePath(noQuote = true)
+        if pDir.Bl or pDir in saniLine:
           start = true
-        elif not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
-          start = true
-        elif gState.recurse:
-          let
-            pDir = sfile.expandFilename().parentDir().sanitizePath(noQuote = true)
-          if pDir.Bl or pDir in saniLine:
-            start = true
-          else:
-            for inc in gState.includeDirs:
-              if inc.absolutePath().sanitizePath(noQuote = true) in saniLine:
-                start = true
-                break
-      else:
-        if start:
-          if "#undef" in line:
-            continue
-          rdata.add line
+        else:
+          for inc in gState.includeDirs:
+            if inc.absolutePath().sanitizePath(noQuote = true) in saniLine:
+              start = true
+              break
+    else:
+      if start:
+        if "#undef" in line:
+          continue
+        rdata.add line
   return rdata.join("\n")
 
 converter toString*(kind: Kind): string =
@@ -644,32 +643,85 @@ proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
       result &= "\n  " & gState.getNodeVal(commentNode).
                           replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "").replace("\n", "\n  ").strip()
 
-proc getPrevCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
-  ## Here we want to go until the node we get is not a comment
-  ## for cases with multiple ``//`` comments instead of one ``/* */``
-  ## section
+proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
+  ## Get a set of comment nodes in order of priority. Will search up to ``maxSearch``
+  ## nodes before and after the current node
+  ##
+  ## Priority is (closest line number) > comment before > comment after.
+  ## This priority might need to be changed based on the project, but
+  ## for now it is good enough
+
+  # Skip this if we don't want comments
   if gState.nocomments:
     return
 
-  var sibling = node.tsNodePrevNamedSibling()
-  var i = 0
+  let (line, _) = gState.getLineCol(node)
 
-  # Search for the starting comment up to maxSearch nodes away
-  while not sibling.isNil and i < maxSearch:
-    # Once a comment is found, find all of the comments right next to
-    # it so that we can get multiple // style comments
-    while not sibling.isNil and sibling.getName() == "comment":
-      result.add(sibling)
-      sibling = sibling.tsNodePrevNamedSibling()
+  # Keep track of both directions from a node
+  var
+    prevSibling = node.tsNodePrevNamedSibling()
+    nextSibling = node.tsNodeNextNamedSibling()
+    nilNode: TSNode
 
-    if sibling.isNil:
+  var
+    i = 0
+    prevSiblingDistance, nextSiblingDistance: int
+    lowestDistance: int
+    commentsFound = false
+
+  while not commentsFound and i < maxSearch:
+
+    # Distance from the current node will tell us approximately if the
+    # comment belongs to the node. The closer it is in terms of line
+    # numbers, the more we can be sure it's the comment we want
+    if not prevSibling.isNil:
+      prevSiblingDistance = abs(gState.getLineCol(prevSibling)[0] - line)
+    if not nextSibling.isNil:
+      nextSiblingDistance = abs(gState.getLineCol(nextSibling)[0] - line)
+
+    lowestDistance = min(prevSiblingDistance, nextSiblingDistance)
+
+    if prevSiblingDistance > maxSearch:
+      # If the line is out of range, skip searching
+      prevSibling = nilNode # Can't do `= nil`
+
+    if nextSiblingDistance > maxSearch:
+      # If the line is out of range, skip searching
+      prevSibling = nilNode
+
+    while (
+      not prevSibling.isNil and
+      prevSibling.getName() == "comment" and
+      prevSiblingDistance == lowestDistance
+    ):
+      # Put the previous nodes in reverse order so the comments
+      # make logical sense
+      result.insert(prevSibling, 0)
+      prevSibling = prevSibling.tsNodePrevNamedSibling()
+      commentsFound = true
+
+    if commentsFound:
       break
 
-    sibling = sibling.tsNodePrevNamedSibling()
-    i += 1
+    while (
+      not nextSibling.isNil and
+      nextSibling.getName() == "comment" and
+      nextSiblingDistance == lowestDistance
+    ):
+      result.add(nextSibling)
+      nextSibling = nextSibling.tsNodeNextNamedSibling()
+      commentsFound = true
 
-  # reverse the comments because we got them in reverse order
-  result.reverse
+    if commentsFound:
+      break
+
+    # Go to next sibling pair
+    if not prevSibling.isNil:
+      prevSibling = prevSibling.tsNodePrevNamedSibling()
+    if not nextSibling.isNil:
+      nextSibling = nextSibling.tsNodeNextNamedSibling()
+
+    i += 1
 
 proc getNextCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
   ## Searches the next nodes up to maxSearch nodes away for a comment
