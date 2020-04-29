@@ -15,7 +15,7 @@ proc zlibPreBuild(outdir, path: string) =
     # Delete default Makefile
     if mf.readFile().contains("configure first"):
       mf.rmFile()
-      when defined(windows):
+      when defined(Windows):
         # Fix static lib name on Windows
         setCmakeLibName(outdir, "zlibstatic", prefix = "lib", oname = "zlib", suffix = ".a")
 

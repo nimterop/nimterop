@@ -19,7 +19,7 @@ proc getNimRootDir(): string =
   fmt"{currentSourcePath}".parentDir.parentDir.parentDir
 
 const
-  DirSep = when defined(windows): '\\' else: '/'
+  DirSep = when defined(Windows): '\\' else: '/'
 
 proc execAction(cmd: string): string =
   var
@@ -53,7 +53,7 @@ proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath
   ##
   ## NOTE: `buildDocs()` only works correctly on Windows with Nim 1.0+ since
   ## https://github.com/nim-lang/Nim/pull/11814 is required.
-  when defined(windows) and (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
+  when defined(Windows) and (NimMajor, NimMinor, NimPatch) < (1, 0, 0):
     echo "buildDocs() unsupported on Windows for Nim < 1.0 - requires PR #11814"
   else:
     let

@@ -45,7 +45,7 @@ check TEST_STR == "hello world"
 
 when defined(osx):
   check OSDEF == 10
-elif defined(windows):
+elif defined(Windows):
   check OSDEF == 20
 else:
   check OSDEF == 30

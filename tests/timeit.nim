@@ -1,4 +1,11 @@
-import std/monotimes, os, osproc, sequtils, strformat, strutils, times
+import os, osproc, sequtils, strformat, strutils, times
+
+when (NimMajor, NimMinor) >= (1, 0):
+  import std/monotimes
+
+  template getTime(): MonoTime = getMonoTime()
+else:
+  template getTime(): float = epochTime()
 
 when isMainModule:
   var params = commandLineParams()
@@ -9,9 +16,9 @@ when isMainModule:
 
   let
 
-    start = getMonoTime()
+    start = getTime()
     ret = execCmd(cmd)
-    endt = getMonoTime()
+    endt = getTime()
 
     outf = getAppDir() / "timeit.txt"
     outd = if fileExists(outf): readFile(outf) else: ""

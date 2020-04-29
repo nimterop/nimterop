@@ -187,7 +187,7 @@ proc getNimConfigFlags(cfg: Config): string =
   for path in cfg.paths:
     result &= &"--path:\"{path}\"\n"
 
-  when defined(windows):
+  when defined(Windows):
     result = result.replace("\\", "/")
 
 proc getNimConfigFlags*(projectDir = ""): string =

@@ -70,7 +70,7 @@ cDefine("SYMBOL", "value")
 cCompile(srcDir/"file.c")
 
 # Perform OS specific tasks
-when defined(windows):
+when defined(Windows):
   # Windows specific symbols, options and files
 
   # Dynamic library to link against

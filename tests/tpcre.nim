@@ -14,7 +14,7 @@ static:
 
 const
   dynpcre =
-    when defined(windows):
+    when defined(Windows):
       when defined(cpu64):
         "pcre64.dll"
       else:

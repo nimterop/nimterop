@@ -623,7 +623,7 @@ macro cImport*(filename: static string, recurse: static bool = false, dynlib: st
   ##
   ##    const
   ##      dynpcre =
-  ##        when defined(windows):
+  ##        when defined(Windows):
   ##          when defined(cpu64):
   ##            "pcre64.dll"
   ##          else:

@@ -34,7 +34,7 @@ proc sleep*(milsecs: int) =
   ## Sleep at compile time
   let
     cmd =
-      when defined(windows):
+      when defined(Windows):
         "cmd /c timeout "
       else:
         "sleep "
@@ -110,7 +110,7 @@ proc findExe*(exe: string): string =
   ## at compile time
   var
     cmd =
-      when defined(windows):
+      when defined(Windows):
         "where " & exe
       else:
         "which " & exe
@@ -354,7 +354,7 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
   ## `first`. Without it, the shortest match is returned.
   var
     cmd =
-      when defined(windows):
+      when defined(Windows):
         "nimgrep --filenames --oneline --nocolor $1 \"$2\" $3"
       elif defined(linux):
         "find $3 $1 -regextype egrep -regex $2"
@@ -364,10 +364,10 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
     recursive = ""
 
   if recurse:
-    when defined(windows):
+    when defined(Windows):
       recursive = "--recursive"
   else:
-    when not defined(windows):
+    when not defined(Windows):
       recursive = "-maxdepth 1"
 
   var
@@ -388,7 +388,7 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
   if ret == 0:
     for line in files.splitLines():
       let f =
-        when defined(windows):
+        when defined(Windows):
           if ": " in line:
             line.split(": ", maxsplit = 1)[1]
           else:
@@ -750,7 +750,7 @@ proc getLocalPath(header, outdir: string): string =
     result = findFile(header, outdir)
 
 proc getNumProcs(): string =
-  when defined(windows):
+  when defined(Windows):
     getEnv("NUMBER_OF_PROCESSORS").strip()
   elif defined(linux):
     execAction("nproc").output.strip()
@@ -778,7 +778,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
       if findExe("cmake").len != 0:
         var
           gen = ""
-        when defined(windows):
+        when defined(Windows):
           if findExe("sh").len != 0:
             let
               uname = execAction("sh -c uname -a").output.toLowerAscii()
@@ -828,7 +828,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
   result = findFile(lname, outdir, regex = true)
 
 proc getDynlibExt(): string =
-  when defined(windows):
+  when defined(Windows):
     result = ".dll"
   elif defined(linux) or defined(FreeBSD):
     result = ".so[0-9.]*"
