@@ -2,16 +2,11 @@ import strutils
 
 proc testCall(cmd, output: string, exitCode: int, delete = true) =
   var
-    ccmd =
-      when defined(windows):
-        "cmd /c " & cmd
-      else:
-        cmd
+    ccmd = "../tests/timeit " & cmd
 
   if not delete:
     ccmd = ccmd.replace(" -f ", " ")
 
-  echo ccmd
   var
     (outp, exitC) = gorgeEx(ccmd)
   echo outp

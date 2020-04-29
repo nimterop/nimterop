@@ -9,7 +9,7 @@ withDir("wrappers"):
   for wrapper in wrappers:
     let
       name = wrapper.extractFilename()
-    exec "git clone https://github.com/" & wrapper
+    exec "../../tests/timeit git clone https://github.com/" & wrapper
     withDir(name):
-      exec "nimble install -d"
-      exec "nimble test"
+      exec "../../../tests/timeit nimble install -d"
+      exec "../../../tests/timeit nimble test"

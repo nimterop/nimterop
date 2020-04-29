@@ -1,6 +1,6 @@
 # Package
 
-version = "0.4.4"
+version = "0.5.0"
 author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
@@ -14,8 +14,7 @@ requires "nim >= 0.20.2", "regex >= 0.14.1", "cligen >= 0.9.45"
 import nimterop/docs
 
 proc execCmd(cmd: string) =
-  echo "execCmd:" & cmd
-  exec cmd
+  exec "tests/timeit " & cmd
 
 proc execTest(test: string, flags = "") =
   execCmd "nim c --hints:off -f " & flags & " -r " & test
@@ -23,6 +22,9 @@ proc execTest(test: string, flags = "") =
 
 task buildToast, "build toast":
   execCmd("nim c --hints:off nimterop/toast.nim")
+
+task buildTimeit, "build timer":
+  exec "nim c -d:danger tests/timeit"
 
 task bt, "build toast":
   execCmd("nim c --hints:off -d:danger nimterop/toast.nim")
@@ -34,6 +36,7 @@ task docs, "Generate docs":
   buildDocs(@["nimterop/all.nim"], "build/htmldocs")
 
 task test, "Test":
+  buildTimeitTask()
   buildToastTask()
 
   execTest "tests/tast2.nim"
@@ -66,8 +69,10 @@ task test, "Test":
 
   # getHeader tests
   withDir("tests"):
-    execCmd("nim e getheader.nims")
+    exec "nim e getheader.nims"
     if not existsEnv("APPVEYOR"):
-      execCmd("nim e wrappers.nims")
+      exec "nim e wrappers.nims"
 
   docsTask()
+
+  echo readFile("tests/timeit.txt")
