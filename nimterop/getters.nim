@@ -638,9 +638,10 @@ proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
   ## Generate a comment from a set of comment nodes. Comment is guaranteed
   ## to be able to be rendered using nim doc
   if commentNodes.len > 0:
+    const escapeRstReg = re"""(["!#$%&'()*+,-./:;<=>?@[\]^_`{|}~])"""
     result = "::"
     for commentNode in commentNodes:
-      result &= "\n  " & gState.getNodeVal(commentNode).
+      result &= "\n  " & gState.getNodeVal(commentNode).replace(escapeRstReg, r"\$1").
                           replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "").replace("\n", "\n  ").strip()
 
 proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
