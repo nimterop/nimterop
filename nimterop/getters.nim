@@ -670,7 +670,6 @@ proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
     commentsFound = false
 
   while not commentsFound and i < maxSearch:
-
     # Distance from the current node will tell us approximately if the
     # comment belongs to the node. The closer it is in terms of line
     # numbers, the more we can be sure it's the comment we want
@@ -689,6 +688,9 @@ proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
       # If the line is out of range, skip searching
       prevSibling = nilNode
 
+    # Search above the current line for comments. When one is found
+    # keep going to retrieve successive comments for cases with multiple
+    # `//` style comments
     while (
       not prevSibling.isNil and
       prevSibling.getName() == "comment" and
@@ -700,9 +702,13 @@ proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
       prevSibling = prevSibling.tsNodePrevNamedSibling()
       commentsFound = true
 
+    # If we've already found comments above the current line, quit
     if commentsFound:
       break
 
+    # Search below or at the current line for comments. When one is found
+    # keep going to retrieve successive comments for cases with multiple
+    # `//` style comments
     while (
       not nextSibling.isNil and
       nextSibling.getName() == "comment" and
@@ -721,24 +727,6 @@ proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
     if not nextSibling.isNil:
       nextSibling = nextSibling.tsNodeNextNamedSibling()
 
-    i += 1
-
-proc getNextCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
-  ## Searches the next nodes up to maxSearch nodes away for a comment
-
-  if gState.nocomments:
-    return
-  # We only want to search for the next comment node (ie: inline)
-  # but we want to keep the same interface as getPrevCommentNodes,
-  # so we keep a returned seq but only store one element
-  var sibling = node.tsNodeNextNamedSibling()
-  var i = 0
-  # Search for the comment up to maxSearch nodes away
-  while not sibling.isNil and i < maxSearch:
-    if sibling.getName() == "comment":
-      result.add sibling
-      break
-    sibling = sibling.tsNodeNextNamedSibling()
     i += 1
 
 proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
