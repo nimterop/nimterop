@@ -61,8 +61,8 @@ task test, "Test":
   execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
 
   when defined(Linux):
-    execTest "tests/rsa.nim", runDocs = false
-    execTest "tests/rsa.nim", "-d:FLAGS=\"-H\"", runDocs = false
+    execTest "tests/rsa.nim"
+    execTest "tests/rsa.nim", "-d:FLAGS=\"-H\""
 
   # Platform specific tests
   when defined(Windows):
