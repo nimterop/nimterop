@@ -23,3 +23,6 @@ when not defined(danger):
 
 # Prevent outdir override
 switch("out", currentSourcePath.parentDir() / "toast".addFileExt(ExeExt))
+
+# Define TOAST for globals.nim
+switch("define", "TOAST")

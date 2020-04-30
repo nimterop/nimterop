@@ -4,6 +4,18 @@ import os except findExe, sleep
 
 import regex
 
+# build specific debug since we cannot import globals (yet)
+var
+  gDebug* = false
+  gDebugCT* {.compileTime.} = false
+
+proc echoDebug(str: string) =
+  let str = "\n# " & str.strip().replace("\n", "\n# ")
+  when nimvm:
+    if gDebugCT: echo str
+  else:
+    if gDebug: echo str
+
 proc fixCmd(cmd: string): string =
   when defined(Windows):
     # Replace 'cd d:\abc' with 'd: && cd d:\abc`
@@ -461,7 +473,7 @@ proc configure*(path, check: string, flags = "") =
       if fileExists(path / i):
         echo "#   Running autogen.sh"
 
-        echo execAction(
+        echoDebug execAction(
           &"cd {(path / i).parentDir().sanitizePath} && bash ./autogen.sh").output
 
         break
@@ -471,7 +483,7 @@ proc configure*(path, check: string, flags = "") =
       if fileExists(path / i):
         echo "#   Running autoreconf"
 
-        echo execAction(&"cd {path.sanitizePath} && autoreconf -fi").output
+        echoDebug execAction(&"cd {path.sanitizePath} && autoreconf -fi").output
 
         break
 
@@ -483,7 +495,7 @@ proc configure*(path, check: string, flags = "") =
     if flags.len != 0:
       cmd &= &" {flags}"
 
-    echo execAction(cmd).output
+    echoDebug execAction(cmd).output
 
   doAssert (path / check).fileExists(), "# Configure failed"
 
@@ -577,10 +589,10 @@ proc cmake*(path, check, flags: string) =
 
   mkDir(path)
 
-  var
+  let
     cmd = &"cd {path.sanitizePath} && cmake {flags}"
 
-  echo execAction(cmd).output
+  echoDebug execAction(cmd).output
 
   doAssert (path / check).fileExists(), "# cmake failed"
 
@@ -616,7 +628,7 @@ proc make*(path, check: string, flags = "", regex = false) =
   if flags.len != 0:
     cmd &= &" {flags}"
 
-  echo execAction(cmd).output
+  echoDebug execAction(cmd).output
 
   doAssert findFile(check, path, regex = regex).len != 0, "# make failed"
 

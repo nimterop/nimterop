@@ -17,11 +17,9 @@ All `{.compileTime.}` procs must be used in a compile time context, e.g. using:
 
 import hashes, macros, os, strformat, strutils
 
-const CIMPORT {.used.} = 1
+import regex
 
-include "."/globals
-
-import "."/[build, paths, types]
+import "."/[build, globals, paths, types]
 export types
 
 proc interpPath(dir: string): string=
@@ -393,6 +391,7 @@ proc cSearchPath*(path: string): string {.compileTime.}=
 proc cDebug*() {.compileTime.} =
   ## Enable debug messages and display the generated Nim code
   gStateCT.debug = true
+  build.gDebugCT = true
 
 proc cDisableCaching*() {.compileTime.} =
   ## Disable caching of generated Nim code - useful during wrapper development

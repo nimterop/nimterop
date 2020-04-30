@@ -2,7 +2,7 @@ import os, osproc, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, ast2, globals, getters, grammar, build, tshelp]
+import "."/[ast, ast2, build, globals, getters, grammar, tshelp]
 
 proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), &"Invalid path {path}"
@@ -80,6 +80,9 @@ proc main(
   # Fail if both includeHeader and dynlib
   doAssert not (includeHeader == true and dynlib.nBl),
     "`includeHeader` and `dynlib` cannot be used simultaneously"
+
+  # Set gDebug in build.nim
+  build.gDebug = debug
 
   # Split some arguments with ,
   gState.symOverride = gState.symOverride.getSplitComma()

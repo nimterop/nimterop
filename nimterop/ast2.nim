@@ -6,7 +6,7 @@ import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
 import "."/treesitter/api
 
-import "."/[globals, getters, exprparser, comphelp, tshelp]
+import "."/[comphelp, exprparser, globals, getters, tshelp]
 
 proc getPtrType*(str: string): string =
   result = case str:

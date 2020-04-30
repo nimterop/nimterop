@@ -16,4 +16,3 @@ proc toastExePath*(): string =
 
 proc testsIncludeDir*(): string =
   nimteropRoot() / "tests" / "include"
-

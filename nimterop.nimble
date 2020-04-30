@@ -24,7 +24,7 @@ task buildToast, "build toast":
   execCmd("nim c --hints:off nimterop/toast.nim")
 
 task buildTimeit, "build timer":
-  exec "nim c -d:danger tests/timeit"
+  exec "nim c --hints:off -d:danger tests/timeit"
 
 task bt, "build toast":
   execCmd("nim c --hints:off -d:danger nimterop/toast.nim")

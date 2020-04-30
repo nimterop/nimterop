@@ -7,7 +7,6 @@ const
 
 static:
   gitPull("https://github.com/jarikomppa/soloud", baseDir, "include/*\nsrc/*\n", checkout = "RELEASE_20200207")
-  cDebug()
   cDisableCaching()
 
 cOverride:

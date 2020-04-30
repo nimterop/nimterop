@@ -4,13 +4,13 @@ import regex
 
 import "."/plugin
 
-when not declared(CIMPORT):
+when defined(TOAST):
   import compiler/[ast, idents, modulegraphs, options]
 
   import "."/treesitter/api
 
 const
-  gAtoms {.used.} = @[
+  gAtoms* {.used.} = @[
     "field_identifier",
     "identifier",
     "number_literal",
@@ -21,7 +21,7 @@ const
     "type_identifier"
   ].toHashSet()
 
-  gExpressions {.used.} = @[
+  gExpressions* {.used.} = @[
     "parenthesized_expression",
     "bitwise_expression",
     "shift_expression",
@@ -29,32 +29,32 @@ const
     "escape_sequence"
   ].toHashSet()
 
-  gEnumVals {.used.} = @[
+  gEnumVals* {.used.} = @[
     "identifier",
     "number_literal",
     "char_literal"
   ].concat(toSeq(gExpressions.items))
 
 type
-  Kind = enum
+  Kind* = enum
     exactlyOne
     oneOrMore     # +
     zeroOrMore    # *
     zeroOrOne     # ?
     orWithNext    # !
 
-  Ast = object
+  Ast* = object
     name*: string
     kind*: Kind
     recursive*: bool
     children*: seq[ref Ast]
-    when not declared(CIMPORT):
+    when defined(TOAST):
       tonim*: proc (ast: ref Ast, node: TSNode, gState: State)
     regex*: Regex
 
-  AstTable {.used.} = TableRef[string, seq[ref Ast]]
+  AstTable* {.used.} = TableRef[string, seq[ref Ast]]
 
-  State = ref object
+  State* = ref object
     compile*, defines*, headers*, includeDirs*, searchDirs*, prefix*, suffix*, symOverride*: seq[string]
 
     debug*, includeHeader*, nocache*, nocomments*, past*, preprocess*, pnim*, recurse*: bool
@@ -87,7 +87,7 @@ type
     commentStr*, debugStr*, skipStr*: string
 
     # Nim compiler objects
-    when not declared(CIMPORT):
+    when defined(TOAST):
       constSection*, enumSection*, pragmaSection*, procSection*, typeSection*, varSection*: PNode
       identCache*: IdentCache
       config*: ConfigRef
@@ -109,24 +109,21 @@ type
     ast1, ast2
 
 var
-  gStateCT {.compiletime, used.} = new(State)
+  gStateCT* {.compiletime, used.} = new(State)
 
-template nBl(s: typed): untyped {.used.} =
+template nBl*(s: typed): untyped {.used.} =
   (s.len != 0)
 
-template Bl(s: typed): untyped {.used.} =
+template Bl*(s: typed): untyped {.used.} =
   (s.len == 0)
 
-when not declared(CIMPORT):
-  export gAtoms, gExpressions, gEnumVals, Kind, Ast, AstTable, State, nBl, Bl
+# Redirect output to file when required
+template gecho*(args: string) =
+  if gState.outputHandle.isNil:
+    stdout.writeLine(args)
+  else:
+    gState.outputHandle.writeLine(args)
 
-  # Redirect output to file when required
-  template gecho*(args: string) =
-    if gState.outputHandle.isNil:
-      stdout.writeLine(args)
-    else:
-      gState.outputHandle.writeLine(args)
-
-  template decho*(args: varargs[string, `$`]): untyped =
-    if gState.debug:
-      gecho join(args, "").getCommented()
+template decho*(args: varargs[string, `$`]): untyped =
+  if gState.debug:
+    gecho join(args, "").getCommented()
