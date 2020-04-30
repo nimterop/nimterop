@@ -1,4 +1,6 @@
 import std/unittest
+import os
+import macros
 import nimterop/cimport
 import nimterop/paths
 
@@ -10,7 +12,7 @@ cDefine("FORCE")
 cIncludeDir testsIncludeDir()
 cCompile cSearchPath("test.c")
 
-cPluginPath("tests/tnimterop_c_plugin.nim")
+cPluginPath(getProjectPath() / "tnimterop_c_plugin.nim")
 
 cOverride:
   type

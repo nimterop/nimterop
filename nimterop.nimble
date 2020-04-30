@@ -12,13 +12,20 @@ installDirs = @["nimterop"]
 requires "nim >= 0.20.2", "regex >= 0.14.1", "cligen >= 0.9.45"
 
 import nimterop/docs
+import os
 
 proc execCmd(cmd: string) =
   exec "tests/timeit " & cmd
 
-proc execTest(test: string, flags = "") =
+proc execTest(test: string, flags = "", runDocs = true) =
   execCmd "nim c --hints:off -f " & flags & " -r " & test
   execCmd "nim cpp --hints:off " & flags & " -r " & test
+
+  if runDocs:
+    let docPath = "build/html_" & test.extractFileName.changeFileExt("") & "_docs"
+    rmDir docPath
+    mkDir docPath
+    buildDocs(@[test], docPath, compilerArgs = flags)
 
 task buildToast, "build toast":
   execCmd("nim c --hints:off nimterop/toast.nim")
@@ -54,8 +61,8 @@ task test, "Test":
   execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
 
   when defined(Linux):
-    execTest "tests/rsa.nim"
-    execTest "tests/rsa.nim", "-d:FLAGS=\"-H\""
+    execTest "tests/rsa.nim", runDocs = false
+    execTest "tests/rsa.nim", "-d:FLAGS=\"-H\"", runDocs = false
 
   # Platform specific tests
   when defined(Windows):
