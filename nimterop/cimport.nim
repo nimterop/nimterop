@@ -434,7 +434,7 @@ proc cAddSearchDir*(dir: string) {.compileTime.} =
   ## Add directory `dir` to the search path used in calls to
   ## `cSearchPath() <cimport.html#cSearchPath,string>`_.
   runnableExamples:
-    import paths, os
+    import nimterop/paths, os
     static:
       cAddSearchDir testsIncludeDir()
     doAssert cSearchPath("test.h").existsFile
