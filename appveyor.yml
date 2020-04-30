@@ -83,7 +83,7 @@ for:
   - /home/appveyor/binaries
 
 build_script:
-  - nimble --verbose install -y
+  - nimble --verbose develop -y
 
 test_script:
   - nimble --verbose test
