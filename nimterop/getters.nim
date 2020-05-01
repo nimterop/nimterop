@@ -565,7 +565,7 @@ proc getPreprocessor*(gState: State, fullpath: string): string =
   else:
     cmd &= "-D__attribute__(x)= "
 
-  cmd &= "-D__restrict= "
+  cmd &= "-D__restrict= -D__extension__= "
 
   cmd &= &"{fullpath.sanitizePath}"
 
