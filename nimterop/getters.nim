@@ -387,6 +387,16 @@ proc getLineCol*(code: var string, node: TSNode): tuple[line, col: int] =
 proc getLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
   getLineCol(gState.code, node)
 
+proc getEndLineCol*(code: var string, node: TSNode): tuple[line, col: int] =
+  # Get line number and column info for node
+  let
+    point = node.tsNodeEndPoint()
+  result.line = point.row.int + 1
+  result.col = point.column.int + 1
+
+proc getEndLineCol*(gState: State, node: TSNode): tuple[line, col: int] =
+  getEndLineCol(gState.code, node)
+
 proc getTSNodeNamedChildCountSansComments*(node: TSNode): int =
   for i in 0 ..< node.len:
     if node.getName() != "comment":
@@ -638,11 +648,12 @@ proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
   ## Generate a comment from a set of comment nodes. Comment is guaranteed
   ## to be able to be rendered using nim doc
   if commentNodes.len > 0:
-    const escapeRstReg = re"""(["!#$%&'()*+,-./:;<=>?@[\]^_`{|}~])"""
     result = "::"
     for commentNode in commentNodes:
-      result &= "\n  " & gState.getNodeVal(commentNode).replace(escapeRstReg, r"\$1").
-                          replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "").replace("\n", "\n  ").strip()
+      result &= "\n  " & gState.getNodeVal(commentNode).strip()
+
+    result = result.replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "")
+    result = result.multiReplace([("\n", "\n  "), ("`", "")]).strip()
 
 proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
   ## Get a set of comment nodes in order of priority. Will search up to ``maxSearch``
@@ -666,7 +677,7 @@ proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
 
   var
     i = 0
-    prevSiblingDistance, nextSiblingDistance: int
+    prevSiblingDistance, nextSiblingDistance: int = int.high
     lowestDistance: int
     commentsFound = false
 
@@ -675,9 +686,15 @@ proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
     # comment belongs to the node. The closer it is in terms of line
     # numbers, the more we can be sure it's the comment we want
     if not prevSibling.isNil:
-      prevSiblingDistance = abs(gState.getLineCol(prevSibling)[0] - line)
+      if prevSibling.getName() == "comment":
+        prevSiblingDistance = abs(gState.getEndLineCol(prevSibling)[0] - line)
+      else:
+        prevSiblingDistance = int.high
     if not nextSibling.isNil:
-      nextSiblingDistance = abs(gState.getLineCol(nextSibling)[0] - line)
+      if nextSibling.getName() == "comment":
+        nextSiblingDistance = abs(gState.getLineCol(nextSibling)[0] - line)
+      else:
+        nextSiblingDistance = int.high
 
     lowestDistance = min(prevSiblingDistance, nextSiblingDistance)
 
@@ -687,7 +704,7 @@ proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
 
     if nextSiblingDistance > maxSearch:
       # If the line is out of range, skip searching
-      prevSibling = nilNode
+      nextSibling = nilNode
 
     # Search above the current line for comments. When one is found
     # keep going to retrieve successive comments for cases with multiple
