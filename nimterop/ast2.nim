@@ -42,8 +42,6 @@ proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimS
   else:
     gecho &"\n# $1'{origname}' skipped" % skind
     gState.skippedSyms.incl origname
-    if gState.debug:
-      gState.skipStr &= &"\n{gState.getNodeVal(node)}"
 
 proc addOverrideFinal(gState: State, kind: NimSymKind) =
   # Add all unused cOverride symbols for `kind` to AST
@@ -285,7 +283,7 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
   if name.Bl:
     # Name skipped or overridden since blank
     result = gState.getOverrideOrSkip(node, origname, kind)
-  elif gState.addNewIdentifer(name):
+  elif origname notin gTypeMap and gState.addNewIdentifer(name):
     if kind == nskType:
       # type name* =
       #

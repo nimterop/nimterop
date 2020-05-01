@@ -57,6 +57,30 @@ const gTypeMap* = {
   "u_int": "cuint",
   "size_t": "uint",
 
+  "int8_t": "int8",
+  "int16_t": "int16",
+  "int32_t": "int32",
+  "int64_t": "int64",
+
+  "intptr_t": "ptr int",
+
+  "Int8": "int8",
+  "Int16": "int16",
+  "Int32": "int32",
+  "Int64": "int64",
+
+  "uint8_t": "uint8",
+  "uint16_t": "uint16",
+  "uint32_t": "uint32",
+  "uint64_t": "uint64",
+
+  "uintptr_t": "ptr uint",
+
+  "Uint8": "uint8",
+  "Uint16": "uint16",
+  "Uint32": "uint32",
+  "Uint64": "uint64",
+
   # long
   "long": "clong",
   "long int": "clong",
@@ -87,10 +111,7 @@ proc getType*(str: string): string =
   if str == "void":
     return "object"
 
-  result = str.strip(chars={'_'}).
-    replace(re"\s+", " ").
-    replace(re"^([u]?int[\d]+)_t$", "$1").
-    replace(re"^([u]?int)ptr_t$", "ptr $1")
+  result = str.strip(chars={'_'}).replace(re"\s+", " ")
 
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
