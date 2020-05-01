@@ -133,13 +133,38 @@ proc getFloatNode(number, suffix: string): PNode {.inline.} =
 
 proc getIntNode(number, suffix: string): PNode {.inline.} =
   ## Get a Nim int node from a C integer expression + suffix
+  var
+    val: BiggestInt
+    flags: TNodeFlags
+  # I realize these regex are wasteful on performance, but
+  # couldn't come up with a better idea.
+  if number.contains(re"0[xX]"):
+    val = parseHexInt(number)
+    flags = {nfBase16}
+  elif number.contains(re"0[bB]"):
+    val = parseBinInt(number)
+    flags = {nfBase2}
+  elif number.contains(re"0[oO]"):
+    val = parseOctInt(number)
+    flags = {nfBase8}
+  else:
+    val = parseInt(number)
+
   case suffix
   of "u", "U":
     result = newNode(nkUintLit)
   of "l", "L":
-    result = newNode(nkInt32Lit)
+    # If the value doesn't fit, adjust
+    if val > int32.high or val < int32.low:
+      result = newNode(nkInt64Lit)
+    else:
+      result = newNode(nkInt32Lit)
   of "ul", "UL":
-    result = newNode(nkUint32Lit)
+    # If the value doesn't fit, adjust
+    if val > uint32.high.BiggestInt:
+      result = newNode(nkUInt64Lit)
+    else:
+      result = newNode(nkUInt32Lit)
   of "ll", "LL":
     result = newNode(nkInt64Lit)
   of "ull", "ULL":
@@ -147,19 +172,8 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
   else:
     result = newNode(nkIntLit)
 
-  # I realize these regex are wasteful on performance, but
-  # couldn't come up with a better idea.
-  if number.contains(re"0[xX]"):
-    result.intVal = parseHexInt(number)
-    result.flags = {nfBase16}
-  elif number.contains(re"0[bB]"):
-    result.intVal = parseBinInt(number)
-    result.flags = {nfBase2}
-  elif number.contains(re"0[oO]"):
-    result.intVal = parseOctInt(number)
-    result.flags = {nfBase8}
-  else:
-    result.intVal = parseInt(number)
+  result.intVal = val
+  result.flags = flags
 
 proc getNumNode(number, suffix: string): PNode {.inline.} =
   ## Convert a C number to a Nim number PNode
