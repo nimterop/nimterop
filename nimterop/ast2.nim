@@ -283,7 +283,9 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
   if name.Bl:
     # Name skipped or overridden since blank
     result = gState.getOverrideOrSkip(node, origname, kind)
-  elif origname notin gTypeMap and gState.addNewIdentifer(name):
+  elif name notin gTypeMapValues and gState.addNewIdentifer(name):
+    # Add only if not an existing Nim type
+
     if kind == nskType:
       # type name* =
       #
@@ -1399,7 +1401,7 @@ proc addEnum(gState: State, node: TSNode) =
           continue
         let
           fname = gState.getIdentifier(gState.getNodeVal(en.getAtom()), nskEnumField)
-        if fname.nBl:
+        if fname.nBl and gState.addNewIdentifer(fname):
           var
             fval = ""
           if prev.Bl:

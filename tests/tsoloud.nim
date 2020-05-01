@@ -1,6 +1,8 @@
 import os, nimterop/[cimport, build]
 
 const
+  FLAGS {.strdefine.} = ""
+
   baseDir = getProjectCacheDir("nimterop" / "tests" / "soloud")
   incl = baseDir/"include"
   src = baseDir/"src"
@@ -42,7 +44,6 @@ cCompile(src/"audiosource", "cpp", exclude="ay/")
 cCompile(src/"audiosource", "c")
 cCompile(src/"filter/*.cpp")
 
-const FLAGS {.strdefine.} = ""
 cImport(incl/"soloud_c.h", flags = FLAGS)
 
 var

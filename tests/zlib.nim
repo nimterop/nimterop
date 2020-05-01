@@ -3,6 +3,8 @@ import os, strutils
 import nimterop/[build, cimport]
 
 const
+  FLAGS {.strdefine.} = ""
+
   baseDir = getProjectCacheDir("nimterop" / "tests" / "zlib")
 
 proc zlibPreBuild(outdir, path: string) =
@@ -64,8 +66,8 @@ when zlibGit or zlibDL:
     cIncludeDir(baseDir / "buildcache")
 
 when not zlibStatic:
-  cImport(zlibPath, recurse = true, dynlib = "zlibLPath")
+  cImport(zlibPath, recurse = true, dynlib = "zlibLPath", flags = FLAGS)
 else:
-  cImport(zlibPath, recurse = true)
+  cImport(zlibPath, recurse = true, flags = FLAGS)
 
 echo "zlib version = " & $zlibVersion()

@@ -30,82 +30,86 @@ yield""".split(Whitespace).toHashSet()
 
 # Types related
 
-const gTypeMap* = {
-  # char
-  "char": "cchar",
-  "signed char": "cschar",
-  "unsigned char": "cuchar",
+const
+  gTypeMap* = {
+    # char
+    "char": "cchar",
+    "signed char": "cschar",
+    "unsigned char": "cuchar",
 
-  # short
-  "short": "cshort",
-  "short int": "cshort",
-  "signed short": "cshort",
-  "signed short int": "cshort",
-  "unsigned short": "cushort",
-  "unsigned short int": "cushort",
-  "uShort": "cushort",
-  "u_short": "cushort",
+    # short
+    "short": "cshort",
+    "short int": "cshort",
+    "signed short": "cshort",
+    "signed short int": "cshort",
+    "unsigned short": "cushort",
+    "unsigned short int": "cushort",
+    "uShort": "cushort",
+    "u_short": "cushort",
 
-  # int
-  "int": "cint",
-  "signed": "cint",
-  "signed int": "cint",
-  "ssize_t": "int",
-  "unsigned": "cuint",
-  "unsigned int": "cuint",
-  "uInt": "cuint",
-  "u_int": "cuint",
-  "size_t": "uint",
+    # int
+    "int": "cint",
+    "signed": "cint",
+    "signed int": "cint",
+    "ssize_t": "int",
+    "unsigned": "cuint",
+    "unsigned int": "cuint",
+    "uInt": "cuint",
+    "u_int": "cuint",
+    "size_t": "uint",
 
-  "int8_t": "int8",
-  "int16_t": "int16",
-  "int32_t": "int32",
-  "int64_t": "int64",
+    "int8_t": "int8",
+    "int16_t": "int16",
+    "int32_t": "int32",
+    "int64_t": "int64",
 
-  "intptr_t": "ptr int",
+    "intptr_t": "ptr int",
 
-  "Int8": "int8",
-  "Int16": "int16",
-  "Int32": "int32",
-  "Int64": "int64",
+    "Int8": "int8",
+    "Int16": "int16",
+    "Int32": "int32",
+    "Int64": "int64",
 
-  "uint8_t": "uint8",
-  "uint16_t": "uint16",
-  "uint32_t": "uint32",
-  "uint64_t": "uint64",
+    "uint8_t": "uint8",
+    "uint16_t": "uint16",
+    "uint32_t": "uint32",
+    "uint64_t": "uint64",
 
-  "uintptr_t": "ptr uint",
+    "uintptr_t": "ptr uint",
 
-  "Uint8": "uint8",
-  "Uint16": "uint16",
-  "Uint32": "uint32",
-  "Uint64": "uint64",
+    "Uint8": "uint8",
+    "Uint16": "uint16",
+    "Uint32": "uint32",
+    "Uint64": "uint64",
 
-  # long
-  "long": "clong",
-  "long int": "clong",
-  "signed long": "clong",
-  "signed long int": "clong",
-  "off_t": "clong",
-  "unsigned long": "culong",
-  "unsigned long int": "culong",
-  "uLong": "culong",
-  "u_long": "culong",
+    # long
+    "long": "clong",
+    "long int": "clong",
+    "signed long": "clong",
+    "signed long int": "clong",
+    "off_t": "clong",
+    "unsigned long": "culong",
+    "unsigned long int": "culong",
+    "uLong": "culong",
+    "u_long": "culong",
 
-  # long long
-  "long long": "clonglong",
-  "long long int": "clonglong",
-  "signed long long": "clonglong",
-  "signed long long int": "clonglong",
-  "off64_t": "clonglong",
-  "unsigned long long": "culonglong",
-  "unsigned long long int": "culonglong",
+    # long long
+    "long long": "clonglong",
+    "long long int": "clonglong",
+    "signed long long": "clonglong",
+    "signed long long int": "clonglong",
+    "off64_t": "clonglong",
+    "unsigned long long": "culonglong",
+    "unsigned long long int": "culonglong",
 
-  # floating point
-  "float": "cfloat",
-  "double": "cdouble",
-  "long double": "clongdouble"
-}.toTable()
+    # floating point
+    "float": "cfloat",
+    "double": "cdouble",
+    "long double": "clongdouble"
+  }.toTable()
+
+  # Nim type names that shouldn't need to be wrapped again
+  gTypeMapValues* = toSeq(gTypeMap.values).toHashSet()
 
 proc getType*(str: string): string =
   if str == "void":

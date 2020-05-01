@@ -3,8 +3,10 @@ import os, strutils
 import nimterop/[build, cimport]
 
 const
+  FLAGS {.strdefine.} = ""
+
   baseDir = getProjectCacheDir("nimterop" / "tests" / "liblzma")
-  flags = "--prefix=___,__,_ --suffix=__,_"
+  tflags = "--prefix=___,__,_ --suffix=__,_ " & FLAGS
 
 static:
   cSkipSymbol(@[
@@ -38,8 +40,8 @@ cOverride:
     lzma_index_iter = object
 
 when not lzmaStatic:
-  cImport(lzmaPath, recurse = true, dynlib = "lzmaLPath", flags = flags)
+  cImport(lzmaPath, recurse = true, dynlib = "lzmaLPath", flags = tflags)
 else:
-  cImport(lzmaPath, recurse = true, flags = flags)
+  cImport(lzmaPath, recurse = true, flags = tflags)
 
 echo "liblzma version = " & $lzma_version_string()
