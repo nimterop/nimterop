@@ -33,6 +33,9 @@ extern "C" {
 #define EQ5 AVAL != BVAL
 #define EQ6 AVAL == BVAL
 
+// testing integer out of long int range
+#define INT_FAST16_MIN (-9223372036854775807L-1)
+
 #define SIZEOF sizeof(char)
 #define REG_STR "regular string"
 #define NOTSUPPORTEDSTR "not a " REG_STR

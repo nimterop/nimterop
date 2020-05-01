@@ -131,6 +131,8 @@ assert SIZEOF == 1
 assert COERCE == 645635670332'u64
 assert COERCE2 == 645635670332'i64
 
+assert INT_FAST16_MIN == -9223372036854775807'i64 - 1
+
 assert BINEXPR == 5
 assert BOOL == true
 assert MATHEXPR == -99
