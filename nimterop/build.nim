@@ -4,6 +4,15 @@ import os except findExe, sleep
 
 import regex
 
+type
+  MakeType* = enum
+    mtConfMake, mtCMake
+
+  BuildStatus = object
+    built: bool
+    buildPath: string
+    error: string
+
 # build specific debug since we cannot import globals (yet)
 var
   gDebug* = false
@@ -771,20 +780,7 @@ proc getNumProcs(): string =
   else:
     "1"
 
-proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): string =
-  var
-    conDeps = false
-    conDepStr = ""
-    cmakeDeps = false
-    cmakeDepStr = ""
-    lpath = findFile(lname, outdir, regex = true)
-    makeFlagsProc = &"-j {getNumProcs()} {makeFlags}"
-    made = false
-    makePath = outdir
-
-  if lpath.len != 0:
-    return lpath
-
+proc buildWithCmake(outdir, flags: string): BuildStatus =
   if not fileExists(outdir / "Makefile"):
     if fileExists(outdir / "CMakeLists.txt"):
       if findExe("cmake").len != 0:
@@ -806,36 +802,59 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string): strin
           gen = "Unix Makefiles".quoteShell
         if findExe("ccache").len != 0:
           gen &= " -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-        makePath = outdir / "buildcache"
-        cmake(makePath, "Makefile", &".. -G {gen} {cmakeFlags}")
-        cmakeDeps = true
+        result.buildPath = outdir / "buildcache"
+        cmake(result.buildPath, "Makefile", &".. -G {gen} {flags}")
+        result.built = true
       else:
-        cmakeDepStr &= "cmake executable missing"
+        result.error = "cmake capable but cmake executable missing"
+  else:
+    result.buildPath = outdir
 
-    if not cmakeDeps:
-      if findExe("bash").len != 0:
-        for file in @["configure", "configure.ac", "configure.in", "autogen.sh", "build/autogen.sh"]:
-          if fileExists(outdir / file):
-            configure(outdir, "Makefile", conFlags)
-            conDeps = true
+proc buildWithConfMake(outdir, flags: string): BuildStatus =
+  if not fileExists(outdir / "Makefile"):
+    if findExe("bash").len != 0:
+      for file in @["configure", "configure.ac", "configure.in", "autogen.sh", "build/autogen.sh"]:
+        if fileExists(outdir / file):
+          configure(outdir, "Makefile", flags)
+          result.buildPath = outdir
+          result.built = true
+          break
+    else:
+      result.error = "configure capable but bash executable missing"
+  else:
+    result.buildPath = outdir
 
-            break
-      else:
-        conDepStr &= "bash executable missing"
-
-  if fileExists(makePath / "Makefile"):
-    make(makePath, lname, makeFlagsProc, regex = true)
-    made = true
-
+proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, preferredMakeType: MakeType): string =
   var
-    error = ""
-  if not cmakeDeps and cmakeDepStr.len != 0:
-    error &= &"cmake capable but {cmakeDepStr}\n"
-  if not conDeps and conDepStr.len != 0:
-    error &= &"configure capable but {conDepStr}\n"
-  if error.len == 0:
-    error = "No build files found in " & outdir
-  doAssert cmakeDeps or conDeps or made, &"\n# Build configuration failed - {error}\n"
+    lpath = findFile(lname, outdir, regex = true)
+    makeFlagsProc = &"-j {getNumProcs()} {makeFlags}"
+    makePath = outdir
+
+  if lpath.len != 0:
+    return lpath
+
+  var buildStatus: BuildStatus
+
+  # Simply reverse order if we want configure/make vs CMake/make
+  case preferredMakeType
+  of mtCMake:
+    buildStatus = buildWithCmake(makePath, cmakeFlags)
+    if not buildStatus.built:
+      buildStatus = buildWithConfMake(makePath, conFlags)
+  of mtConfMake:
+    buildStatus = buildWithConfMake(makePath, conFlags)
+    if not buildStatus.built:
+      buildStatus = buildWithCmake(makePath, cmakeFlags)
+
+  if buildStatus.buildPath.len > 0:
+    buildStatus.built = findFile(lname, buildStatus.buildPath, regex = true).len > 0
+
+    if not buildStatus.built and fileExists(buildStatus.buildPath / "Makefile"):
+      make(buildStatus.buildPath, lname, makeFlagsProc, regex = true)
+      buildStatus.built = true
+
+  let error = if buildStatus.error.len > 0: buildStatus.error else: "No build files found in " & outdir
+  doAssert buildStatus.built, &"\n# Build configuration failed - {error}\n"
 
   result = findFile(lname, outdir, regex = true)
 
@@ -903,7 +922,7 @@ macro isDefined*(def: untyped): untyped =
 
 macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
-  altNames: static[string] = ""): untyped =
+  altNames: static[string] = "", preferredMakeType: static[MakeType] = mtCMake): untyped =
   ## Get the path to a header file for wrapping with
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
   ## `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
@@ -1056,7 +1075,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         when stdPath.len != 0 and stdLPath.len != 0:
           stdLPath
         else:
-          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`)
+          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `preferredMakeType`.MakeType)
 
       # Header path - search again in case header is generated in build
       `path`* =
