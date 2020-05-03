@@ -5,8 +5,8 @@ import os except findExe, sleep
 import regex
 
 type
-  MakeType* = enum
-    mtConfMake, mtCMake
+  BuildType* = enum
+    btAutoconf, btCmake
 
   BuildStatus = object
     built: bool
@@ -824,7 +824,7 @@ proc buildWithConfMake(outdir, flags: string): BuildStatus =
   else:
     result.buildPath = outdir
 
-proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, preferredMakeType: MakeType): string =
+proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildType: BuildType): string =
   var
     lpath = findFile(lname, outdir, regex = true)
     makeFlagsProc = &"-j {getNumProcs()} {makeFlags}"
@@ -836,20 +836,20 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, prefer
   var buildStatus: BuildStatus
 
   # Simply reverse order if we want configure/make vs CMake/make
-  case preferredMakeType
-  of mtCMake:
+  case buildType
+  of btCmake:
     buildStatus = buildWithCmake(makePath, cmakeFlags)
     if not buildStatus.built:
       buildStatus = buildWithConfMake(makePath, conFlags)
-  of mtConfMake:
+  of btAutoconf:
     buildStatus = buildWithConfMake(makePath, conFlags)
     if not buildStatus.built:
       buildStatus = buildWithCmake(makePath, cmakeFlags)
 
   if buildStatus.buildPath.len > 0:
-    buildStatus.built = findFile(lname, buildStatus.buildPath, regex = true).len > 0
+    let libraryExists = findFile(lname, buildStatus.buildPath, regex = true).len > 0
 
-    if not buildStatus.built and fileExists(buildStatus.buildPath / "Makefile"):
+    if not libraryExists and fileExists(buildStatus.buildPath / "Makefile"):
       make(buildStatus.buildPath, lname, makeFlagsProc, regex = true)
       buildStatus.built = true
 
@@ -922,7 +922,7 @@ macro isDefined*(def: untyped): untyped =
 
 macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
-  altNames: static[string] = "", preferredMakeType: static[MakeType] = mtCMake): untyped =
+  altNames: static[string] = "", buildType: static[BuildType] = btCmake): untyped =
   ## Get the path to a header file for wrapping with
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
   ## `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
@@ -1075,7 +1075,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         when stdPath.len != 0 and stdLPath.len != 0:
           stdLPath
         else:
-          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `preferredMakeType`.MakeType)
+          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildType`.BuildType)
 
       # Header path - search again in case header is generated in build
       `path`* =
