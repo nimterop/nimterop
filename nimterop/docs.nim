@@ -45,6 +45,8 @@ proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath
   ## `defines` is a list of `-d:xxx` define flags (the `xxx` part) that should be passed
   ## to `nim doc` so that `getHeader()` is invoked correctly.
   ##
+  ## `nimArgs` is a string representing extra arguments to send to the `nim doc` call.
+  ##
   ## Use the `--publish` flag with nimble to publish docs contained in
   ## `path` to Github in the `gh-pages` branch. This requires the ghp-import
   ## package for Python: `pip install ghp-import`
