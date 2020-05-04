@@ -1640,16 +1640,31 @@ proc addDecl(gState: State, node: TSNode) =
 
   let
     start = getStartAtom(node)
-    commentNodes = gState.getCommentNodes(node)
+
+  var
+    firstDecl = true
+    commentNodes: seq[TSNode]
 
   for i in start+1 ..< node.len:
     if not node[i].firstChildInTree("function_declarator").isNil:
       # Proc declaration - var or actual proc
       if node[i].getAtom().getPxName(1) == "pointer_declarator":
         # proc var
+        if firstDecl:
+          # If
+          commentNodes = gState.getCommentNodes(node)
+          firstDecl = false
+        else:
+          commentNodes = gState.getCommentNodes(node[i])
         gState.addProcVar(node[i], node[start], commentNodes)
       else:
         # proc
+        if firstDecl:
+          # If
+          commentNodes = gState.getCommentNodes(node)
+          firstDecl = false
+        else:
+          commentNodes = gState.getCommentNodes(node[i])
         gState.addProc(node[i], node[start], commentNodes)
     else:
       # Regular var

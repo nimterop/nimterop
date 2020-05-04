@@ -25,7 +25,7 @@ proc execTest(test: string, flags = "", runDocs = true) =
     let docPath = "build/html_" & test.extractFileName.changeFileExt("") & "_docs"
     rmDir docPath
     mkDir docPath
-    buildDocs(@[test], docPath, compilerArgs = flags)
+    buildDocs(@[test], docPath, nimArgs = flags)
 
 task buildToast, "build toast":
   execCmd("nim c --hints:off nimterop/toast.nim")

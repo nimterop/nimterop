@@ -36,7 +36,7 @@ proc execAction(cmd: string): string =
   doAssert ret == 0, "Command failed: " & $ret & "\ncmd: " & ccmd & "\nresult:\n" & result
 
 proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath() & $DirSep,
-                defines: openArray[string] = @[], compilerArgs = "") =
+                defines: openArray[string] = @[], nimArgs = "") =
   ## Generate docs for all specified nim `files` to the specified `path`
   ##
   ## `baseDir` is the project path by default and `files` and `path` are relative
@@ -70,7 +70,7 @@ proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath
         defStr
       nim = getCurrentCompilerExe()
     for file in files:
-      echo execAction(&"{nim} doc {defStr} {compilerArgs} -o:{path} --project --index:on {baseDir & file}")
+      echo execAction(&"{nim} doc {defStr} {nimArgs} -o:{path} --project --index:on {baseDir & file}")
 
     echo execAction(&"{nim} buildIndex -o:{path}/theindex.html {path}")
     when declared(getNimRootDir):
