@@ -810,7 +810,7 @@ proc buildWithCmake(outdir, flags: string): BuildStatus =
   else:
     result.buildPath = outdir
 
-proc buildWithConfMake(outdir, flags: string): BuildStatus =
+proc buildWithAutoConf(outdir, flags: string): BuildStatus =
   if not fileExists(outdir / "Makefile"):
     if findExe("bash").len != 0:
       for file in @["configure", "configure.ac", "configure.in", "autogen.sh", "build/autogen.sh"]:
@@ -824,7 +824,7 @@ proc buildWithConfMake(outdir, flags: string): BuildStatus =
   else:
     result.buildPath = outdir
 
-proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildType: BuildType): string =
+proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildTypes: openArray[BuildType]): string =
   var
     lpath = findFile(lname, outdir, regex = true)
     makeFlagsProc = &"-j {getNumProcs()} {makeFlags}"
@@ -835,16 +835,15 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
 
   var buildStatus: BuildStatus
 
-  # Simply reverse order if we want configure/make vs CMake/make
-  case buildType
-  of btCmake:
-    buildStatus = buildWithCmake(makePath, cmakeFlags)
-    if not buildStatus.built:
-      buildStatus = buildWithConfMake(makePath, conFlags)
-  of btAutoconf:
-    buildStatus = buildWithConfMake(makePath, conFlags)
-    if not buildStatus.built:
+  for buildType in buildTypes:
+    case buildType
+    of btCmake:
       buildStatus = buildWithCmake(makePath, cmakeFlags)
+    of btAutoconf:
+      buildStatus = buildWithAutoConf(makePath, conFlags)
+
+    if buildStatus.built:
+      break
 
   if buildStatus.buildPath.len > 0:
     let libraryExists = findFile(lname, buildStatus.buildPath, regex = true).len > 0
@@ -922,7 +921,7 @@ macro isDefined*(def: untyped): untyped =
 
 macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
-  altNames: static[string] = "", buildType: static[BuildType] = btCmake): untyped =
+  altNames: static[string] = "", buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
   ## Get the path to a header file for wrapping with
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
   ## `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
@@ -964,6 +963,9 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   ## the typical lib name is `libz.so` and not `libzlib.so`. However, it is libzlib.dll on Windows if built
   ## with cmake. In this case, `altNames = "z,zlib"`. Comma separate for multiple alternate names without
   ## spaces.
+  ##
+  ## `buildTypes` specifies a list of in order build strategies to use when building the downloaded source
+  ## files. Default is [btCmake, btAutoconf]
   ##
   ## The original header name is not included by default if `altNames` is set since it could cause the
   ## wrong lib to be selected. E.g. `SDL2/SDL.h` could pick `libSDL.so` even if `altNames = "SDL2"`.
@@ -1075,7 +1077,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         when stdPath.len != 0 and stdLPath.len != 0:
           stdLPath
         else:
-          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildType`.BuildType)
+          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildTypes`)
 
       # Header path - search again in case header is generated in build
       `path`* =
