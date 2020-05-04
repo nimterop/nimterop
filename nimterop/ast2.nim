@@ -1651,7 +1651,8 @@ proc addDecl(gState: State, node: TSNode) =
       if node[i].getAtom().getPxName(1) == "pointer_declarator":
         # proc var
         if firstDecl:
-          # If
+          # If it's the first declaration, use the whole node
+          # to get the comment above/below
           commentNodes = gState.getCommentNodes(node)
           firstDecl = false
         else:
@@ -1660,7 +1661,8 @@ proc addDecl(gState: State, node: TSNode) =
       else:
         # proc
         if firstDecl:
-          # If
+          # If it's the first declaration, use the whole node
+          # to get the comment above/below
           commentNodes = gState.getCommentNodes(node)
           firstDecl = false
         else:
