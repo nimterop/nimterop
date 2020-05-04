@@ -34,6 +34,8 @@ Nimterop can be used in two ways:
 
 Any combination of the above is possible - only download, build or wrapping and nimterop avoids imposing any particular workflow.
 
+Refer to [CHANGES.md](CHANGES.md) for history and information around breaking changes.
+
 ### Build API
 
 Creating a wrapper has two parts, the first is to setup the C library. This includes downloading it or finding it if already installed, and building it if applicable. The `getHeader()` high-level API provides all of this functionality as a convenience. The following `.nim` wrapper file is an example of using the high-level `getHeader()` API to perform all building, wrapping and linking automatically:
@@ -223,6 +225,8 @@ This is part of the reason why Nimterop provides a wrapper API so that the gener
 ## Credits
 
 Nimterop depends on [tree-sitter](http://tree-sitter.github.io/tree-sitter/) and all licensing terms of [tree-sitter](https://github.com/tree-sitter/tree-sitter/blob/master/LICENSE) apply to the usage of this package. The tree-sitter functionality is pulled and wrapped using nimterop itself.
+
+Thank you to all the [contributors](https://github.com/nimterop/nimterop/graphs/contributors), issue submitters, various people in [#nim](irc://freenode.net/nim) and users for helping improve Nimterop over the years.
 
 ## Feedback
 
