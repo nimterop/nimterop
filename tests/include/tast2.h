@@ -75,7 +75,7 @@ typedef int
   **(*A12)(int, int b, int *c, int *, int *count[4], int (*func)(int, int)),
   **(*A121)(float, float b, float *c, float *, float *count[4], float (*func)(float, float)),
   **(*A122)(char, char b, char *c, char *, char *count[4], char (*func)(char, char));
-typedef int A13(int, int, void (*func)(void));
+typedef int (*A13)(int, int, void (*func)(void));
 
 struct A14 { volatile char a1; };
 struct A15 { char *a1; const int *a2[1]; };
