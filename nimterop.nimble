@@ -18,8 +18,11 @@ proc execCmd(cmd: string) =
   exec "tests/timeit " & cmd
 
 proc execTest(test: string, flags = "", runDocs = true) =
-  execCmd "nim c --hints:off -f " & flags & " -r " & test
-  execCmd "nim cpp --hints:off " & flags & " -r " & test
+  execCmd "nim c --hints:off -f -d:checkAbi " & flags & " -r " & test
+  let
+    # -d:checkAbi broken in cpp mode until post 1.2.0
+    cppAbi = when (NimMajor, NimMinor) >= (1, 3): "-d:checkAbi " else: ""
+  execCmd "nim cpp --hints:off " & cppAbi & flags & " -r " & test
 
   if runDocs:
     let docPath = "build/html_" & test.extractFileName.changeFileExt("") & "_docs"
