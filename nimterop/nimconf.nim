@@ -95,6 +95,13 @@ proc jsonToSeq(node: JsonNode, key: string): seq[string] =
     for elem in node[key].getElems():
       result.add elem.getStr()
 
+proc getAbsoluteDir(projectDir, path: string): string =
+  # Path is relative to `projectDir` if not absolute
+  if path.isAbsolute():
+    result = path
+  else:
+    result = (projectDir / path).normalizedPath()
+
 proc getNimConfig*(projectDir = ""): Config =
   # Get `paths` - list of paths to be forwarded to Nim
   result = new(Config)
@@ -146,12 +153,15 @@ proc getNimConfig*(projectDir = ""): Config =
 
   # Find non standard lib paths added to `searchPath`
   for path in searchPaths:
+    let
+      path = getAbsoluteDir(projectDir, path)
     if libPath notin path:
       result.paths.incl path
 
   # Find `nimblePaths` in `lazyPaths`
   for path in lazyPaths:
     let
+      path = getAbsoluteDir(projectDir, path)
       (_, tail) = path.strip(leading = false, chars = {'/', '\\'}).splitPath()
     if tail == "pkgs":
       # Nimble path probably
@@ -161,6 +171,8 @@ proc getNimConfig*(projectDir = ""): Config =
   # Have to do this separately since `nimblePaths` could be after
   # packages in `lazyPaths`
   for path in lazyPaths:
+    let
+      path = getAbsoluteDir(projectDir, path)
     var skip = false
     for npath in result.nimblePaths:
       if npath in path:
