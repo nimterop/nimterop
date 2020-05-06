@@ -548,7 +548,26 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
     # Input -> true, false
     # Output -> true, false
     result = gState.parseString(node.val)
-  of "type_descriptor", "sized_type_specifier":
+  of "type_descriptor":
+    # Input => int*
+    # (type_descriptor 1 2 4 "int*"
+    #  (type_identifier 1 2 3 "int")
+    #  (abstract_pointer_declarator 1 3 1 "*")
+    # )
+    #
+    # Output => ptr int
+    #
+    # nkPtrTy(
+    #  nkIdent("int")
+    # )
+    let pointerDecl = node.anyChildInTree("abstract_pointer_declarator")
+
+    if pointerDecl.isNil:
+      result = gState.processTSNode(node[0], typeofNode)
+    else:
+      let pointerCount = pointerDecl.getXCount("abstract_pointer_declarator")
+      result = gState.newPtrTree(pointerCount, gState.processTSNode(node[0], typeofNode))
+  of "sized_type_specifier", "primitive_type", "type_identifier":
     # Input -> int, unsigned int, long int, etc
     # Output -> cint, cuint, clong, etc
     let ty = getType(node.val)

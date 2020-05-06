@@ -8,17 +8,6 @@ import "."/treesitter/api
 
 import "."/[comphelp, exprparser, globals, getters, tshelp]
 
-proc getPtrType*(str: string): string =
-  result = case str:
-    of "cchar":
-      "cstring"
-    of "object":
-      "pointer"
-    of "FILE":
-      "File"
-    else:
-      str
-
 proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimSymKind): PNode =
   # Check if symbol `origname` of `kind` and `origname` has any cOverride defined
   # and use that if present
@@ -117,7 +106,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
     if not maybeTyNode.isNil:
       let name = maybeTyNode.getName()
       case name
-      of "type_descriptor", "sized_type_specifier":
+      of "type_descriptor", "sized_type_specifier", "primitive_type", "type_identifier":
         discard
       else:
         # Can't do gState.parseCExpression(root) here for some reason?
@@ -404,43 +393,6 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
     gState.identifierNodes[name] = result
   else:
     gecho &"# $1 '{origname}' is duplicate, skipped" % getKeyword(kind)
-
-proc newPtrTree(gState: State, count: int, typ: PNode): PNode =
-  # Create nkPtrTy tree depending on count
-  #
-  # Reduce by 1 if Nim type available for ptr X - e.g. ptr cchar = cstring
-  result = typ
-  var
-    count = count
-  if typ.kind == nkIdent:
-    let
-      tname = typ.ident.s
-      ptname = getPtrType(tname)
-    if tname != ptname:
-      # If Nim type available, use that ident
-      result = gState.getIdent(ptname, typ.info, exported = false)
-      # One ptr reduced
-      count -= 1
-  if count > 0:
-    # Nested nkPtrTy(typ) depending on count
-    #
-    # [ptr ...] typ
-    #
-    # nkPtrTy(
-    #  nkPtrTy(
-    #    typ
-    #  )
-    # )
-    var
-      nresult = newNode(nkPtrTy)
-      parent = nresult
-      child: PNode
-    for i in 1 ..< count:
-      child = newNode(nkPtrTy)
-      parent.add child
-      parent = child
-    parent.add result
-    result = nresult
 
 proc newArrayTree(gState: State, node: TSNode, typ, size: PNode = nil): PNode =
   # Create nkBracketExpr tree depending on input

@@ -20,6 +20,8 @@ extern "C" {
 #define COERCE 645635634896ull + 35436
 #define COERCE2 645635634896 + 35436ul
 #define BINEXPR ~(-(1u << !-1)) ^ (10 >> 1)
+#define POINTEREXPR (int*)0
+#define POINTERPOINTERPOINTEREXPR (int***)0
 #define BOOL true
 #define MATHEXPR (1 + 2/3*20 - 100)
 #define ANDEXPR (100 & 11000)

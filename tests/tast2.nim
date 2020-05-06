@@ -150,6 +150,9 @@ assert SHL1 == (1.uint shl 1)
 assert SHL2 == (1.uint shl 2)
 assert SHL3 == (1.uint shl 3)
 
+assert typeof(POINTEREXPR) is (ptr cint)
+assert typeof(POINTERPOINTERPOINTEREXPR) is (ptr ptr ptr cint)
+
 assert ALLSHL == (SHL1 or SHL2 or SHL3)
 
 assert A0 is object
