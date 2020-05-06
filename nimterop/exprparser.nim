@@ -549,6 +549,17 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
     # Output -> true, false
     result = gState.parseString(node.val)
   of "type_descriptor":
+    # Input => int*
+    # (type_descriptor 1 2 4 "int*"
+    #  (type_identifier 1 2 3 "int")
+    #  (abstract_pointer_declarator 1 3 1 "*")
+    # )
+    #
+    # Output => ptr int
+    #
+    # nkPtrTy(
+    #  nkIdent("int")
+    # )
     let pointerDecl = node.anyChildInTree("abstract_pointer_declarator")
 
     if pointerDecl.isNil:

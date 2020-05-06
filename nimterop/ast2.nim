@@ -106,7 +106,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
     if not maybeTyNode.isNil:
       let name = maybeTyNode.getName()
       case name
-      of "type_descriptor", "sized_type_specifier":
+      of "type_descriptor", "sized_type_specifier", "primitive_type":
         discard
       else:
         # Can't do gState.parseCExpression(root) here for some reason?
