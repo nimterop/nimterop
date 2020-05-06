@@ -43,6 +43,39 @@ type
     zeroOrOne     # ?
     orWithNext    # !
 
+  PragmaMode* = enum
+    # includeHeader = true, dynlib = false
+    #
+    # Types = {.header, .importc.}
+    # Static inline = {.header, .importc.}
+    # Procs = {.header, .importc.}
+    # Lib = {.compile.} or {.passL.}
+    useHeader
+
+    # includeHeader = true, dynlib = true
+    #
+    # Types = {.header, .importc.}
+    # Static inline = {.header, .importc.}
+    # Procs = {.dynlib, importc.}
+    # Libs = loaded by dynlib
+    useHeaderDynlib
+
+    # includeHeader = false, dynlib = false
+    #
+    # Types = {.bycopy.}
+    # Static inline = not available
+    # Procs = {.importc.}
+    # Lib = {.compile.} or {.passL.}
+    noHeader
+
+    # includeHeader = false, dynlib = true
+    #
+    # Types = {.bycopy.}
+    # Static inline = not available
+    # Procs = {.dynlib, importc.}
+    # Libs = loaded by dynlib
+    noHeaderDynlib
+
   Ast* = object
     name*: string
     kind*: Kind
@@ -55,37 +88,51 @@ type
   AstTable* {.used.} = TableRef[string, seq[ref Ast]]
 
   State* = ref object
-    compile*, defines*, headers*, includeDirs*, searchDirs*, prefix*, suffix*, symOverride*: seq[string]
-
-    debug*, includeHeader*, nocache*, nocomments*, past*, preprocess*, pnim*, recurse*: bool
-
-    code*, convention*, dynlib*, mode*, nim*, overrides*, pluginSource*, pluginSourcePath*: string
-
+    # Command line arguments to toast - some forwarded from cimport.nim
+    convention*: string        # `--convention | -C` to change calling convention from cdecl default
+    debug*: bool               # `cDebug()` or `--debug | -d` to enable debug mode
+    defines*: seq[string]      # Symbols added by `cDefine()` and `--define | -D` for C/C++ preprocessor/compiler
+    dynlib*: string            # `cImport(dynlib)` or `--dynlib | -l` to specify variable containing library name
+    feature*: seq[Feature]     # `--feature | -f` feature flags enabled
+    includeDirs*: seq[string]  # Paths added by `cIncludeDir()` and `--includeDirs | -I` for C/C++ preprocessor/compiler
+    includeHeader*: bool       # `--includeHeader | -H` to include {.header.} pragma to wrapper
+    mode*: string              # `cImport(mode)` or `--mode | -m` to override detected compiler mode - c or cpp
+    nim*: string               # `--nim` to specify full path to Nim compiler
+    nocomments*: bool          # `--nocomments | -c` to disable rendering comments in wrappers
+    past*: bool                # `--past | -a` to print tree-sitter AST of code
+    pluginSourcePath*: string  # `--pluginSourcePath` specified path to plugin file to compile and load
+    pnim*: bool                # `--pnim | -n` to render Nim wrapper for header
+    preprocess*: bool          # `--preprocess | -p` to enable preprocessing of code before wrapping
+    prefix*: seq[string]       # `--prefix` strings to strip from start of identifiers
+    recurse*: bool             # `--recurse | -r` to recurse into #include files in headers specified
     replace*: OrderedTableRef[string, string]
+                               # `--replace | -G` replacement rules for identifiers
+    suffix*: seq[string]       # `--suffix` strings to strip from end of identifiers
+    symOverride*: seq[string]  # `cSkipSymbol()`, `cOverride()` and `--symOverride | -O` symbols to skip during wrapping
 
-    feature*: seq[Feature]
+    # cimport.nim specific
+    compile*: seq[string]      # `cCompile()` list of files already processed
+    nocache*: bool             # `cDisableCaching()` to disable caching of artifacts
+    overrides*: string         # `cOverride()` code which gets added to `cPlugin()` output
+    pluginSource*: string      # `cPlugin()` generated code to write to plugin file from
+    searchDirs*: seq[string]   # `cSearchPath()` added directories for header search
 
+    # Data fields
+    code*: string              # Contents of header file currently being processed
+    currentHeader*: string     # Const name of header being currently processed
+    impShort*: string          # Short base name for pragma in output
+    outputHandle*: File        # `--output | -o` open file handle
+    sourceFile*: string        # Full path of header being currently processed
+
+    # Plugin callbacks
     onSymbol*, onSymbolOverride*: OnSymbol
     onSymbolOverrideFinal*: OnSymbolOverrideFinal
 
-    outputHandle*: File
-
-    # All symbols that have been declared so far indexed by nimName
-    identifiers*: TableRef[string, string]
-
-    # All const names for enum casting
-    constIdentifiers*: HashSet[string]
-
-    # All symbols that have been skipped due to
-    # being unwrappable or the user provided
-    # override is blank
-    skippedSyms*: HashSet[string]
-
-    # Legacy ast fields, remove when ast2 becomes default
-    constStr*, enumStr*, procStr*, typeStr*: string
-
-    commentStr*, debugStr*, skipStr*: string
-
+    # Symbol tables
+    constIdentifiers*: HashSet[string]     # Const names for enum casting
+    identifiers*: TableRef[string, string] # Symbols that have been declared so far indexed by nimName
+    skippedSyms*: HashSet[string]          # Symbols that have been skipped due to being unwrappable or
+                                           # the user provided override is blank
     # Nim compiler objects
     when defined(TOAST):
       constSection*, enumSection*, pragmaSection*, procSection*, typeSection*, varSection*: PNode
@@ -93,16 +140,16 @@ type
       config*: ConfigRef
       graph*: ModuleGraph
 
-      # Craeted symbols to generated AST - forward declaration tracking
+      # Table of symbols to generated AST PNode - used to implement forward declarations
       identifierNodes*: TableRef[string, PNode]
-
-    currentHeader*, impShort*, sourceFile*: string
 
     # Used for the exprparser.nim module
     currentExpr*, currentTyCastName*: string
 
+    # Legacy AST fields, remove when ast2 becomes default
+    constStr*, enumStr*, procStr*, typeStr*: string
+    commentStr*, debugStr*, skipStr*: string
     data*: seq[tuple[name, val: string]]
-
     nodeBranch*: seq[string]
 
   Feature* = enum
