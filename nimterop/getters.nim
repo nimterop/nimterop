@@ -127,11 +127,12 @@ proc checkIdentifier(name, kind, parent, origName: string) =
   if name.nBl:
     let
       origStr = if name != origName: &", originally '{origName}' before 'cPlugin:onSymbol()', still" else: ""
-      errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} contains"
+      errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} contains $1 " &
+        "which Nim does not allow. Use toast flag '$2' or 'cPlugin()' to modify."
 
-    doAssert name[0] != '_' and name[^1] != '_', errmsg & " leading/trailing underscores '_'"
+    doAssert name[0] != '_' and name[^1] != '_', errmsg % ["leading/trailing underscores '_'", "--prefix or --suffix"]
 
-    doAssert (not name.contains("__")): errmsg & " consecutive underscores '_'"
+    doAssert (not name.contains("__")): errmsg % ["consecutive underscores '_'", "--replace"]
 
   # Cannot blank out symbols which are fields or params
   #
