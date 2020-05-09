@@ -247,7 +247,7 @@ static inline int sitest1(int f1) {
 
 // DUPLICATES
 
-#ifndef HEADER
+#ifdef NOHEADER
 
 #define A 1
 #define B 1.0

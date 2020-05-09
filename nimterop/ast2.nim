@@ -15,7 +15,7 @@ proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimS
   # If not, symbol needs to be skipped - only get here if `name` is blank
   let
     # Get cleaned name for symbol, set parent so that cOverride is ignored
-    name = gState.getIdentifier(origname, kind, parent = "getOverrideOrSkip")
+    name = gState.getIdentifier(origname, kind, parent = "IgnoreSkipSymbol")
 
     override = gState.getOverride(origname, kind)
 
@@ -244,7 +244,8 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
   #
   # If `fname`, use it instead of node.getAtom() for name
   # If `pragmas`, add as nkPragmaExpr but not for `nskProc` since procs add pragmas elsewhere
-  # If `istype` is set, this is a typedef, else struct/union so add {.importc: "struct/union X".} when includeHeader
+  # If `istype` is set, this is a typedef, else struct/union so add {.importc: "struct/union X".}
+  # when `not noHeader`
   let
     atom = node.getAtom()
 
@@ -306,14 +307,14 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
       # )
       var
         pragmas =
-          if gState.isIncludeHeader():
+          if not gState.noHeader:
             # Need to add header and importc
             if istype and name == origname:
-              # Need to add impShort since neither struct/union nor name change
-              pragmas & gState.impShort
+              # Neither struct/union nor name change
+              pragmas & "importc" & (gState.impShort & "Hdr")
             else:
               # Add header shortcut, additional pragmas added later
-              pragmas & (gState.impShort & "H")
+              pragmas & (gState.impShort & "Hdr")
           else:
             pragmas
 
@@ -323,7 +324,7 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
           else:
             ident
 
-      if gState.isIncludeHeader():
+      if not gState.noHeader:
         if not istype or name != origname:
           # Add importc pragma since either struct/union or name changed
           let
@@ -361,18 +362,20 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
         prident = block:
           var
             prident: PNode
+          # Add {.importc.} pragma
           if name != origname:
-            # Add importc pragma since name changed
+            # Name changed
             prident = gState.newPragmaExpr(node, ident, "importc", newStrNode(nkStrLit, &"{origname}"))
-            if gState.isIncludeHeader():
-              # Add header
-              gState.addPragma(node, prident[1], gState.impShort & "H")
-            elif gState.dynlib.nBl:
-              # Add dynlib
-              gState.addPragma(node, prident[1], "dynlib", gState.getIdent(gState.dynlib))
           else:
-            # Only need impShort since no name change
-            prident = gState.newPragmaExpr(node, ident, gState.impShort)
+            prident = gState.newPragmaExpr(node, ident, "importc")
+
+          if gState.dynlib.nBl:
+            # Add {.dynlib.}
+            gState.addPragma(node, prident[1], gState.impShort & "Dyn")
+          elif not gState.noHeader:
+            # Add {.header.}
+            gState.addPragma(node, prident[1], gState.impShort & "Hdr")
+
           if pragmas.nBl:
             gState.addPragma(node, prident[1], pragmas)
           prident
@@ -789,7 +792,7 @@ proc addTypeObject(gState: State, node: TSNode, typeDef: PNode = nil, fname = ""
           npexpr = gState.newPragmaExpr(node, typedef[0], pragmas)
         typedef[0] = npexpr
       else:
-        # includeHeader already added impShort in newXIdent()
+        # `not gState.noHeader` already added pragmas in newXIdent()
         gState.addPragma(node, typeDef[0][1], pragmas)
 
     # nkTypeSection.add
@@ -1552,23 +1555,20 @@ proc addProc(gState: State, node, rnode: TSNode, commentNodes: seq[TSNode]) =
           gState.newPragma(node, "importc", newStrNode(nkStrLit, origname))
         else:
           # {.impnameC.} shortcut
-          gState.newPragma(node, gState.impShort & "C")
+          gState.newPragma(node, "importc")
 
       # Detect ... and add {.varargs.}
       pvarargs = plist.getVarargs()
 
-    # Need {.convention.} and {.header.} if applicable
-    if name != origname:
-      if gState.isIncludeHeader():
-        # {.impnameHC.} shortcut
-        gState.addPragma(node, prident, gState.impShort & "HC")
-      else:
-        # {.convention.}
-        gState.addPragma(node, prident, gState.convention)
+    # Need {.convention.}
+    gState.addPragma(node, prident, gState.convention)
 
-        if gState.dynlib.nBl:
-          # {.dynlib.} for DLLs
-          gState.addPragma(node, prident, "dynlib", gState.getIdent(gState.dynlib))
+    if gState.dynlib.nBl:
+      # Add {.dynlib.}
+      gState.addPragma(node, prident, gState.impShort & "Dyn")
+    elif not gState.noHeader:
+      # Add {.header.}
+      gState.addPragma(node, prident, gState.impShort & "Hdr")
 
     if pvarargs:
       # Add {.varargs.} for ...
@@ -1637,10 +1637,10 @@ proc addDef(gState: State, node: TSNode) =
     commentNodes = gState.getCommentNodes(node)
 
   if node[start+1].getName() == "function_declarator":
-    if gState.isIncludeHeader():
+    if not gState.noHeader:
       gState.addProc(node[start+1], node[start], commentNodes)
     else:
-      gecho &"\n# proc '$1' skipped - static inline procs require 'includeHeader'" %
+      gecho &"\n# proc '$1' skipped - static inline procs cannot work with '--noHeader | -H'" %
         gState.getNodeVal(node[start+1].getAtom())
 
 proc processNode(gState: State, node: TSNode): bool =
@@ -1707,50 +1707,35 @@ proc searchTree(gState: State, root: TSNode) =
     if node == root:
       break
 
+###
+#    gState.addPragma(root, impPragma, "importc")
+#  gState.addPragma(root, impConvPragma, gState.convention)
+
 proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
   # Create shortcut pragmas to reduce clutter
   var
     hdrPragma: PNode
-    hdrConvPragma: PNode
-    impPragma = newNode(nkPragma)
-    impConvPragma = newNode(nkPragma)
+    dynPragma: PNode
 
-  # {.pragma: impname, importc.}
-  gState.addPragma(root, impPragma, "pragma", gState.getIdent(gState.impShort))
-  gState.addPragma(root, impPragma, "importc")
-
-  if gState.isIncludeHeader():
+  if not gState.noHeader:
     # Path to header const
     gState.constSection.add gState.newConstDef(
       root, fname = gState.currentHeader, fval = '"' & fullpath & '"')
 
-    # {.pragma: impnameH, header: "xxx".} for types when name != origname
-    hdrPragma = gState.newPragma(root, "pragma", gState.getIdent(gState.impShort & "H"))
+    # {.pragma: impnameHdr, header: "xxx".}
+    hdrPragma = gState.newPragma(root, "pragma", gState.getIdent(gState.impShort & "Hdr"))
     gState.addPragma(root, hdrPragma, "header", gState.getIdent(gState.currentHeader))
 
-    # Add {.impnameH.} to {.impname.}
-    gState.addPragma(root, impPragma, gState.impShort & "H")
-
-    # {.pragma: impnameHC, impnameH, convention.} for procs when name != origname
-    hdrConvPragma = gState.newPragma(root, "pragma", gState.getIdent(gState.impShort & "HC"))
-    gState.addPragma(root, hdrConvPragma, gState.impShort & "H")
-    gState.addPragma(root, hdrConvPragma, gState.convention)
-
-  # {.pragma: impnameC, impname, convention.} for procs
-  gState.addPragma(root, impConvPragma, "pragma", gState.getIdent(gState.impShort & "C"))
-  gState.addPragma(root, impConvPragma, gState.impShort)
-  gState.addPragma(root, impConvPragma, gState.convention)
-
   if gState.dynlib.nBl:
-    # {.dynlib.} for DLLs
-    gState.addPragma(root, impConvPragma, "dynlib", gState.getIdent(gState.dynlib))
+    # {.pragma: impnameDyn, dynlib: libname.}
+    dynPragma = gState.newPragma(root, "pragma", gState.getIdent(gState.impShort & "Dyn"))
+    gState.addPragma(root, dynPragma, "dynlib", gState.getIdent(gState.dynlib))
 
-  # Add all pragma shortcuts to output
+  # Add pragma shortcuts to output
   if not hdrPragma.isNil:
     gState.pragmaSection.add hdrPragma
-    gState.pragmaSection.add hdrConvPragma
-  gState.pragmaSection.add impPragma
-  gState.pragmaSection.add impConvPragma
+  if not dynPragma.isNil:
+    gState.pragmaSection.add dynPragma
 
 proc printNimHeader*(gState: State) =
   # Top level output with context info

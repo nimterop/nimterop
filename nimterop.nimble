@@ -46,11 +46,13 @@ task docs, "Generate docs":
   buildDocs(@["nimterop/all.nim"], "build/htmldocs")
 
 task test, "Test":
+  rmFile("tests/timeit.txt")
+
   buildTimeitTask()
   buildToastTask()
 
   execTest "tests/tast2.nim"
-  execTest "tests/tast2.nim", "-d:HEADER"
+  execTest "tests/tast2.nim", "-d:NOHEADER"
 
   execTest "tests/tnimterop_c.nim"
   execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2\""

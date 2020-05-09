@@ -2,11 +2,11 @@ import hashes, macros, os, sets, strformat, strutils, tables
 
 import regex
 
-import "."/[getters, globals, treesitter/api]
+import "."/[getters, globals, treesitter/api, tshelp]
 
 proc getHeaderPragma*(gState: State): string =
   result =
-    if gState.isIncludeHeader():
+    if not gState.noHeader and gState.dynlib.Bl:
       &", header: {gState.currentHeader}"
     else:
       ""
@@ -211,7 +211,7 @@ proc parseNim*(gState: State, fullpath: string, root: TSNode, astTable: AstTable
   gState.impShort = gState.currentHeader.replace("header", "imp")
   gState.sourceFile = fullpath
 
-  if gState.isIncludeHeader():
+  if not gState.noHeader and gState.dynlib.Bl:
     gState.constStr &= &"\n  {gState.currentHeader} {{.used.}} = \"{fp}\""
 
   root.searchAst(astTable, gState)

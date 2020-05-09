@@ -14,17 +14,17 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.0
 
 ### Breaking changes
 
-- Nimterop now skips generating the `{.header.}` pragma by default in non-dynlib mode. This skips the header file `#include` in the generated code and allows creation of wrappers that do not require presence of the header during compile time. There are cases where this will not work so the `--includeHeader | -H` flag is available to revert to the legacy behavior when required. This change applies to both `ast2` and the legacy backend so if an existing wrapper breaks, test it with `-H` to see if it starts working again. [#169][i169]
-
-- Nimterop defaulted to C++ mode for preprocessing and tree-sitter parsing in all cases unless explicitly informed to use C mode. This has been changed and is now detected based on the file extension. This means some existing wrappers could break since they might contain C++ code or include C++ headers like `#include <string>` which will not work in C mode. Explicitly setting `mode = "cpp"` or `-mcpp` should fix such issues. [#176][i176]
+- Nimterop used to default to C++ mode for preprocessing and tree-sitter parsing in all cases unless explicitly informed to use C mode. This has been changed and is now detected based on the file extension. This means some existing wrappers could break since they might contain C++ code or include C++ headers like `#include <string>` which will not work in C mode. Explicitly setting `mode = "cpp"` or `-mcpp` should fix such issues. [#176][i176]
 
 - Enums were originally being mapped to `distint int` - this has been changed to `distinct cint` since the sizes are incorrect on 64-bit and is especially noticeable when types or unions have enum fields.
 
-- `static inline` functions are no longer wrapped by the legacy backend. The `ast2` backend correctly generates wrappers for such functions but they are only generated when `--includeHeader | -H` is in effect. This is because such functions do not exist in the binary and can only be referenced when the header is compiled in.
+- `static inline` functions are no longer wrapped by the legacy backend. The `ast2` backend correctly generates wrappers for such functions but they are only generated when `--noHeader | -H` is not in effect. This is because such functions do not exist in the binary and can only be referenced when the header is compiled in.
 
 - Support for Nim v0.19.6 has been dropped and the test matrix now covers v0.20.2, v1.0.6, v1.2.0 and devel.
 
 ### New functionality
+
+- Nimterop can now skip generating the `{.header.}` pragma when the `--noHeader | -H` flag is used. This skips the header file `#include` in the generated code and allows creation of wrappers that do not require presence of the header during compile time. Note that `static inline` functions will only be wrapped when the header is compiled in. This change applies to both `ast2` and the legacy backend, although `ast2` can also generate wrappers with both `{.header.}` and `{.dynlib.}` in effect enabling type size checking with `-d:checkAbi`. More information is available in the [README.md](README.md). [#169][i169]
 
 - `ast2` includes support for various C constructs that were issues with the legacy backend. These changes should reduce the reliance on `cOverride()` and existing wrappers should attempt to clean up such sections where possible.
   - N-dimensional arrays and pointers - [#54][i54]

@@ -34,11 +34,11 @@ proc main(
     defines: seq[string] = @[],
     dynlib: string = "",
     feature: seq[Feature] = @[Feature.ast1],
-    includeHeader = false,
     includeDirs: seq[string] = @[],
     mode = "",
     nim: string = "nim",
-    nocomments = false,
+    noComments = false,
+    noHeader = false,
     output = "",
     past = false,
     pgrammar = false,
@@ -61,11 +61,11 @@ proc main(
     defines: defines,
     dynlib: dynlib,
     feature: feature,
-    includeHeader: includeHeader,
     includeDirs: includeDirs,
     mode: mode,
     nim: nim,
-    nocomments: nocomments,
+    noComments: noComments,
+    noHeader: noHeader,
     past: past,
     pluginSourcePath: pluginSourcePath,
     pnim: pnim,
@@ -76,10 +76,6 @@ proc main(
     suffix: suffix,
     symOverride: symOverride
   )
-
-  # Fail if both includeHeader and dynlib
-  doAssert not (includeHeader == true and dynlib.nBl),
-    "`includeHeader` and `dynlib` cannot be used simultaneously"
 
   # Set gDebug in build.nim
   build.gDebug = debug
@@ -196,16 +192,16 @@ when isMainModule:
   import cligen
   dispatch(main, help = {
     "check": "check generated wrapper with compiler",
-    "convention": "calling convention for wrapped procs - default: cdecl",
+    "convention": "calling convention for wrapped procs",
     "debug": "enable debug output",
     "defines": "definitions to pass to preprocessor",
     "dynlib": "import symbols from library in specified Nim string",
     "feature": "flags to enable experimental features",
-    "includeHeader": "add {.header.} pragma to wrapper",
     "includeDirs": "include directory to pass to preprocessor",
     "mode": "language parser: c or cpp",
-    "nim": "use a particular Nim executable - default: $PATH/nim",
-    "nocomments": "exclude top-level comments from output",
+    "nim": "use a particular Nim executable",
+    "noComments": "exclude top-level comments from output",
+    "noHeader": "skip {.header.} pragma in wrapper",
     "output": "file to output content - default: stdout",
     "past": "print AST output",
     "pgrammar": "print grammar",
@@ -226,9 +222,9 @@ when isMainModule:
     "defines": 'D',
     "dynlib": 'l',
     "feature": 'f',
-    "includeHeader": 'H',
     "includeDirs": 'I',
-    "nocomments": 'c',
+    "noComments": 'c',
+    "noHeader": 'H',
     "output": 'o',
     "past": 'a',
     "pgrammar": 'g',

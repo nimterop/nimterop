@@ -2,7 +2,7 @@ import macros, strformat, strutils, tables
 
 import regex
 
-import "."/[ast, getters, globals, lisp, treesitter/api]
+import "."/[ast, getters, globals, lisp, treesitter/api, tshelp]
 
 type
   Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, gState: State) {.nimcall.}]]
@@ -180,7 +180,7 @@ proc initGrammar(): Grammar =
 
       var
         i = 0
-        typ = gState.getIdentifier(gState.data[i].val, nskType, "Parent").getType()
+        typ = gState.getIdentifier(gState.data[i].val, nskType, "IgnoreSkipSymbol").getType()
         name = ""
         nname = ""
         tptr = ""
@@ -202,7 +202,7 @@ proc initGrammar(): Grammar =
         nname = gState.getIdentifier(name, nskType)
         i += 1
 
-      if gState.isIncludeHeader():
+      if not gState.noHeader and gState.dynlib.Bl:
         pragmas.add gState.getImportC(name, nname)
 
       let
@@ -318,7 +318,7 @@ proc initGrammar(): Grammar =
       else:
         var
           pragmas: seq[string] = @[]
-        if gState.isIncludeHeader():
+        if not gState.noHeader and gState.dynlib.Bl:
           pragmas.add gState.getImportC(prefix & name, nname)
         pragmas.add "bycopy"
         if union.nBl:

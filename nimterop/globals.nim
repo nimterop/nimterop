@@ -43,39 +43,6 @@ type
     zeroOrOne     # ?
     orWithNext    # !
 
-  PragmaMode* = enum
-    # includeHeader = true, dynlib = false
-    #
-    # Types = {.header, .importc.}
-    # Static inline = {.header, .importc.}
-    # Procs = {.header, .importc.}
-    # Lib = {.compile.} or {.passL.}
-    useHeader
-
-    # includeHeader = true, dynlib = true
-    #
-    # Types = {.header, .importc.}
-    # Static inline = {.header, .importc.}
-    # Procs = {.dynlib, importc.}
-    # Libs = loaded by dynlib
-    useHeaderDynlib
-
-    # includeHeader = false, dynlib = false
-    #
-    # Types = {.bycopy.}
-    # Static inline = not available
-    # Procs = {.importc.}
-    # Lib = {.compile.} or {.passL.}
-    noHeader
-
-    # includeHeader = false, dynlib = true
-    #
-    # Types = {.bycopy.}
-    # Static inline = not available
-    # Procs = {.dynlib, importc.}
-    # Libs = loaded by dynlib
-    noHeaderDynlib
-
   Ast* = object
     name*: string
     kind*: Kind
@@ -95,10 +62,10 @@ type
     dynlib*: string            # `cImport(dynlib)` or `--dynlib | -l` to specify variable containing library name
     feature*: seq[Feature]     # `--feature | -f` feature flags enabled
     includeDirs*: seq[string]  # Paths added by `cIncludeDir()` and `--includeDirs | -I` for C/C++ preprocessor/compiler
-    includeHeader*: bool       # `--includeHeader | -H` to include {.header.} pragma to wrapper
     mode*: string              # `cImport(mode)` or `--mode | -m` to override detected compiler mode - c or cpp
     nim*: string               # `--nim` to specify full path to Nim compiler
-    nocomments*: bool          # `--nocomments | -c` to disable rendering comments in wrappers
+    noComments*: bool          # `--noComments | -c` to disable rendering comments in wrappers
+    noHeader*: bool            # `--noHeader | -H` to skip {.header.} pragma in wrapper
     past*: bool                # `--past | -a` to print tree-sitter AST of code
     pluginSourcePath*: string  # `--pluginSourcePath` specified path to plugin file to compile and load
     pnim*: bool                # `--pnim | -n` to render Nim wrapper for header

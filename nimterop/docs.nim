@@ -74,13 +74,13 @@ proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath
     for file in files:
       echo execAction(&"{nim} doc {defStr} {nimArgs} -o:{path} --project --index:on {baseDir & file}")
 
-    echo execAction(&"{nim} buildIndex -o:{path}/theindex.html {path}")
+    echo execAction(&"{nim} buildIndex {nimArgs} -o:{path}/theindex.html {path}")
     when declared(getNimRootDir):
       #[
       this enables doc search, works at least locally with:
       cd {path} && python -m SimpleHTTPServer 9009
       ]#
-      echo execAction(&"{nim} js -o:{path}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim")
+      echo execAction(&"{nim} js {nimArgs} -o:{path}/dochack.js {getNimRootDir()}/tools/dochack/dochack.nim")
 
     for i in 0 .. paramCount():
       if paramStr(i) == "--publish":

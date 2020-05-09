@@ -28,6 +28,8 @@ cPlugin:
 
   proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
     sym.name = sym.name.replace("pcre_", "")
+    if sym.name.startsWith("pcre16_") or sym.name.startsWith("pcre32_"):
+      sym.name = ""
 
 const FLAGS {.strdefine.} = ""
 cImport(pcreH, dynlib="dynpcre", flags="--mode=c " & FLAGS)

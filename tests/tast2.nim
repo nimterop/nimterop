@@ -11,17 +11,17 @@ static:
 const
   path = currentSourcePath.parentDir() / "include" / "tast2.h"
 
-when defined(HEADER):
-  cDefine("HEADER")
+when defined(NOHEADER):
+  cDefine("NOHEADER")
   const
     flags = " -H"
-    pHeader = @["header:" & path.replace("\\", "/")]
-    pHeaderImp = @["importc"] & pHeader
+    pHeader: seq[string] = @[]
+    pHeaderImp: seq[string] = @[]
 else:
   const
     flags = ""
-    pHeader: seq[string] = @[]
-    pHeaderImp: seq[string] = @[]
+    pHeader = @["header:" & path.replace("\\", "/")]
+    pHeaderImp = @["importc"] & pHeader
 
 const
   pHeaderImpBy = @["bycopy"] & pHeaderImp
@@ -68,7 +68,7 @@ macro checkPragmas(t: typed, pragmas: static[seq[string]], istype: static[bool] 
     ast = t.getImpl()
     prag = ast.getPragmas()
     exprag = pragmas.toHashSet()
-  when defined(HEADER):
+  when not defined(NOHEADER):
     if not istype:
       if "union" in exprag:
         exprag.incl "importc:union " & $t
@@ -169,7 +169,7 @@ a1.f1 = 2
 assert A2 is object
 testFields(A2)
 checkPragmas(A2, pHeaderInc, istype = false)
-when not defined(HEADER):
+when defined(NOHEADER):
   # typedef struct X; is invalid
   var a2: A2
 
@@ -475,6 +475,6 @@ assert nested is object
 testFields(nested, "f1|f2|f3|f4|f5|f6|f7|f8!NT1|Type_tast2h1|NT3|Type_tast2h3|NU2|Union_tast2h1|NE1|Enum_tast2h2")
 checkPragmas(nested, pHeaderImpBy)
 
-when defined(HEADER):
+when not defined(NOHEADER):
   assert sitest1(5) == 10
   assert sitest1(10) == 20
