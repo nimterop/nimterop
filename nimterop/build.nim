@@ -859,11 +859,11 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
 
 proc getDynlibExt(): string =
   when defined(Windows):
-    result = ".dll"
+    result = "[0-9.\\-]*\\.dll"
   elif defined(linux) or defined(FreeBSD):
-    result = ".so[0-9.]*"
+    result = "\\.so[0-9.]*"
   elif defined(macosx):
-    result = ".dylib[0-9.]*"
+    result = "\\.dylib[0-9.]*"
 
 var
   gDefines {.compileTime.} = initTable[string, string]()
@@ -1007,7 +1007,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
     preBuild = newIdentNode(name & "PreBuild")
 
     # Regex for library search
-    lre = "(lib)?$1[_-]?(static)?[0-9.\\-]*\\"
+    lre = "(lib)?$1[_-]?(static)?"
 
     # If -d:xxx set with setDefines()
     stdVal = gDefines.hasKey(stdStr)

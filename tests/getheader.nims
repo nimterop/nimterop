@@ -35,11 +35,6 @@ when defined(posix):
   testCall(cmd & " -d:lzmaGit -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0)
   testCall(cmd & " -d:lzmaGit -d:lzmaStatic -d:lzmaSetVer=v5.2.0" & lrcmd, lexp & "5.2.0", 0, delete = false)
 
-  # dl - remove from Windows to save some time
-  testCall(cmd & " -d:lzmaDL" & lrcmd, "Need version", 1)
-  testCall(cmd & " -d:lzmaDL -d:lzmaSetVer=5.2.4" & lrcmd, lexp & "5.2.4", 0)
-  testCall(cmd & " -d:lzmaDL -d:lzmaStatic -d:lzmaSetVer=5.2.4" & lrcmd, lexp & "5.2.4", 0, delete = false)
-
 # git
 testCall(cmd & " -d:envTest" & zrcmd, zexp, 0)
 testCall(cmd & " -d:envTestStatic" & zrcmd, zexp, 0, delete = false)
@@ -47,6 +42,11 @@ testCall(cmd & " -d:envTestStatic" & zrcmd, zexp, 0, delete = false)
 # git tag
 testCall(cmd & " -d:zlibGit -d:zlibSetVer=v1.2.10" & zrcmd, zexp & "1.2.10", 0)
 testCall(cmd & " -d:zlibGit -d:zlibStatic -d:zlibSetVer=v1.2.10" & zrcmd, zexp & "1.2.10", 0, delete = false)
+
+# dl
+testCall(cmd & " -d:lzmaDL" & lrcmd, "Need version", 1)
+testCall(cmd & " -d:lzmaDL -d:lzmaSetVer=5.2.4" & lrcmd, lexp & "5.2.4", 0)
+testCall(cmd & " -d:lzmaDL -d:lzmaStatic -d:lzmaSetVer=5.2.4" & lrcmd, lexp & "5.2.4", 0, delete = false)
 
 # dl
 testCall(cmd & " -d:zlibDL -d:zlibSetVer=1.2.11" & zrcmd, zexp & "1.2.11", 0)

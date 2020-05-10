@@ -82,10 +82,8 @@ task test, "Test":
   # getHeader tests
   withDir("tests"):
     exec "nim e getheader.nims"
-    when not defined(Windows):
-      # Skip on Windows since very slow
-      if not existsEnv("APPVEYOR"):
-        exec "nim e wrappers.nims"
+    if not existsEnv("APPVEYOR"):
+      exec "nim e wrappers.nims"
 
   docsTask()
 
