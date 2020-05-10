@@ -482,8 +482,12 @@ proc configure*(path, check: string, flags = "") =
       if fileExists(path / i):
         echo "#   Running autogen.sh"
 
-        echoDebug execAction(
-          &"cd {(path / i).parentDir().sanitizePath} && bash ./autogen.sh").output
+        when defined(unix):
+          echoDebug execAction(
+            &"cd {(path / i).parentDir().sanitizePath} && ./autogen.sh").output
+        else:
+          echoDebug execAction(
+            &"cd {(path / i).parentDir().sanitizePath} && bash ./autogen.sh").output
 
         break
 
@@ -499,8 +503,12 @@ proc configure*(path, check: string, flags = "") =
   if fileExists(path / "configure"):
     echo "#   Running configure " & flags
 
-    var
-      cmd = &"cd {path.sanitizePath} && bash ./configure"
+    when defined(unix):
+      var
+        cmd = &"cd {path.sanitizePath} && ./configure"
+    else:
+      var
+        cmd = &"cd {path.sanitizePath} && bash ./configure"
     if flags.len != 0:
       cmd &= &" {flags}"
 
