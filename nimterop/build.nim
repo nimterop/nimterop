@@ -91,18 +91,22 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
     # Else cache for preserving functionality in nimsuggest and nimcheck
     let
       hash = (ccmd & cacheKey).hash().abs()
-      cacheFile = getNimteropCacheDir() / "execCache" / "nimterop_" & $hash & ".txt"
+      cachePath = getNimteropCacheDir() / "execCache" / "nimterop_" & $hash
+      cacheFile = cachePath & ".txt"
+      retFile = cachePath & "_ret.txt"
 
     when defined(nimsuggest) or defined(nimcheck):
       # Load results from cache file if generated in previous run
-      if fileExists(cacheFile):
+      if fileExists(cacheFile) and fileExists(retFile):
         result.output = cacheFile.readFile()
+        result.ret = retFile.readFile().parseInt()
       elif die:
         doAssert false, "Results not cached - run nim c/cpp at least once\n" & ccmd
     else:
-      if cache and fileExists(cacheFile) and not compileOption("forceBuild"):
+      if cache and fileExists(cacheFile) and fileExists(retFile) and not compileOption("forceBuild"):
         # Return from cache when requested
         result.output = cacheFile.readFile()
+        result.ret = retFile.readFile().parseInt()
       else:
         # Execute command and store results in cache
         (result.output, result.ret) = gorgeEx(ccmd)
@@ -113,6 +117,7 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
             let flag = when not defined(Windows): "-p" else: ""
             discard execAction(&"mkdir {flag} {dir.sanitizePath}")
           cacheFile.writeFile(result.output)
+          retFile.writeFile($result.ret)
   else:
     # Used by toast
     (result.output, result.ret) = execCmdEx(ccmd)

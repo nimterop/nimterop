@@ -58,12 +58,24 @@ proc getProjectDir*(): string =
   else:
     discard
 
+proc stripName(path, projectName: string): string =
+  # Remove `pname_d|r` tail from path
+  let
+    (head, tail) = path.splitPath()
+  if projectName in tail:
+    result = head
+  else:
+    result = path
+
 proc getNimcacheDir*(projectDir = ""): string =
   ## Get nimcache directory for current compilation or specified `projectDir`
   when nimvm:
     when (NimMajor, NimMinor, NimPatch) >= (1, 2, 0):
       # Get value at compile time from `std/compilesettings`
-      result = querySetting(SingleValueSetting.nimcacheDir)
+      result = stripName(
+        querySetting(SingleValueSetting.nimcacheDir),
+        querySetting(SingleValueSetting.projectName)
+      )
   else:
     discard
 
@@ -78,12 +90,7 @@ proc getNimcacheDir*(projectDir = ""): string =
       dumpJson = getJson(projectDir)
 
     if dumpJson != nil and dumpJson.hasKey("nimcache"):
-      result = dumpJson["nimcache"].getStr()
-      let
-        (head, tail) = result.splitPath()
-      if "dummy" in tail:
-        # Remove `dummy_d` subdir when default nimcache
-        result = head
+      result = stripName(dumpJson["nimcache"].getStr(), "dummy")
 
   # Set to OS defaults if not detectable
   if result.len == 0:
