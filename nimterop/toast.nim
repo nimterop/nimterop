@@ -114,6 +114,9 @@ proc main(
     doAssert gState.outputHandle.open(outputFile, fmWrite),
       &"Failed to write to {outputFile}"
 
+    if gState.debug:
+      echo &"# Writing output to {outputFile}\n"
+
   # Process grammar into AST
   let
     astTable =

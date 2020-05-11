@@ -103,7 +103,10 @@ const
     # floating point
     "float": "cfloat",
     "double": "cdouble",
-    "long double": "clongdouble"
+    "long double": "clongdouble",
+
+    # Misc Nim types
+    "Bool": "bool"
   }.toTable()
 
   # Nim type names that shouldn't need to be wrapped again
