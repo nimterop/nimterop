@@ -28,7 +28,7 @@ yield""".split(Whitespace).toHashSet()
 
 # Types related
 
-const
+var
   gTypeMap* = {
     # char
     "char": "cchar",

@@ -243,6 +243,12 @@ static inline int sitest1(int f1) {
   return f1 * 2;
 }
 
+// Issue #196
+typedef int MyInt;
+struct TestMyInt {
+  MyInt f1;
+};
+
 
 
 // DUPLICATES
@@ -438,6 +444,12 @@ typedef struct {
 static inline int sitest1(int f1) {
   return f1 * 2;
 }
+
+// Issue #196
+typedef int MyInt;
+struct TestMyInt {
+  MyInt f1;
+};
 
 
 

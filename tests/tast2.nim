@@ -35,7 +35,7 @@ cOverride:
   type
     A1* = A0
 
-cImport(path, flags="-f:ast2 -ENK_,SDL_ -GVICE=SLICE" & flags)
+cImport(path, flags="-f:ast2 -ENK_,SDL_ -GVICE=SLICE -TMyInt=cint" & flags)
 
 proc getPragmas(n: NimNode): HashSet[string] =
   # Find all pragmas in AST, return as "name" or "name:value" in set
@@ -478,3 +478,8 @@ checkPragmas(nested, pHeaderImpBy)
 when not defined(NOHEADER):
   assert sitest1(5) == 10
   assert sitest1(10) == 20
+
+when declared(MyInt):
+  assert false, "MyInt is defined!"
+testFields(TestMyInt, "f1!cint")
+checkPragmas(TestMyInt, pHeaderBy, isType = false)

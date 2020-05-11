@@ -76,6 +76,8 @@ type
                                # `--replace | -G` replacement rules for identifiers
     suffix*: seq[string]       # `--suffix` strings to strip from end of identifiers
     symOverride*: seq[string]  # `cSkipSymbol()`, `cOverride()` and `--symOverride | -O` symbols to skip during wrapping
+    typeMap*: TableRef[string, string]
+                               # `--typeMap | -T` to map instances of type X to Y - e.g. ABC=cint
 
     # cimport.nim specific
     compile*: seq[string]      # `cCompile()` list of files already processed

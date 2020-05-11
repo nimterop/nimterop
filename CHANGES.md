@@ -56,6 +56,8 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.0
 
 - `toast` now includes `--replace | -G` to manipulate identifier names beyond `--prefix` and `--suffix`. `-G:X=Y` replaces X with Y and `-G:@_[_]+=_` replaces multiple `_` with a single instance using the `@` prefix to enable regular expressions.
 
+- `toast` also includes `--typeMap | -T` to map C types to another type. E.g. `--typeMap:GLint64=int64` generates a wrapper where all instances of `GLint64` are remapped to the Nim type `int64` and `GLint64` is not defined. (since v0.5.2)
+
 - Nimterop is now able to detect Nim configuration of projects and can better handle cases where defaults such as `nimcacheDir` or `nimblePath` are overridden. This especially enables better interop with workflows that do not depend on Nimble. [#151][i151] [#153][i153]
 
 - Nimterop defaults to `cmake`, followed by `autoconf` for building libraries with `getHeader()`. It is now possible to change the order of discovery with the `buildType` value. [#200][i200]

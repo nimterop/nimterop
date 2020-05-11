@@ -229,6 +229,7 @@ Options:
   -s, --stub           bool      false    stub out undefined type references as objects
   -F=, --suffix=       strings   {}       strip suffix from identifiers
   -O=, --symOverride=  strings   {}       skip generating specified symbols
+  -T=, --typeMap=      strings   {}       map instances of type X to Y - e.g. ABC=cint
 ```
 
 ## Why nimterop

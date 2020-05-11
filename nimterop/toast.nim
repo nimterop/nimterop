@@ -1,4 +1,4 @@
-import os, osproc, strformat, strutils, tables, times
+import os, osproc, sets, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
@@ -51,6 +51,7 @@ proc main(
     stub = false,
     suffix: seq[string] = @[],
     symOverride: seq[string] = @[],
+    typeMap: seq[string] = @[],
     source: seq[string]
   ) =
 
@@ -92,6 +93,14 @@ proc main(
       name = nv[0]
       value = if nv.len == 2: nv[1] else: ""
     gState.replace[name] = value
+
+  # typeMap => getters.gTypeMap
+  for i in typeMap.getSplitComma():
+    let
+      nv = i.split("=", maxsplit = 1)
+    doAssert nv.len == 2, "`--typeMap` requires X=Y format"
+    gTypeMap[nv[0]] = nv[1]
+    gTypeMapValues.incl nv[1]
 
   if pluginSourcePath.nBl:
     gState.loadPlugin(pluginSourcePath)
@@ -217,7 +226,8 @@ when isMainModule:
     "source" : "C/C++ source/header",
     "stub": "stub out undefined type references as objects",
     "suffix": "strip suffix from identifiers",
-    "symOverride": "skip generating specified symbols"
+    "symOverride": "skip generating specified symbols",
+    "typeMap": "map instances of type X to Y - e.g. ABC=cint"
   }, short = {
     "check": 'k',
     "convention": 'C',
@@ -238,5 +248,6 @@ when isMainModule:
     "replace": 'G',
     "stub": 's',
     "suffix": 'F',
-    "symOverride": 'O'
+    "symOverride": 'O',
+    "typeMap": 'T'
   })
