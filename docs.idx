@@ -1,1 +1,1 @@
-buildDocs	docs.html#buildDocs,openArray[string],string,openArray[string]	docs: buildDocs(files: openArray[string]; path: string; baseDir = getProjectPath() &amp; &quot;/&quot;;\n          defines: openArray[string] = @[])	
+buildDocs	docs.html#buildDocs,openArray[string],string,openArray[string],string	docs: buildDocs(files: openArray[string]; path: string; baseDir = getProjectPath() &amp; &quot;/&quot;;\n          defines: openArray[string] = @[]; nimArgs = &quot;&quot;)	

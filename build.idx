@@ -1,3 +1,8 @@
+btAutoconf	build.html#btAutoconf	BuildType.btAutoconf	
+btCmake	build.html#btCmake	BuildType.btCmake	
+BuildType	build.html#BuildType	build: BuildType	
+gDebug	build.html#gDebug	build: gDebug	
+gDebugCT	build.html#gDebugCT	build: gDebugCT	
 sanitizePath	build.html#sanitizePath,string	build: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string	
 Config	build.html#Config	build: Config	
 getProjectDir	build.html#getProjectDir	build: getProjectDir(): string	
@@ -39,4 +44,4 @@ getGccLibPaths	build.html#getGccLibPaths,string	build: getGccLibPaths(mode: stri
 setDefines	build.html#setDefines.m	build: setDefines(defs: static openArray[string]): untyped	
 clearDefines	build.html#clearDefines.m	build: clearDefines(): untyped	
 isDefined	build.html#isDefined.m,untyped	build: isDefined(def: untyped): untyped	
-getHeader	build.html#getHeader.m,static[string],static[string],static[string],static[string],static[string],static[string],static[string],static[string]	build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;\n          dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;\n          conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;\n          makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;): untyped	
+getHeader	build.html#getHeader.m,static[string],static[string],static[string],static[string],static[string],static[string],static[string],static[string],static[openArray[BuildType]]	build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;\n          dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;\n          conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;\n          makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;;\n          buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped	
