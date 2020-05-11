@@ -1718,13 +1718,9 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
     dynPragma: PNode
 
   if not gState.noHeader:
-    # Path to header const
-    gState.constSection.add gState.newConstDef(
-      root, fname = gState.currentHeader, fval = '"' & fullpath & '"')
-
     # {.pragma: impnameHdr, header: "xxx".}
     hdrPragma = gState.newPragma(root, "pragma", gState.getIdent(gState.impShort & "Hdr"))
-    gState.addPragma(root, hdrPragma, "header", gState.getIdent(gState.currentHeader))
+    gState.addPragma(root, hdrPragma, "header", newStrNode(nkStrLit, fullpath))
 
   if gState.dynlib.nBl:
     # {.pragma: impnameDyn, dynlib: libname.}
@@ -1736,6 +1732,9 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
     gState.pragmaSection.add hdrPragma
   if not dynPragma.isNil:
     gState.pragmaSection.add dynPragma
+
+  # Add `{.experimental: "codeReordering".} for #206
+  gState.pragmaSection.add gState.newPragma(root, "experimental", newStrNode(nkStrLit, "codeReordering"))
 
 proc printNimHeader*(gState: State) =
   # Top level output with context info
@@ -1793,9 +1792,9 @@ proc printNim*(gState: State) =
   # Create output to Nim using Nim compiler renderer
   var
     tree = newNode(nkStmtList)
+  tree.add gState.pragmaSection
   tree.add gState.enumSection
   tree.add gState.constSection
-  tree.add gState.pragmaSection
   tree.add gState.typeSection
   tree.add gState.varSection
   tree.add gState.procSection
