@@ -49,8 +49,10 @@ extern "C" {
 
 #define ALLSHL (SHL1 | SHL2 | SHL3)
 
+// disable for windows for now
+#ifndef _WIN32
 // const not supported yet
-static const int SOME_CONST = 8;
+const int SOME_CONST = 8;
 
 struct some_struct_s
 {
@@ -63,6 +65,7 @@ struct parent_struct_s
 };
 
 typedef struct some_struct_s SOME_ARRAY[SOME_CONST];
+#endif
 
 struct A0;
 struct A1 {};
