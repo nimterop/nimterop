@@ -573,8 +573,12 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
           (pname, _, pinfo) = gState.getNameInfo(node[i].getAtom(), nskField, parent = name)
           pident = gState.getIdent(pname, pinfo, exported)
         result.add pident
-        result.add gState.getTypeArray(node[i], tident, name)
-        result.add newNode(nkEmpty)
+        let tyArray = gState.getTypeArray(node[i], tident, name)
+        if tyArray.kind != nkNone:
+          result.add tyArray
+          result.add newNode(nkEmpty)
+        else:
+          result = nil
       else:
         result = nil
 
@@ -955,6 +959,8 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
       if size.kind != nkNone:
         result = gState.newArrayTree(cnode, result, size)
         cnode = cnode[0]
+      else:
+        result = newNode(nkNone)
     elif cnode.len == 1:
       # type name[] = UncheckedArray[type]
       result = gState.newArrayTree(cnode, result)
@@ -984,6 +990,10 @@ proc addTypeArray(gState: State, node: TSNode) =
       let
         name = typeDef.getIdentName()
         typ = gState.getTypeArray(node[i], tident, name)
+
+      if typ.kind == nkNone:
+        gecho (&"{gState.getNodeVal(node)} skipped").getCommented()
+        continue
 
       typeDef.add typ
 
