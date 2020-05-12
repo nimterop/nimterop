@@ -50,7 +50,7 @@ extern "C" {
 #define ALLSHL (SHL1 | SHL2 | SHL3)
 
 // const not supported yet
-const int SOME_CONST = 8;
+static const int SOME_CONST = 8;
 
 struct some_struct_s
 {
