@@ -155,6 +155,9 @@ assert typeof(POINTERPOINTERPOINTEREXPR) is (ptr ptr ptr cint)
 
 assert ALLSHL == (SHL1 or SHL2 or SHL3)
 
+assert not compiles(parent_struct_s().s)
+assert not defined(SOME_ARRAY)
+
 assert A0 is object
 testFields(A0, "f1!cint")
 checkPragmas(A0, pHeaderBy, istype = false)

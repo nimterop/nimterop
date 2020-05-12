@@ -49,6 +49,21 @@ extern "C" {
 
 #define ALLSHL (SHL1 | SHL2 | SHL3)
 
+// const not supported yet
+const int SOME_CONST = 8;
+
+struct some_struct_s
+{
+  int x;
+};
+
+struct parent_struct_s
+{
+  struct some_struct_s s[SOME_CONST];
+};
+
+typedef struct some_struct_s SOME_ARRAY[SOME_CONST];
+
 struct A0;
 struct A1 {};
 typedef struct A2;
