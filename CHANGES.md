@@ -58,6 +58,8 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.0
 
 - `toast` also includes `--typeMap | -T` to map C types to another type. E.g. `--typeMap:GLint64=int64` generates a wrapper where all instances of `GLint64` are remapped to the Nim type `int64` and `GLint64` is not defined. (since v0.5.2)
 
+- CLI flags can now be specified one or more per line in a file and path provided to `toast`. They will be expanded in place. [#196][i196] (since v0.5.3)
+
 - Nimterop is now able to detect Nim configuration of projects and can better handle cases where defaults such as `nimcacheDir` or `nimblePath` are overridden. This especially enables better interop with workflows that do not depend on Nimble. [#151][i151] [#153][i153]
 
 - Nimterop defaults to `cmake`, followed by `autoconf` for building libraries with `getHeader()`. It is now possible to change the order of discovery with the `buildType` value. [#200][i200]
@@ -78,5 +80,6 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.0
 [i174]: https://github.com/nimterop/nimterop/issues/174
 [i176]: https://github.com/nimterop/nimterop/issues/176
 [i181]: https://github.com/nimterop/nimterop/issues/181
+[i196]: https://github.com/nimterop/nimterop/issues/196
 [i197]: https://github.com/nimterop/nimterop/issues/197
 [i200]: https://github.com/nimterop/nimterop/issues/200

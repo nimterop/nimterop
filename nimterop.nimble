@@ -59,8 +59,8 @@ task test, "Test":
   execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2 -H\""
 
   execCmd "nim cpp --hints:off -f -r tests/tnimterop_cpp.nim"
-  execCmd "./nimterop/toast -pnk -E=_ tests/include/toast.h"
-  execCmd "./nimterop/toast -pnk -E=_ -f:ast2 tests/include/toast.h"
+  execCmd "./nimterop/toast tests/toast.cfg tests/include/toast.h"
+  execCmd "./nimterop/toast tests/toast.cfg -f:ast2 tests/include/toast.h"
 
   execTest "tests/tpcre.nim"
   execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""

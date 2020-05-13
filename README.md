@@ -195,14 +195,14 @@ Nimterop also provides a [docs](https://nimterop.github.io/nimterop/docs.html) A
 
 ### Command line API
 
-The `toast` binary can also be used directly on the CLI, similar to `c2nim`. The `cPlugin()` interface
+The `toast` binary can also be used directly on the CLI, similar to `c2nim`. These flags can be specified on the command line or via a file, one or more flags per line, and the path provided to `toast` instead, or a combination. The file contents will be expanded in place.
 
 Note: unlike the wrapper API, the `-p | --preprocess` flag is not enabled by default but is *highly* recommended.
 
 ```
 > toast -h
 Usage:
-  main [optional-params] C/C++ source/header
+  main [optional-params] C/C++ source/header(s) and command line file(s)
 Options:
   -h, --help                              print this cligen-erated help
   --help-syntax                           advanced: prepend,plurals,..

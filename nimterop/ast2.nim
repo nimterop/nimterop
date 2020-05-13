@@ -139,7 +139,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
     else:
       gecho &"# const '{origname}' is duplicate, skipped"
   else:
-    gecho &"# const '{origname}' has invalid value '{val}'"
+    gecho &"# const '{origname}' has unsupported value '{val}'"
     gState.skippedSyms.incl origname
 
 proc addConst(gState: State, node: TSNode) =
@@ -1736,19 +1736,9 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
   # Add `{.experimental: "codeReordering".} for #206
   gState.pragmaSection.add gState.newPragma(root, "experimental", newStrNode(nkStrLit, "codeReordering"))
 
-proc printNimHeader*(gState: State) =
-  # Top level output with context info
-  gecho """# Generated at $1
-# Command line:
-#   $2 $3
-
-{.hint[ConvFromXtoItselfNotNeeded]: off.}
-
-import nimterop/types
-""" % [$now(), getAppFilename(), commandLineParams().join(" ")]
-
 proc initNim*(gState: State) =
   # Initialize for parseNim() one time
+  gecho "import nimterop/types\n"
 
   # Track identifiers already rendered and corresponding PNodes
   gState.identifiers = newTable[string, string]()

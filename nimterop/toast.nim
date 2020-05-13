@@ -141,7 +141,6 @@ proc main(
   elif source.nBl:
     # Print source after preprocess or Nim output
     if gState.pnim:
-      gState.printNimHeader()
       gState.initNim()
     for src in source:
       gState.process(src.expandSymlinkAbs(), astTable)
@@ -199,6 +198,29 @@ proc main(
   if check and output.len == 0:
     stdout.write outputFile.readFile()
 
+proc mergeParams(cmdNames: seq[string], cmdLine = commandLineParams()): seq[string] =
+  # Load command-line params from `source` if it is a .cfg file
+  if cmdNames.len != 0:
+    # https://github.com/c-blake/cligen/issues/149
+    for param in cmdLine:
+      if param.fileExists() and param.splitFile().ext == ".cfg":
+        echo &"# Loading flags from '{param}'"
+        for line in param.readFile().splitLines():
+          let
+            line = line.strip()
+          if line.len > 1 and line[0] != '#':
+            result.add line.parseCmdLine()
+      else:
+        result.add param
+
+    if result.len != 0 and "-h" notin result and "--help" notin result:
+      echo &"""# Generated @ {$now()}
+# Command line:
+#   {getAppFilename()} {result.join(" ")}
+"""
+  else:
+    result = cmdLine
+
 when isMainModule:
   # Setup cligen command line help and short flags
   import cligen
@@ -223,7 +245,7 @@ when isMainModule:
     "preprocess": "run preprocessor on header",
     "recurse": "process #include files",
     "replace": "replace X with Y in identifiers, X1=Y1,X2=Y2, @X for regex",
-    "source" : "C/C++ source/header",
+    "source" : "C/C++ source/header(s) and command line file(s)",
     "stub": "stub out undefined type references as objects",
     "suffix": "strip suffix from identifiers",
     "symOverride": "skip generating specified symbols",
