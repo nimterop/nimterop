@@ -42,17 +42,16 @@ extern "C" {
 #define REG_STR "regular string"
 #define NOTSUPPORTEDSTR "not a " REG_STR
 
-#define NULLCHAR '\0'/* comments should not break things*/
-#define OCTCHAR '\012' // nor should this comment
+#define NULLCHAR '\0'
+#define OCTCHAR '\012'
 #define HEXCHAR '\xFE'
 #define TRICKYSTR "\x4E\034\nfoo\0\'\"\r\v\a\b\e\f\t\\\?bar"
 
 #define ALLSHL (SHL1 | SHL2 | SHL3)
 
-// disable for windows for now
-#ifndef _WIN32
-// const not supported yet
-const int SOME_CONST = 8;
+#ifdef NIMTEROP
+#define SOME_CONST 8
+#endif
 
 struct some_struct_s
 {
@@ -65,7 +64,6 @@ struct parent_struct_s
 };
 
 typedef struct some_struct_s SOME_ARRAY[SOME_CONST];
-#endif
 
 struct A0;
 struct A1 {};

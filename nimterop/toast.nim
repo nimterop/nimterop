@@ -4,6 +4,8 @@ import "."/treesitter/[api, c, cpp]
 
 import "."/[ast, ast2, build, globals, getters, grammar, tshelp]
 
+{.passC: "-DNIMTEROP".}
+
 proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), &"Invalid path {path}"
 

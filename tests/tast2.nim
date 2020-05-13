@@ -35,6 +35,7 @@ cOverride:
   type
     A1* = A0
 
+cDefine("SOME_CONST=100")
 cImport(path, flags="-f:ast2 -ENK_,SDL_ -GVICE=SLICE -TMyInt=cint" & flags)
 
 proc getPragmas(n: NimNode): HashSet[string] =
@@ -155,9 +156,8 @@ assert typeof(POINTERPOINTERPOINTEREXPR) is (ptr ptr ptr cint)
 
 assert ALLSHL == (SHL1 or SHL2 or SHL3)
 
-when not defined(windows):
-  assert not compiles(parent_struct_s().s)
-  assert not defined(SOME_ARRAY)
+assert typeof(parent_struct_s().s) is array[100, some_struct_s]
+assert typeof(SOME_ARRAY) is array[100, some_struct_s]
 
 assert A0 is object
 testFields(A0, "f1!cint")
