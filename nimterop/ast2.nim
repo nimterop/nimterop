@@ -574,11 +574,8 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
           pident = gState.getIdent(pname, pinfo, exported)
         result.add pident
         let tyArray = gState.getTypeArray(node[i], tident, name)
-        if tyArray.kind != nkNone:
-          result.add tyArray
-          result.add newNode(nkEmpty)
-        else:
-          result = nil
+        result.add tyArray
+        result.add newNode(nkEmpty)
       else:
         result = nil
 
@@ -953,14 +950,16 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
   for i in 0 ..< acount:
     if cnode.len == 2:
       # type name[X] => array[X, type]
-      let
-        # Size of array could be a Nim expression
-        size = gState.parseCExpression(gState.getNodeVal(cnode[1]))
-      if size.kind != nkNone:
-        result = gState.newArrayTree(cnode, result, size)
-        cnode = cnode[0]
-      else:
-        result = newNode(nkNone)
+      var size: PNode
+      let cnodeVal = gState.getNodeVal(cnode[1])
+      # Size of array could be a Nim expression
+      size = gState.parseCExpression(cnodeVal)
+      if size.kind == nkNone:
+        # If the size could not be parsed, leave it alone
+        size = gState.getIdent(cnodeVal)
+
+      result = gState.newArrayTree(cnode, result, size)
+      cnode = cnode[0]
     elif cnode.len == 1:
       # type name[] = UncheckedArray[type]
       result = gState.newArrayTree(cnode, result)
@@ -990,10 +989,6 @@ proc addTypeArray(gState: State, node: TSNode) =
       let
         name = typeDef.getIdentName()
         typ = gState.getTypeArray(node[i], tident, name)
-
-      if typ.kind == nkNone:
-        gecho (&"{gState.getNodeVal(node)} skipped").getCommented()
-        continue
 
       typeDef.add typ
 
