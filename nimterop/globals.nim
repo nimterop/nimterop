@@ -114,6 +114,9 @@ type
 
     # Used for the exprparser.nim module
     currentExpr*, currentTyCastName*: string
+    # Controls whether or not the current expression
+    # should validate idents against currently defined idents
+    currentExprSkipIdentValidation*: bool
 
     # Legacy AST fields, remove when ast2 becomes default
     constStr*, enumStr*, procStr*, typeStr*: string

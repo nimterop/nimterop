@@ -45,14 +45,14 @@ proc getExprIdent*(gState: State, identName: string, kind = nskConst, parent = "
   ##
   ## Returns PNode(nkNone) if the identifier is blank
   result = newNode(nkNone)
-  if identName notin gState.skippedSyms:
+  if gState.currentExprSkipIdentValidation or identName notin gState.skippedSyms:
     var ident = identName
     if ident != "_":
       # Process the identifier through cPlugin
       ident = gState.getIdentifier(ident, kind, parent)
     if kind == nskType:
       result = gState.getIdent(ident)
-    elif ident.nBl and ident in gState.constIdentifiers:
+    elif gState.currentExprSkipIdentValidation or ident.nBl and ident in gState.constIdentifiers:
       if gState.currentTyCastName.nBl:
         ident = ident & "." & gState.currentTyCastName
       result = gState.getIdent(ident)
@@ -591,7 +591,7 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
 
   decho "NODE RESULT: ", result
 
-proc parseCExpression*(gState: State, codeRoot: TSNode, name = ""): PNode =
+proc parseCExpression*(gState: State, codeRoot: TSNode): PNode =
   ## Parse a c expression from a root ts node
 
   # This var is used for keeping track of the type of the first
@@ -607,14 +607,16 @@ proc parseCExpression*(gState: State, codeRoot: TSNode, name = ""): PNode =
     decho "UNEXPECTED EXCEPTION: ", e.msg
     result = newNode(nkNone)
 
-proc parseCExpression*(gState: State, code: string, name = ""): PNode =
+proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidation = false): PNode =
   ## Convert the C string to a nim PNode tree
   gState.currentExpr = code
   gState.currentTyCastName = name
+  gState.currentExprSkipIdentValidation = skipIdentValidation
 
   withCodeAst(gState.currentExpr, gState.mode):
-    result = gState.parseCExpression(root, name)
+    result = gState.parseCExpression(root)
 
   # Clear the state
   gState.currentExpr = ""
   gState.currentTyCastName = ""
+  gState.currentExprSkipIdentValidation = false
