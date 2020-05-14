@@ -952,10 +952,7 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
       var size: PNode
       let cnodeVal = gState.getNodeVal(cnode[1])
       # Size of array could be a Nim expression
-      size = gState.parseCExpression(cnodeVal)
-      if size.kind == nkNone:
-        # If the size could not be parsed, leave it alone
-        size = gState.getIdent(cnodeVal)
+      size = gState.parseCExpression(cnodeVal, skipIdentValidation = true)
 
       result = gState.newArrayTree(cnode, result, size)
       cnode = cnode[0]
