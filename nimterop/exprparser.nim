@@ -45,14 +45,14 @@ proc getExprIdent*(gState: State, identName: string, kind = nskConst, parent = "
   ##
   ## Returns PNode(nkNone) if the identifier is blank
   result = newNode(nkNone)
-  if gState.currentExprSkipIdentValidation or identName notin gState.skippedSyms:
+  if gState.skipIdentValidation or identName notin gState.skippedSyms:
     var ident = identName
     if ident != "_":
       # Process the identifier through cPlugin
       ident = gState.getIdentifier(ident, kind, parent)
     if kind == nskType:
       result = gState.getIdent(ident)
-    elif gState.currentExprSkipIdentValidation or ident.nBl and ident in gState.constIdentifiers:
+    elif gState.skipIdentValidation or ident.nBl and ident in gState.constIdentifiers:
       if gState.currentTyCastName.nBl:
         ident = ident & "." & gState.currentTyCastName
       result = gState.getIdent(ident)
@@ -611,7 +611,7 @@ proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidati
   ## Convert the C string to a nim PNode tree
   gState.currentExpr = code
   gState.currentTyCastName = name
-  gState.currentExprSkipIdentValidation = skipIdentValidation
+  gState.skipIdentValidation = skipIdentValidation
 
   withCodeAst(gState.currentExpr, gState.mode):
     result = gState.parseCExpression(root)
@@ -619,4 +619,4 @@ proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidati
   # Clear the state
   gState.currentExpr = ""
   gState.currentTyCastName = ""
-  gState.currentExprSkipIdentValidation = false
+  gState.skipIdentValidation = false
