@@ -573,8 +573,7 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
           (pname, _, pinfo) = gState.getNameInfo(node[i].getAtom(), nskField, parent = name)
           pident = gState.getIdent(pname, pinfo, exported)
         result.add pident
-        let tyArray = gState.getTypeArray(node[i], tident, name)
-        result.add tyArray
+        result.add gState.getTypeArray(node[i], tident, name)
         result.add newNode(nkEmpty)
       else:
         result = nil
