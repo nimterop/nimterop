@@ -227,7 +227,7 @@ proc getOverride*(gState: State, name: string, kind: NimSymKind): string =
         result = sym.override
 
         if kind != nskProc:
-          result = result.replace(re"(?m)^(.*?)$", "  $1")
+          result = "  " & result.replace("\n", "\n ")
 
 proc getOverrideFinal*(gState: State, kind: NimSymKind): string =
   # Get all unused cOverride symbols of `kind`

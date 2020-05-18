@@ -2,6 +2,8 @@ import macros, os, sets, strutils
 
 import nimterop/[cimport]
 
+{.passC: "-DNIMTEROP".}
+
 static:
   # Skip casting on lower nim compilers because
   # the VM does not support it
