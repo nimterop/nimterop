@@ -1,7 +1,5 @@
 import sets, strformat, strutils
 
-import regex
-
 import "."/[getters, globals]
 import "."/treesitter/[api, c, cpp]
 
@@ -273,8 +271,14 @@ proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
     for commentNode in commentNodes:
       result &= "\n  " & gState.getNodeVal(commentNode).strip()
 
-    result = result.replace(re" *(//|/\*\*|\*\*/|/\*|\*/|\*)", "")
-    result = result.multiReplace([("\n", "\n  "), ("`", "")]).strip()
+    result = result.multiReplace(
+      {
+        "/**": "", "**/": "", "/*": "",
+        "*/": "", "/*": "", "//": "",
+        "\n": "\n  ", "`": ""
+        }
+    # need to replace this last otherwise it supercedes other replacements
+    ).replace(" *", "").strip()
 
 proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
   ## Get a set of comment nodes in order of priority. Will search up to ``maxSearch``
