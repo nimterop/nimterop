@@ -1,7 +1,5 @@
 import macros, os, sequtils, sets, strformat, strutils, tables, times
 
-import options as opts
-
 import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
 import "."/treesitter/api
@@ -136,6 +134,8 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
         result.add valident[0]
       else:
         result.add valident
+      # In case symbol was skipped earlier
+      gState.skippedSyms.excl origname
     else:
       gecho &"# const '{origname}' is duplicate, skipped"
   else:
@@ -251,7 +251,7 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
 
     (tname, torigname, info) =
       if not atom.isNil:
-        gState.getNameInfo(node.getAtom(), kind)
+        gState.getNameInfo(atom, kind)
       else:
         ("", "", gState.getLineInfo(node))
 
@@ -342,46 +342,42 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
       result.add prident
       result.add newNode(nkEmpty)
     elif kind == nskVar:
-      # var name* {.importc: "abc".}
+      # Used by `addVar()` for regular vars and proc vars
       #
-      # nkIdentDefs(
-      #  nkPragmaExpr(
-      #   nkPostfix(
-      #    nkIdent("*"),
-      #    nkIdent(name)
-      #   ),
-      #   nkPragma(
-      #    nkExprColonExpr(
-      #     nkIdent("importc"),
-      #     nkStrLit("abc")
-      #    )
+      # name* {.importc: "abc".}
+      #
+      # nkPragmaExpr(
+      #  nkPostfix(
+      #   nkIdent("*"),
+      #   nkIdent(name)
+      #  ),
+      #  nkPragma(
+      #   nkExprColonExpr(
+      #    nkIdent("importc"),
+      #    nkStrLit("abc")
       #   )
       #  )
       # )
-      let
-        prident = block:
-          var
-            prident: PNode
-          # Add {.importc.} pragma
-          if name != origname:
-            # Name changed
-            prident = gState.newPragmaExpr(node, ident, "importc", newStrNode(nkStrLit, &"{origname}"))
-          else:
-            prident = gState.newPragmaExpr(node, ident, "importc")
+      result = block:
+        var
+          prident: PNode
+        # Add {.importc.} pragma
+        if name != origname:
+          # Name changed
+          prident = gState.newPragmaExpr(node, ident, "importc", newStrNode(nkStrLit, &"{origname}"))
+        else:
+          prident = gState.newPragmaExpr(node, ident, "importc")
 
-          if gState.dynlib.nBl:
-            # Add {.dynlib.}
-            gState.addPragma(node, prident[1], gState.impShort & "Dyn")
-          elif not gState.noHeader:
-            # Add {.header.}
-            gState.addPragma(node, prident[1], gState.impShort & "Hdr")
+        if gState.dynlib.nBl:
+          # Add {.dynlib.}
+          gState.addPragma(node, prident[1], gState.impShort & "Dyn")
+        elif not gState.noHeader:
+          # Add {.header.}
+          gState.addPragma(node, prident[1], gState.impShort & "Hdr")
 
-          if pragmas.nBl:
-            gState.addPragma(node, prident[1], pragmas)
-          prident
-
-      result = newNode(nkIdentDefs)
-      result.add prident
+        if pragmas.nBl:
+          gState.addPragma(node, prident[1], pragmas)
+        prident
     elif kind == nskProc:
       # name*
       #
@@ -426,12 +422,39 @@ proc newArrayTree(gState: State, node: TSNode, typ, size: PNode = nil): PNode =
 proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNode
 proc getTypeProc(gState: State, name: string, node, rnode: TSNode): PNode
 
-iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInteger, ftname = "", exported = false): PNode =
-  # Create nkIdentDefs tree for specified proc parameter or object field
+proc getTypeAndStart(gState: State, name: string, node: TSNode, ftname = ""):
+  tuple[tname: string, tinfo: TLineInfo, tident: PNode, start: int] =
+  # Shortcut to get start node and type info from first node
   #
-  # For proc, param should not be `exported`
+  # `name` is the parent type or proc
   #
-  # If `ftname` is set, use it as the type name
+  # If `ftname` is set, use it as the type name instead
+  result.start = getStartAtom(node)
+
+  let
+    # node[start] - param type
+    (tname0, _, tinfo) = gState.getNameInfo(node[result.start].getAtom(), nskType, parent = name)
+
+  # Override type name
+  result.tname =
+    if ftname.nBl:
+      ftname
+    else:
+      tname0
+
+  result.tinfo = tinfo
+  result.tident = gState.getIdent(result.tname, tinfo, exported = false)
+
+proc newIdentDef(gState: State, name: string, node: TSNode, tname: string, tinfo: TLineInfo, tident: PNode,
+  start, offset, poffset: SomeInteger, exported = false): PNode =
+  # Create nkIdentDefs tree for specified proc parameter, object field or var/proc var
+  #
+  # `name` is the parent type or proc - if blank, this is a var so add pragmas
+  # `tname`, `tinfo` and `tident` are the type info for the node
+  # `start` is the `node` child where type is located
+  # `offset` is the nth `node` child where specified param/field/var is located - from `addVar()`
+  # `poffset` is the param number and used for unnamed params in procs - from `newIdentDefs()` iterator
+  # `isvar` when true adds pragmas
   #
   # pname: [ptr ..] typ
   #
@@ -441,7 +464,7 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
   #  nkEmpty()
   # )
   #
-  # For object, field should be exported
+  # For objects and vars/proc vars, field should be exported
   #
   # pname*: [ptr ..] typ
   #
@@ -453,6 +476,125 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
   #  typ,
   #  nkEmpty()
   # )
+  result = newNode(nkIdentDefs)
+
+  let
+    fdecl = node[offset].firstChildInTree("function_declarator")
+    afdecl = node[offset].firstChildInTree("abstract_function_declarator")
+    adecl = node[offset].firstChildInTree("array_declarator")
+    abst = node[offset].getName() == "abstract_pointer_declarator"
+  if fdecl.isNil and afdecl.isNil and adecl.isNil:
+    if abst:
+      # Only for proc with no named param with pointer type
+      # Create a param name based on poffset
+      #
+      # int func(char *, int **);
+      let
+        pname = "a" & $(poffset+1)
+        pident = gState.getIdent(pname, tinfo, exported)
+        acount = node[offset].getXCount("abstract_pointer_declarator")
+      result.add pident
+      result.add gState.newPtrTree(acount, tident)
+      result.add newNode(nkEmpty)
+    else:
+      # Named param, simple type
+      if name.nBl:
+        # Types and procs - `newIdentDefs()` iterator
+        let
+          (pname, _, pinfo) = gState.getNameInfo(node[offset].getAtom(), nskField, parent = name)
+          pident = gState.getIdent(pname, pinfo, exported)
+
+          # Bitfield support - typedef struct { int field: 1; };
+          prident =
+            if node.len > offset and node[offset + 1].getName() == "bitfield_clause":
+              gState.newPragmaExpr(node, pident, "bitsize",
+                newIntNode(nkIntLit, parseInt(gState.getNodeVal(node[offset + 1].getAtom()))))
+            else:
+              pident
+
+        result.add prident
+      else:
+        # Vars - `addVar()`
+        let
+          pident = gState.newXIdent(node[offset], nskVar)
+        if pident.isNil:
+          return nil
+
+        result.add pident
+
+      let
+        count = node[offset].getPtrCount()
+      if count > 0:
+        result.add gState.newPtrTree(count, tident)
+      else:
+        result.add tident
+      result.add newNode(nkEmpty)
+  elif not fdecl.isNil:
+    # Named param, function pointer
+    var
+      name = name
+      pident: PNode
+    if name.nBl:
+      # Types and procs - `newIdentDefs()` iterator
+      let
+        (pname, _, pinfo) = gState.getNameInfo(node[offset].getAtom(), nskField, parent = name)
+      pident = gState.getIdent(pname, pinfo, exported)
+    else:
+      # Vars - `addVar()`
+      pident = gState.newXIdent(node[offset], nskVar)
+      if pident.isNil:
+        return nil
+      # The var is the parent
+      name = pident.getIdentName()
+
+    result.add pident
+    result.add gState.getTypeProc(name, node[offset], node[start])
+    result.add newNode(nkEmpty)
+  elif not afdecl.isNil:
+    # Only for proc with no named param with function pointer type
+    # Create a param name based on poffset
+    #
+    # int func(int (*)(int *));
+    let
+      pname = "a" & $(poffset+1)
+      pident = gState.getIdent(pname, tinfo, exported)
+      procTy = gState.getTypeProc(name, node[offset], node[start])
+    result.add pident
+    result.add procTy
+    result.add newNode(nkEmpty)
+  elif not adecl.isNil:
+    # Named param, array type
+    var
+      name = name
+      pident: PNode
+    if name.nBl:
+      # Types and procs - `newIdentDefs()` iterator
+      let
+        (pname, _, pinfo) = gState.getNameInfo(node[offset].getAtom(), nskField, parent = name)
+      pident = gState.getIdent(pname, pinfo, exported)
+    else:
+      # Vars - `addVar()`
+      pident = gState.newXIdent(node[offset], nskVar)
+      if pident.isNil:
+        return nil
+      # The var is the parent
+      name = pident.getIdentName()
+
+    result.add pident
+    result.add gState.getTypeArray(node[offset], tident, name)
+    result.add newNode(nkEmpty)
+  else:
+    result = nil
+
+iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInteger, ftname = "", exported = false): PNode =
+  # Create nkIdentDefs tree for specified proc parameter or object field
+  #
+  # `name` is the parent type or proc
+  # `offset` is the param number and used for unnamed params in procs
+  #
+  # For proc, param should not be `exported`
+  #
+  # If `ftname` is set, use it as the type name
   #
   # Iterator since structs can have multiple comma separated fields for the
   # same type so can yield multiple results.
@@ -460,23 +602,12 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
   # struct ABC { int w, h; };
   #
   # This is not applicable for procs.
-  var
-    start = getStartAtom(node)
-
   let
-    # node[start] - param type
-    (tname0, _, tinfo) = gState.getNameInfo(node[start].getAtom(), nskType, parent = name)
-
-    # Override type name
-    tname =
-      if ftname.nBl:
-        ftname
-      else:
-        tname0
-
-    tident = gState.getIdent(tname, tinfo, exported = false)
+    (tname, tinfo, tident, start0) = gState.getTypeAndStart(name, node, ftname)
 
   # Skip qualifiers after type
+  var
+    start = start0
   while start < node.len - 1 and node[start+1].getName() == "type_qualifier":
     start += 1
 
@@ -503,82 +634,7 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
     for i in start+1 ..< node.len:
       if node[i].getName() == "bitfield_clause":
         continue
-
-      var
-        result = newNode(nkIdentDefs)
-
-      let
-        fdecl = node[i].firstChildInTree("function_declarator")
-        afdecl = node[i].firstChildInTree("abstract_function_declarator")
-        adecl = node[i].firstChildInTree("array_declarator")
-        abst = node[i].getName() == "abstract_pointer_declarator"
-      if fdecl.isNil and afdecl.isNil and adecl.isNil:
-        if abst:
-          # Only for proc with no named param with pointer type
-          # Create a param name based on offset
-          #
-          # int func(char *, int **);
-          let
-            pname = "a" & $(offset+1)
-            pident = gState.getIdent(pname, tinfo, exported)
-            acount = node[i].getXCount("abstract_pointer_declarator")
-          result.add pident
-          result.add gState.newPtrTree(acount, tident)
-          result.add newNode(nkEmpty)
-        else:
-          # Named param, simple type
-          let
-            (pname, _, pinfo) = gState.getNameInfo(node[i].getAtom(), nskField, parent = name)
-            pident = gState.getIdent(pname, pinfo, exported)
-
-            # Bitfield support - typedef struct { int field: 1; };
-            prident =
-              if node.len > i and node[i + 1].getName() == "bitfield_clause":
-                gState.newPragmaExpr(node, pident, "bitsize",
-                  newIntNode(nkIntLit, parseInt(gState.getNodeVal(node[i + 1].getAtom()))))
-              else:
-                pident
-
-            count = node[i].getPtrCount()
-
-          result.add prident
-          if count > 0:
-            result.add gState.newPtrTree(count, tident)
-          else:
-            result.add tident
-          result.add newNode(nkEmpty)
-      elif not fdecl.isNil:
-        # Named param, function pointer
-        let
-          (pname, _, pinfo) = gState.getNameInfo(node[i].getAtom(), nskField, parent = name)
-          pident = gState.getIdent(pname, pinfo, exported)
-        result.add pident
-        result.add gState.getTypeProc(name, node[i], node[start])
-        result.add newNode(nkEmpty)
-      elif not afdecl.isNil:
-        # Only for proc with no named param with function pointer type
-        # Create a param name based on offset
-        #
-        # int func(int (*)(int *));
-        let
-          pname = "a" & $(offset+1)
-          pident = gState.getIdent(pname, tinfo, exported)
-          procTy = gState.getTypeProc(name, node[i], node[start])
-        result.add pident
-        result.add procTy
-        result.add newNode(nkEmpty)
-      elif not adecl.isNil:
-        # Named param, array type
-        let
-          (pname, _, pinfo) = gState.getNameInfo(node[i].getAtom(), nskField, parent = name)
-          pident = gState.getIdent(pname, pinfo, exported)
-        result.add pident
-        result.add gState.getTypeArray(node[i], tident, name)
-        result.add newNode(nkEmpty)
-      else:
-        result = nil
-
-      yield result
+      yield gState.newIdentDef(name, node, tname, tinfo, tident, start, i, offset, exported)
 
 proc newFormalParams(gState: State, name: string, node: TSNode, rtyp: PNode): PNode =
   # Create nkFormalParams tree for specified params and return type
@@ -967,11 +1023,8 @@ proc addTypeArray(gState: State, node: TSNode) =
   # Add a type of array type
   decho("addTypeArray()")
   let
-    start = getStartAtom(node)
+    (_, _, tident, start) = gState.getTypeAndStart("addTypeArray", node)
 
-    # node[start] = identifier = type name
-    (tname, _, info) = gState.getNameInfo(node[start].getAtom(), nskType, parent = "addTypeArray")
-    tident = gState.getIdent(tname, info, exported = false)
     commentNodes = gState.getCommentNodes(node)
 
   # Could have multiple types, comma separated
@@ -1015,6 +1068,7 @@ proc addTypeArray(gState: State, node: TSNode) =
 proc getTypeProc(gState: State, name: string, node, rnode: TSNode): PNode =
   # Create proc type tree
   #
+  # `name` is the parent type or proc
   # `rnode` is the return type
   let
     # rnode = identifier = return type name
@@ -1368,7 +1422,7 @@ proc addEnum(gState: State, node: TSNode) =
         fnames: HashSet[string]
         # Hold all of field information so that we can add all of them
         # after the const identifiers has been updated
-        fieldDeclarations: seq[tuple[fname: string, fval: string, cexpr: Option[TSNode], comment: seq[TSNode]]]
+        fieldDeclarations: seq[tuple[fname, forigname, fval, cexpr: string, comment: seq[TSNode]]]
       for i in 0 .. enumlist.len - 1:
         let
           en = enumlist[i]
@@ -1378,7 +1432,8 @@ proc addEnum(gState: State, node: TSNode) =
         let
           atom = en.getAtom()
           commentNodes = gState.getCommentNodes(en)
-          fname = gState.getIdentifier(gState.getNodeVal(atom), nskEnumField)
+          forigname = gState.getNodeVal(atom)
+          fname = gState.getIdentifier(forigname, nskEnumField)
 
         if fname.nBl and gState.addNewIdentifer(fname):
           var
@@ -1391,9 +1446,9 @@ proc addEnum(gState: State, node: TSNode) =
             fval = &"({prev} + 1).{name}"
 
           if en.len > 1 and en[1].getName() in gEnumVals:
-            fieldDeclarations.add((fname, "", some(en[1]), commentNodes))
+            fieldDeclarations.add((fname, forigname, "", gState.getNodeVal(en[1]), commentNodes))
           else:
-            fieldDeclarations.add((fname, fval, none(TSNode), commentNodes))
+            fieldDeclarations.add((fname, forigname, fval, "", commentNodes))
 
           fnames.incl fname
           prev = fname
@@ -1403,77 +1458,24 @@ proc addEnum(gState: State, node: TSNode) =
       gState.constIdentifiers.incl fnames
 
       # parseCExpression requires all const identifiers to be present for the enum
-      for (fname, fval, cexprNode, commentNodes) in fieldDeclarations:
-        var fval = fval
-        if cexprNode.isSome:
-          fval = "(" & $gState.parseCExpression(gState.getNodeVal(cexprNode.get()), name) & ")." & name
-        # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
-        let constNode = gState.parseString(&"const {fname}* = {fval}")[0][0]
+      for (fname, forigname, fval, cexpr, commentNodes) in fieldDeclarations:
+        let
+          fval =
+            if fval.Bl:
+              "(" & $gState.parseCExpression(cexpr, name) & ")." & name
+            else: fval
+
+          # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
+          constNode = gState.parseString(&"const {fname}* = {fval}")[0][0]
+
         constNode.comment = gState.getCommentsStr(commentNodes)
         gState.constSection.add constNode
+        # In case symbol was skipped earlier
+        gState.skippedSyms.excl forigname
 
       # Add other names
       if node.getName() == "type_definition" and node.len > 1:
         gState.addTypeTyped(node, ftname = name, offset = offset)
-
-proc addProcVar(gState: State, node, rnode: TSNode, commentNodes: seq[TSNode]) =
-  # Add a proc variable
-  decho("addProcVar()")
-  let
-    # node = identifier = name
-    identDefs = gState.newXIdent(node, kind = nskVar, istype = true)
-
-  if not identDefs.isNil:
-    let
-      name = identDefs.getIdentName()
-      # origname = gState.getNodeVal(node.getAtom())
-
-      procTy = gState.getTypeProc(name, node, rnode)
-
-    identDefs.add procTy
-    identDefs.add newNode(nkEmpty)
-
-    # var X* {.importc: "_X": proc(a1: Y, a2: Z): P {.cdecl.}
-    #
-    # nkIdentDefs(
-    #  nkPragmaExpr(
-    #   nkPostfix(
-    #    nkIdent("*"),
-    #    nkIdent("X")
-    #   ),
-    #   nkPragma(
-    #    nkExprColonExpr(
-    #     nkIdent("importc"),
-    #     nkStrLit("_X")
-    #    )
-    #   )
-    #  ),
-    #  nkProcTy(
-    #   nkFormalParams(
-    #    nkIdent("P"),
-    #    nkIdentDefs(
-    #     nkIdent("a1"),
-    #     nkIdent("Y"),
-    #     nkEmpty()
-    #    ),
-    #    nkIdentDefs(
-    #     nkIdent("a2"),
-    #     nkIdent("Z"),
-    #     nkEmpty()
-    #    )
-    #   ),
-    #   nkPragma(
-    #    nkIdent("cdecl")
-    #   )
-    #  ),
-    #  nkEmpty()
-    # )
-
-    identDefs.comment = gState.getCommentsStr(commentNodes)
-    # nkVarSection.add
-    gState.varSection.add identDefs
-
-    gState.printDebug(identDefs)
 
 proc addProc(gState: State, node, rnode: TSNode, commentNodes: seq[TSNode]) =
   # Add a proc
@@ -1585,6 +1587,65 @@ proc addProc(gState: State, node, rnode: TSNode, commentNodes: seq[TSNode]) =
 
     gState.printDebug(procDef)
 
+proc addVar(gState: State, node: TSNode, offset: SomeInteger, commentNodes: seq[TSNode]) =
+  # Add a regular variable
+  #
+  # `node` is the `nth` child of (declaration)
+  # `tnode` is the type node, the first child of (declaration)
+  decho("addVar()")
+  let
+    (tname, tinfo, tident, start) = gState.getTypeAndStart("", node)
+
+    identDefs = gState.newIdentDef("", node, tname, tinfo, tident, start, offset, 0, exported = true)
+
+  if not identDefs.isNil:
+    # proc var
+    #
+    # P (*_X)(Y a1, Z a2);
+    #
+    # var X* {.importc: "_X": proc(a1: Y, a2: Z): P {.cdecl.}
+    #
+    # nkIdentDefs(
+    #  nkPragmaExpr(
+    #   nkPostfix(
+    #    nkIdent("*"),
+    #    nkIdent("X")
+    #   ),
+    #   nkPragma(
+    #    nkExprColonExpr(
+    #     nkIdent("importc"),
+    #     nkStrLit("_X")
+    #    )
+    #   )
+    #  ),
+    #  nkProcTy(
+    #   nkFormalParams(
+    #    nkIdent("P"),
+    #    nkIdentDefs(
+    #     nkIdent("a1"),
+    #     nkIdent("Y"),
+    #     nkEmpty()
+    #    ),
+    #    nkIdentDefs(
+    #     nkIdent("a2"),
+    #     nkIdent("Z"),
+    #     nkEmpty()
+    #    )
+    #   ),
+    #   nkPragma(
+    #    nkIdent("cdecl")
+    #   )
+    #  ),
+    #  nkEmpty()
+    # )
+
+    identDefs.comment = gState.getCommentsStr(commentNodes)
+
+    # nkVarSection.add
+    gState.varSection.add identDefs
+
+    gState.printDebug(identDefs)
+
 proc addDecl(gState: State, node: TSNode) =
   # Add a declaration
   decho("addDecl()")
@@ -1598,31 +1659,29 @@ proc addDecl(gState: State, node: TSNode) =
     commentNodes: seq[TSNode]
 
   for i in start+1 ..< node.len:
+    if node[i].getName() == "comment":
+      continue
+
+    if firstDecl:
+      # If it's the first declaration, use the whole node
+      # to get the comment above/below
+      commentNodes = gState.getCommentNodes(node)
+      firstDecl = false
+    else:
+      commentNodes = gState.getCommentNodes(node[i])
+
     if not node[i].firstChildInTree("function_declarator").isNil:
       # Proc declaration - var or actual proc
       if node[i].getAtom().getPxName(1) == "pointer_declarator":
         # proc var
-        if firstDecl:
-          # If it's the first declaration, use the whole node
-          # to get the comment above/below
-          commentNodes = gState.getCommentNodes(node)
-          firstDecl = false
-        else:
-          commentNodes = gState.getCommentNodes(node[i])
-        gState.addProcVar(node[i], node[start], commentNodes)
+        #gState.addProcVar(node[i], node[start], commentNodes)
+        gState.addVar(node, i, commentNodes)
       else:
         # proc
-        if firstDecl:
-          # If it's the first declaration, use the whole node
-          # to get the comment above/below
-          commentNodes = gState.getCommentNodes(node)
-          firstDecl = false
-        else:
-          commentNodes = gState.getCommentNodes(node[i])
         gState.addProc(node[i], node[start], commentNodes)
     else:
       # Regular var
-      discard
+      gState.addVar(node, i, commentNodes)
 
 proc addDef(gState: State, node: TSNode) =
   # Wrap static inline definition if {.header.} mode is specified

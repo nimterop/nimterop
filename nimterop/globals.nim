@@ -139,7 +139,7 @@ template Bl*(s: typed): untyped {.used.} =
 # Redirect output to file when required
 template gecho*(args: string) =
   if gState.outputHandle.isNil:
-    stdout.writeLine(args)
+    echo args
   else:
     gState.outputHandle.writeLine(args)
 
