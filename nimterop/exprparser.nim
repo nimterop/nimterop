@@ -1,4 +1,4 @@
-import strformat, strutils, macros, sets
+import strformat, strutils, macros, sets, sequtils
 
 import regex
 
@@ -31,6 +31,10 @@ import "."/[globals, getters, comphelp, tshelp]
 
 type
   ExprParseError* = object of CatchableError
+
+const
+  CharRegStr = "(\\\\x[[:xdigit:]]{2}|\\\\\\d{3}|\\\\0|\\\\a|\\\\b|\\\\e|\\\\f|\\\\n|\\\\r|\\\\t|\\\\v|\\\\\\\\|\\\\'|\\\\\"|[[:ascii:]])"
+  CharRegex = re(CharRegStr)
 
 template val(node: TSNode): string =
   gState.currentExpr.getNodeVal(node)
@@ -138,13 +142,13 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
     flags: TNodeFlags
   # I realize these regex are wasteful on performance, but
   # couldn't come up with a better idea.
-  if number.contains(re"0[xX]"):
+  if number.startsWith("0X") or number.startsWith("0x"):
     val = parseHexInt(number)
     flags = {nfBase16}
-  elif number.contains(re"0[bB]"):
+  elif number.startsWith("0B") or number.startsWith("0b"):
     val = parseBinInt(number)
     flags = {nfBase2}
-  elif number.contains(re"0[oO]"):
+  elif number.startsWith("0O") or number.startsWith("0o"):
     val = parseOctInt(number)
     flags = {nfBase8}
   else:
@@ -186,25 +190,36 @@ proc processNumberLiteral(gState: State, node: TSNode): PNode =
   ## Parse a number literal from a TSNode. Can be a float, hex, long, etc
   result = newNode(nkNone)
   let nodeVal = node.val
+  var
+    prefix: string
+    number = nodeVal
+    suffix: string
 
-  var match: RegexMatch
-  const reg = re"(\-)?(0\d+|0[xX][0-9a-fA-F]+|0[bB][01]+|\d+\.\d*[fFlL]?|\d*\.\d+[fFlL]?|\d+)([ulUL]*)"
-  let found = nodeVal.find(reg, match)
-  if found:
-    let
-      prefix = if match.group(0).len > 0: nodeVal[match.group(0)[0]] else: ""
-      number = nodeVal[match.group(1)[0]]
-      suffix = nodeVal[match.group(2)[0]]
+  const
+    singleEndings = ["u", "l", "U", "L"]
+    doubleEndings = ["ul", "UL", "ll", "LL"]
+    tripleEndings = ["ull", "ULL"]
 
-    result = getNumNode(number, suffix)
+  if number.startsWith("-"):
+    number = number[1 ..< number.len]
+    prefix = "-"
+  if tripleEndings.any(proc (s: string): bool = number.endsWith(s)):
+    suffix = number[^3 .. ^1]
+    number = number[0 ..< ^3]
+  elif doubleEndings.any(proc (s: string): bool = number.endsWith(s)):
+    suffix = number[^2 .. ^1]
+    number = number[0 ..< ^2]
+  elif singleEndings.any(proc (s: string): bool = number.endsWith(s)):
+    suffix = $number[number.len - 1]
+    number = number[0 ..< ^1]
 
-    if result.kind != nkNone and prefix == "-":
-      result = nkPrefix.newTree(
-        gState.getIdent("-"),
-        result
-      )
-  else:
-    raise newException(ExprParseError, &"Could not find a number in number_literal: \"{nodeVal}\"")
+  result = getNumNode(number, suffix)
+
+  if result.kind != nkNone and prefix == "-":
+    result = nkPrefix.newTree(
+      gState.getIdent("-"),
+      result
+    )
 
 proc processCharacterLiteral(gState: State, node: TSNode): PNode =
   # Input => 'G'
@@ -234,13 +249,9 @@ proc processStringLiteral(gState: State, node: TSNode): PNode =
     nodeVal = node.val
     strVal = nodeVal[1 ..< nodeVal.len - 1]
 
-  const
-    str = "(\\\\x[[:xdigit:]]{2}|\\\\\\d{3}|\\\\0|\\\\a|\\\\b|\\\\e|\\\\f|\\\\n|\\\\r|\\\\t|\\\\v|\\\\\\\\|\\\\'|\\\\\"|[[:ascii:]])"
-    reg = re(str)
-
   # Convert the c string escape sequences/etc to Nim chars
   var nimStr = newStringOfCap(nodeVal.len)
-  for m in strVal.findAll(reg):
+  for m in strVal.findAll(CharRegex):
     nimStr.add(parseChar(strVal[m.group(0)[0]]).chr)
 
   result = newStrNode(nkStrLit, nimStr)
