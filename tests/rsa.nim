@@ -35,10 +35,11 @@ cPlugin:
 cOverride:
   proc OPENSSL_die*(assertion: cstring; file: cstring; line: cint) {.importc.}
 
+# Skip comments for https://github.com/tree-sitter/tree-sitter-c/issues/44
 cImport(@[
   basePath / "rsa.h",
   basePath / "err.h",
-], recurse = true, flags = "-f:ast2 -s " & FLAGS)
+], recurse = true, flags = "-f:ast2 -s -c " & FLAGS)
 
 {.passL: cryptoLPath.}
 

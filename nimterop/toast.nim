@@ -13,7 +13,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
     gState.mode = getCompilerMode(path)
 
   if gState.preprocess:
-    gState.code = gState.getPreprocessor(path)
+    gState.getPreprocessor(path)
   else:
     gState.code = readFile(path)
 
@@ -35,7 +35,7 @@ proc main(
     debug = false,
     defines: seq[string] = @[],
     dynlib: string = "",
-    feature: seq[Feature] = @[Feature.ast1],
+    feature: seq[Feature] = @[],
     includeDirs: seq[string] = @[],
     mode = "",
     nim: string = "nim",
@@ -82,6 +82,10 @@ proc main(
 
   # Set gDebug in build.nim
   build.gDebug = debug
+
+  # Default `ast` mode
+  if gState.feature.Bl:
+    gState.feature.add Feature.ast1
 
   # Split some arguments with ,
   gState.symOverride = gState.symOverride.getSplitComma()

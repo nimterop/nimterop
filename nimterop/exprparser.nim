@@ -600,7 +600,8 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   else:
     raise newException(ExprParseError, &"Unsupported node type \"{nodeName}\" for node \"{node.val}\"")
 
-  decho "NODE RESULT: ", result
+  if result.kind != nkNone:
+    decho "NODE RESULT: ", result
 
 proc parseCExpression*(gState: State, codeRoot: TSNode): PNode =
   ## Parse a c expression from a root ts node

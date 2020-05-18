@@ -116,7 +116,7 @@ proc getType*(str: string): string =
   if str == "void":
     return "object"
 
-  result = str.strip(chars={'_'}).replace(re"\s+", " ")
+  result = str.strip(chars={'_'}).splitWhitespace().join(" ")
 
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
@@ -246,17 +246,23 @@ proc getKeyword*(kind: NimSymKind): string =
 proc getCurrentHeader*(fullpath: string): string =
   ("header" & fullpath.splitFile().name.multiReplace([(".", ""), ("-", "")]))
 
-proc getPreprocessor*(gState: State, fullpath: string): string =
+proc getPreprocessor*(gState: State, fullpath: string) =
   var
     cmts = if gState.noComments: "" else: "-CC"
     cmd = &"""{getCompiler()} -E {cmts} -dD {getGccModeArg(gState.mode)} -w """
 
-    rdata: seq[string] = @[]
+    ddata: seq[string]
+    rdata: seq[string]
     start = false
     sfile = fullpath.sanitizePath(noQuote = true)
 
+    sfileName = sfile.extractFilename()
+    pDir = sfile.expandFilename().parentDir()
+    includeDirs: seq[string]
+
   for inc in gState.includeDirs:
     cmd &= &"-I{inc.sanitizePath} "
+    includeDirs.add inc.absolutePath().sanitizePath(noQuote = true)
 
   for def in gState.defines:
     cmd &= &"-D{def} "
@@ -267,7 +273,10 @@ proc getPreprocessor*(gState: State, fullpath: string): string =
   else:
     cmd &= "-D__attribute__(x)= "
 
-  cmd &= "-D__restrict= -D__extension__= "
+  cmd &= "-D__restrict= -D__extension__= -D__inline__=inline -D__inline=inline "
+
+  # https://github.com/tree-sitter/tree-sitter-c/issues/43
+  cmd &= "-D_Noreturn= "
 
   cmd &= &"{fullpath.sanitizePath}"
 
@@ -278,26 +287,26 @@ proc getPreprocessor*(gState: State, fullpath: string): string =
       start = false
       let
         saniLine = line.sanitizePath(noQuote = true)
-      if sfile in saniLine:
-        start = true
-      elif not ("\\" in line) and not ("/" in line) and extractFilename(sfile) in line:
+      if sfile in saniLine or
+        (DirSep notin saniLine and sfileName in saniLine):
         start = true
       elif gState.recurse:
-        let
-          pDir = sfile.expandFilename().parentDir().sanitizePath(noQuote = true)
         if pDir.Bl or pDir in saniLine:
           start = true
         else:
-          for inc in gState.includeDirs:
-            if inc.absolutePath().sanitizePath(noQuote = true) in saniLine:
+          for inc in includeDirs:
+            if inc in saniLine:
               start = true
               break
     else:
       if start:
         if "#undef" in line:
           continue
-        rdata.add line
-  return rdata.join("\n")
+        elif line.startsWith("#define"):
+          ddata.add line
+        else:
+          rdata.add line
+  gState.code = ddata.join("\n") & "\n" & rdata.join("\n")
 
 converter toString*(kind: Kind): string =
   return case kind:

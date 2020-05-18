@@ -50,7 +50,7 @@ proc getName*(node: TSNode): string {.inline.} =
 
 proc getNodeVal*(code: var string, node: TSNode): string =
   if not node.isNil:
-    return code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1].strip()
+    return code[node.tsNodeStartByte() .. node.tsNodeEndByte()-1]
 
 proc getNodeVal*(gState: State, node: TSNode): string =
   gState.code.getNodeVal(node)
