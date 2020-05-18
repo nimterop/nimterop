@@ -17,8 +17,6 @@ All `{.compileTime.}` procs must be used in a compile time context, e.g. using:
 
 import hashes, macros, os, strformat, strutils
 
-import regex
-
 import "."/[build, globals, paths, types]
 export types
 
@@ -684,7 +682,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
     hash = output.hash().abs()
     hpath = getProjectCacheDir("c2nimCache", forceClean = false) / "nimterop_" & $hash & ".h"
     npath = hpath[0 .. hpath.rfind('.')] & "nim"
-    header = ("header" & fullpath.splitFile().name.replace(re"[-.]+", ""))
+    header = "header" & fullpath.splitFile().name.split(seps = {'-', '.'}).join()
 
   if not fileExists(hpath) or gStateCT.nocache or compileOption("forceBuild"):
     mkDir(hpath.parentDir())
@@ -714,10 +712,6 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
 
   var
     nimout = &"const {header} = \"{fullpath}\"\n\n" & readFile(npath)
-
-  nimout = nimout.
-    replace(re"([u]?int[\d]+)_t", "$1").
-    replace(re"([u]?int)ptr_t", "ptr $1")
 
   if gStateCT.debug:
     echo nimout

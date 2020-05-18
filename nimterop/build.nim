@@ -2,8 +2,6 @@ import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
 
-import regex
-
 type
   BuildType* = enum
     btAutoconf, btCmake
@@ -995,7 +993,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   ## prior to the build process.
   var
     origname = header.extractFilename().split(".")[0]
-    name = origname.replace(re"[[:^alnum:]]", "")
+    name = origname.split(seps = AllChars-Letters-Digits).join()
 
     # -d:xxx for this header
     stdStr = name & "Std"

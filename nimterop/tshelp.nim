@@ -81,6 +81,23 @@ proc getStartAtom*(node: TSNode): int =
       else:
         break
 
+proc getConstQualifier*(gState: State, node: TSNode): bool =
+  # Check if node siblings have type_qualifier = `const`
+  var
+    curr = node.tsNodePrevNamedSibling()
+  while not curr.isNil:
+    # Check previous siblings
+    if curr.getName() == "type_qualifier" and
+      gState.getNodeVal(curr) == "const":
+        return true
+    curr = curr.tsNodePrevNamedSibling()
+
+  # Check immediate next sibling
+  curr = node.tsNodePrevNamedSibling()
+  if curr.getName() == "type_qualifier" and
+    gState.getNodeVal(curr) == "const":
+      return true
+
 proc getXCount*(node: TSNode, ntype: string, reverse = false): int =
   if not node.isNil:
     # Get number of ntype nodes nested in tree
