@@ -35,6 +35,7 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.0
   - Nested function pointers - [#155][i155] [#156][i156]
   - Various enum fixes - [#159][i159] [#171][i171]
   - Map `int arr[]` to `arr: UncheckedArray[cint]` - [#174][i174]
+  - Global variables including arrays and procs (since v0.5.4)
 
 - `ast2` also includes an advanced expression parser that can reliably handle constructs typically seen with `#define` statements and enumeration values:
   - Integers + integer like expressions (hex, octal, suffixes)
