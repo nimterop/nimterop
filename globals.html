@@ -98,29 +98,11 @@ function main() {
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li>
-  <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
-  <ul class="simple simple-toc-section">
-    
-  </ul>
-</li>
-<li>
   <a class="reference reference-toplevel" href="#7" id="57">Types</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#Kind"
-    title="Kind = enum
-  exactlyOne, oneOrMore, zeroOrMore, zeroOrOne, orWithNext"><wbr />Kind<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#Ast"
-    title="Ast = object
-  name*: string
-  kind*: Kind
-  recursive*: bool
-  children*: seq[ref Ast]
-  when defined(TOAST):
-      tonim*: proc (ast: ref Ast; node: TSNode; gState: State)
-
-  regex*: Regex"><wbr />Ast<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#AstTable"
-    title="AstTable {.used.} = TableRef[string, seq[ref Ast]]"><wbr />Ast<wbr />Table<span class="attachedType"></span></a></li>
+      <li><a class="reference" href="#Feature"
+    title="Feature = enum
+  ast1, ast2"><wbr />Feature<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#State"
     title="State = ref object
   convention*: string
@@ -142,37 +124,37 @@ function main() {
   replace*: OrderedTableRef[string, string]
   suffix*: seq[string]
   symOverride*: seq[string]
-  compile*: seq[string]
-  nocache*: bool
-  overrides*: string
-  pluginSource*: string
-  searchDirs*: seq[string]
-  code*: string
-  currentHeader*: string
-  impShort*: string
-  outputHandle*: File
-  sourceFile*: string
-  onSymbol*, onSymbolOverride*: OnSymbol
-  onSymbolOverrideFinal*: OnSymbolOverrideFinal
-  constIdentifiers*: HashSet[string]
-  identifiers*: TableRef[string, string]
-  skippedSyms*: HashSet[string]
+  typeMap*: TableRef[string, string]
   when defined(TOAST):
+      code*: string
+      currentHeader*: string
+      impShort*: string
+      outputHandle*: File
+      sourceFile*: string
+      onSymbol*, onSymbolOverride*: OnSymbol
+      onSymbolOverrideFinal*: OnSymbolOverrideFinal
+      constIdentifiers*: HashSet[string]
+      identifiers*: TableRef[string, string]
+      skippedSyms*: HashSet[string]
       constSection*, enumSection*, pragmaSection*, procSection*, typeSection*,
       varSection*: PNode
       identCache*: IdentCache
       config*: ConfigRef
       graph*: ModuleGraph
       identifierNodes*: TableRef[string, PNode]
+      currentExpr*, currentTyCastName*: string
+      skipIdentValidation*: bool
+      constStr*, enumStr*, procStr*, typeStr*: string
+      commentStr*, debugStr*, skipStr*: string
+      data*: seq[tuple[name, val: string]]
+      nodeBranch*: seq[string]
 
-  currentExpr*, currentTyCastName*: string
-  constStr*, enumStr*, procStr*, typeStr*: string
-  commentStr*, debugStr*, skipStr*: string
-  data*: seq[tuple[name, val: string]]
-  nodeBranch*: seq[string]"><wbr />State<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#Feature"
-    title="Feature = enum
-  ast1, ast2"><wbr />Feature<span class="attachedType"></span></a></li>
+  else:
+      compile*: seq[string]
+      nocache*: bool
+      overrides*: string
+      pluginSource*: string
+      searchDirs*: seq[string]"><wbr />State<span class="attachedType"></span></a></li>
 
   </ul>
 </li>
@@ -185,40 +167,12 @@ function main() {
   </ul>
 </li>
 <li>
-  <a class="reference reference-toplevel" href="#10" id="60">Consts</a>
-  <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#gAtoms"
-    title="gAtoms = (data: [(0, &quot;&quot;), (0, &quot;&quot;), (1614225842, &quot;number_literal&quot;),
-              (1319695283, &quot;primitive_type&quot;), (1793269124, &quot;field_identifier&quot;),
-              (0, &quot;&quot;), (3981357206, &quot;sized_type_specifier&quot;), (0, &quot;&quot;), (0, &quot;&quot;),
-              (2270920025, &quot;identifier&quot;), (2611676809, &quot;type_identifier&quot;),
-              (826664731, &quot;char_literal&quot;), (0, &quot;&quot;), (0, &quot;&quot;), (0, &quot;&quot;),
-              (117363871, &quot;preproc_arg&quot;)], counter: 8)"><wbr />g<wbr />Atoms<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#gExpressions"
-    title="gExpressions = (data: [(0, &quot;&quot;), (0, &quot;&quot;), (0, &quot;&quot;), (0, &quot;&quot;),
-                    (1136084212, &quot;bitwise_expression&quot;),
-                    (3224825605, &quot;math_expression&quot;), (0, &quot;&quot;), (0, &quot;&quot;), (0, &quot;&quot;),
-                    (0, &quot;&quot;), (0, &quot;&quot;), (0, &quot;&quot;), (0, &quot;&quot;), (928982205, &quot;escape_sequence&quot;),
-                    (248082302, &quot;parenthesized_expression&quot;),
-                    (3969200367, &quot;shift_expression&quot;)], counter: 5)"><wbr />g<wbr />Expressions<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#gEnumVals"
-    title="gEnumVals = [&quot;identifier&quot;, &quot;number_literal&quot;, &quot;char_literal&quot;, &quot;bitwise_expression&quot;,
-           &quot;math_expression&quot;, &quot;escape_sequence&quot;, &quot;parenthesized_expression&quot;,
-           &quot;shift_expression&quot;]"><wbr />g<wbr />Enum<wbr />Vals<span class="attachedType"></span></a></li>
-
-  </ul>
-</li>
-<li>
   <a class="reference reference-toplevel" href="#18" id="68">Templates</a>
   <ul class="simple simple-toc-section">
       <li><a class="reference" href="#nBl.t%2Ctyped"
     title="nBl(s: typed): untyped"><wbr />n<wbr />Bl<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#Bl.t%2Ctyped"
     title="Bl(s: typed): untyped"><wbr />Bl<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#gecho.t%2Cstring"
-    title="gecho(args: string)"><wbr />gecho<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#decho.t%2Cvarargs%5Bstring%2C%5D"
-    title="decho(args: varargs[string, `$`]): untyped"><wbr />decho<span class="attachedType"></span></a></li>
 
   </ul>
 </li>
@@ -230,40 +184,12 @@ function main() {
   <div id="tocRoot"></div>
   
   <p class="module-desc"></p>
-  <div class="section" id="6">
-<h1><a class="toc-backref" href="#6">Imports</a></h1>
-<dl class="item">
-<a class="reference external" href="plugin.html">plugin</a>
-</dl></div>
-<div class="section" id="7">
+  <div class="section" id="7">
 <h1><a class="toc-backref" href="#7">Types</a></h1>
 <dl class="item">
-<a id="Kind"></a>
-<dt><pre><a href="globals.html#Kind"><span class="Identifier">Kind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
-  <span class="Identifier">exactlyOne</span><span class="Other">,</span> <span class="Identifier">oneOrMore</span><span class="Other">,</span> <span class="Identifier">zeroOrMore</span><span class="Other">,</span> <span class="Identifier">zeroOrOne</span><span class="Other">,</span> <span class="Identifier">orWithNext</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="Ast"></a>
-<dt><pre><a href="globals.html#Ast"><span class="Identifier">Ast</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="globals.html#Kind"><span class="Identifier">Kind</span></a>
-  <span class="Identifier">recursive</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">children</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Keyword">ref</span> <a href="globals.html#Ast"><span class="Identifier">Ast</span></a><span class="Other">]</span>
-  <span class="Keyword">when</span> <span class="Identifier">defined</span><span class="Other">(</span><span class="Identifier">TOAST</span><span class="Other">)</span><span class="Other">:</span>
-      <span class="Identifier">tonim</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">ast</span><span class="Other">:</span> <span class="Keyword">ref</span> <span class="Identifier">Ast</span><span class="Other">;</span> <span class="Identifier">node</span><span class="Other">:</span> <span class="Identifier">TSNode</span><span class="Other">;</span> <span class="Identifier">gState</span><span class="Other">:</span> <span class="Identifier">State</span><span class="Other">)</span>
-
-  <span class="Identifier">regex</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Regex</span>
-</pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="AstTable"></a>
-<dt><pre><a href="globals.html#AstTable"><span class="Identifier">AstTable</span></a> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">used</span></span><span class="Other">.}</span></span> <span class="Other">=</span> <span class="Identifier">TableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Keyword">ref</span> <a href="globals.html#Ast"><span class="Identifier">Ast</span></a><span class="Other">]</span><span class="Other">]</span></pre></dt>
+<a id="Feature"></a>
+<dt><pre><a href="globals.html#Feature"><span class="Identifier">Feature</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <span class="Identifier">ast1</span><span class="Other">,</span> <span class="Identifier">ast2</span></pre></dt>
 <dd>
 
 
@@ -290,43 +216,39 @@ function main() {
   <span class="Identifier">replace</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">suffix</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">symOverride</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
-  <span class="Identifier">compile</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
-  <span class="Identifier">nocache</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">overrides</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">pluginSource</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">searchDirs</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
-  <span class="Identifier">code</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">currentHeader</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">impShort</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">outputHandle</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">File</span>
-  <span class="Identifier">sourceFile</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">onSymbolOverride</span><span class="Operator">*</span><span class="Other">:</span> <a href="plugin.html#OnSymbol"><span class="Identifier">OnSymbol</span></a>
-  <span class="Identifier">onSymbolOverrideFinal</span><span class="Operator">*</span><span class="Other">:</span> <a href="plugin.html#OnSymbolOverrideFinal"><span class="Identifier">OnSymbolOverrideFinal</span></a>
-  <span class="Identifier">constIdentifiers</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
-  <span class="Identifier">identifiers</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">TableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">string</span><span class="Other">]</span>
-  <span class="Identifier">skippedSyms</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
+  <span class="Identifier">typeMap</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">TableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">string</span><span class="Other">]</span>
   <span class="Keyword">when</span> <span class="Identifier">defined</span><span class="Other">(</span><span class="Identifier">TOAST</span><span class="Other">)</span><span class="Other">:</span>
+      <span class="Identifier">code</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">currentHeader</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">impShort</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">outputHandle</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">File</span>
+      <span class="Identifier">sourceFile</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">onSymbolOverride</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">OnSymbol</span>
+      <span class="Identifier">onSymbolOverrideFinal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">OnSymbolOverrideFinal</span>
+      <span class="Identifier">constIdentifiers</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
+      <span class="Identifier">identifiers</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">TableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">string</span><span class="Other">]</span>
+      <span class="Identifier">skippedSyms</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
       <span class="Identifier">constSection</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">enumSection</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">pragmaSection</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">procSection</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">typeSection</span><span class="Operator">*</span><span class="Other">,</span>
       <span class="Identifier">varSection</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">PNode</span>
       <span class="Identifier">identCache</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">IdentCache</span>
       <span class="Identifier">config</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">ConfigRef</span>
       <span class="Identifier">graph</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">ModuleGraph</span>
       <span class="Identifier">identifierNodes</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">TableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">PNode</span><span class="Other">]</span>
+      <span class="Identifier">currentExpr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">currentTyCastName</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">skipIdentValidation</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+      <span class="Identifier">constStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">enumStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">procStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">typeStr</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">commentStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">debugStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">skipStr</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">data</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Keyword">tuple</span><span class="Other">[</span><span class="Identifier">name</span><span class="Other">,</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">]</span><span class="Other">]</span>
+      <span class="Identifier">nodeBranch</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
 
-  <span class="Identifier">currentExpr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">currentTyCastName</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">constStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">enumStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">procStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">typeStr</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">commentStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">debugStr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">skipStr</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">data</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Keyword">tuple</span><span class="Other">[</span><span class="Identifier">name</span><span class="Other">,</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">]</span><span class="Other">]</span>
-  <span class="Identifier">nodeBranch</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
-</pre></dt>
-<dd>
+  <span class="Keyword">else</span><span class="Other">:</span>
+      <span class="Identifier">compile</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
+      <span class="Identifier">nocache</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+      <span class="Identifier">overrides</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">pluginSource</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+      <span class="Identifier">searchDirs</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
 
-
-
-</dd>
-<a id="Feature"></a>
-<dt><pre><a href="globals.html#Feature"><span class="Identifier">Feature</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
-  <span class="Identifier">ast1</span><span class="Other">,</span> <span class="Identifier">ast2</span></pre></dt>
+  </pre></dt>
 <dd>
 
 
@@ -339,44 +261,6 @@ function main() {
 <dl class="item">
 <a id="gStateCT"></a>
 <dt><pre><a href="globals.html#gStateCT"><span class="Identifier">gStateCT</span></a> <span class="Other">=</span> <span class="Identifier">new</span><span class="Other">(</span><a href="globals.html#State"><span class="Identifier">State</span></a><span class="Other">)</span></pre></dt>
-<dd>
-
-
-
-</dd>
-
-</dl></div>
-<div class="section" id="10">
-<h1><a class="toc-backref" href="#10">Consts</a></h1>
-<dl class="item">
-<a id="gAtoms"></a>
-<dt><pre><a href="globals.html#gAtoms"><span class="Identifier">gAtoms</span></a> <span class="Other">=</span> <span class="Other">(</span><span class="Identifier">data</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">1614225842</span><span class="Other">,</span> <span class="StringLit">&quot;number_literal&quot;</span><span class="Other">)</span><span class="Other">,</span>
-              <span class="Other">(</span><span class="DecNumber">1319695283</span><span class="Other">,</span> <span class="StringLit">&quot;primitive_type&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">1793269124</span><span class="Other">,</span> <span class="StringLit">&quot;field_identifier&quot;</span><span class="Other">)</span><span class="Other">,</span>
-              <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">3981357206</span><span class="Other">,</span> <span class="StringLit">&quot;sized_type_specifier&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span>
-              <span class="Other">(</span><span class="DecNumber">2270920025</span><span class="Other">,</span> <span class="StringLit">&quot;identifier&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">2611676809</span><span class="Other">,</span> <span class="StringLit">&quot;type_identifier&quot;</span><span class="Other">)</span><span class="Other">,</span>
-              <span class="Other">(</span><span class="DecNumber">826664731</span><span class="Other">,</span> <span class="StringLit">&quot;char_literal&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span>
-              <span class="Other">(</span><span class="DecNumber">117363871</span><span class="Other">,</span> <span class="StringLit">&quot;preproc_arg&quot;</span><span class="Other">)</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">counter</span><span class="Other">:</span> <span class="DecNumber">8</span><span class="Other">)</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="gExpressions"></a>
-<dt><pre><a href="globals.html#gExpressions"><span class="Identifier">gExpressions</span></a> <span class="Other">=</span> <span class="Other">(</span><span class="Identifier">data</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span>
-                    <span class="Other">(</span><span class="DecNumber">1136084212</span><span class="Other">,</span> <span class="StringLit">&quot;bitwise_expression&quot;</span><span class="Other">)</span><span class="Other">,</span>
-                    <span class="Other">(</span><span class="DecNumber">3224825605</span><span class="Other">,</span> <span class="StringLit">&quot;math_expression&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span>
-                    <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">0</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">,</span> <span class="Other">(</span><span class="DecNumber">928982205</span><span class="Other">,</span> <span class="StringLit">&quot;escape_sequence&quot;</span><span class="Other">)</span><span class="Other">,</span>
-                    <span class="Other">(</span><span class="DecNumber">248082302</span><span class="Other">,</span> <span class="StringLit">&quot;parenthesized_expression&quot;</span><span class="Other">)</span><span class="Other">,</span>
-                    <span class="Other">(</span><span class="DecNumber">3969200367</span><span class="Other">,</span> <span class="StringLit">&quot;shift_expression&quot;</span><span class="Other">)</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">counter</span><span class="Other">:</span> <span class="DecNumber">5</span><span class="Other">)</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="gEnumVals"></a>
-<dt><pre><a href="globals.html#gEnumVals"><span class="Identifier">gEnumVals</span></a> <span class="Other">=</span> <span class="Other">[</span><span class="StringLit">&quot;identifier&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;number_literal&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;char_literal&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;bitwise_expression&quot;</span><span class="Other">,</span>
-           <span class="StringLit">&quot;math_expression&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;escape_sequence&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;parenthesized_expression&quot;</span><span class="Other">,</span>
-           <span class="StringLit">&quot;shift_expression&quot;</span><span class="Other">]</span></pre></dt>
 <dd>
 
 
@@ -401,20 +285,6 @@ function main() {
 
 
 </dd>
-<a id="gecho.t,string"></a>
-<dt><pre><span class="Keyword">template</span> <a href="#gecho.t%2Cstring"><span class="Identifier">gecho</span></a><span class="Other">(</span><span class="Identifier">args</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="decho.t,varargs[string,]"></a>
-<dt><pre><span class="Keyword">template</span> <a href="#decho.t%2Cvarargs%5Bstring%2C%5D"><span class="Identifier">decho</span></a><span class="Other">(</span><span class="Identifier">args</span><span class="Other">:</span> <span class="Identifier">varargs</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Other">`</span><span class="Operator">$</span><span class="Other">`</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
-<dd>
-
-
-
-</dd>
 
 </dl></div>
 
@@ -425,7 +295,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-05-11 03:35:45 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-05-19 15:39:47 UTC</small>
       </div>
     </div>
   </div>
