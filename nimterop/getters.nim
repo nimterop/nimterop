@@ -251,7 +251,6 @@ proc getPreprocessor*(gState: State, fullpath: string) =
     cmts = if gState.noComments: "" else: "-CC"
     cmd = &"""{getCompiler()} -E {cmts} -dD {getGccModeArg(gState.mode)} -w """
 
-    ddata: seq[string]
     rdata: seq[string]
     start = false
     sfile = fullpath.sanitizePath(noQuote = true)
@@ -302,11 +301,8 @@ proc getPreprocessor*(gState: State, fullpath: string) =
       if start:
         if "#undef" in line:
           continue
-        elif line.startsWith("#define"):
-          ddata.add line
-        else:
-          rdata.add line
-  gState.code = ddata.join("\n") & "\n" & rdata.join("\n")
+        rdata.add line
+  gState.code = rdata.join("\n")
 
 converter toString*(kind: Kind): string =
   return case kind:

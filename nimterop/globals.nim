@@ -131,6 +131,9 @@ when defined(TOAST):
 
     AstTable* {.used.} = TableRef[string, seq[ref Ast]]
 
+    Status* = enum
+      success, unknown, error
+
   # Redirect output to file when required
   template gecho*(args: string) =
     if gState.outputHandle.isNil:
