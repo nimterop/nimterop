@@ -15,6 +15,7 @@ type
 var
   gDebug* = false
   gDebugCT* {.compileTime.} = false
+  gNimExe* = ""
 
 proc echoDebug(str: string) =
   let str = "\n# " & str.strip().replace("\n", "\n# ")
@@ -46,6 +47,14 @@ proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   if not noQuote:
     result = result.quoteShell
 
+proc getCurrentNimCompiler*(): string =
+  when nimvm:
+    result = getCurrentCompilerExe()
+    when defined(nimsuggest):
+      result = result.replace("nimsuggest", "nim")
+  else:
+    result = gNimExe
+
 # Nim cfg file related functionality
 include "."/nimconf
 
@@ -63,11 +72,6 @@ proc sleep*(milsecs: int) =
 proc getNimteropCacheDir(): string =
   # Get location to cache all nimterop artifacts
   result = getNimcacheDir() / "nimterop"
-
-proc getCurrentNimCompiler*(): string =
-  result = getCurrentCompilerExe()
-  when defined(nimsuggest):
-    result = result.replace("nimsuggest", "nim")
 
 proc execAction*(cmd: string, retry = 0, die = true, cache = false,
                  cacheKey = ""): tuple[output: string, ret: int] =

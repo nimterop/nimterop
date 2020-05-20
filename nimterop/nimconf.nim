@@ -20,7 +20,7 @@ type
 proc getJson(projectDir: string): JsonNode =
   # Get `nim dump` json value for `projectDir`
   var
-    cmd = "nim --hints:off --dump.format:json dump dummy"
+    cmd = &"{getCurrentNimCompiler()} --hints:off --dump.format:json dump dummy"
     dump = ""
     ret = 0
 

@@ -139,7 +139,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
     else:
       gecho &"# const '{origname}' is duplicate, skipped"
   else:
-    gecho &"# const '{origname}' has unsupported value '{val}'"
+    gecho &"# const '{origname}' has unsupported value '{val.strip()}'"
     gState.skippedSyms.incl origname
 
 proc addConst(gState: State, node: TSNode) =
