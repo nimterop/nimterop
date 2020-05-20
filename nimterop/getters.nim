@@ -454,7 +454,7 @@ proc loadPlugin*(gState: State, sourcePath: string) =
       outflags = &"--out:\"{pdll}\""
 
       # Compile plugin as library with `markAndSweep` GC
-      cmd = &"{gState.nim.sanitizePath} c --app:lib --gc:markAndSweep {flags} {outflags} {sourcePath.sanitizePath}"
+      cmd = &"{gState.nim} c --app:lib --gc:markAndSweep {flags} {outflags} {sourcePath.sanitizePath}"
 
     discard execAction(cmd)
   doAssert fileExists(pdll), "No plugin binary generated for " & sourcePath

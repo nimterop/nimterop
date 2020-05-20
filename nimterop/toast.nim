@@ -64,7 +64,7 @@ proc main(
     feature: feature,
     includeDirs: includeDirs,
     mode: mode,
-    nim: nim,
+    nim: nim.sanitizePath,
     noComments: noComments,
     noHeader: noHeader,
     past: past,
@@ -79,7 +79,8 @@ proc main(
   )
 
   # Set gDebug in build.nim
-  build.gDebug = debug
+  build.gDebug = gState.debug
+  build.gNimExe = gState.nim
 
   # Default `ast` mode
   if gState.feature.Bl:
