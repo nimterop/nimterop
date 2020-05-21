@@ -1815,7 +1815,10 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
 
 proc initNim*(gState: State) =
   # Initialize for parseNim() one time
-  gecho "import nimterop/types\n"
+  gecho """import nimterop/types
+
+{.push hint[ConvFromXtoItselfNotNeeded]: off.}
+"""
 
   # Track identifiers already rendered and corresponding PNodes
   gState.identifiers = newTable[string, string]()
@@ -1867,3 +1870,5 @@ proc printNim*(gState: State) =
   tree.add gState.procSection
 
   gecho tree.renderTree()
+
+  gecho "{.pop.}"

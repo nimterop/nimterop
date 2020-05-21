@@ -238,6 +238,8 @@ proc printNim*(gState: State) =
   if gState.procStr.nBl:
     gecho &"{gState.procStr}\n"
 
+  gecho "{.pop.}"
+
   if gState.debug:
     if gState.debugStr.nBl:
       gecho gState.debugStr
