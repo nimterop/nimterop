@@ -284,18 +284,17 @@ proc getCommentsStr*(gState: State, commentNodes: seq[TSNode]): string =
   ## Generate a comment from a set of comment nodes. Comment is guaranteed
   ## to be able to be rendered using nim doc
   if commentNodes.len > 0:
-    result = "::"
     for commentNode in commentNodes:
       result &= "\n  " & gState.getNodeVal(commentNode).strip()
 
-    result = result.multiReplace(
+    result = "```\n  " & result.multiReplace(
       {
         "/**": "", "**/": "", "/*": "",
         "*/": "", "/*": "", "//": "",
         "\n": "\n  ", "`": ""
         }
     # need to replace this last otherwise it supercedes other replacements
-    ).replace(" *", "").strip()
+    ).replace(" *", "").strip() & "\n```"
 
 proc getCommentNodes*(gState: State, node: TSNode, maxSearch=1): seq[TSNode] =
   ## Get a set of comment nodes in order of priority. Will search up to ``maxSearch``
