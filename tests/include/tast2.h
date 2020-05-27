@@ -90,7 +90,7 @@ typedef char *(*A11)[3];
 typedef struct A0 *A111[12];
 
 typedef int
-  **(*A12)(int, int b, int *c, int *, int *count[4], int (*func)(int, int)),
+  **(*A12)(int, int b, int *c, int *, int /*out*/ *count[4], int (*func)(int, int)),
   **(*A121)(float, float b, float *c, float *, float *count[4], float (*func)(float, float)),
   **(*A122)(char, char b, char *c, char *, char *count[4], char (*func)(char, char));
 typedef int (*A13)(int, int, void (*func)(void));

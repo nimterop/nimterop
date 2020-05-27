@@ -365,6 +365,9 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
     discard execAction(&"cd {outdirQ} && git config core.sparsecheckout true")
     writeFile(sparsefile, plist)
 
+  # In case directory has old files from another run
+  discard execAction(&"cd {outdirQ} && git clean -fxd")
+
   if checkout.len != 0:
     echo "# Checking out " & checkout
     discard execAction(&"cd {outdirQ} && git fetch", retry = 1)

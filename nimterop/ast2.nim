@@ -608,7 +608,7 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
   # Skip qualifiers after type
   var
     start = start0
-  while start < node.len - 1 and node[start+1].getName() == "type_qualifier":
+  while start < node.len - 1 and node[start+1].getName() in ["type_qualifier", "comment"]:
     start += 1
 
   if start == node.len - 1:
