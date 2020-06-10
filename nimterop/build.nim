@@ -206,6 +206,14 @@ proc rmDir*(dir: string) =
   ## Remove a directory or pattern at compile time
   rmFile(dir, dir = true)
 
+proc cleanDir*(dir: string) =
+  ## Remove all contents of a directory at compile time
+  for kind, path in walkDir(dir):
+    if kind == pcDir:
+      rmDir(path)
+    else:
+      rmFile(path)
+
 proc getProjectCacheDir*(name: string, forceClean = true): string =
   ## Get a cache directory where all nimterop artifacts can be stored
   ##
@@ -281,7 +289,7 @@ proc extractTar*(tarfile, outdir: string) =
   if name.len != 0:
     rmFile(outdir / name)
 
-proc downloadUrl*(url, outdir: string) =
+proc downloadUrl*(url, outdir: string, quiet = false) =
   ## Download a file using `curl` or `wget` (or `powershell` on Windows) to the specified directory
   ##
   ## If an archive file, it is automatically extracted after download.
@@ -291,7 +299,8 @@ proc downloadUrl*(url, outdir: string) =
     archives = @[".zip", ".xz", ".gz", ".bz2", ".tgz", ".tar"]
 
   if not (ext in archives and fileExists(outdir/file)):
-    echo "# Downloading " & file
+    if not quiet:
+      echo "# Downloading " & file
     mkDir(outdir)
     var cmd = findExe("curl")
     if cmd.len != 0:
@@ -304,7 +313,7 @@ proc downloadUrl*(url, outdir: string) =
         cmd = "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
       else:
         doAssert false, "No download tool available - curl, wget"
-    discard execAction(cmd % [url, (outdir/file).sanitizePath], retry = 1)
+    discard execAction(cmd % [url.quoteShell, (outdir/file).sanitizePath], retry = 1)
 
     if ext == ".zip":
       extractZip(file, outdir)
@@ -732,6 +741,36 @@ proc getGccLibPaths*(mode: string): seq[string] =
   when defined(osx):
     result.add "/usr/lib"
 
+proc getGccInfo*(): tuple[arch, os, compiler, version: string] =
+  let
+    (outp, _) = execAction(&"{getCompiler()} -v")
+  for line in outp.splitLines():
+    if line.startsWith("Target: "):
+      result.arch = line.split(' ')[1].split('-')[0]
+      result.os =
+        if "linux" in line:
+          "linux"
+        elif "android" in line:
+          "android"
+        elif "darwin" in line:
+          "macos"
+        elif "w64" in line or "mingw" in line:
+          "windows"
+        else:
+          "unknown"
+    elif " version " in line:
+      result.version = line.split(" version ")[1].split(' ')[0]
+  if "clang" in outp:
+    if result.os == "macos":
+      result.compiler = "apple-clang"
+    else:
+      result.compiler = "clang"
+  else:
+    result.compiler = "gcc"
+
+# Conan support
+include conan
+
 proc getStdPath(header, mode: string): string =
   for inc in getGccPaths(mode):
     result = findFile(header, inc, recurse = false, first = true)
@@ -783,6 +822,28 @@ proc getDlPath(header, url, outdir, version: string): string =
       mvFile(outdir / dirname / path, outdir / path)
 
   result = findFile(header, outdir)
+
+proc getConanPath(header, uri, outdir, version: string, shared: bool): string =
+  var
+    uri = uri
+
+  if "$#" in uri or "$1" in uri:
+    doAssert version.len != 0, "Need version for Conan uri"
+    uri = uri % version
+  else:
+    doAssert version.len == 0, "Conan uri does not contain version"
+
+  let
+    pkg = newConanPackageFromUri(uri, shared)
+  downloadConan(pkg, outdir)
+
+  result = findFile(header, outdir)
+
+proc getConanLPath(outdir: string): string =
+  let
+    pkg = loadConanInfo(outdir)
+  
+  result = pkg.getConanLibs(outdir).join(" ")
 
 proc getLocalPath(header, outdir: string): string =
   if outdir.len != 0:
@@ -937,7 +998,9 @@ macro isDefined*(def: untyped): untyped =
       false
   )
 
-macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: static[string] = "", outdir: static[string] = "",
+macro getHeader*(
+  header: static[string], giturl: static[string] = "", dlurl: static[string] = "",
+  conanuri: static[string] = "", outdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
   altNames: static[string] = "", buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
   ## Get the path to a header file for wrapping with
@@ -950,16 +1013,18 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
   ## `-d:xxxStd` - search standard system paths. E.g. `/usr/include` and `/usr/lib` on Linux
   ## `-d:xxxGit` - clone source from a git repo specified in `giturl`
   ## `-d:xxxDL` - download source from `dlurl` and extract if required
+  ## `-d:xxxConan` - download headers and binary from conan.io using `conanuri`
+  ##   typically formatted as `name/version[@user/channel][:bhash]`
   ##
   ## This allows a single wrapper to be used in different ways depending on the user's needs.
   ## If no `-d:xxx` defines are specified, `outdir` will be searched for the header as is.
   ##
-  ## If multiple `-d:xxx` defines are specified, precedence is `Std` and then `Git` or `DL`.
-  ## This allows using a system installed library if available before falling back to manual
-  ## building.
+  ## If multiple `-d:xxx` defines are specified, precedence is `Std` and then `Git`, `DL` or
+  ## `Conan`. This allows using a system installed library if available before falling back
+  ## to manual building.
   ##
   ## `-d:xxxSetVer=x.y.z` can be used to specify which version to use. It is used as a tag
-  ## name for Git whereas for DL, it replaces `$1` in the URL defined.
+  ## name for Git whereas for DL and Conan, it replaces `$1` in the URL defined.
   ##
   ## All defines can also be set in code using `setDefines()`.
   ##
@@ -1006,6 +1071,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
     stdStr = name & "Std"
     gitStr = name & "Git"
     dlStr = name & "DL"
+    conanStr = name & "Conan"
 
     staticStr = name & "Static"
     verStr = name & "SetVer"
@@ -1014,6 +1080,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
     nameStd = newIdentNode(stdStr)
     nameGit = newIdentNode(gitStr)
     nameDL = newIdentNode(dlStr)
+    nameConan = newIdentNode(conanStr)
 
     nameStatic = newIdentNode(staticStr)
 
@@ -1031,6 +1098,7 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
     stdVal = gDefines.hasKey(stdStr)
     gitVal = gDefines.hasKey(gitStr)
     dlVal = gDefines.hasKey(dlStr)
+    conanVal = gDefines.hasKey(conanStr)
     staticVal = gDefines.hasKey(staticStr)
     verVal =
       if gDefines.hasKey(verStr):
@@ -1052,14 +1120,17 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
       `nameStd`* = when defined(`nameStd`): true else: `stdVal` == 1
       `nameGit`* = when defined(`nameGit`): true else: `gitVal` == 1
       `nameDL`* = when defined(`nameDL`): true else: `dlVal` == 1
+      `nameConan`* = when defined(`nameConan`): true else: `conanVal` == 1
       `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
 
     # Search for header in outdir (after retrieving code) depending on -d:xxx mode
-    proc getPath(header, giturl, dlurl, outdir, version: string): string =
+    proc getPath(header, giturl, dlurl, conanuri, outdir, version: string, shared: bool): string =
       when `nameGit`:
         getGitPath(header, giturl, outdir, version)
       elif `nameDL`:
         getDlPath(header, dlurl, outdir, version)
+      elif `nameConan`:
+        getConanPath(header, conanuri, outdir, version, shared)
       else:
         getLocalPath(header, outdir)
 
@@ -1077,23 +1148,30 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
       stdLPath =
         when `nameStd`: getStdLibPath(`lname`, `mode`) else: ""
 
+      useStd = stdPath.len != 0 and stdLPath.len != 0
+
       # Look elsewhere if requested while prioritizing standard paths
       prePath =
-        when stdPath.len != 0 and stdLPath.len != 0:
+        when useStd:
           stdPath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `outdir`, `version`)
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `outdir`, `version`, not `nameStatic`)
 
-    # Run preBuild hook before building library if not standard
-    when (prePath != stdPath or prePath.len == 0) and declared(`preBuild`):
+    # Run preBuild hook before building library if not Std or Conan
+    when not (useStd or `nameConan`) and declared(`preBuild`):
       static:
         `preBuild`(`outdir`, prePath)
 
     const
       # Library binary path - build if not standard
       `lpath`* =
-        when stdPath.len != 0 and stdLPath.len != 0:
+        when useStd:
           stdLPath
+        elif `nameConan`:
+          when `nameStatic`:
+            getConanLPath(`outdir`)
+          else:
+            findFile(`lname`, `outdir`, regex = true)
         else:
           buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildTypes`)
 
@@ -1102,10 +1180,11 @@ macro getHeader*(header: static[string], giturl: static[string] = "", dlurl: sta
         if prePath.len != 0:
           prePath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `outdir`, `version`)
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `outdir`, `version`, not `nameStatic`)
 
     static:
-      doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " & "missing/empty outdir or -d:$1Std -d:$1Git or -d:$1DL not specified" % `name`
+      doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " &
+        "missing/empty outdir or -d:$1Std -d:$1Git -d:$1DL or -d:$1Conan not specified" % `name`
       doAssert `lpath`.len != 0, "\nLibrary " & `lname` & " not found"
       echo "# Including library " & `lpath`
 
