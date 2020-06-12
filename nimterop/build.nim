@@ -1138,7 +1138,7 @@ macro getHeader*(
       `version`* {.strdefine.} = `verVal`
       `lname` =
         when `nameStatic`:
-          `lre` & ".a"
+          `lre` & "\\.(a|lib)"
         else:
           `lre` & getDynlibExt()
 

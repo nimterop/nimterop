@@ -163,7 +163,15 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
   ## `filter` can be used to tweak search terms
   ##    e.g. build_type=Debug&compiler=clang
   let
-    (arch, os, compiler, _) = getGccInfo()
+    (arch, os, compiler, version) = getGccInfo()
+
+    vsplit = version.split('.')
+
+    vfilter =
+      when defined(OSX):
+        vsplit[0 .. 1].join(".")
+      else:
+        vsplit[0]
 
     query =
       if pkg.bhash.len == 0:
@@ -177,7 +185,8 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
           if filter.len != 0:
             query &= &"&{filter}"
           if "compiler=" notin filter and os != "windows":
-            query &= &"&compiler={compiler}"
+            query &= &"&compiler={compiler}&compiler.version=" & vfilter
+
           query.replace("&", "%20and%20")
       else: ""
 
