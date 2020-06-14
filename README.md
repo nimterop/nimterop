@@ -53,6 +53,7 @@ getHeader(
   "header.h",                                             # The header file to wrap, full path is returned in `headerPath`
   giturl = "https://github.com/username/repo",            # Git repo URL
   dlurl = "https://website.org/download/repo-$1.tar.gz",  # Download URL for archive or raw file
+  conanuri = "repo/$1",                                   # Conan.io URI
   outdir = baseDir,                                       # Where to download/build/search
   conFlags = "--disable-comp --enable-feature",           # Flags to pass configure script
   cmakeFlags = "-DENABLE_STATIC_LIB=ON"                   # Flags to pass to Cmake
@@ -61,7 +62,7 @@ getHeader(
 
 # Wrap headerPath as returned from getHeader() and link statically
 # or dynamically depending on user input
-when not defined(headerStatic):
+when not isDefined(headerStatic):
   cImport(headerPath, recurse = true, dynlib = "headerLPath")       # Pass dynlib if not static link
 else:
   cImport(headerPath, recurse = true)
@@ -74,8 +75,8 @@ Module documentation for the build API can be found [here](https://nimterop.gith
 The above wrapper is generic and allows the end user to control how it works. Note that `headerPath` is derived from `header.h` so if you have `SDL.h` as the argument to `getHeader()`, it generates `SDLPath` and `SDLLPath` and is controlled by `-d:SDLStatic`, `-d:SDLGit` and so forth.
 
 - If the library is already installed in `/usr/include` then the `-d:headerStd` define to Nim can be used to instruct `getHeader()` to search for `header.h` in the standard system path.
-- If the library needs to be downloaded, the user can use `-d:headerGit` to clone the source from the specified git URL or `-d:headerDL` to get the source from download URL.
-  - The `-d:headerSetVer=X.Y.Z` flag can be used to specify which version to download. It is used as the tag name for Git whereas for DL, it replaces `$1` in the URL if defined.
+- If the library needs to be downloaded, the user can use `-d:headerGit` to clone the source from the specified git URL, `-d:headerDL` to get the source from download URL or `-d:headerConan` to download from https://conan.io/center.
+  - The `-d:headerSetVer=X.Y.Z` flag can be used to specify which version to download. It is used as the tag name for Git and for DL and Conan, it replaces `$1` in the URL if specified.
 - If no flag is provided, `getHeader()` simply looks for the library in `outdir`. The user could use Git submodules or manually download or check-in the library to that directory and `getHeader()` will use it directly.
 
 #### Pre build
@@ -92,7 +93,7 @@ Flags can be specified to these tools via `getHeader()` or directly via the unde
 
 #### Linking
 
-- If `-d:headerStatic` is specified, `getHeader()` will return the static library path in `headerLPath`. The wrapper writer can check for this and call `cImport()` accordingly as in the example above. If it is omitted, the dynamic library is returned in `headerLPath`.
+- If `-d:headerStatic` is specified, `getHeader()` will return the static library path in `headerLPath`. The wrapper writer can check for this and call `cImport()` accordingly as in the example above. If `-d:headerStatic` is omitted, the dynamic library is returned in `headerLPath`.
 - `getHeader()` searches for libraries based on the header name by default:
   - `libheader.so` or `libheader.a` on Linux
   - `libheader.dylib` on OSX
@@ -224,7 +225,7 @@ Options:
   -n, --pnim           bool      false    print Nim output
   -E=, --prefix=       strings   {}       strip prefix from identifiers
   -p, --preprocess     bool      false    run preprocessor on header
-  -r, --recurse        bool      false    process #include files
+  -r, --recurse        bool      false    process #include files, implies --preprocess
   -G=, --replace=      strings   {}       replace X with Y in identifiers, X1=Y1,X2=Y2, @X for regex
   -s, --stub           bool      false    stub out undefined type references as objects
   -F=, --suffix=       strings   {}       strip suffix from identifiers

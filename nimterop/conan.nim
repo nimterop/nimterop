@@ -65,13 +65,19 @@ proc jsonGet(url: string): JsonNode =
   # Make HTTP call and return content as JSON
   let
     temp = getTempDir()
-    file = temp / url.extractFilename()
+    file = block:
+      var
+        file = temp / url.extractFilename()
+      when defined(Windows):
+        file = file.replace('?', '_')
+      file
 
   downloadUrl(url, temp, quiet = true)
   result = readFile(file).parseJson()
   rmFile(file)
 
-proc `==`(pkg1, pkg2: ConanPackage): bool =
+proc `==`*(pkg1, pkg2: ConanPackage): bool =
+  ## Check if two ConanPackage objects are equal
   (not pkg1.isNil and not pkg2.isNil and
     pkg1.name == pkg2.name and
     pkg1.version == pkg2.version and
@@ -94,9 +100,7 @@ proc newConanPackage*(name, version, user = "_", channel = "_", bhash = "", shar
   result.shared = shared
 
 proc newConanPackageFromUri*(uri: string, shared = true): ConanPackage =
-  ## Create a new ConanPackage from a conan uri
-  ##
-  ## name/version[@user/channel][:bhash]
+  ## Create a new ConanPackage from a conan uri typically formatted as name/version[@user/channel][:bhash]
   var
     name, version, user, channel, bhash: string
 
@@ -136,6 +140,8 @@ proc getUriFromConanPackage*(pkg: ConanPackage): string =
 
 proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPackage =
   ## Search for package by `name` and optional `version`, `user` and `channel`
+  ## 
+  ## Search is quite slow so it is preferable to specify a version and use `getConanBuilds()`
   var
     query = name
   if version.len != 0:
@@ -249,7 +255,7 @@ proc getConanRevisions*(pkg: ConanPackage, bld: ConanBuild) =
       bld.revisions.add i.getOrDefault("revision").getStr()
 
 proc loadConanInfo*(outdir: string): ConanPackage =
-  ## Load cached package info from `outdir/conaninfo.txt`
+  ## Load cached package info from `outdir/conaninfo.json`
   fixOutDir()
   let
     file = outdir / conanInfo
@@ -258,7 +264,7 @@ proc loadConanInfo*(outdir: string): ConanPackage =
     result = to[ConanPackage](readFile(file))
 
 proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
-  ## Save downloaded package info to `outdir/conaninfo.txt`
+  ## Save downloaded package info to `outdir/conaninfo.json`
   fixOutDir()
   let
     file = outdir / conanInfo
@@ -266,6 +272,7 @@ proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
   writeFile(file, $$pkg)
 
 proc parseConanManifest(pkg: ConanPackage, outdir: string) =
+  # Get all header and library info from downloaded conan package
   let
     file = outdir / conanManifest
   
@@ -327,6 +334,9 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
 proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string)
 proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
   ## Download latest recipe/build/revision of `pkg` to `outdir`
+  ## 
+  ## High-level API that handles the end to end Conan process flow to find
+  ## latest package binary and downloads and extracts it to `outdir`.
   fixOutDir()
   let
     pkg =

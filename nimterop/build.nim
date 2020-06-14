@@ -1044,32 +1044,41 @@ macro getHeader*(
   ## `-d:xxxStatic` can be specified to statically link with the library instead. This
   ## will automatically add a `{.passL.}` call to the static library for convenience. Note
   ## that `-d:xxxConan` downloads all dependency libs as well and the `xxxLPath` will
-  ## include all separated by space in the right order for linking.
+  ## include paths to all of them separated by space in the right order for linking.
+  ## 
+  ## Note also that Conan currently builds all OSX binaries on 10.14 so older versions of
+  ## OSX will complain if statically linking to these binaries. Further, all Conan binaries
+  ## for Windows are built with Visual Studio so static linking the `.lib` files with gcc
+  ## or clang might lead to incompatibility issues if the library uses Visual Studio
+  ## specific compiler features.
   ##
   ## `conFlags`, `cmakeFlags` and `makeFlags` allow sending custom parameters to `configure`,
-  ## `cmake` and `make` in case additional configuration is required as part of the build process.
+  ## `cmake` and `make` in case additional configuration is required as part of the build
+  ## process.
   ##
-  ## `altNames` is a list of alternate names for the library - e.g. zlib uses `zlib.h` for the header but
-  ## the typical lib name is `libz.so` and not `libzlib.so`. However, it is libzlib.dll on Windows if built
-  ## with cmake. In this case, `altNames = "z,zlib"`. Comma separate for multiple alternate names without
-  ## spaces.
+  ## `altNames` is a list of alternate names for the library - e.g. zlib uses `zlib.h` for
+  ## the header but the typical lib name is `libz.so` and not `libzlib.so`. However, it is
+  ## libzlib.dll on Windows if built with cmake. In this case, `altNames = "z,zlib"`. Comma
+  ## separate for multiple alternate names without spaces.
   ##
-  ## The original header name is not included by default if `altNames` is set since it could cause the
-  ## wrong lib to be selected. E.g. `SDL2/SDL.h` could pick `libSDL.so` even if `altNames = "SDL2"`.
-  ## Explicitly include it in `altNames` like the `zlib` example when required.
+  ## The original header name is not included by default if `altNames` is set since it could
+  ## cause the wrong lib to be selected. E.g. `SDL2/SDL.h` could pick `libSDL.so` even if
+  ## `altNames = "SDL2"`. Explicitly include it in `altNames` like the `zlib` example when
+  ## required.
   ##
-  ## `buildTypes` specifies a list of ordered build strategies to use when building the downloaded source
-  ## files. Default is [btCmake, btAutoconf]
+  ## `buildTypes` specifies a list of ordered build strategies to use when building the
+  ## downloaded source files. Default is [btCmake, btAutoconf]
   ##
-  ## `xxxPreBuild` is a hook that is called after the source code is pulled from Git or downloaded but
-  ## before the library is built. This might be needed if some initial prep needs to be done before
-  ## compilation. A few values are provided to the hook to help provide context:
+  ## `xxxPreBuild` is a hook that is called after the source code is pulled from Git or
+  ## downloaded but before the library is built. This might be needed if some initial prep
+  ## needs to be done before compilation. A few values are provided to the hook to help
+  ## provide context:
   ##
-  ##   `outdir` is the same `outdir` passed in and `header` is the discovered header path in the
-  ##   downloaded source code.
+  ##   `outdir` is the same `outdir` passed in and `header` is the discovered header path
+  ##   in the downloaded source code.
   ##
-  ## Simply define `proc xxxPreBuild(outdir, header: string)` in the wrapper and it will get called
-  ## prior to the build process.
+  ## Simply define `proc xxxPreBuild(outdir, header: string)` in the wrapper and it will get
+  ## called prior to the build process.
   var
     origname = header.extractFilename().split(".")[0]
     name = origname.split(seps = AllChars-Letters-Digits).join()
