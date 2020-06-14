@@ -123,6 +123,10 @@ proc main(
   if check and outputFile.len == 0:
     outputFile = getTempDir() / "toast_" & ($getTime().toUnix()).addFileExt("nim")
 
+  # Recurse implies preprocess
+  if gState.recurse:
+    gState.preprocess = true
+
   # Redirect output to file
   if outputFile.len != 0:
     doAssert gState.outputHandle.open(outputFile, fmWrite),
@@ -248,7 +252,7 @@ when isMainModule:
     "pnim": "print Nim output",
     "prefix": "strip prefix from identifiers",
     "preprocess": "run preprocessor on header",
-    "recurse": "process #include files",
+    "recurse": "process #include files - implies --preprocess",
     "replace": "replace X with Y in identifiers, X1=Y1,X2=Y2, @X for regex",
     "source" : "C/C++ source/header(s) and command line file(s)",
     "stub": "stub out undefined type references as objects",

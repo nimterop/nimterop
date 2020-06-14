@@ -1018,26 +1018,33 @@ macro getHeader*(
   ##
   ## This allows a single wrapper to be used in different ways depending on the user's needs.
   ## If no `-d:xxx` defines are specified, `outdir` will be searched for the header as is.
+  ## The user can opt to download the sources to `outdir` using any other method such as
+  ## git sub-modules, vendoring or pointing to a repository that was already cloned.
   ##
   ## If multiple `-d:xxx` defines are specified, precedence is `Std` and then `Git`, `DL` or
   ## `Conan`. This allows using a system installed library if available before falling back
-  ## to manual building.
+  ## to manual building. The user would need to specify both `-d:xxxStd` and one of the other
+  ## methods.
   ##
   ## `-d:xxxSetVer=x.y.z` can be used to specify which version to use. It is used as a tag
   ## name for Git whereas for DL and Conan, it replaces `$1` in the URL defined.
   ##
-  ## All defines can also be set in code using `setDefines()`.
+  ## All defines can also be set in code using `setDefines()` and checked for using
+  ## `isDefined()` which checks for defines set from both `-d` and `setDefines()`.
   ##
   ## The library is then configured (with `cmake` or `autotools` if possible) and built
   ## using `make`, unless using `-d:xxxStd` which presumes that the system package
-  ## manager was used to install prebuilt headers and binaries.
+  ## manager was used to install prebuilt headers and binaries, or using `-d:xxxConan`
+  ## which downloads pre-built binaries.
   ##
   ## The header path is stored in `const xxxPath` and can be used in a `cImport()` call
   ## in the calling wrapper. The dynamic library path is stored in `const xxxLPath` and can
   ## be used for the `dynlib` parameter (within quotes) or with `{.passL.}`.
   ##
   ## `-d:xxxStatic` can be specified to statically link with the library instead. This
-  ## will automatically add a `{.passL.}` call to the static library for convenience.
+  ## will automatically add a `{.passL.}` call to the static library for convenience. Note
+  ## that `-d:xxxConan` downloads all dependency libs as well and the `xxxLPath` will
+  ## include all separated by space in the right order for linking.
   ##
   ## `conFlags`, `cmakeFlags` and `makeFlags` allow sending custom parameters to `configure`,
   ## `cmake` and `make` in case additional configuration is required as part of the build process.
@@ -1047,19 +1054,19 @@ macro getHeader*(
   ## with cmake. In this case, `altNames = "z,zlib"`. Comma separate for multiple alternate names without
   ## spaces.
   ##
-  ## `buildTypes` specifies a list of in order build strategies to use when building the downloaded source
-  ## files. Default is [btCmake, btAutoconf]
-  ##
   ## The original header name is not included by default if `altNames` is set since it could cause the
   ## wrong lib to be selected. E.g. `SDL2/SDL.h` could pick `libSDL.so` even if `altNames = "SDL2"`.
   ## Explicitly include it in `altNames` like the `zlib` example when required.
+  ##
+  ## `buildTypes` specifies a list of ordered build strategies to use when building the downloaded source
+  ## files. Default is [btCmake, btAutoconf]
   ##
   ## `xxxPreBuild` is a hook that is called after the source code is pulled from Git or downloaded but
   ## before the library is built. This might be needed if some initial prep needs to be done before
   ## compilation. A few values are provided to the hook to help provide context:
   ##
-  ## `outdir` is the same `outdir` passed in and `header` is the discovered header path in the
-  ## downloaded source code.
+  ##   `outdir` is the same `outdir` passed in and `header` is the discovered header path in the
+  ##   downloaded source code.
   ##
   ## Simply define `proc xxxPreBuild(outdir, header: string)` in the wrapper and it will get called
   ## prior to the build process.
