@@ -40,12 +40,6 @@ const
   conanPackage = "conan_package.tgz"
   conanManifest = "conanmanifest.txt"
 
-# https://github.com/kdheepak/binary-builder-downloader/blob/master/src/bbd.nim
-# https://bintray.com/conan/conan-center
-# https://bintray.com/bincrafters/public-conan/
-
-# https://docs.conan.io/en/latest/howtos/manage_shared_libraries.html#manage-shared
-
 var
   # Bintray download URL for explicit `user/channel`
   baseAltUrl {.compiletime.} = {
@@ -73,7 +67,10 @@ proc jsonGet(url: string): JsonNode =
       file
 
   downloadUrl(url, temp, quiet = true)
-  result = readFile(file).parseJson()
+  try:
+    result = readFile(file).parseJson()
+  except JsonParsingError:
+    discard
   rmFile(file)
 
 proc `==`*(pkg1, pkg2: ConanPackage): bool =
@@ -352,10 +349,11 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
   elif clean:
     cleanDir(outdir)
 
-  echo &"# Downloading {pkg.name} v{pkg.version} from Conan"
-
   pkg.getConanBuilds()
 
+  doAssert pkg.recipes.len != 0, &"# Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
+
+  echo &"# Downloading {pkg.name} v{pkg.version} from Conan"
   for recipe, builds in pkg.recipes:
     for build in builds:
       if pkg.bhash.len == 0 or pkg.bhash == build.bhash:

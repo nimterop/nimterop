@@ -39,6 +39,9 @@ when defined(posix):
 
   # conan static
   testCall(cmd & " -d:libssh2Conan -d:libssh2SetVer=1.9.0 -d:libssh2Static" & sshcmd, zexp, 0)
+else:
+  # conan static for Windows
+  testCall(cmd & " -d:zlibConan -d:zlibSetVer=1.2.11 -d:zlibStatic" & zrcmd, zexp, 0)
 
 # git
 testCall(cmd & " -d:envTest" & zrcmd, zexp, 0)

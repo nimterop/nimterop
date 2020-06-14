@@ -27,6 +27,7 @@ getHeader(
   "zlib.h",
   giturl = "https://github.com/madler/zlib",
   dlurl = "http://zlib.net/zlib-$1.tar.gz",
+  conanuri = "zlib/$1",
   outdir = baseDir,
   altNames = "z,zlib"
 )
