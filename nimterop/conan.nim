@@ -278,7 +278,7 @@ proc parseConanManifest(pkg: ConanPackage, outdir: string) =
       if line.startsWith("lib/"):
         if line.endsWith(".a") or line.endsWith(".lib"):
           pkg.staticLibs.add line
-        elif line.endsWith(".so"):
+        elif line.endsWith(".so") or line.endsWith(".dylib"):
           pkg.sharedLibs.add line
       elif line.startsWith("bin/") and line.endsWith("dll"):
         pkg.sharedLibs.add line

@@ -70,19 +70,6 @@ proc walkDirImpl(indir, inext: string, file=true): seq[string] =
   if ret == 0:
     result = output.splitLines()
 
-proc getFileDate(fullpath: string): string =
-  var
-    ret = 0
-    cmd =
-      when defined(Windows):
-        &"cmd /c for %a in ({fullpath.sanitizePath}) do echo %~ta"
-      elif defined(Linux):
-        &"stat -c %y {fullpath.sanitizePath}"
-      elif defined(OSX) or defined(FreeBSD):
-        &"stat -f %m {fullpath.sanitizePath}"
-
-  (result, ret) = execAction(cmd)
-
 proc getCacheValue(fullpath: string): string =
   if not gStateCT.nocache:
     result = fullpath.getFileDate()

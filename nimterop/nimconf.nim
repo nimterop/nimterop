@@ -16,6 +16,7 @@ type
     paths*: OrderedSet[string]
     nimblePaths*: OrderedSet[string]
     nimcacheDir*: string
+    outDir*: string
 
 proc getJson(projectDir: string): JsonNode =
   # Get `nim dump` json value for `projectDir`
@@ -67,35 +68,6 @@ proc stripName(path, projectName: string): string =
   else:
     result = path
 
-proc getNimcacheDir*(projectDir = ""): string =
-  ## Get nimcache directory for current compilation or specified `projectDir`
-  when nimvm:
-    when (NimMajor, NimMinor, NimPatch) >= (1, 2, 0):
-      # Get value at compile time from `std/compilesettings`
-      result = stripName(
-        querySetting(SingleValueSetting.nimcacheDir),
-        querySetting(SingleValueSetting.projectName)
-      )
-  else:
-    discard
-
-  # Not Nim v1.2.0+ or runtime
-  if result.len == 0:
-    let
-      # Get project directory for < v1.2.0 at compile time
-      projectDir = if projectDir.len != 0: projectDir else: getProjectDir()
-
-    # Use `nim dump` to figure out nimcache for `projectDir`
-    let
-      dumpJson = getJson(projectDir)
-
-    if dumpJson != nil and dumpJson.hasKey("nimcache"):
-      result = stripName(dumpJson["nimcache"].getStr(), "dummy")
-
-  # Set to OS defaults if not detectable
-  if result.len == 0:
-    result = getOsCacheDir()
-
 proc jsonToSeq(node: JsonNode, key: string): seq[string] =
   # Convert JsonArray to seq[string] for specified `key`
   if node.hasKey(key):
@@ -126,7 +98,11 @@ proc getNimConfig*(projectDir = ""): Config =
       libPath = getCurrentCompilerExe().parentDir().parentDir() / "lib"
       lazyPaths = querySettingSeq(MultipleValueSetting.lazyPaths)
       searchPaths = querySettingSeq(MultipleValueSetting.searchPaths)
-      result.nimcacheDir = querySetting(SingleValueSetting.nimcacheDir)
+      result.nimcacheDir = stripName(
+        querySetting(SingleValueSetting.nimcacheDir),
+        querySetting(SingleValueSetting.projectName)
+      )
+      result.outDir = querySetting(SingleValueSetting.outDir)
   else:
     discard
 
@@ -149,6 +125,11 @@ proc getNimConfig*(projectDir = ""): Config =
       elif searchPaths.len != 0:
         # Usually `libPath` is last entry in `searchPaths`
         libPath = searchPaths[^1]
+
+      if dumpJson.hasKey("nimcache"):
+        result.nimcacheDir = stripName(dumpJson["nimcache"].getStr(), "dummy")
+      if dumpJson.hasKey("outdir"):
+        result.outDir = dumpJson["outdir"].getStr()
 
   # Parse version
   if version.len != 0:
@@ -188,7 +169,11 @@ proc getNimConfig*(projectDir = ""): Config =
     if not skip:
       result.paths.incl path
 
-  result.nimcacheDir = getNimcacheDir(projectDir)
+  if result.nimcacheDir.len == 0:
+    result.nimcacheDir = getOsCacheDir()
+
+  if result.outDir.len == 0:
+    result.outDir = projectDir
 
 proc getNimConfigFlags(cfg: Config): string =
   # Convert configuration into Nim flags for cfg file or command line
@@ -228,3 +213,15 @@ proc writeNimConfig*(cfgFile: string, projectDir = "") =
     cfg = getNimConfig(projectDir)
     cfgOut = getNimConfigFlags(cfg)
   writeFile(cfgFile, cfgOut)
+
+proc getNimcacheDir*(projectDir = ""): string =
+  ## Get nimcache directory for current compilation or specified `projectDir`
+  let
+    cfg = getNimConfig(projectDir)
+  result = cfg.nimcacheDir
+
+proc getOutDir*(projectDir = ""): string =
+  ## Get output directory for current compilation or specified `projectDir`
+  let
+    cfg = getNimConfig(projectDir)
+  result = cfg.outDir

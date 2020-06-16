@@ -94,18 +94,11 @@ proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
           break
 
 proc findJBBLibs(pkg: JBBPackage, outdir: string) =
-  pkg.sharedLibs = findFiles("lib[\\\\/].*\\.(so|dylib)", outdir)
-  pkg.sharedLibs.add findFiles("bin[\\\\/].*\\.(dll)", outdir)
-  for i in 0 ..< pkg.sharedLibs.len:
-    if pkg.sharedLibs[i].isAbsolute:
-      pkg.sharedLibs[i] = pkg.sharedLibs[i][outdir.len+1 .. ^1]
+  pkg.sharedLibs = findFiles("(bin|lib)[\\\\/].*\\.(so|dll|dynlib)[0-9.]*", outdir)
 
   for lib in findFiles("lib[\\\\/].*\\.(a|lib)$", outdir):
     if not lib.endsWith(".dll.a"):
-      if lib.isAbsolute:
-        pkg.staticLibs.add lib[outdir.len+1 .. ^1]
-      else:
-        pkg.staticLibs.add lib
+      pkg.staticLibs.add lib
 
 proc getJBBRepo*(pkg: JBBPackage, outdir: string) =
   ## Clone JBB package repo and checkout version tag if version is
@@ -174,11 +167,10 @@ proc downloadJBB*(pkg: JBBPackage, outdir: string, clean = true) =
         &" v{pkg.version}"
       else:
         ""
-    path = outdir / "downloads" / pkg.name
+    path = outdir / pkg.name
   echo &"# Downloading {pkg.name}{vstr} from BinaryBuilder.org"
   downloadUrl(pkg.url, path, quiet = true)
   pkg.findJBBLibs(path)
-  mvTree(path, outdir)
 
   pkg.dlJBBRequires(outdir)
 
@@ -204,7 +196,7 @@ proc getJBBLDeps*(pkg: JBBPackage, outdir: string, shared: bool, main = true): s
 
   if not main:
     for lib in libs:
-      result.add outdir / lib
+      result.add lib
 
   for cpkg in pkg.requires:
     result.add cpkg.getJBBLDeps(outdir, shared, main = false)

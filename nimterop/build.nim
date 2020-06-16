@@ -158,8 +158,10 @@ proc mkDir*(dir: string) =
       flag = when not defined(Windows): "-p" else: ""
     discard execAction(&"mkdir {flag} {dir.sanitizePath}", retry = 2)
 
-proc cpFile*(source, dest: string, move = false) =
+proc cpFile*(source, dest: string, psymlink = false, move = false) =
   ## Copy a file from `source` to `dest` at compile time
+  ##
+  ## `psymlink = true` preserves symlinks instead of dereferencing on posix
   let
     source = source.replace("/", $DirSep)
     dest = dest.replace("/", $DirSep)
@@ -173,7 +175,10 @@ proc cpFile*(source, dest: string, move = false) =
         if move:
           "mv -f"
         else:
-          "cp -f"
+          if psymlink:
+            "cp -fd"
+          else:
+            "cp -f"
 
   discard execAction(&"{cmd} {source.sanitizePath} {dest.sanitizePath}", retry = 2)
 
@@ -232,6 +237,20 @@ proc cpTree*(source, dest: string, move = false) =
 proc mvTree*(source, dest: string) =
   ## Move contents of source dir to the destination, not the directory itself
   cpTree(source, dest, move = true)
+
+proc getFileDate*(fullpath: string): string =
+  ## Get file date for `fullpath`
+  var
+    ret = 0
+    cmd =
+      when defined(Windows):
+        &"cmd /c for %a in ({fullpath.sanitizePath}) do echo %~ta"
+      elif defined(Linux):
+        &"stat -c %y {fullpath.sanitizePath}"
+      elif defined(OSX) or defined(FreeBSD):
+        &"stat -f %m {fullpath.sanitizePath}"
+
+  (result, ret) = execAction(cmd)
 
 proc getProjectCacheDir*(name: string, forceClean = true): string =
   ## Get a cache directory where all nimterop artifacts can be stored
@@ -1083,7 +1102,8 @@ macro isDefined*(def: untyped): untyped =
 
 macro getHeader*(
   header: static[string], giturl: static[string] = "", dlurl: static[string] = "",
-  conanuri: static[string] = "", jbburi: static[string] = "", outdir: static[string] = "",
+  conanuri: static[string] = "", jbburi: static[string] = "",
+  outdir: static[string] = "", libdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
   altNames: static[string] = "", buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
   ## Get the path to a header file for wrapping with
@@ -1125,7 +1145,14 @@ macro getHeader*(
   ##
   ## The header path is stored in `const xxxPath` and can be used in a `cImport()` call
   ## in the calling wrapper. The dynamic library path is stored in `const xxxLPath` and can
-  ## be used for the `dynlib` parameter (within quotes) or with `{.passL.}`.
+  ## be used for the `dynlib` parameter (within quotes) or with `{.passL.}`. Any dependency
+  ## libraries downloaded by `Conan` or `JBB` are returned in `const xxxLDeps` as a seq[string].
+  ##
+  ## `libdir` can be used to instruct `getHeader()` to copy shared libraries and their
+  ## dependencies to that directory. This prevents any runtime failures if `outdir` gets
+  ## removed or its contents changed. By default, `libdir` is set to the output directory
+  ## where the program binary will be created. The values of `xxxLPath` and `xxxLDeps` will
+  ## reflect this new location.
   ##
   ## `-d:xxxStatic` can be specified to statically link with the library instead. This
   ## will automatically add a `{.passL.}` call to the static library for convenience. Note
@@ -1214,6 +1241,8 @@ macro getHeader*(
         ""
     mode = getCompilerMode(header)
 
+    libdir = if libdir.len != 0: libdir else: getOutDir()
+
   # Use alternate library names if specified for regex search
   if altNames.len != 0:
     lre = lre % ("(" & altNames.replace(",", "|") & ")")
@@ -1272,9 +1301,9 @@ macro getHeader*(
       static:
         `preBuild`(`outdir`, prePath)
 
-    const
-      # Library binary path - build if not standard
-      `lpath`* =
+    let
+      # Library binary path - build if not standard / conan / jbb
+      lpath {.compiletime.} =
         when useStd:
           stdLPath
         elif `nameConan` or `nameJBB`:
@@ -1283,7 +1312,7 @@ macro getHeader*(
           buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildTypes`)
 
       # Library dependecy paths
-      `ldeps`*: seq[string] =
+      ldeps {.compiletime.}: seq[string] =
         when `nameConan`:
           getConanLDeps(`outdir`)
         elif `nameJBB`:
@@ -1291,6 +1320,7 @@ macro getHeader*(
         else:
           @[]
 
+    const
       # Header path - search again in case header is generated in build
       `path`* =
         if prePath.len != 0:
@@ -1301,12 +1331,57 @@ macro getHeader*(
     static:
       doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " &
         "missing/empty outdir or -d:$1Std -d:$1Git -d:$1DL -d:$1Conan or -d:$1JBB not specified" % `name`
-      doAssert `lpath`.len != 0, "\nLibrary " & `lname` & " not found"
-      echo "# Including library " & `lpath`
+      doAssert lpath.len != 0, "\nLibrary " & `lname` & " not found"
 
-    # Automatically link with static library and dependencies
+    proc extractFilenameStatic(str: string): string {.compiletime.} =
+      var
+        pos = -1
+      for i in countdown(str.len - 1, 0):
+        if str[i] == '/' or str[i] == '\\':
+          pos = i + 1
+          break
+      result = str[pos .. ^1]
+
+    proc joinPathStatic(str1, str2: string): string {.compiletime.} =
+      let
+        sep = when defined(Windows): "\\" else: "/"
+      result = str1 & sep & str2
+
     when `nameStatic`:
+      const
+        `lpath`* = lpath
+        `ldeps`* = ldeps
+
+      # Automatically link with static library and dependencies
       {.passL: `lpath`.}
       if `ldeps`.len != 0:
         {.passL: `ldeps`.join(" ").}
+
+      static:
+        echo "# Including library " & lpath
+        if `ldeps`.len != 0:
+          echo "# Including dependencies " & `ldeps`.join(" ")
+    else:
+      const
+        `lpath`* = joinPathStatic(`libdir`, lpath.extractFilenameStatic())
+        `ldeps`* = block:
+          var
+            ldeps = ldeps
+          for i in 0 ..< ldeps.len:
+            let
+              lname = ldeps[i].extractFilenameStatic()
+              ldeptgt = joinPathStatic(`libdir`, lname)
+            if not fileExists(ldeptgt) or getFileDate(ldeps[i]) > getFileDate(ldeptgt):
+              echo "# Copying " & lname & " to " & `libdir`
+              cpFile(ldeps[i], ldeptgt, psymlink = true)
+            ldeps[i] = ldeptgt
+          ldeps
+
+      static:
+        # Copy shared libraries and dependencies to `libdir`
+        if not fileExists(`lpath`) or getFileDate(lpath) > getFileDate(`lpath`):
+          echo "# Copying " & `lpath`.extractFilenameStatic() & " to " & `libdir`
+          cpFile(lpath, `lpath`)
+
+        echo "# Including library " & `lpath`
   )
