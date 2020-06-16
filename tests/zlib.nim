@@ -28,6 +28,7 @@ getHeader(
   giturl = "https://github.com/madler/zlib",
   dlurl = "http://zlib.net/zlib-$1.tar.gz",
   conanuri = "zlib/$1",
+  jbburi = "zlib/$1",
   outdir = baseDir,
   altNames = "z,zlib"
 )
@@ -72,3 +73,6 @@ else:
   cImport(zlibPath, recurse = true, flags = FLAGS)
 
 echo "zlib version = " & $zlibVersion()
+
+when isDefined(zlibJBB) and isDefined(zlibStatic):
+  {.passL: "-no-pie".}

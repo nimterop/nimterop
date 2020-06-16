@@ -158,7 +158,7 @@ proc mkDir*(dir: string) =
       flag = when not defined(Windows): "-p" else: ""
     discard execAction(&"mkdir {flag} {dir.sanitizePath}", retry = 2)
 
-proc cpFile*(source, dest: string, move=false) =
+proc cpFile*(source, dest: string, move = false) =
   ## Copy a file from `source` to `dest` at compile time
   let
     source = source.replace("/", $DirSep)
@@ -214,6 +214,25 @@ proc cleanDir*(dir: string) =
     else:
       rmFile(path)
 
+proc cpTree*(source, dest: string, move = false) =
+  ## Copy contents of source dir to the destination, not the directory itself
+  for kind, path in walkDir(source, relative = true):
+    if kind == pcDir:
+      cpTree(source / path, dest / path, move)
+      if move:
+        rmDir(source / path)
+    else:
+      if not dirExists(dest):
+        mkDir(dest)
+      if move:
+        mvFile(source / path, dest / path)
+      else:
+        cpFile(source / path, dest / path)
+
+proc mvTree*(source, dest: string) =
+  ## Move contents of source dir to the destination, not the directory itself
+  cpTree(source, dest, move = true)
+
 proc getProjectCacheDir*(name: string, forceClean = true): string =
   ## Get a cache directory where all nimterop artifacts can be stored
   ##
@@ -242,7 +261,7 @@ proc getProjectCacheDir*(name: string, forceClean = true): string =
     echo "# Removing " & result
     rmDir(result)
 
-proc extractZip*(zipfile, outdir: string) =
+proc extractZip*(zipfile, outdir: string, quiet = false) =
   ## Extract a zip file using `powershell` on Windows and `unzip` on other
   ## systems to the specified output directory
   var cmd = "unzip -o $#"
@@ -251,10 +270,11 @@ proc extractZip*(zipfile, outdir: string) =
           "'System.IO.Compression.FileSystem'; " &
           "[IO.Compression.ZipFile]::ExtractToDirectory('$#', '.'); }\""
 
-  echo "# Extracting " & zipfile
+  if not quiet:
+    echo "# Extracting " & zipfile
   discard execAction(&"cd {outdir.sanitizePath} && {cmd % zipfile}")
 
-proc extractTar*(tarfile, outdir: string) =
+proc extractTar*(tarfile, outdir: string, quiet = false) =
   ## Extract a tar file using `tar`, `7z` or `7za` to the specified output directory
   var
     cmd = ""
@@ -284,7 +304,8 @@ proc extractTar*(tarfile, outdir: string) =
 
   doAssert cmd.len != 0, "No extraction tool - tar, 7z, 7za - available for " & tarfile.sanitizePath
 
-  echo "# Extracting " & tarfile
+  if not quiet:
+    echo "# Extracting " & tarfile
   discard execAction(&"cd {outdir.sanitizePath} && {cmd}")
   if name.len != 0:
     rmFile(outdir / name)
@@ -316,9 +337,9 @@ proc downloadUrl*(url, outdir: string, quiet = false) =
     discard execAction(cmd % [url.quoteShell, (outdir/file).sanitizePath], retry = 1)
 
     if ext == ".zip":
-      extractZip(file, outdir)
+      extractZip(file, outdir, quiet)
     elif ext in archives:
-      extractTar(file, outdir)
+      extractTar(file, outdir, quiet)
 
 proc gitReset*(outdir: string) =
   ## Hard reset the git repository at the specified directory
@@ -342,7 +363,7 @@ proc gitCheckout*(file, outdir: string) =
     sleep(500)
     echo "#   Retrying ..."
 
-proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
+proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false) =
   ## Pull the specified git repository to the output directory
   ##
   ## `plist` is the list of specific files and directories or wildcards
@@ -362,7 +383,8 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
 
   mkDir(outdir)
 
-  echo "# Setting up Git repo: " & url
+  if not quiet:
+    echo "# Setting up Git repo: " & url
   discard execAction(&"cd {outdirQ} && git init .")
   discard execAction(&"cd {outdirQ} && git remote add origin {url}")
 
@@ -378,20 +400,32 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "") =
   discard execAction(&"cd {outdirQ} && git clean -fxd")
 
   if checkout.len != 0:
-    echo "# Checking out " & checkout
+    if not quiet:
+      echo "# Checking out " & checkout
     discard execAction(&"cd {outdirQ} && git fetch", retry = 1)
     discard execAction(&"cd {outdirQ} && git checkout {checkout}")
   else:
-    echo "# Pulling repository"
+    if not quiet:
+      echo "# Pulling repository"
     discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master", retry = 1)
 
-proc findFile*(file: string, dir: string, recurse = true, first = false, regex = false): string =
-  ## Find the file in the specified directory
+proc gitTags*(outdir: string): seq[string] =
+  ## Get all the git tags in the specified directory
+  let
+    cmd = &"cd {outdir.sanitizePath} && git tag"
+    tags = execAction(cmd).output.splitLines()
+  for tag in tags:
+    let
+      tag = tag.strip()
+    if tag.len != 0:
+      result.add tag
+
+proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[string] =
+  ## Find all matching files in the specified directory
   ##
   ## `file` is a regular expression if `regex` is true
   ##
-  ## Turn off recursive search with `recurse` and stop on first match with
-  ## `first`. Without it, the shortest match is returned.
+  ## Turn off recursive search with `recurse`
   var
     cmd =
       when defined(Windows):
@@ -435,10 +469,22 @@ proc findFile*(file: string, dir: string, recurse = true, first = false, regex =
             ""
         else:
           line
+      if f.len != 0:
+        result.add f
 
-      if (f.len != 0 and (result.len == 0 or result.len > f.len)):
-        result = f
-        if first: break
+proc findFile*(file: string, dir: string, recurse = true, first = false, regex = false): string =
+  ## Find the file in the specified directory
+  ##
+  ## `file` is a regular expression if `regex` is true
+  ##
+  ## Turn off recursive search with `recurse` and stop on first match with
+  ## `first`. Without it, the shortest match is returned.
+  let
+    matches = findFiles(file, dir, recurse, regex)
+  for match in matches:
+    if (result.len == 0 or result.len > match.len):
+      result = match
+      if first: break
 
 proc flagBuild*(base: string, flags: openArray[string]): string =
   ## Simple helper proc to generate flags for `configure`, `cmake`, etc.
@@ -533,7 +579,7 @@ proc configure*(path, check: string, flags = "") =
 
     echoDebug execAction(cmd).output
 
-  doAssert (path / check).fileExists(), "# Configure failed"
+  doAssert (path / check).fileExists(), "Configure failed"
 
 proc getCmakePropertyStr(name, property, value: string): string =
   &"\nset_target_properties({name} PROPERTIES {property} \"{value}\")\n"
@@ -630,7 +676,7 @@ proc cmake*(path, check, flags: string) =
 
   echoDebug execAction(cmd).output
 
-  doAssert (path / check).fileExists(), "# cmake failed"
+  doAssert (path / check).fileExists(), "cmake failed"
 
 proc make*(path, check: string, flags = "", regex = false) =
   ## Run the `make` command to build all binaries in the specified path
@@ -666,7 +712,7 @@ proc make*(path, check: string, flags = "", regex = false) =
 
   echoDebug execAction(cmd).output
 
-  doAssert findFile(check, path, regex = regex).len != 0, "# make failed"
+  doAssert findFile(check, path, regex = regex).len != 0, "make failed"
 
 proc getCompilerMode*(path: string): string =
   ## Determines a target language mode from an input filename, if one is not already specified.
@@ -768,8 +814,15 @@ proc getGccInfo*(): tuple[arch, os, compiler, version: string] =
   else:
     result.compiler = "gcc"
 
+template fixOutDir() {.dirty.} =
+  let
+    outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
+
 # Conan support
 include conan
+
+# Julia Binary Builder support
+include jbb
 
 proc getStdPath(header, mode: string): string =
   for inc in getGccPaths(mode):
@@ -839,11 +892,41 @@ proc getConanPath(header, uri, outdir, version: string, shared: bool): string =
 
   result = findFile(header, outdir)
 
-proc getConanLPath(outdir: string): string =
+proc getConanLDeps(outdir: string): seq[string] =
   let
     pkg = loadConanInfo(outdir)
-  
-  result = pkg.getConanLibs(outdir).join(" ")
+
+  result = pkg.getConanLDeps(outdir)
+
+proc getJBBPath(header, uri, outdir, version: string): string =
+  let
+    spl = uri.split('/', 1)
+    name = spl[0]
+
+  var
+    ver =
+      if spl.len == 2:
+        spl[1]
+      else:
+        ""
+
+  if "$#" in ver or "$1" in ver:
+    doAssert version.len != 0, "Need version for BinaryBuilder.org uri"
+    ver = ver % version
+  else:
+    doAssert version.len == 0, "BinaryBuilder.org uri does not contain version"
+
+  let
+    pkg = newJBBPackage(name, ver)
+  downloadJBB(pkg, outdir)
+
+  result = findFile(header, outdir)
+
+proc getJBBLDeps(outdir: string, shared: bool): seq[string] =
+  let
+    pkg = loadJBBInfo(outdir)
+
+  result = pkg.getJBBLDeps(outdir, shared)
 
 proc getLocalPath(header, outdir: string): string =
   if outdir.len != 0:
@@ -932,7 +1015,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
       buildStatus.built = true
 
   let error = if buildStatus.error.len > 0: buildStatus.error else: "No build files found in " & outdir
-  doAssert buildStatus.built, &"\n# Build configuration failed - {error}\n"
+  doAssert buildStatus.built, &"\nBuild configuration failed - {error}\n"
 
   result = findFile(lname, outdir, regex = true)
 
@@ -1000,7 +1083,7 @@ macro isDefined*(def: untyped): untyped =
 
 macro getHeader*(
   header: static[string], giturl: static[string] = "", dlurl: static[string] = "",
-  conanuri: static[string] = "", outdir: static[string] = "",
+  conanuri: static[string] = "", jbburi: static[string] = "", outdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
   altNames: static[string] = "", buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
   ## Get the path to a header file for wrapping with
@@ -1015,19 +1098,22 @@ macro getHeader*(
   ## `-d:xxxDL` - download source from `dlurl` and extract if required
   ## `-d:xxxConan` - download headers and binary from conan.io using `conanuri`
   ##   typically formatted as `name/version[@user/channel][:bhash]`
+  ## `-d:xxxJBB` - download headers and binary from BinaryBuilder.org using `jbburi`
+  ##   typically formatted as `name/version`
   ##
   ## This allows a single wrapper to be used in different ways depending on the user's needs.
   ## If no `-d:xxx` defines are specified, `outdir` will be searched for the header as is.
   ## The user can opt to download the sources to `outdir` using any other method such as
   ## git sub-modules, vendoring or pointing to a repository that was already cloned.
   ##
-  ## If multiple `-d:xxx` defines are specified, precedence is `Std` and then `Git`, `DL` or
-  ## `Conan`. This allows using a system installed library if available before falling back
-  ## to manual building. The user would need to specify both `-d:xxxStd` and one of the other
-  ## methods.
+  ## If multiple `-d:xxx` defines are specified, precedence is `Std` and then `Git`, `DL`,
+  ## `Conan` or `JBB`. This allows using a system installed library if available before
+  ## falling back to manual building. The user would need to specify both `-d:xxxStd` and
+  ## one of the other methods.
   ##
   ## `-d:xxxSetVer=x.y.z` can be used to specify which version to use. It is used as a tag
-  ## name for Git whereas for DL and Conan, it replaces `$1` in the URL defined.
+  ## name for Git whereas for DL, Conan and BinaryBuilder.org, it replaces `$1` in the URL
+  ## defined.
   ##
   ## All defines can also be set in code using `setDefines()` and checked for using
   ## `isDefined()` which checks for defines set from both `-d` and `setDefines()`.
@@ -1035,7 +1121,7 @@ macro getHeader*(
   ## The library is then configured (with `cmake` or `autotools` if possible) and built
   ## using `make`, unless using `-d:xxxStd` which presumes that the system package
   ## manager was used to install prebuilt headers and binaries, or using `-d:xxxConan`
-  ## which downloads pre-built binaries.
+  ## or `-d:xxxJBB` which download pre-built binaries.
   ##
   ## The header path is stored in `const xxxPath` and can be used in a `cImport()` call
   ## in the calling wrapper. The dynamic library path is stored in `const xxxLPath` and can
@@ -1043,9 +1129,10 @@ macro getHeader*(
   ##
   ## `-d:xxxStatic` can be specified to statically link with the library instead. This
   ## will automatically add a `{.passL.}` call to the static library for convenience. Note
-  ## that `-d:xxxConan` downloads all dependency libs as well and the `xxxLPath` will
-  ## include paths to all of them separated by space in the right order for linking.
-  ## 
+  ## that `-d:xxxConan` and `-d:xxxJBB` download all dependency libs as well and the
+  ## `xxxLPath` will include paths to all of them separated by space in the right order for
+  ## linking.
+  ##
   ## Note also that Conan currently builds all OSX binaries on 10.14 so older versions of
   ## OSX will complain if statically linking to these binaries. Further, all Conan binaries
   ## for Windows are built with Visual Studio so static linking the `.lib` files with gcc
@@ -1088,6 +1175,7 @@ macro getHeader*(
     gitStr = name & "Git"
     dlStr = name & "DL"
     conanStr = name & "Conan"
+    jbbStr = name & "JBB"
 
     staticStr = name & "Static"
     verStr = name & "SetVer"
@@ -1097,12 +1185,14 @@ macro getHeader*(
     nameGit = newIdentNode(gitStr)
     nameDL = newIdentNode(dlStr)
     nameConan = newIdentNode(conanStr)
+    nameJBB = newIdentNode(jbbStr)
 
     nameStatic = newIdentNode(staticStr)
 
     # Consts to generate
     path = newIdentNode(name & "Path")
     lpath = newIdentNode(name & "LPath")
+    ldeps = newIdentNode(name & "LDeps")
     version = newIdentNode(verStr)
     lname = newIdentNode(name & "LName")
     preBuild = newIdentNode(name & "PreBuild")
@@ -1115,6 +1205,7 @@ macro getHeader*(
     gitVal = gDefines.hasKey(gitStr)
     dlVal = gDefines.hasKey(dlStr)
     conanVal = gDefines.hasKey(conanStr)
+    jbbVal = gDefines.hasKey(jbbStr)
     staticVal = gDefines.hasKey(staticStr)
     verVal =
       if gDefines.hasKey(verStr):
@@ -1137,16 +1228,19 @@ macro getHeader*(
       `nameGit`* = when defined(`nameGit`): true else: `gitVal` == 1
       `nameDL`* = when defined(`nameDL`): true else: `dlVal` == 1
       `nameConan`* = when defined(`nameConan`): true else: `conanVal` == 1
+      `nameJBB`* = when defined(`nameJBB`): true else: `jbbVal` == 1
       `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
 
     # Search for header in outdir (after retrieving code) depending on -d:xxx mode
-    proc getPath(header, giturl, dlurl, conanuri, outdir, version: string, shared: bool): string =
+    proc getPath(header, giturl, dlurl, conanuri, jbburi, outdir, version: string, shared: bool): string =
       when `nameGit`:
         getGitPath(header, giturl, outdir, version)
       elif `nameDL`:
         getDlPath(header, dlurl, outdir, version)
       elif `nameConan`:
         getConanPath(header, conanuri, outdir, version, shared)
+      elif `nameJBB`:
+        getJBBPath(header, jbburi, outdir, version)
       else:
         getLocalPath(header, outdir)
 
@@ -1171,10 +1265,10 @@ macro getHeader*(
         when useStd:
           stdPath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `outdir`, `version`, not `nameStatic`)
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `outdir`, `version`, not `nameStatic`)
 
-    # Run preBuild hook before building library if not Std or Conan
-    when not (useStd or `nameConan`) and declared(`preBuild`):
+    # Run preBuild hook before building library if not Std, Conan or JBB
+    when not (useStd or `nameConan` or `nameJBB`) and declared(`preBuild`):
       static:
         `preBuild`(`outdir`, prePath)
 
@@ -1183,28 +1277,36 @@ macro getHeader*(
       `lpath`* =
         when useStd:
           stdLPath
-        elif `nameConan`:
-          when `nameStatic`:
-            getConanLPath(`outdir`)
-          else:
-            findFile(`lname`, `outdir`, regex = true)
+        elif `nameConan` or `nameJBB`:
+          findFile(`lname`, `outdir`, regex = true)
         else:
           buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildTypes`)
+
+      # Library dependecy paths
+      `ldeps`*: seq[string] =
+        when `nameConan`:
+          getConanLDeps(`outdir`)
+        elif `nameJBB`:
+          getJBBLDeps(`outdir`, not `nameStatic`)
+        else:
+          @[]
 
       # Header path - search again in case header is generated in build
       `path`* =
         if prePath.len != 0:
           prePath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `outdir`, `version`, not `nameStatic`)
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `outdir`, `version`, not `nameStatic`)
 
     static:
       doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " &
-        "missing/empty outdir or -d:$1Std -d:$1Git -d:$1DL or -d:$1Conan not specified" % `name`
+        "missing/empty outdir or -d:$1Std -d:$1Git -d:$1DL -d:$1Conan or -d:$1JBB not specified" % `name`
       doAssert `lpath`.len != 0, "\nLibrary " & `lname` & " not found"
       echo "# Including library " & `lpath`
 
-    # Automatically link with static libary
+    # Automatically link with static library and dependencies
     when `nameStatic`:
       {.passL: `lpath`.}
+      if `ldeps`.len != 0:
+        {.passL: `ldeps`.join(" ").}
   )

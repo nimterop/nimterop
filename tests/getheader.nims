@@ -23,6 +23,7 @@ var
 
 testCall(cmd & lrcmd, "No build files found", 1)
 testCall(cmd & " -d:libssh2Conan" & sshcmd, "Need version for Conan uri", 1)
+testCall(cmd & " -d:libssh2JBB" & sshcmd, "Need version for BinaryBuilder.org uri", 1)
 
 when defined(posix):
   # stdlib
@@ -42,6 +43,11 @@ when defined(posix):
 else:
   # conan static for Windows
   testCall(cmd & " -d:zlibConan -d:zlibSetVer=1.2.11 -d:zlibStatic" & zrcmd, zexp, 0)
+
+# JBB
+testCall(cmd & " -d:libssh2JBB -d:libssh2SetVer=1.9.0" & sshcmd, zexp, 0)
+testCall(cmd & " -d:zlibJBB -d:zlibSetVer=1.2.11" & zrcmd, zexp, 0)
+testCall(cmd & " -d:zlibJBB -d:zlibSetVer=1.2.11 -d:zlibStatic" & zrcmd, zexp, 0)
 
 # git
 testCall(cmd & " -d:envTest" & zrcmd, zexp, 0)

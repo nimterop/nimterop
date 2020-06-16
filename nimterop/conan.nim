@@ -11,8 +11,8 @@ type
 
     bhash*: string
     shared*: bool
-    headers*: seq[string]
-    libs*: seq[string]
+    sharedLibs*: seq[string]
+    staticLibs*: seq[string]
     requires*: seq[ConanPackage]
 
   ConanBuild* = ref object
@@ -26,14 +26,14 @@ type
 
 const
   # Conan API urls
-  baseUrl = "https://conan.bintray.com/v2/conans"
-  searchUrl = baseUrl & "/search?q=$query"
-  pkgUrl = baseUrl & "/$name/$version/$user/$channel/search$query"
-  cfgUrl = baseUrl & "/$name/$version/$user/$channel/revisions/$recipe/packages/$build/revisions"
-  dlUrl = baseUrl & "/$name/$version/$user/$channel/revisions/$recipe/packages/$build/revisions/$revision/files/$file"
+  conanBaseUrl = "https://conan.bintray.com/v2/conans"
+  conanSearchUrl = conanBaseUrl & "/search?q=$query"
+  conanPkgUrl = conanBaseUrl & "/$name/$version/$user/$channel/search$query"
+  conanCfgUrl = conanBaseUrl & "/$name/$version/$user/$channel/revisions/$recipe/packages/$build/revisions"
+  conanDlUrl = conanBaseUrl & "/$name/$version/$user/$channel/revisions/$recipe/packages/$build/revisions/$revision/files/$file"
 
   # Bintray download sub-URL for explicit `user/channel` (not _/_)
-  dlAltUrl = "/download_file?file_path=$user%2F$name%2F$version%2F$channel%2F0%2Fpackage%2F$build%2F0%2F$file"
+  conanDlAltUrl = "/download_file?file_path=$user%2F$name%2F$version%2F$channel%2F0%2Fpackage%2F$build%2F0%2F$file"
 
   # Strings
   conanInfo = "conaninfo.json"
@@ -42,18 +42,14 @@ const
 
 var
   # Bintray download URL for explicit `user/channel`
-  baseAltUrl {.compiletime.} = {
+  conanBaseAltUrl {.compiletime.} = {
     "bincrafters": "https://bintray.com/bincrafters/public-conan",
     "conan": "https://bintray.com/conan-community/conan"
   }.toTable()
 
-template fixOutDir() {.dirty.} =
-  let
-    outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
-
-proc addAltBaseUrl*(name, url: string) =
+proc addAltConanBaseUrl*(name, url: string) =
   # Add an alternate base URL for a custom conan repo on bintray
-  baseAltUrl[name] = url
+  conanBaseAltUrl[name] = url
 
 proc jsonGet(url: string): JsonNode =
   # Make HTTP call and return content as JSON
@@ -137,7 +133,7 @@ proc getUriFromConanPackage*(pkg: ConanPackage): string =
 
 proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPackage =
   ## Search for package by `name` and optional `version`, `user` and `channel`
-  ## 
+  ##
   ## Search is quite slow so it is preferable to specify a version and use `getConanBuilds()`
   var
     query = name
@@ -149,7 +145,7 @@ proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPac
         query &= "/" & channel
 
   let
-    j1 = jsonGet(searchUrl % ["query", query])
+    j1 = jsonGet(conanSearchUrl % ["query", query])
     res = j1.getOrDefault("results").getElems()
 
   if res.len != 0:
@@ -193,7 +189,7 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
           query.replace("&", "%20and%20")
       else: ""
 
-    url = pkgUrl % [
+    url = conanPkgUrl % [
       "name", pkg.name,
       "version", pkg.version,
       "user", pkg.user,
@@ -234,7 +230,7 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
 proc getConanRevisions*(pkg: ConanPackage, bld: ConanBuild) =
   ## Get all revisions of a build
   let
-    url = cfgUrl % [
+    url = conanCfgUrl % [
       "name", pkg.name,
       "version", pkg.version,
       "user", pkg.user,
@@ -269,22 +265,23 @@ proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
   writeFile(file, $$pkg)
 
 proc parseConanManifest(pkg: ConanPackage, outdir: string) =
-  # Get all header and library info from downloaded conan package
+  # Get all library info from downloaded conan package
   let
     file = outdir / conanManifest
-  
+
   if fileExists(file):
     let
       data = readFile(file)
     for line in data.splitLines():
       let
         line = line.split(':')[0]
-      if line.startsWith("include/"):
-        pkg.headers.add line
-      elif line.startsWith("lib/"):
-        pkg.libs.add line
+      if line.startsWith("lib/"):
+        if line.endsWith(".a") or line.endsWith(".lib"):
+          pkg.staticLibs.add line
+        elif line.endsWith(".so"):
+          pkg.sharedLibs.add line
       elif line.startsWith("bin/") and line.endsWith("dll"):
-        pkg.libs.add line
+        pkg.sharedLibs.add line
 
 proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision = "") =
   ## Download specific `revision` of `bld` to `outdir`
@@ -300,7 +297,7 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
 
     url =
       if pkg.user == "_":
-        dlUrl % [
+        conanDlUrl % [
           "name", pkg.name,
           "version", pkg.version,
           "user", pkg.user,
@@ -311,7 +308,7 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
           "file", conanPackage
         ]
       else:
-        baseAltUrl[pkg.user] & dlAltUrl % [
+        conanBaseAltUrl[pkg.user] & conanDlAltUrl % [
           "name", pkg.name,
           "version", pkg.version,
           "user", pkg.user,
@@ -331,7 +328,7 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
 proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string)
 proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
   ## Download latest recipe/build/revision of `pkg` to `outdir`
-  ## 
+  ##
   ## High-level API that handles the end to end Conan process flow to find
   ## latest package binary and downloads and extracts it to `outdir`.
   fixOutDir()
@@ -351,7 +348,7 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
 
   pkg.getConanBuilds()
 
-  doAssert pkg.recipes.len != 0, &"# Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
+  doAssert pkg.recipes.len != 0, &"Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
 
   echo &"# Downloading {pkg.name} v{pkg.version} from Conan"
   for recipe, builds in pkg.recipes:
@@ -375,18 +372,25 @@ proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string) =
   if bld.options["shared"] == "False":
     for req in bld.requires:
       let
-        rpkg = newConanPackageFromUri(req)
+        rpkg = newConanPackageFromUri(req, shared = false)
 
       downloadConan(rpkg, outdir, clean = false)
       pkg.requires.add rpkg
 
-proc getConanLibs*(pkg: ConanPackage, outdir: string): seq[string] =
-  ## Get all Conan libs (.so|.a|.lib|.dll) in pkg, including deps
+proc getConanLDeps*(pkg: ConanPackage, outdir: string, main = true): seq[string] =
+  ## Get all Conan libs - shared (.so|.dll) or static (.a|.lib) in pkg, including deps
   ## in descending order
-  ## 
+  ##
   ## `outdir` is prefixed to each entry
-  for lib in pkg.libs:
-    result.add outdir / lib
+  let
+    libs = if pkg.shared: pkg.sharedLibs else: pkg.staticLibs
+    str = if pkg.shared: "shared" else: "static"
+
+  doAssert libs.len != 0, &"No {str} libs found for {pkg.name} in {outdir}"
+
+  if not main:
+    for lib in libs:
+      result.add outdir / lib
 
   for cpkg in pkg.requires:
-    result.add cpkg.getConanLibs(outdir)
+    result.add cpkg.getConanLDeps(outdir, main = false)

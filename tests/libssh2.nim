@@ -6,6 +6,7 @@ const
 getHeader(
   header = "libssh2.h",
   conanuri = "libssh2/$1",
+  jbburi = "libssh2/$1",
   outdir = outdir
 )
 
@@ -14,16 +15,16 @@ cOverride:
     stat = object
     stat64 = object
     SOCKET = object
-  
+
 when not libssh2Static:
   cImport(libssh2Path, recurse = true, dynlib = "libssh2LPath", flags = "-f:ast2 -c -E_ -F_")
 
-  when not defined(Windows):
+  when not defined(Windows) and not isDefined(libssh2JBB):
     proc zlibVersion(): cstring {.importc, dynlib: libssh2LPath.}
 else:
   cImport(libssh2Path, recurse = true, flags = "-f:ast2 -c -E_ -F_")
 
-  when not defined(Windows):
+  when not defined(Windows) and not isDefined(libssh2JBB):
     proc zlibVersion(): cstring {.importc.}
 
   {.passL: "-lpthread".}
@@ -39,8 +40,11 @@ if session == nil:
 libssh2_session_set_blocking(session, 0.cint)
 
 echo "zlib version = " & (block:
-  when not defined(Windows):
+  when not defined(Windows) and not isDefined(libssh2JBB):
     $zlibVersion()
   else:
     ""
 )
+
+static:
+  echo libssh2LDeps

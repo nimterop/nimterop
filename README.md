@@ -54,6 +54,7 @@ getHeader(
   giturl = "https://github.com/username/repo",            # Git repo URL
   dlurl = "https://website.org/download/repo-$1.tar.gz",  # Download URL for archive or raw file
   conanuri = "repo/$1",                                   # Conan.io URI
+  jbburi = "repo/$1",                                     # BinaryBuilder.org URI
   outdir = baseDir,                                       # Where to download/build/search
   conFlags = "--disable-comp --enable-feature",           # Flags to pass configure script
   cmakeFlags = "-DENABLE_STATIC_LIB=ON"                   # Flags to pass to Cmake
@@ -75,8 +76,8 @@ Module documentation for the build API can be found [here](https://nimterop.gith
 The above wrapper is generic and allows the end user to control how it works. Note that `headerPath` is derived from `header.h` so if you have `SDL.h` as the argument to `getHeader()`, it generates `SDLPath` and `SDLLPath` and is controlled by `-d:SDLStatic`, `-d:SDLGit` and so forth.
 
 - If the library is already installed in `/usr/include` then the `-d:headerStd` define to Nim can be used to instruct `getHeader()` to search for `header.h` in the standard system path.
-- If the library needs to be downloaded, the user can use `-d:headerGit` to clone the source from the specified git URL, `-d:headerDL` to get the source from download URL or `-d:headerConan` to download from https://conan.io/center.
-  - The `-d:headerSetVer=X.Y.Z` flag can be used to specify which version to download. It is used as the tag name for Git and for DL and Conan, it replaces `$1` in the URL if specified.
+- If the library needs to be downloaded, the user can use `-d:headerGit` to clone the source from the specified git URL, `-d:headerDL` to get the source from download URL, `-d:headerConan` to download from https://conan.io/center or `-d:headerJBB` to download from https://binarybuilder.org.
+  - The `-d:headerSetVer=X.Y.Z` flag can be used to specify which version to download. It is used as the tag name for Git and for DL, Conan and JBB, it replaces `$1` in the URL if specified.
 - If no flag is provided, `getHeader()` simply looks for the library in `outdir`. The user could use Git submodules or manually download or check-in the library to that directory and `getHeader()` will use it directly.
 
 #### Pre build
@@ -93,16 +94,21 @@ Flags can be specified to these tools via `getHeader()` or directly via the unde
 
 #### Linking
 
-- If `-d:headerStatic` is specified, `getHeader()` will return the static library path in `headerLPath`. The wrapper writer can check for this and call `cImport()` accordingly as in the example above. If `-d:headerStatic` is omitted, the dynamic library is returned in `headerLPath`.
-- `getHeader()` searches for libraries based on the header name by default:
-  - `libheader.so` or `libheader.a` on Linux
-  - `libheader.dylib` on OSX
-  - `header.dll` or `header.a` on Windows
-- If a library has a different header and library binary name, `altNames` can be used to configure an alternate name of library binary.
-  - For example, Bzip2 has `bzlib.h` but the library is `libbz2.so` so `altNames = "bz2"`.
-  - In the example above, `altNames = "hdr"` so `getHeader()` will look for `libhdr.so`, `hdr.dll`, etc.
-  - See [bzlib.nim](https://github.com/genotrance/nimarchive/blob/master/nimarchive/bzlib.nim) for an example.
-- [lzma.nim](https://github.com/nimterop/nimterop/blob/master/tests/lzma.nim) is an example of a library that allows both static and dynamic linking.
+If `-d:headerStatic` is specified, `getHeader()` will return the static library path in `headerLPath`. The wrapper writer can check for this and call `cImport()` accordingly as in the example above. If `-d:headerStatic` is omitted, the dynamic library is returned in `headerLPath`.
+
+All dependency libraries (supported by Conan and JBB) will be returned in `headerLDeps`. Static libraries and dependencies are automatically linked using `{.passL.}`. Conan shared libs include all dependencies whereas JBB shared libs expect the required dependencies to be in the same location or in `LD_LIBRARY_PATH`.
+
+`getHeader()` searches for libraries based on the header name by default:
+- `libheader.so` or `libheader.a` on Linux
+- `libheader.dylib` on OSX
+- `header.dll`, `header.a` or `header.lib` on Windows
+
+If a library has a different header and library binary name, `altNames` can be used to configure an alternate name of library binary.
+- For example, Bzip2 has `bzlib.h` but the library is `libbz2.so` so `altNames = "bz2"`.
+- In the example above, `altNames = "hdr"` so `getHeader()` will look for `libhdr.so`, `hdr.dll`, etc.
+- See [bzlib.nim](https://github.com/genotrance/nimarchive/blob/master/nimarchive/bzlib.nim) for an example.
+
+[lzma.nim](https://github.com/nimterop/nimterop/blob/master/tests/lzma.nim) is an example of a library that allows both static and dynamic linking.
 
 #### User control
 
