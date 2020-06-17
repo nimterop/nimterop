@@ -244,7 +244,9 @@ proc getFileDate*(fullpath: string): string =
     ret = 0
     cmd =
       when defined(Windows):
-        &"cmd /c for %a in ({fullpath.sanitizePath}) do echo %~ta"
+        let
+          (head, tail) = fullpath.splitPath()
+        &"cmd /c forfiles /P {head.sanitizePath()} /M {tail.sanitizePath} /C \"cmd /c echo @fdate @ftime @fsize\""
       elif defined(Linux):
         &"stat -c %y {fullpath.sanitizePath}"
       elif defined(OSX) or defined(FreeBSD):
