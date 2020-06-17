@@ -252,6 +252,17 @@ proc getFileDate*(fullpath: string): string =
 
   (result, ret) = execAction(cmd)
 
+proc touchFile*(fullpath: string) =
+  ## Touch file to update modified date
+  var
+    cmd =
+      when defined(Windows):
+        &"cmd /c copy /b {fullpath.sanitizePath}+"
+      else:
+        &"touch {fullpath.sanitizePath}"
+
+  discard execAction(cmd)
+
 proc getProjectCacheDir*(name: string, forceClean = true): string =
   ## Get a cache directory where all nimterop artifacts can be stored
   ##
@@ -1367,19 +1378,22 @@ macro getHeader*(
         `ldeps`* = block:
           var
             ldeps = ldeps
+            copied: seq[string]
           for i in 0 ..< ldeps.len:
             let
               lname = ldeps[i].extractFilenameStatic()
               ldeptgt = joinPathStatic(`libdir`, lname)
-            if not fileExists(ldeptgt) or getFileDate(ldeps[i]) > getFileDate(ldeptgt):
-              echo "# Copying " & lname & " to " & `libdir`
+            if not fileExists(ldeptgt) or getFileDate(ldeps[i]) != getFileDate(ldeptgt):
               cpFile(ldeps[i], ldeptgt, psymlink = true)
+              copied.add lname
             ldeps[i] = ldeptgt
+          if copied.len != 0:
+            echo "# Copying dependencies: " & copied.join(" ") & "\n#   to " & `libdir`
           ldeps
 
       static:
         # Copy shared libraries and dependencies to `libdir`
-        if not fileExists(`lpath`) or getFileDate(lpath) > getFileDate(`lpath`):
+        if not fileExists(`lpath`) or getFileDate(lpath) != getFileDate(`lpath`):
           echo "# Copying " & `lpath`.extractFilenameStatic() & " to " & `libdir`
           cpFile(lpath, `lpath`)
 

@@ -40,6 +40,7 @@ when defined(posix):
 
   # conan static
   testCall(cmd & " -d:libssh2Conan -d:libssh2SetVer=1.9.0 -d:libssh2Static" & sshcmd, zexp, 0)
+<<<<<<< HEAD
 else:
   # conan static for Windows
   testCall(cmd & " -d:zlibConan -d:zlibSetVer=1.2.11 -d:zlibStatic" & zrcmd, zexp, 0)
@@ -48,6 +49,8 @@ else:
 testCall(cmd & " -d:libssh2JBB -d:libssh2SetVer=1.9.0" & sshcmd, zexp, 0)
 testCall(cmd & " -d:zlibJBB -d:zlibSetVer=1.2.11" & zrcmd, zexp, 0)
 testCall(cmd & " -d:zlibJBB -d:zlibSetVer=1.2.11 -d:zlibStatic" & zrcmd, zexp, 0)
+=======
+>>>>>>> c35eb74... Add tests for conan, recurse implies preprocess
 
 # git
 testCall(cmd & " -d:envTest" & zrcmd, zexp, 0)

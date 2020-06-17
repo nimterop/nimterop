@@ -346,6 +346,8 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
   elif clean:
     cleanDir(outdir)
 
+  echo &"# Downloading {pkg.name} v{pkg.version} from Conan"
+
   pkg.getConanBuilds()
 
   doAssert pkg.recipes.len != 0, &"Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
