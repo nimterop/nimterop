@@ -176,7 +176,7 @@ proc cpFile*(source, dest: string, psymlink = false, move = false) =
           "mv -f"
         else:
           if psymlink:
-            "cp -fd"
+            "cp -fa"
           else:
             "cp -f"
 
@@ -1055,7 +1055,7 @@ proc getDynlibExt(): string =
   elif defined(linux) or defined(FreeBSD):
     result = "\\.so[0-9.]*"
   elif defined(macosx):
-    result = "\\.dylib[0-9.]*"
+    result = "[0-9.\\-]*\\.dylib"
 
 var
   gDefines {.compileTime.} = initTable[string, string]()

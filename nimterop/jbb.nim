@@ -94,7 +94,7 @@ proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
           break
 
 proc findJBBLibs(pkg: JBBPackage, outdir: string) =
-  pkg.sharedLibs = findFiles("(bin|lib)[\\\\/].*\\.(so|dll|dynlib)[0-9.]*", outdir)
+  pkg.sharedLibs = findFiles("(bin|lib)[\\\\/].*\\.(so|dll|dylib)[0-9.]*", outdir)
 
   for lib in findFiles("lib[\\\\/].*\\.(a|lib)$", outdir):
     if not lib.endsWith(".dll.a"):
