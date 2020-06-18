@@ -1,4 +1,4 @@
-import marshal, os, strutils
+import json, os, strutils
 
 type
   JBBPackage* = ref object
@@ -143,7 +143,10 @@ proc loadJBBInfo*(outdir: string): JBBPackage =
     file = outdir / jbbInfo
 
   if fileExists(file):
-    result = to[JBBPackage](readFile(file))
+    try:
+      result = to(readFile(file).parseJson(), JBBPackage)
+    except:
+      discard
 
 proc saveJBBInfo*(pkg: JBBPackage, outdir: string) =
   ## Save downloaded package info to `outdir/jbbinfo.json`
@@ -151,7 +154,7 @@ proc saveJBBInfo*(pkg: JBBPackage, outdir: string) =
   let
     file = outdir / jbbInfo
 
-  writeFile(file, $$pkg)
+  writeFile(file, $(%pkg))
 
 proc dlJBBRequires*(pkg: JBBPackage, outdir: string)
 proc downloadJBB*(pkg: JBBPackage, outdir: string, main = true) =

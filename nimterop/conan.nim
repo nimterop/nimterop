@@ -1,4 +1,4 @@
-import json, marshal, os, strformat, strutils, tables
+import json, os, strformat, strutils, tables
 
 type
   ConanPackage* = ref object
@@ -272,7 +272,10 @@ proc loadConanInfo*(outdir: string): ConanPackage =
     file = outdir / conanInfo
 
   if fileExists(file):
-    result = to[ConanPackage](readFile(file))
+    try:
+      result = to(readFile(file).parseJson(), ConanPackage)
+    except:
+      discard
 
 proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
   ## Save downloaded package info to `outdir/conaninfo.json`
@@ -280,7 +283,7 @@ proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
   let
     file = outdir / conanInfo
 
-  writeFile(file, $$pkg)
+  writeFile(file, $(%pkg))
 
 proc parseConanManifest(pkg: ConanPackage, outdir: string) =
   # Get all library info from downloaded conan package
