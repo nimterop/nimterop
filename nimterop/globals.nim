@@ -146,7 +146,7 @@ when defined(TOAST):
       gecho join(args, "").getCommented()
 else:
   var
-    gStateCT* {.compiletime, used.} = new(State)
+    gStateCT* {.compileTime, used.} = new(State)
 
 template nBl*(s: typed): untyped {.used.} =
   (s.len != 0)

@@ -42,10 +42,13 @@ const
 
 var
   # Bintray download URL for explicit `user/channel`
-  conanBaseAltUrl {.compiletime.} = {
+  conanBaseAltUrl {.compileTime.} = {
     "bincrafters": "https://bintray.com/bincrafters/public-conan",
     "conan": "https://bintray.com/conan-community/conan"
   }.toTable()
+
+  # Reuse dependencies already downloaded
+  gConanRequires {.compileTime.}: Table[string, ConanPackage]
 
 proc addAltConanBaseUrl*(name, url: string) =
   # Add an alternate base URL for a custom conan repo on bintray
@@ -144,13 +147,28 @@ proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPac
       if channel.len != 0:
         query &= "/" & channel
 
+  echo &"# Searching Conan.io for latest version of {name}"
+
   let
     j1 = jsonGet(conanSearchUrl % ["query", query])
     res = j1.getOrDefault("results").getElems()
 
-  if res.len != 0:
-    # Return last entry - latest
-    result = newConanPackageFromUri(res[^1].getStr())
+  # Return latest comparing versions - prefer @_/_
+  var
+    latest = ""
+    latestv = ""
+  for i in 0 ..< res.len:
+    let
+      str = res[i].getStr()
+    if "@_/_" in str:
+      let
+        ver = str.split('/')[1].split('@')[0]
+      if latestv.len == 0 or compareVersions(ver, latestv) > 0:
+        latestv = ver
+        latest = str
+
+  if latest.len != 0:
+    result = newConanPackageFromUri(latest)
 
 proc searchConan*(pkg: ConanPackage): ConanPackage =
   ## Search for latest package based on incomplete package info
@@ -288,6 +306,9 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
   ##
   ## If omitted, the latest revision (first) is downloaded
   fixOutDir()
+
+  doAssert bld.revisions.len != 0, "No build revisions found for Conan.io package " & pkg.getUriFromConanPackage()
+
   let
     revision =
       if revision.len != 0:
@@ -326,7 +347,7 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
   rmFile(outdir / conanManifest)
 
 proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string)
-proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
+proc downloadConan*(pkg: ConanPackage, outdir: string, main = true) =
   ## Download latest recipe/build/revision of `pkg` to `outdir`
   ##
   ## High-level API that handles the end to end Conan process flow to find
@@ -339,11 +360,13 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
       else:
         pkg
 
-    cpkg = loadConanInfo(outdir)
+  if main:
+    let
+      cpkg = loadConanInfo(outdir)
 
-  if cpkg == pkg:
-    return
-  elif clean:
+    if cpkg == pkg:
+      return
+
     cleanDir(outdir)
 
   echo &"# Downloading {pkg.name} v{pkg.version} from Conan"
@@ -352,7 +375,7 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
 
   doAssert pkg.recipes.len != 0, &"Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
 
-  echo &"# Downloading {pkg.name} v{pkg.version} from Conan"
+  echo &"# Downloading {pkg.name} v{pkg.version} from Conan.io"
   for recipe, builds in pkg.recipes:
     for build in builds:
       if pkg.bhash.len == 0 or pkg.bhash == build.bhash:
@@ -362,7 +385,7 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, clean = true) =
         break
     break
 
-  if clean:
+  if main:
     pkg.saveConanInfo(outdir)
 
 proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string) =
@@ -374,10 +397,17 @@ proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string) =
   if bld.options["shared"] == "False":
     for req in bld.requires:
       let
-        rpkg = newConanPackageFromUri(req, shared = false)
+        name = req.split('/')[0]
+      if gConanRequires.hasKey(name):
+        # Reuse dep already downloaded
+        pkg.requires.add gConanRequires[name]
+      else:
+        let
+          rpkg = newConanPackageFromUri(req, shared = false)
 
-      downloadConan(rpkg, outdir, clean = false)
-      pkg.requires.add rpkg
+        downloadConan(rpkg, outdir, main = false)
+        pkg.requires.add rpkg
+        gConanRequires[name] = rpkg
 
 proc getConanLDeps*(pkg: ConanPackage, outdir: string, main = true): seq[string] =
   ## Get all Conan libs - shared (.so|.dll) or static (.a|.lib) in pkg, including deps

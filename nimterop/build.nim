@@ -2,6 +2,8 @@ import hashes, macros, osproc, sets, strformat, strutils, tables
 
 import os except findExe, sleep
 
+export extractFilename, `/`
+
 type
   BuildType* = enum
     btAutoconf, btCmake
@@ -850,6 +852,31 @@ template fixOutDir() {.dirty.} =
   let
     outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
 
+proc compareVersions*(ver1, ver2: string): int =
+  ## Compare two version strings x.y.z and return -1, 0, 1
+  ##
+  ## ver1 < ver2 = -1
+  ## ver1 = ver2 = 0
+  ## ver1 > ver2 = 1
+  let
+    ver1seq = ver1.replace("-", "").split('.')
+    ver2seq = ver2.replace("-", "").split('.')
+  for i in 0 ..< ver1seq.len:
+    let
+      p1 = ver1seq[i]
+      p2 = if i < ver2seq.len: ver2seq[i] else: "0"
+
+    try:
+      let
+        h1 = p1.parseHexInt()
+        h2 = p2.parseHexInt()
+
+      if h1 < h2: return -1
+      elif h1 > h2: return 1
+    except ValueError:
+      if p1 < p2: return -1
+      elif p1 > p2: return 1
+
 # Conan support
 include conan
 
@@ -913,10 +940,10 @@ proc getConanPath(header, uri, outdir, version: string, shared: bool): string =
     uri = uri
 
   if "$#" in uri or "$1" in uri:
-    doAssert version.len != 0, "Need version for Conan uri"
+    doAssert version.len != 0, "Need version for Conan.io uri: " & uri
     uri = uri % version
-  else:
-    doAssert version.len == 0, "Conan uri does not contain version"
+  elif version.len != 0:
+    uri = uri & "/" & version
 
   let
     pkg = newConanPackageFromUri(uri, shared)
@@ -934,6 +961,7 @@ proc getJBBPath(header, uri, outdir, version: string): string =
   let
     spl = uri.split('/', 1)
     name = spl[0]
+    hasVersion = version.len != 0
 
   var
     ver =
@@ -942,11 +970,15 @@ proc getJBBPath(header, uri, outdir, version: string): string =
       else:
         ""
 
-  if "$#" in ver or "$1" in ver:
-    doAssert version.len != 0, "Need version for BinaryBuilder.org uri"
-    ver = ver % version
-  else:
-    doAssert version.len == 0, "BinaryBuilder.org uri does not contain version"
+  if ver.len != 0:
+    if "$#" in ver or "$1" in ver:
+      doAssert hasVersion, "Need version for BinaryBuilder.org uri: " & uri
+      ver = ver % version
+    elif hasVersion:
+      doAssert false, "Version in both uri `" & uri & "` and `-d:xxxSetVer=\"" &
+        version & "\"` for BinaryBuilder.org"
+  elif hasVersion:
+    ver = version
 
   let
     pkg = newJBBPackage(name, ver)
@@ -1129,10 +1161,10 @@ macro getHeader*(
   ## `-d:xxxStd` - search standard system paths. E.g. `/usr/include` and `/usr/lib` on Linux
   ## `-d:xxxGit` - clone source from a git repo specified in `giturl`
   ## `-d:xxxDL` - download source from `dlurl` and extract if required
-  ## `-d:xxxConan` - download headers and binary from conan.io using `conanuri`
-  ##   typically formatted as `name/version[@user/channel][:bhash]`
-  ## `-d:xxxJBB` - download headers and binary from BinaryBuilder.org using `jbburi`
-  ##   typically formatted as `name/version`
+  ## `-d:xxxConan` - download headers and binary from Conan.io using `conanuri` with
+  ##   format `pkgname[/version[@user/channel][:bhash]]`
+  ## `-d:xxxJBB` - download headers and binary from BinaryBuilder.org using `jbburi` with
+  ##   format `pkgname[/version]`
   ##
   ## This allows a single wrapper to be used in different ways depending on the user's needs.
   ## If no `-d:xxx` defines are specified, `outdir` will be searched for the header as is.
@@ -1145,8 +1177,15 @@ macro getHeader*(
   ## one of the other methods.
   ##
   ## `-d:xxxSetVer=x.y.z` can be used to specify which version to use. It is used as a tag
-  ## name for Git whereas for DL, Conan and BinaryBuilder.org, it replaces `$1` in the URL
-  ## defined.
+  ## name for `Git` whereas for `DL`, `Conan` and `JBB`, it replaces `$1` in the URL
+  ## if specified. Specifying `-d:xxxSetVer` without a `$1` will download that version for
+  ## `Conan` and `JBB` if available. If no version is specified, the latest release of the
+  ## package is downloaded. For `Conan`, `-d:xxxSetVer` can also be used to set additional
+  ## URI information:
+  ##   `-d:xxxSetVer=1.9.0@bincrafters/stable:bhash`
+  ##
+  ## If `conanuri` or `jbburi` are not defined and `Conan` or `JBB` is selected, the `header`
+  ## filename is used instead.
   ##
   ## All defines can also be set in code using `setDefines()` and checked for using
   ## `isDefined()` which checks for defines set from both `-d` and `setDefines()`.
@@ -1165,7 +1204,7 @@ macro getHeader*(
   ## dependencies to that directory. This prevents any runtime failures if `outdir` gets
   ## removed or its contents changed. By default, `libdir` is set to the output directory
   ## where the program binary will be created. The values of `xxxLPath` and `xxxLDeps` will
-  ## reflect this new location.
+  ## reflect this new location. `libdir` is ignored for `Std` mode.
   ##
   ## `-d:xxxStatic` can be specified to statically link with the library instead. This
   ## will automatically add a `{.passL.}` call to the static library for convenience. Note
@@ -1209,6 +1248,10 @@ macro getHeader*(
   var
     origname = header.extractFilename().split(".")[0]
     name = origname.split(seps = AllChars-Letters-Digits).join()
+
+    # Default to origname if not specified
+    conanuri = if conanuri.len != 0: conanuri else: origname
+    jbburi = if jbburi.len != 0: jbburi else: origname
 
     # -d:xxx for this header
     stdStr = name & "Std"
@@ -1316,7 +1359,7 @@ macro getHeader*(
 
     let
       # Library binary path - build if not standard / conan / jbb
-      lpath {.compiletime.} =
+      lpath {.compileTime.} =
         when useStd:
           stdLPath
         elif `nameConan` or `nameJBB`:
@@ -1325,11 +1368,14 @@ macro getHeader*(
           buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildTypes`)
 
       # Library dependecy paths
-      ldeps {.compiletime.}: seq[string] =
-        when `nameConan`:
-          getConanLDeps(`outdir`)
-        elif `nameJBB`:
-          getJBBLDeps(`outdir`, not `nameStatic`)
+      ldeps {.compileTime.}: seq[string] =
+        when not useStd:
+          when `nameConan`:
+            getConanLDeps(`outdir`)
+          elif `nameJBB`:
+            getJBBLDeps(`outdir`, not `nameStatic`)
+          else:
+            @[]
         else:
           @[]
 
@@ -1345,20 +1391,6 @@ macro getHeader*(
       doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " &
         "missing/empty outdir or -d:$1Std -d:$1Git -d:$1DL -d:$1Conan or -d:$1JBB not specified" % `name`
       doAssert lpath.len != 0, "\nLibrary " & `lname` & " not found"
-
-    proc extractFilenameStatic(str: string): string {.compiletime.} =
-      var
-        pos = -1
-      for i in countdown(str.len - 1, 0):
-        if str[i] == '/' or str[i] == '\\':
-          pos = i + 1
-          break
-      result = str[pos .. ^1]
-
-    proc joinPathStatic(str1, str2: string): string {.compiletime.} =
-      let
-        sep = when defined(Windows): "\\" else: "/"
-      result = str1 & sep & str2
 
     when `nameStatic`:
       const
@@ -1376,28 +1408,34 @@ macro getHeader*(
           echo "# Including dependencies " & `ldeps`.join(" ")
     else:
       const
-        `lpath`* = joinPathStatic(`libdir`, lpath.extractFilenameStatic())
-        `ldeps`* = block:
-          var
-            ldeps = ldeps
-            copied: seq[string]
-          for i in 0 ..< ldeps.len:
-            let
-              lname = ldeps[i].extractFilenameStatic()
-              ldeptgt = joinPathStatic(`libdir`, lname)
-            if not fileExists(ldeptgt) or getFileDate(ldeps[i]) != getFileDate(ldeptgt):
-              cpFile(ldeps[i], ldeptgt, psymlink = true)
-              copied.add lname
-            ldeps[i] = ldeptgt
-          if copied.len != 0:
-            echo "# Copying dependencies: " & copied.join(" ") & "\n#   to " & `libdir`
-          ldeps
+        `lpath`* = when not useStd: `libdir` / lpath.extractFilename() else: lpath
+        `ldeps`* =
+          when not useStd:
+            block:
+              var
+                ldeps = ldeps
+                copied: seq[string]
+              for i in 0 ..< ldeps.len:
+                let
+                  lname = ldeps[i].extractFilename()
+                  ldeptgt = `libdir` / lname
+                if not fileExists(ldeptgt) or getFileDate(ldeps[i]) != getFileDate(ldeptgt):
+                  cpFile(ldeps[i], ldeptgt, psymlink = true)
+                  copied.add lname
+                ldeps[i] = ldeptgt
+              # Copy downloaded dependencies to `libdir`
+              if copied.len != 0:
+                echo "# Copying dependencies: " & copied.join(" ") & "\n#   to " & `libdir`
+              ldeps
+          else:
+            ldeps
 
       static:
-        # Copy shared libraries and dependencies to `libdir`
-        if not fileExists(`lpath`) or getFileDate(lpath) != getFileDate(`lpath`):
-          echo "# Copying " & `lpath`.extractFilenameStatic() & " to " & `libdir`
-          cpFile(lpath, `lpath`)
+          when not useStd:
+            # Copy downloaded shared libraries to `libdir`
+            if not fileExists(`lpath`) or getFileDate(lpath) != getFileDate(`lpath`):
+              echo "# Copying " & `lpath`.extractFilename() & " to " & `libdir`
+              cpFile(lpath, `lpath`)
 
-        echo "# Including library " & `lpath`
+          echo "# Including library " & `lpath`
   )

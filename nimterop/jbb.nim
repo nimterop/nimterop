@@ -20,6 +20,10 @@ const
   jbbProject = "Project.toml"
   jbbArtifacts = "Artifacts.toml"
 
+var
+  # Reuse dependencies already downloaded
+  gJBBRequires {.compileTime.}: Table[string, JBBPackage]
+
 proc `==`*(pkg1, pkg2: JBBPackage): bool =
   ## Check if two JBBPackage objects are equal
   (not pkg1.isNil and not pkg2.isNil and
@@ -79,19 +83,26 @@ proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
       let
         line = line.strip()
       if line.len != 0:
-        if line.startsWith("arch = ") and not found:
-          let
-            barch = line.split(" = ")[1].strip(chars = {'"'})
-          if barch == arch:
-            found = true
-        elif line.startsWith("os = ") and found:
-          let
-            bos = line.split(" = ")[1].strip(chars = {'"'})
-          if bos != os:
-            found = false
-        elif line.startsWith("url = ") and found:
-          pkg.url = line.split(" = ")[1].strip(chars = {'"'})
-          break
+        let
+          spl = line.split(" = ", 1)
+          name = spl[0]
+          val = if spl.len == 2: spl[1].strip(chars = {'"', ' '}) else: ""
+
+        # Match arch, os and glibc on Linux to find download URL
+        case name
+        of "arch":
+          if val == arch and not found: found = true
+        of "os":
+          if val != os and found: found = false
+        of "libc":
+          when defined(Linux):
+            if val != "glibc" and found: found = false
+        of "url":
+          if found:
+            pkg.url = val
+            break
+        else:
+          discard
 
 proc findJBBLibs(pkg: JBBPackage, outdir: string) =
   pkg.sharedLibs = findFiles("(bin|lib)[\\\\/].*\\.(so|dll|dylib)[0-9.]*", outdir)
@@ -143,18 +154,19 @@ proc saveJBBInfo*(pkg: JBBPackage, outdir: string) =
   writeFile(file, $$pkg)
 
 proc dlJBBRequires*(pkg: JBBPackage, outdir: string)
-proc downloadJBB*(pkg: JBBPackage, outdir: string, clean = true) =
+proc downloadJBB*(pkg: JBBPackage, outdir: string, main = true) =
   ## Download `pkg` from BinaryBuilder.org to `outdir`
   ##
   ## High-level API that handles the end to end JBB process flow to find
   ## latest package binary and downloads and extracts it to `outdir`.
   fixOutDir()
-  let
-    cpkg = loadJBBInfo(outdir)
+  if main:
+    let
+      cpkg = loadJBBInfo(outdir)
 
-  if cpkg == pkg:
-    return
-  elif clean:
+    if cpkg == pkg:
+      return
+
     cleanDir(outdir)
 
   pkg.getJBBRepo(outdir)
@@ -174,14 +186,21 @@ proc downloadJBB*(pkg: JBBPackage, outdir: string, clean = true) =
 
   pkg.dlJBBRequires(outdir)
 
-  if clean:
+  if main:
     pkg.saveJBBInfo(outdir)
 
 proc dlJBBRequires*(pkg: JBBPackage, outdir: string) =
   ## Download all required dependencies of this `pkg`
   fixOutDir()
-  for rpkg in pkg.requires:
-    downloadJBB(rpkg, outdir, clean = false)
+  for i in 0 ..< pkg.requires.len:
+    let
+      rpkg = pkg.requires[i]
+    if gJBBRequires.hasKey(rpkg.name):
+      # Reuse dep already downloaded
+      pkg.requires[i] = gJBBRequires[rpkg.name]
+    else:
+      downloadJBB(rpkg, outdir, main = false)
+      gJBBRequires[rpkg.name] = rpkg
 
 proc getJBBLDeps*(pkg: JBBPackage, outdir: string, shared: bool, main = true): seq[string] =
   ## Get all BinaryBuilder.org libs - shared (.so|.dll) or static (.a|.lib) in pkg, including deps
