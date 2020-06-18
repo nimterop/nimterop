@@ -1,5 +1,8 @@
 import json, os, strutils
 
+when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
+  import marshal
+
 type
   JBBPackage* = ref object
     ## JBBPackage type that stores package information
@@ -143,10 +146,13 @@ proc loadJBBInfo*(outdir: string): JBBPackage =
     file = outdir / jbbInfo
 
   if fileExists(file):
-    try:
-      result = to(readFile(file).parseJson(), JBBPackage)
-    except:
-      discard
+    when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
+      result = to[JBBPackage](readFile(file))
+    else:
+      try:
+        result = to(readFile(file).parseJson(), JBBPackage)
+      except:
+        discard
 
 proc saveJBBInfo*(pkg: JBBPackage, outdir: string) =
   ## Save downloaded package info to `outdir/jbbinfo.json`
@@ -154,7 +160,10 @@ proc saveJBBInfo*(pkg: JBBPackage, outdir: string) =
   let
     file = outdir / jbbInfo
 
-  writeFile(file, $(%pkg))
+  when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
+    writeFile(file, $$pkg)
+  else:
+    writeFile(file, $(%pkg))
 
 proc dlJBBRequires*(pkg: JBBPackage, outdir: string)
 proc downloadJBB*(pkg: JBBPackage, outdir: string, main = true) =

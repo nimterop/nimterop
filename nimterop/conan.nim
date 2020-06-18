@@ -1,4 +1,9 @@
-import json, os, strformat, strutils, tables
+import os, strformat, strutils, tables
+
+when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
+  import marshal
+else:
+  import json
 
 type
   ConanPackage* = ref object
@@ -272,10 +277,13 @@ proc loadConanInfo*(outdir: string): ConanPackage =
     file = outdir / conanInfo
 
   if fileExists(file):
-    try:
-      result = to(readFile(file).parseJson(), ConanPackage)
-    except:
-      discard
+    when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
+      result = to[ConanPackage](readFile(file))
+    else:
+      try:
+        result = to(readFile(file).parseJson(), ConanPackage)
+      except:
+        discard
 
 proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
   ## Save downloaded package info to `outdir/conaninfo.json`
@@ -283,7 +291,10 @@ proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
   let
     file = outdir / conanInfo
 
-  writeFile(file, $(%pkg))
+  when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
+    writeFile(file, $$pkg)
+  else:
+    writeFile(file, $(%pkg))
 
 proc parseConanManifest(pkg: ConanPackage, outdir: string) =
   # Get all library info from downloaded conan package
