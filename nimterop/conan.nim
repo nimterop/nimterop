@@ -208,6 +208,10 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
             query &= &"&{filter}"
           if "compiler=" notin filter and os != "windows":
             query &= &"&compiler={compiler}&compiler.version=" & vfilter
+          if "compiler.runtime=" notin filter and os == "windows":
+            query &= &"&compiler.runtime=MD"
+          if "compiler.version=" notin filter and os == "windows":
+            query &= &"&compiler.version=14"
 
           query.replace("&", "%20and%20")
       else: ""

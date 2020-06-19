@@ -129,7 +129,7 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
   # On failure, retry or die as requested
   if result.ret != 0:
     if retry > 0:
-      sleep(500)
+      sleep(1000)
       result = execAction(cmd, retry = retry - 1, die, cache, cacheKey)
     elif die:
       doAssert false, "Command failed: " & $result.ret & "\ncmd: " & ccmd &
@@ -368,7 +368,7 @@ proc downloadUrl*(url, outdir: string, quiet = false) =
         cmd = "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
       else:
         doAssert false, "No download tool available - curl, wget"
-    discard execAction(cmd % [url.quoteShell, (outdir/file).sanitizePath], retry = 1)
+    discard execAction(cmd % [url.quoteShell, (outdir/file).sanitizePath], retry = 3)
 
     if ext == ".zip":
       extractZip(file, outdir, quiet)
@@ -436,12 +436,12 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false
   if checkout.len != 0:
     if not quiet:
       echo "# Checking out " & checkout
-    discard execAction(&"cd {outdirQ} && git fetch", retry = 1)
+    discard execAction(&"cd {outdirQ} && git fetch", retry = 3)
     discard execAction(&"cd {outdirQ} && git checkout {checkout}")
   else:
     if not quiet:
       echo "# Pulling repository"
-    discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master", retry = 1)
+    discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master", retry = 3)
 
 proc gitTags*(outdir: string): seq[string] =
   ## Get all the git tags in the specified directory
