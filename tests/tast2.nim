@@ -110,6 +110,7 @@ assert B == 1.0
 assert C == 0x10
 assert D == "hello"
 assert E == 'c'
+assert F == 0o1234
 
 assert not defined(NOTSUPPORTEDSTR)
 

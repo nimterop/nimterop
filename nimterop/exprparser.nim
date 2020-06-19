@@ -140,8 +140,6 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
   var
     val: BiggestInt
     flags: TNodeFlags
-  # I realize these regex are wasteful on performance, but
-  # couldn't come up with a better idea.
   if number.startsWith("0X") or number.startsWith("0x"):
     val = parseHexInt(number)
     flags = {nfBase16}
@@ -203,6 +201,9 @@ proc processNumberLiteral(gState: State, node: TSNode): PNode =
   if number.startsWith("-"):
     number = number[1 ..< number.len]
     prefix = "-"
+  if number.len > 1 and number[0] == '0' and number[1] notin ['x', 'X']:
+    # Octal 0123
+    number = "0o" & number[1 .. ^1]
   if tripleEndings.any(proc (s: string): bool = number.endsWith(s)):
     suffix = number[^3 .. ^1]
     number = number[0 ..< ^3]

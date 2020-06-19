@@ -7,6 +7,7 @@ extern "C" {
 #define C 0x10
 #define D "hello"
 #define E 'c'
+#define F 01234
 
 #define UEXPR (1234u << 1)
 #define ULEXPR (1234ul << 2)
