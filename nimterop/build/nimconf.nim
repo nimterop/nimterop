@@ -3,6 +3,8 @@ import json, os, osproc, sets, strformat, strutils
 when nimvm:
   when (NimMajor, NimMinor, NimPatch) >= (1, 2, 0):
     import std/compilesettings
+  else:
+    import macros
 else:
   discard
 
@@ -55,7 +57,6 @@ proc getProjectDir*(): string =
       result = querySetting(projectFull).parentDir()
     else:
       # Get from `macros`
-      import macros
       result = getProjectPath()
   else:
     discard
