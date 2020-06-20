@@ -2,7 +2,8 @@ import macros, strutils
 
 import compiler/[ast, idents, lineinfos, msgs, options, parser, pathutils, renderer]
 
-import "."/[globals, getters, treesitter/api, tshelp]
+import ".."/[globals, treesitter/api]
+import "."/[getters, tshelp]
 
 proc handleError*(conf: ConfigRef, info: TLineInfo, msg: TMsgKind, arg: string) =
   # Raise exception in parseString() instead of exiting for errors

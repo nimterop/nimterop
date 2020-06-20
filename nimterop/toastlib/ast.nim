@@ -2,7 +2,8 @@ import hashes, macros, os, sets, strformat, strutils, tables
 
 import regex
 
-import "."/[getters, globals, treesitter/api, tshelp]
+import ".."/[globals, treesitter/api]
+import "."/[getters, tshelp]
 
 proc getHeaderPragma*(gState: State): string =
   result =

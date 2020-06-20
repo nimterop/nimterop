@@ -2,7 +2,8 @@ import macros, strformat, strutils, tables
 
 import regex
 
-import "."/[ast, getters, globals, lisp, treesitter/api, tshelp]
+import ".."/[globals, treesitter/api]
+import "."/[ast, getters, lisp, tshelp]
 
 type
   Grammar = seq[tuple[grammar: string, call: proc(ast: ref Ast, node: TSNode, gState: State) {.nimcall.}]]

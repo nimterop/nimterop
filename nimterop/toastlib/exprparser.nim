@@ -4,9 +4,9 @@ import regex
 
 import compiler/[ast, renderer]
 
-import "."/treesitter/[api, c, cpp]
-
-import "."/[globals, getters, comphelp, tshelp]
+import ".."/treesitter/[api, c, cpp]
+import ".."/globals
+import "."/[getters, comphelp, tshelp]
 
 # This version of exprparser should be able to handle:
 #

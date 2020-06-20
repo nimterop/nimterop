@@ -1,4 +1,5 @@
-import "."/[getters, globals]
+import ".."/globals
+import "."/getters
 
 var
   gTokens: seq[string]

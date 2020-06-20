@@ -1,4 +1,4 @@
-import json, os, strutils
+import json, os, strformat, strutils, tables
 
 when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
   import marshal

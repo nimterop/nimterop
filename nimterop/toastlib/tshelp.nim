@@ -1,7 +1,8 @@
 import sets, strformat, strutils
 
-import "."/[getters, globals]
-import "."/treesitter/[api, c, cpp]
+import ".."/treesitter/[api, c, cpp]
+import ".."/globals
+import "."/getters
 
 template withCodeAst*(code: string, mode: string, body: untyped): untyped =
   ## A simple template to inject the TSNode into a body of code

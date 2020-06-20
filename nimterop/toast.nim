@@ -2,7 +2,9 @@ import os, osproc, sets, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[ast, ast2, build, globals, getters, grammar, tshelp]
+import "."/[build, globals]
+
+import "."/toastlib/[ast, ast2, getters, grammar, tshelp]
 
 proc process(gState: State, path: string, astTable: AstTable) =
   doAssert existsFile(path), &"Invalid path {path}"

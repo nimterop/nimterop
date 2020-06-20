@@ -2,9 +2,9 @@ import macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import compiler/[ast, idents, lineinfos, modulegraphs, msgs, options, renderer]
 
-import "."/treesitter/api
+import ".."/[globals, treesitter/api]
 
-import "."/[comphelp, exprparser, globals, getters, tshelp]
+import "."/[comphelp, exprparser, getters, tshelp]
 
 proc getOverrideOrSkip(gState: State, node: TSNode, origname: string, kind: NimSymKind): PNode =
   # Check if symbol `origname` of `kind` and `origname` has any cOverride defined
