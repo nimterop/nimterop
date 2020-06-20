@@ -1,4 +1,7 @@
-import hashes, macros, osproc, sets, strformat, strutils, tables
+import hashes, osproc, sets, strformat, strutils
+
+when not defined(TOAST):
+  import macros, tables
 
 import os except findExe, sleep
 
