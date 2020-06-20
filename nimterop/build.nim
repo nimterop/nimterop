@@ -76,7 +76,7 @@ proc getNimteropCacheDir(): string =
   result = getNimcacheDir() / "nimterop"
 
 proc execAction*(cmd: string, retry = 0, die = true, cache = false,
-                 cacheKey = ""): tuple[output: string, ret: int] =
+                 cacheKey = "", onRetry: proc() = nil): tuple[output: string, ret: int] =
   ## Execute an external command - supported at compile time
   ##
   ## Checks if command exits successfully before returning. If not, an
@@ -129,7 +129,9 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
   # On failure, retry or die as requested
   if result.ret != 0:
     if retry > 0:
-      sleep(1000)
+      if not onRetry.isNil:
+        onRetry()
+      sleep(500)
       result = execAction(cmd, retry = retry - 1, die, cache, cacheKey)
     elif die:
       doAssert false, "Command failed: " & $result.ret & "\ncmd: " & ccmd &
@@ -344,16 +346,17 @@ proc extractTar*(tarfile, outdir: string, quiet = false) =
   if name.len != 0:
     rmFile(outdir / name)
 
-proc downloadUrl*(url, outdir: string, quiet = false) =
+proc downloadUrl*(url, outdir: string, quiet = false, retry = 1) =
   ## Download a file using `curl` or `wget` (or `powershell` on Windows) to the specified directory
   ##
   ## If an archive file, it is automatically extracted after download.
   let
     file = url.extractFilename()
+    filePath = outdir / file
     ext = file.splitFile().ext.toLowerAscii()
     archives = @[".zip", ".xz", ".gz", ".bz2", ".tgz", ".tar"]
 
-  if not (ext in archives and fileExists(outdir/file)):
+  if not (ext in archives and fileExists(filePath)):
     if not quiet:
       echo "# Downloading " & file
     mkDir(outdir)
@@ -368,7 +371,8 @@ proc downloadUrl*(url, outdir: string, quiet = false) =
         cmd = "powershell [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget $# -OutFile $#"
       else:
         doAssert false, "No download tool available - curl, wget"
-    discard execAction(cmd % [url.quoteShell, (outdir/file).sanitizePath], retry = 3)
+    discard execAction(cmd % [url.quoteShell, (filePath).sanitizePath], retry = 3,
+      onRetry = proc() = rmFile(filePath))
 
     if ext == ".zip":
       extractZip(file, outdir, quiet)
