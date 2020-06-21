@@ -86,7 +86,7 @@ proc findExe*(exe: string): string =
     (output, ret) = execAction(cmd, die = false)
 
   if ret == 0:
-    return output.splitLines()[0].strip()
+    return output.splitLines()[0].strip().sanitizePath
 
 proc mkDir*(dir: string) =
   ## Create a directory at compile time
