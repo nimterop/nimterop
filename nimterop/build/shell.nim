@@ -393,7 +393,8 @@ proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[s
   var
     dir = dir
     file = file
-  if not recurse:
+  # If file = `path/file`, adjust dir = `dir/path` and search for new file
+  if not (recurse or regex):
     let
       pdir = file.parentDir()
     if pdir.len != 0:
