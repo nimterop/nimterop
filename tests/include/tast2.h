@@ -107,6 +107,8 @@ typedef struct A20 { char a1; } A20, A21, *A21p;
 //Expression
 typedef struct A22 { const int **f1; int *f2[123+132]; } A22;
 
+typedef const char *(*A23)();
+
 //Unions
 union U1 {int f1; float f2; };
 typedef union U2 { const int **f1; int abc[123+132]; } U2;

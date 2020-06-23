@@ -1238,7 +1238,11 @@ proc addType(gState: State, node: TSNode, union = false) =
         gState.addTypeObject(node[0], union = union)
       else:
         let
-          fdecl = node[1].anyChildInTree("function_declarator")
+          fdecl =
+            if node.len >= 3:
+              node[2].anyChildInTree("function_declarator")
+            else:
+              node[1].anyChildInTree("function_declarator")
           adecl = node[1].anyChildInTree("array_declarator")
         if fdlist.isNil:
           if adecl.isNil and fdecl.isNil:
