@@ -61,6 +61,7 @@ struct some_struct_s
 
 struct parent_struct_s
 {
+  /* Random comment */
   struct some_struct_s s[SOME_CONST];
 };
 
@@ -107,6 +108,9 @@ typedef struct A20 { char a1; } A20, A21, *A21p;
 
 //Expression
 typedef struct A22 { const int **f1; int *f2[123+132]; } A22;
+
+// #231
+typedef const char *(*A23)();
 
 //Unions
 union U1 {int f1; float f2; };
@@ -239,6 +243,7 @@ typedef struct {
     struct { int f1; } f2;
 
     struct NT3 {
+        /* Random comment */
         struct {
             int f1;
             union NU1 {
@@ -277,6 +282,65 @@ struct TestMyInt {
 #define C 0x10
 #define D "hello"
 #define E 'c'
+#define F 01234
+
+#define UEXPR (1234u << 1)
+#define ULEXPR (1234ul << 2)
+#define ULLEXPR (1234ull << 3)
+#define LEXPR (1234l << 4)
+#define LLEXPR (1234ll << 5)
+
+#define SHL1 (1u << 1)
+#define SHL2 (1u << 2)
+#define SHL3 (1u << 3)
+#define COERCE 645635634896ull + 35436
+#define COERCE2 645635634896 + 35436ul
+#define BINEXPR ~(-(1u << !-1)) ^ (10 >> 1)
+#define POINTEREXPR (int*)0
+#define POINTERPOINTERPOINTEREXPR (int***)0
+#define BOOL true
+#define MATHEXPR (1 + 2/3*20 - 100)
+#define ANDEXPR (100 & 11000)
+#define CASTEXPR (char) 34
+#define AVAL 100
+#define BVAL 200
+#define EQ1 AVAL <= BVAL
+#define EQ2 AVAL >= BVAL
+#define EQ3 AVAL > BVAL
+#define EQ4 AVAL < BVAL
+#define EQ5 AVAL != BVAL
+#define EQ6 AVAL == BVAL
+
+// testing integer out of long int range
+#define INT_FAST16_MIN (-9223372036854775807L-1)
+
+#define SIZEOF sizeof(char)
+#define REG_STR "regular string"
+#define NOTSUPPORTEDSTR "not a " REG_STR
+
+#define NULLCHAR '\0'
+#define OCTCHAR '\012'
+#define HEXCHAR '\xFE'
+#define TRICKYSTR "\x4E\034\nfoo\0\'\"\r\v\a\b\e\f\t\\\?bar"
+
+#define ALLSHL (SHL1 | SHL2 | SHL3)
+
+#ifdef NIMTEROP
+#define SOME_CONST 8
+#endif
+
+struct some_struct_s
+{
+  int x;
+};
+
+struct parent_struct_s
+{
+  /* Random comment */
+  struct some_struct_s s[SOME_CONST];
+};
+
+typedef struct some_struct_s SOME_ARRAY[SOME_CONST];
 
 struct A0;
 struct A1 {};
@@ -303,10 +367,10 @@ typedef char *(*A11)[3];
 typedef struct A0 *A111[12];
 
 typedef int
-  **(*A12)(int, int b, int *c, int *, int *count[4], int (*func)(int, int)),
+  **(*A12)(int, int b, int *c, int *, int /*out*/ *count[4], int (*func)(int, int)),
   **(*A121)(float, float b, float *c, float *, float *count[4], float (*func)(float, float)),
   **(*A122)(char, char b, char *c, char *, char *count[4], char (*func)(char, char));
-typedef int A13(int, int, void (*func)(void));
+typedef int (*A13)(int, int, void (*func)(void));
 
 struct A14 { volatile char a1; };
 struct A15 { char *a1; const int *a2[1]; };
@@ -319,6 +383,9 @@ typedef struct A20 { char a1; } A20, A21, *A21p;
 
 //Expression
 typedef struct A22 { const int **f1; int *f2[123+132]; } A22;
+
+// #231
+typedef const char *(*A23)();
 
 //Unions
 union U1 {int f1; float f2; };
@@ -403,6 +470,16 @@ void
 
 int sqlite3_bind_blob(struct A1*, int, const void*, int n, void(*)(void*));
 
+// Issue #174 - type name[] => UncheckedArray[type]
+int ucArrFunc1(int text[]);
+int ucArrFunc2(int text[][5], int (*func)(int text[]));
+
+typedef int ucArrType1[][5];
+struct ucArrType2 {
+    float f1[5][5];
+    int *f2[][5];
+};
+
 typedef struct fieldfuncfunc {
     int *(*func1)(int f1, int *(*sfunc1)(int f1, int *(*ssfunc1)(int f1, ...)));
 };
@@ -441,6 +518,7 @@ typedef struct {
     struct { int f1; } f2;
 
     struct NT3 {
+        /* Random comment */
         struct {
             int f1;
             union NU1 {
@@ -467,7 +545,6 @@ typedef int MyInt;
 struct TestMyInt {
   MyInt f1;
 };
-
 
 
 #endif

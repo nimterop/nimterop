@@ -1238,8 +1238,9 @@ proc addType(gState: State, node: TSNode, union = false) =
         gState.addTypeObject(node[0], union = union)
       else:
         let
-          fdecl = node[1].anyChildInTree("function_declarator")
-          adecl = node[1].anyChildInTree("array_declarator")
+          start = node.getStartAtom()
+          fdecl = node[start+1].anyChildInTree("function_declarator")
+          adecl = node[start+1].anyChildInTree("array_declarator")
         if fdlist.isNil:
           if adecl.isNil and fdecl.isNil:
             # typedef X Y;
@@ -1341,9 +1342,9 @@ proc addType(gState: State, node: TSNode, union = false) =
 
             # First add struct as object
             decho("addType(): case 6")
-            gState.addTypeObject(node[0], union = union)
+            gState.addTypeObject(node[start], union = union)
 
-            if node.len > 1 and gState.getNodeVal(node[1]) != "":
+            if node.len > start+1 and gState.getNodeVal(node[start+1]) != "":
               # Add any additional names
               gState.addTypeTyped(node)
           else:
@@ -1357,14 +1358,14 @@ proc addType(gState: State, node: TSNode, union = false) =
               name = block:
                 var
                   name = ""
-                for i in 1 ..< node.len:
+                for i in start+1 ..< node.len:
                   if node[i].getName() == "type_identifier":
                     name = gState.getNodeVal(node[i].getAtom())
 
                 name
 
             # Now add struct as object with specified name
-            gState.addTypeObject(node[0], fname = name, istype = true, union = union)
+            gState.addTypeObject(node[start], fname = name, istype = true, union = union)
 
             if name.nBl:
               # Add any additional names

@@ -333,6 +333,10 @@ checkPragmas(A22, pHeaderBy, istype = false)
 var a22: A22
 a22.f1 = addr a15.a2[0]
 
+assert A23 is proc(): cstring {.cdecl.}
+checkPragmas(A23, pHeaderImp & "cdecl")
+var a23: A23
+
 assert U1 is object
 assert sizeof(U1) == sizeof(cfloat)
 checkPragmas(U1, pHeaderBy & @["union"], istype = false)

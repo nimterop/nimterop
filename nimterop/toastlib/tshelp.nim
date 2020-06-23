@@ -62,7 +62,7 @@ proc getAtom*(node: TSNode): TSNode =
     if node.getName() in gAtoms:
       return node
     elif node.len != 0:
-      if node[0].getName() == "type_qualifier":
+      if node[0].getName() in ["type_qualifier", "comment"]:
         # Skip const, volatile
         if node.len > 1:
           return node[1].getAtom()
