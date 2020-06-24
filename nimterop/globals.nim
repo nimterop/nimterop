@@ -3,8 +3,6 @@ import tables
 when defined(TOAST):
   import sets, sequtils, strutils
 
-  import regex
-
   import "."/plugin
 
   import compiler/[ast, idents, modulegraphs, options]
@@ -13,7 +11,7 @@ when defined(TOAST):
 
 type
   Feature* = enum
-    ast1, ast2
+    ast2
 
   State* = ref object
     # Command line arguments to toast - some forwarded from cimport.nim
@@ -72,12 +70,6 @@ type
       # Controls whether or not the current expression
       # should validate idents against currently defined idents
       skipIdentValidation*: bool
-
-      # Legacy AST fields, remove when ast2 becomes default
-      constStr*, enumStr*, procStr*, typeStr*: string
-      commentStr*, debugStr*, skipStr*: string
-      data*: seq[tuple[name, val: string]]
-      nodeBranch*: seq[string]
     else:
       # cimport.nim specific
       compile*: seq[string]      # `cCompile()` list of files already processed
@@ -114,23 +106,6 @@ when defined(TOAST):
     ].concat(toSeq(gExpressions.items))
 
   type
-    Kind* = enum
-      exactlyOne
-      oneOrMore     # +
-      zeroOrMore    # *
-      zeroOrOne     # ?
-      orWithNext    # !
-
-    Ast* = object
-      name*: string
-      kind*: Kind
-      recursive*: bool
-      children*: seq[ref Ast]
-      tonim*: proc (ast: ref Ast, node: TSNode, gState: State)
-      regex*: Regex
-
-    AstTable* {.used.} = TableRef[string, seq[ref Ast]]
-
     Status* = enum
       success, unknown, error
 

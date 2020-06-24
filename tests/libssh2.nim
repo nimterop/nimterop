@@ -17,12 +17,12 @@ cOverride:
     SOCKET = object
 
 when not libssh2Static:
-  cImport(libssh2Path, recurse = true, dynlib = "libssh2LPath", flags = "-f:ast2 -c -E_ -F_")
+  cImport(libssh2Path, recurse = true, dynlib = "libssh2LPath", flags = "-c -E_ -F_")
 
   when not defined(Windows) and not isDefined(libssh2JBB):
     proc zlibVersion(): cstring {.importc, dynlib: libssh2LPath.}
 else:
-  cImport(libssh2Path, recurse = true, flags = "-f:ast2 -c -E_ -F_")
+  cImport(libssh2Path, recurse = true, flags = "-c -E_ -F_")
 
   when not defined(Windows) and not isDefined(libssh2JBB):
     proc zlibVersion(): cstring {.importc.}

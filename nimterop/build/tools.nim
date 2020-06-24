@@ -9,6 +9,13 @@ type
     buildPath: string
     error: string
 
+proc echoDebug(str: string) =
+  let str = "\n# " & str.strip().replace("\n", "\n# ")
+  when nimvm:
+    if gDebugCT: echo str
+  else:
+    if gDebug: echo str
+
 proc configure*(path, check: string, flags = "") =
   ## Run the GNU `configure` command to generate all Makefiles or other
   ## build scripts in the specified path
@@ -193,7 +200,7 @@ proc make*(path, check: string, flags = "", regex = false) =
       cpFile(cmd, cmd.replace("mingw32-make", "make"))
   doAssert cmd.len != 0, "Make not found"
 
-  cmd = &"cd {path.sanitizePath} && make"
+  cmd = &"cd {path.sanitizePath} && make -j {getNumProcs()}"
   if flags.len != 0:
     cmd &= &" {flags}"
 

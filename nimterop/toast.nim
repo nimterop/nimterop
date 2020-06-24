@@ -4,9 +4,9 @@ import "."/treesitter/[api, c, cpp]
 
 import "."/[build, globals]
 
-import "."/toastlib/[ast, ast2, getters, grammar, tshelp]
+import "."/toastlib/[ast2, getters, tshelp]
 
-proc process(gState: State, path: string, astTable: AstTable) =
+proc process(gState: State, path: string) =
   doAssert existsFile(path), &"Invalid path {path}"
 
   if gState.mode.Bl:
@@ -21,10 +21,7 @@ proc process(gState: State, path: string, astTable: AstTable) =
     if gState.past:
       gecho gState.printLisp(root)
     elif gState.pnim:
-      if Feature.ast2 in gState.feature:
-        ast2.parseNim(gState, path, root)
-      elif Feature.ast1 in gState.feature:
-        ast.parseNim(gState, path, root, astTable)
+      parseNim(gState, path, root)
     elif gState.preprocess:
       gecho gState.code
 
@@ -43,7 +40,6 @@ proc main(
     noHeader = false,
     output = "",
     past = false,
-    pgrammar = false,
     pluginSourcePath: string = "",
     pnim = false,
     prefix: seq[string] = @[],
@@ -83,10 +79,6 @@ proc main(
   # Set gDebug in build.nim
   build.gDebug = gState.debug
   build.gNimExe = gState.nim
-
-  # Default `ast` mode
-  if gState.feature.Bl:
-    gState.feature.add Feature.ast1
 
   # Split some arguments with ,
   gState.symOverride = gState.symOverride.getSplitComma()
@@ -137,31 +129,14 @@ proc main(
     if gState.debug:
       echo &"# Writing output to {outputFile}\n"
 
-  # Process grammar into AST
-  let
-    astTable =
-      if Feature.ast1 in gState.feature:
-        parseGrammar()
-      else:
-        nil
-
-  if pgrammar:
-    if Feature.ast1 in gState.feature:
-      # Print AST of grammar
-      gState.printGrammar(astTable)
-  elif source.nBl:
+  if source.nBl:
     # Print source after preprocess or Nim output
     if gState.pnim:
       gState.initNim()
     for src in source:
-      gState.process(src.expandSymlinkAbs(), astTable)
+      gState.process(src.expandSymlinkAbs())
     if gState.pnim:
-      if Feature.ast2 in gState.feature:
-        ast2.printNim(gState)
-      elif Feature.ast1 in gState.feature:
-        ast.printNim(gState)
-        gecho """{.hint: "The legacy wrapper generation algorithm is deprecated and will be removed in the next release of Nimterop.".}"""
-        gecho """{.hint: "Refer to CHANGES.md for details on migrating to the new backend.".}"""
+      printNim(gState)
 
   # Close outputFile
   if outputFile.len != 0:
@@ -249,7 +224,6 @@ when isMainModule:
     "noHeader": "skip {.header.} pragma in wrapper",
     "output": "file to output content - default: stdout",
     "past": "print AST output",
-    "pgrammar": "print grammar",
     "pluginSourcePath": "nim file to build and load as a plugin",
     "pnim": "print Nim output",
     "prefix": "strip prefix from identifiers",
@@ -273,7 +247,6 @@ when isMainModule:
     "noHeader": 'H',
     "output": 'o',
     "past": 'a',
-    "pgrammar": 'g',
     "pnim": 'n',
     "prefix": 'E',
     "preprocess": 'p',

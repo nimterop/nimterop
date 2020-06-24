@@ -455,7 +455,8 @@ proc linkLibs*(names: openArray[string], staticLink = true): string =
   for res in resSet:
     result &= " " & res
 
-proc getNumProcs(): string =
+proc getNumProcs*(): string =
+  ## Get number of processors
   when defined(Windows):
     getEnv("NUMBER_OF_PROCESSORS").strip()
   elif defined(linux):

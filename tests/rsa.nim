@@ -39,7 +39,7 @@ cOverride:
 cImport(@[
   basePath / "rsa.h",
   basePath / "err.h",
-], recurse = true, flags = "-f:ast2 -s -c " & FLAGS)
+], recurse = true, flags = "-s -c " & FLAGS)
 
 {.passL: cryptoLPath.}
 

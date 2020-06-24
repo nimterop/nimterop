@@ -14,12 +14,6 @@ var
   gNimExe* = ""
 
 # Misc helpers
-proc echoDebug(str: string) =
-  let str = "\n# " & str.strip().replace("\n", "\n# ")
-  when nimvm:
-    if gDebugCT: echo str
-  else:
-    if gDebug: echo str
 
 proc sanitizePath*(path: string, noQuote = false, sep = $DirSep): string =
   result = path.multiReplace([("\\\\", sep), ("\\", sep), ("/", sep)])
@@ -34,7 +28,7 @@ proc getCurrentNimCompiler*(): string =
   else:
     result = gNimExe
 
-template fixOutDir() {.dirty.} =
+template fixOutDir() {.dirty, used.} =
   let
     outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
 

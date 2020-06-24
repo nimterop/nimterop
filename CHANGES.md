@@ -19,6 +19,8 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.0
 
 ### Breaking changes
 
+- The legacy algorithm has been removed as promised. `ast2` is now the default and wrappers no longer need to explicitly specify `-f:ast2` in order to use it.
+
 - All shared libraries installed by `getHeader()` will now get copied into the `libdir` parameter specified. If left blank, `libdir` will default to the directory where the executable binary gets created (outdir). While this is not really a breaking change, it is a change in behavior compared to older versions of nimterop. Note that `Std` libraries are not copied over. [#154](i154)
 
 - `git.nim` has been removed. This module was an artifact from the early days and was renamed to `build.nim` back in v0.2.0.

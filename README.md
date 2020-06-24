@@ -177,13 +177,13 @@ Now that this is understood, a user might want any combination of the above in t
 - By default, generated wrappers will include the `{.header, importc.}` pragmas for types and procs. This can be disabled with the `--noHeader | -H` flag to `toast` or `flags = "-H"` param to `cImport()` which will remove `{.header}` for both and `{.importc.}` for types only.
 - By default, generated wrappers will assume that the user will link the library implementation themselves. The `--dynlib | -l` flag to `toast` or `dynlib = "headerLPath"` param to `cImport()` will configure the wrapper to generate `{.dynlib.}` pragmas for procs.
 
-This results in four cases:
+This results in four supported cases:
 1. Default: `{.header, importc.}` for both types and procs
 2. With `--noHeader`, types will be pure Nim and procs will be just `{.importc.}`
 3. With `--dynlib`, types will still be `{.header, importc.}` but procs will be `{.dynlib, importc.}`
 4. With `--dynlib` and `--noHeader`, types will be pure Nim, procs will be `{.dynlib, importc.}`
 
-While `ast2` supports all these modes, the legacy backend does not support the third mixed case and will infer `--noHeader` when `--dynlib` is specified (case 4). Creation of a standalone wrapper (case 4) which does not require the header or library at compile time will require an explicit `--noHeader` and `--dynlib` for `ast2`.
+Creation of a standalone wrapper (case 4) which does not require the header or library at compile time will require an explicit `--noHeader` and `--dynlib`.
 
 More documentation on on these pragmas can be found in the Nim manual:
 - [{.importc.}](https://nim-lang.org/docs/manual.html#foreign-function-interface-importc-pragma)
@@ -218,7 +218,7 @@ Options:
   -d, --debug          bool      false    enable debug output
   -D=, --defines=      strings   {}       definitions to pass to preprocessor
   -l=, --dynlib=       string    ""       {.dynlib.} pragma to import symbols - Nim const string or file path
-  -f=, --feature=      Features  ast1     flags to enable experimental features
+  -f=, --feature=      Features  {}       flags to enable experimental features
   -I=, --includeDirs=  strings   {}       include directory to pass to preprocessor
   -m=, --mode=         string    ""       language parser: c or cpp
   --nim=               string    "nim"    use a particular Nim executable
@@ -226,12 +226,11 @@ Options:
   -H, --noHeader       bool      false    skip {.header.} pragma in wrapper
   -o=, --output=       string    ""       file to output content - default: stdout
   -a, --past           bool      false    print AST output
-  -g, --pgrammar       bool      false    print grammar
   --pluginSourcePath=  string    ""       nim file to build and load as a plugin
   -n, --pnim           bool      false    print Nim output
   -E=, --prefix=       strings   {}       strip prefix from identifiers
   -p, --preprocess     bool      false    run preprocessor on header
-  -r, --recurse        bool      false    process #include files, implies --preprocess
+  -r, --recurse        bool      false    process #include files - implies --preprocess
   -G=, --replace=      strings   {}       replace X with Y in identifiers, X1=Y1,X2=Y2, @X for regex
   -s, --stub           bool      false    stub out undefined type references as objects
   -F=, --suffix=       strings   {}       strip suffix from identifiers

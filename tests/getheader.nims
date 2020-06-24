@@ -14,7 +14,7 @@ proc testCall(cmd, output: string, exitCode: int, delete = true) =
   doAssert outp.contains(output), outp
 
 var
-  cmd = "nim c -f --hints:off -d:FLAGS=\"-f:ast2\" -d:checkAbi"
+  cmd = "nim c -f --hints:off -d:checkAbi"
   lrcmd = " -r lzma.nim"
   zrcmd = " -r zlib.nim"
   sshcmd = " -r libssh2.nim"

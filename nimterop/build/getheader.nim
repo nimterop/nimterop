@@ -178,7 +178,6 @@ proc getLocalPath(header, outdir: string): string =
 proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildTypes: openArray[BuildType]): string =
   var
     lpath = findFile(lname, outdir, regex = true)
-    makeFlagsProc = &"-j {getNumProcs()} {makeFlags}"
     makePath = outdir
 
   if lpath.len != 0:
@@ -200,7 +199,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
     let libraryExists = findFile(lname, buildStatus.buildPath, regex = true).len > 0
 
     if not libraryExists and fileExists(buildStatus.buildPath / "Makefile"):
-      make(buildStatus.buildPath, lname, makeFlagsProc, regex = true)
+      make(buildStatus.buildPath, lname, makeFlags, regex = true)
       buildStatus.built = true
 
   let error = if buildStatus.error.len > 0: buildStatus.error else: "No build files found in " & outdir

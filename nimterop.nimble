@@ -1,6 +1,6 @@
 # Package
 
-version = "0.5.9"
+version = "0.6.0"
 author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
@@ -55,15 +55,12 @@ task test, "Test":
   execTest "tests/tast2.nim", "-d:NOHEADER"
 
   execTest "tests/tnimterop_c.nim"
-  execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2\""
-  execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-f:ast2 -H\""
+  execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-H\""
 
   execCmd "nim cpp --hints:off -f -r tests/tnimterop_cpp.nim"
   execCmd "./nimterop/toast tests/toast.cfg tests/include/toast.h"
-  execCmd "./nimterop/toast tests/toast.cfg -f:ast2 tests/include/toast.h"
 
   execTest "tests/tpcre.nim"
-  execTest "tests/tpcre.nim", "-d:FLAGS=\"-f:ast2\""
 
   when defined(Linux):
     execTest "tests/rsa.nim"
@@ -72,12 +69,10 @@ task test, "Test":
   # Platform specific tests
   when defined(Windows):
     execTest "tests/tmath.nim"
-    execTest "tests/tmath.nim", "-d:FLAGS=\"-f:ast2\""
-    execTest "tests/tmath.nim",  "-d:FLAGS=\"-f:ast2 -H\""
+    execTest "tests/tmath.nim",  "-d:FLAGS=\"-H\""
   if defined(OSX) or defined(Windows) or not existsEnv("TRAVIS"):
     execTest "tests/tsoloud.nim"
-    execTest "tests/tsoloud.nim", "-d:FLAGS=\"-f:ast2\""
-    execTest "tests/tsoloud.nim",  "-d:FLAGS=\"-f:ast2 -H\""
+    execTest "tests/tsoloud.nim",  "-d:FLAGS=\"-H\""
 
   # getHeader tests
   withDir("tests"):
