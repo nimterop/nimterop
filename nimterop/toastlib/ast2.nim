@@ -1805,7 +1805,10 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
     # {.pragma: impnameDyn, dynlib: libname.}
     let
       dynPragma = gState.newPragma(root, "pragma", gState.getIdent(gState.impShort & "Dyn"))
-    gState.addPragma(root, dynPragma, "dynlib", gState.getIdent(gState.dynlib))
+    if '.' in gState.dynlib:
+      gState.addPragma(root, dynPragma, "dynlib", newStrNode(nkStrLit, gState.dynlib))
+    else:
+      gState.addPragma(root, dynPragma, "dynlib", gState.getIdent(gState.dynlib))
     gState.pragmaSection.add dynPragma
     count += 1
 

@@ -240,7 +240,7 @@ when isMainModule:
     "convention": "calling convention for wrapped procs",
     "debug": "enable debug output",
     "defines": "definitions to pass to preprocessor",
-    "dynlib": "import symbols from library in specified Nim string",
+    "dynlib": "{.dynlib.} pragma to import symbols - Nim const string or file path",
     "feature": "flags to enable experimental features",
     "includeDirs": "include directory to pass to preprocessor",
     "mode": "language parser: c or cpp",

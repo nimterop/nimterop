@@ -392,6 +392,12 @@ macro getHeader*(
       else:
         getLocalPath(header, outdir)
 
+    static:
+      # Don't delete project
+      when not `nameStd` and (`nameGit` or `nameDL` or `nameConan` or `nameJBB`):
+        doAssert `outdir`.len != 0, "getHeader():outdir cannot be blank"
+        doAssert `outdir` != getProjectPath(), "getHeader():outdir cannot be the project path"
+
     const
       `version`* {.strdefine.} = `verVal`
       `lname` =

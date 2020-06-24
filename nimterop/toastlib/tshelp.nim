@@ -154,7 +154,13 @@ proc firstChildInTree*(node: TSNode, ntype: string): TSNode =
   while not cnode.isNil:
     if cnode.getName() == ntype:
       return cnode
-    cnode = cnode[0]
+    if cnode.len != 0:
+      for i in 0 ..< cnode.len:
+        if cnode[i].getName() != "comment":
+          cnode = cnode[i]
+          break
+    else:
+      cnode = cnode[0]
 
 proc anyChildInTree*(node: TSNode, ntype: string): TSNode =
   # Search for node type anywhere in tree - depth first

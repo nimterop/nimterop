@@ -217,7 +217,7 @@ Options:
   -C=, --convention=   string    "cdecl"  calling convention for wrapped procs
   -d, --debug          bool      false    enable debug output
   -D=, --defines=      strings   {}       definitions to pass to preprocessor
-  -l=, --dynlib=       string    ""       import symbols from library in specified Nim string
+  -l=, --dynlib=       string    ""       {.dynlib.} pragma to import symbols - Nim const string or file path
   -f=, --feature=      Features  ast1     flags to enable experimental features
   -I=, --includeDirs=  strings   {}       include directory to pass to preprocessor
   -m=, --mode=         string    ""       language parser: c or cpp
