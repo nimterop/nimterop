@@ -7,7 +7,7 @@ when defined(TOAST):
 
   import compiler/[ast, idents, modulegraphs, options]
 
-  import "."/treesitter/api
+  # import "."/treesitter/api
 
 type
   Feature* = enum
@@ -78,6 +78,21 @@ type
       pluginSource*: string      # `cPlugin()` generated code to write to plugin file from
       searchDirs*: seq[string]   # `cSearchPath()` added directories for header search
 
+  BuildType* = enum
+    btAutoconf, btCmake
+
+  BuildStatus* = object
+    built*: bool
+    buildPath*: string
+    error*: string
+
+when nimvm:
+  var
+    gStateCT* {.compileTime, used.} = new(State)
+else:
+  var
+    gState*: State
+
 when defined(TOAST):
   const
     gAtoms* {.used.} = @[
@@ -119,9 +134,6 @@ when defined(TOAST):
   template decho*(args: varargs[string, `$`]): untyped =
     if gState.debug:
       gecho join(args, "").getCommented()
-else:
-  var
-    gStateCT* {.compileTime, used.} = new(State)
 
 template nBl*(s: typed): untyped {.used.} =
   (s.len != 0)

@@ -1,5 +1,7 @@
 import json, os, strformat, strutils, tables
 
+import "."/[ccompiler, nimconf, shell]
+
 when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
   import marshal
 
@@ -26,6 +28,10 @@ const
 var
   # Reuse dependencies already downloaded
   gJBBRequires {.compileTime.}: Table[string, JBBPackage]
+
+template fixOutDir() {.dirty.} =
+  let
+    outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
 
 proc `==`*(pkg1, pkg2: JBBPackage): bool =
   ## Check if two JBBPackage objects are equal

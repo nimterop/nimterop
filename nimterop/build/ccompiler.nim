@@ -1,5 +1,7 @@
 import os, strformat, strutils
 
+import "."/shell
+
 proc getCompilerMode*(path: string): string =
   ## Determines a target language mode from an input filename, if one is not already specified.
   let file = path.splitFile()

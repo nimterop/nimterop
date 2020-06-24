@@ -1,5 +1,7 @@
 import json, os, osproc, sets, strformat, strutils
 
+import "."/misc
+
 when nimvm:
   when (NimMajor, NimMinor, NimPatch) >= (1, 2, 0):
     import std/compilesettings
@@ -227,3 +229,7 @@ proc getOutDir*(projectDir = ""): string =
   let
     cfg = getNimConfig(projectDir)
   result = cfg.outDir
+
+proc getNimteropCacheDir*(): string =
+  ## Get location to cache all nimterop artifacts
+  result = getNimcacheDir() / "nimterop"

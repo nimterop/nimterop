@@ -1,6 +1,7 @@
 import strutils, os
 
-import ".."/[build, setup, paths]
+import ".."/[setup, paths]
+import ".."/build/shell
 
 static:
   treesitterCppSetup()

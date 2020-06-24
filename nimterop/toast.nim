@@ -2,9 +2,11 @@ import os, osproc, sets, strformat, strutils, tables, times
 
 import "."/treesitter/[api, c, cpp]
 
-import "."/[build, globals]
+import "."/[globals]
 
 import "."/toastlib/[ast2, getters, tshelp]
+
+import "."/build/[ccompiler, misc]
 
 proc process(gState: State, path: string) =
   doAssert existsFile(path), &"Invalid path {path}"
@@ -54,7 +56,7 @@ proc main(
   ) =
 
   # Setup global state with arguments
-  var gState = State(
+  gState = State(
     convention: convention,
     debug: debug,
     defines: defines,
@@ -75,10 +77,6 @@ proc main(
     suffix: suffix,
     symOverride: symOverride
   )
-
-  # Set gDebug in build.nim
-  build.gDebug = gState.debug
-  build.gNimExe = gState.nim
 
   # Split some arguments with ,
   gState.symOverride = gState.symOverride.getSplitComma()

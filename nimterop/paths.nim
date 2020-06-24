@@ -1,6 +1,6 @@
 import os
 
-import "."/build
+import "."/build/shell
 
 const
   cacheDir* = getProjectCacheDir("nimterop", forceClean = false)

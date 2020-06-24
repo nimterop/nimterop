@@ -1,5 +1,7 @@
 import os, strformat, strutils, tables
 
+import "."/[ccompiler, misc, nimconf, shell]
+
 when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
   import marshal
 else:
@@ -76,6 +78,10 @@ proc jsonGet(url: string): JsonNode =
   except JsonParsingError:
     discard
   rmFile(file)
+
+template fixOutDir() {.dirty.} =
+  let
+    outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
 
 proc `==`*(pkg1, pkg2: ConanPackage): bool =
   ## Check if two ConanPackage objects are equal

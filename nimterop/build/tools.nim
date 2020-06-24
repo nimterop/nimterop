@@ -1,20 +1,16 @@
-import os, strformat, strutils
+import strformat, strutils
 
-type
-  BuildType* = enum
-    btAutoconf, btCmake
+import os except findExe
 
-  BuildStatus = object
-    built: bool
-    buildPath: string
-    error: string
+import ".."/globals
+import "."/[misc, shell]
 
 proc echoDebug(str: string) =
   let str = "\n# " & str.strip().replace("\n", "\n# ")
-  when nimvm:
-    if gDebugCT: echo str
+  when defined(TOAST):
+    if gState.debug: echo str
   else:
-    if gDebug: echo str
+    if gStateCT.debug: echo str
 
 proc configure*(path, check: string, flags = "") =
   ## Run the GNU `configure` command to generate all Makefiles or other
@@ -208,7 +204,7 @@ proc make*(path, check: string, flags = "", regex = false) =
 
   doAssert findFile(check, path, regex = regex).len != 0, "make failed"
 
-proc buildWithCmake(outdir, flags: string): BuildStatus =
+proc buildWithCmake*(outdir, flags: string): BuildStatus =
   if not fileExists(outdir / "Makefile"):
     if fileExists(outdir / "CMakeLists.txt"):
       if findExe("cmake").len != 0:
@@ -238,7 +234,7 @@ proc buildWithCmake(outdir, flags: string): BuildStatus =
   else:
     result.buildPath = outdir
 
-proc buildWithAutoConf(outdir, flags: string): BuildStatus =
+proc buildWithAutoConf*(outdir, flags: string): BuildStatus =
   if not fileExists(outdir / "Makefile"):
     if findExe("bash").len != 0:
       for file in @["configure", "configure.ac", "configure.in", "autogen.sh", "build/autogen.sh"]:

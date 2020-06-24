@@ -2,7 +2,8 @@ import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
 
 import regex
 
-import ".."/[build, globals, plugin]
+import ".."/[globals, plugin]
+import ".."/build/[ccompiler, misc, nimconf, shell]
 
 const gReserved = """
 addr and as asm

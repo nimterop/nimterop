@@ -1,4 +1,9 @@
-import macros, os, strutils, tables
+import macros, strformat, strutils, tables
+
+import os except findExe
+
+import ".."/globals
+import "."/[ccompiler, conan, jbb, nimconf, shell, tools]
 
 var
   gDefines {.compileTime.} = initTable[string, string]()

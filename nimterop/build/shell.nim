@@ -1,15 +1,25 @@
-import os, strformat, strutils
+import hashes, osproc, sets, strformat, strutils
 
-proc sleep*(milsecs: int) =
-  ## Sleep at compile time
-  let
-    cmd =
-      when defined(Windows):
-        "cmd /c timeout "
-      else:
-        "sleep "
+when not defined(TOAST):
+  import os except findExe, sleep
+else:
+  import os
 
-  discard gorgeEx(cmd & $(milsecs / 1000))
+import "."/[misc, nimconf]
+
+when not defined(TOAST):
+  proc sleep*(milsecs: int) =
+    ## Sleep at compile time
+    let
+      cmd =
+        when defined(Windows):
+          "cmd /c timeout "
+        else:
+          "sleep "
+
+    discard gorgeEx(cmd & $(milsecs / 1000))
+else:
+  export sleep
 
 proc execAction*(cmd: string, retry = 0, die = true, cache = false,
                  cacheKey = "", onRetry: proc() = nil): tuple[output: string, ret: int] =
@@ -73,20 +83,23 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
       doAssert false, "Command failed: " & $result.ret & "\ncmd: " & ccmd &
                       "\nresult:\n" & result.output
 
-proc findExe*(exe: string): string =
-  ## Find the specified executable using the `which`/`where` command - supported
-  ## at compile time
-  var
-    cmd =
-      when defined(Windows):
-        "where " & exe
-      else:
-        "which " & exe
+when not defined(TOAST):
+  proc findExe*(exe: string): string =
+    ## Find the specified executable using the `which`/`where` command - supported
+    ## at compile time
+    var
+      cmd =
+        when defined(Windows):
+          "where " & exe
+        else:
+          "which " & exe
 
-    (output, ret) = execAction(cmd, die = false)
+      (output, ret) = execAction(cmd, die = false)
 
-  if ret == 0:
-    return output.splitLines()[0].strip().sanitizePath
+    if ret == 0:
+      return output.splitLines()[0].strip().sanitizePath
+else:
+  export findExe
 
 proc mkDir*(dir: string) =
   ## Create a directory at compile time
@@ -465,3 +478,31 @@ proc getNumProcs*(): string =
     execAction("sysctl -n hw.ncpu").output.strip()
   else:
     "1"
+
+proc getProjectCacheDir*(name: string, forceClean = true): string =
+  ## Get a cache directory where all nimterop artifacts can be stored
+  ##
+  ## Projects can use this location to download source code and build binaries
+  ## that can be then accessed by multiple apps. This is created under the
+  ## per-user Nim cache directory.
+  ##
+  ## Use `name` to specify the subdirectory name for a project.
+  ##
+  ## `forceClean` is enabled by default and effectively deletes the folder
+  ## if Nim is compiled with the `-f` or `--forceBuild` flag. This allows
+  ## any project to start out with a clean cache dir on a forced build.
+  ##
+  ## NOTE: avoid calling `getProjectCacheDir()` multiple times on the same
+  ## `name` when `forceClean = true` else checked out source might get deleted
+  ## at the wrong time during build.
+  ##
+  ## E.g.
+  ##   `nimgit2` downloads `libgit2` source so `name = "libgit2"`
+  ##
+  ##   `nimarchive` downloads `libarchive`, `bzlib`, `liblzma` and `zlib` so
+  ##   `name = "nimarchive" / "libarchive"` for `libarchive`, etc.
+  result = getNimteropCacheDir() / name
+
+  if forceClean and compileOption("forceBuild"):
+    echo "# Removing " & result
+    rmDir(result)

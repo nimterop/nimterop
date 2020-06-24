@@ -376,7 +376,6 @@ proc cSearchPath*(path: string): string {.compileTime.}=
 proc cDebug*() {.compileTime.} =
   ## Enable debug messages and display the generated Nim code
   gStateCT.debug = true
-  build.gDebugCT = true
 
 proc cDisableCaching*() {.compileTime.} =
   ## Disable caching of generated Nim code - useful during wrapper development
