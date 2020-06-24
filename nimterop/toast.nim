@@ -124,8 +124,7 @@ proc main(
     doAssert gState.outputHandle.open(outputFile, fmWrite),
       &"Failed to write to {outputFile}"
 
-    if gState.debug:
-      echo &"# Writing output to {outputFile}\n"
+    decho &"# Writing output to {outputFile}\n"
 
   if source.nBl:
     # Print source after preprocess or Nim output

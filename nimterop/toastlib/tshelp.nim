@@ -30,9 +30,6 @@ template withCodeAst*(code: string, mode: string, body: untyped): untyped =
   defer:
     tree.tsTreeDelete()
 
-proc getCommented*(str: string): string =
-  "\n# " & str.strip().replace("\n", "\n# ")
-
 proc isNil*(node: TSNode): bool =
   node.tsNodeIsNull()
 

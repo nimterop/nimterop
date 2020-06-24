@@ -1,5 +1,6 @@
 import json, os, strformat, strutils, tables
 
+import ".."/globals
 import "."/[ccompiler, nimconf, shell]
 
 when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
@@ -198,7 +199,7 @@ proc downloadJBB*(pkg: JBBPackage, outdir: string, main = true) =
       else:
         ""
     path = outdir / pkg.name
-  echo &"# Downloading {pkg.name}{vstr} from BinaryBuilder.org"
+  gecho &"# Downloading {pkg.name}{vstr} from BinaryBuilder.org"
   downloadUrl(pkg.url, path, quiet = true)
   pkg.findJBBLibs(path)
 

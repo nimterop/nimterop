@@ -5,6 +5,7 @@ when not defined(TOAST):
 else:
   import os
 
+import ".."/globals
 import "."/[misc, nimconf]
 
 when not defined(TOAST):
@@ -228,7 +229,7 @@ proc extractZip*(zipfile, outdir: string, quiet = false) =
           "[IO.Compression.ZipFile]::ExtractToDirectory('$#', '.'); }\""
 
   if not quiet:
-    echo "# Extracting " & zipfile
+    gecho "# Extracting " & zipfile
   discard execAction(&"cd {outdir.sanitizePath} && {cmd % zipfile}")
 
 proc extractTar*(tarfile, outdir: string, quiet = false) =
@@ -262,7 +263,7 @@ proc extractTar*(tarfile, outdir: string, quiet = false) =
   doAssert cmd.len != 0, "No extraction tool - tar, 7z, 7za - available for " & tarfile.sanitizePath
 
   if not quiet:
-    echo "# Extracting " & tarfile
+    gecho "# Extracting " & tarfile
   discard execAction(&"cd {outdir.sanitizePath} && {cmd}")
   if name.len != 0:
     rmFile(outdir / name)
@@ -279,7 +280,7 @@ proc downloadUrl*(url, outdir: string, quiet = false, retry = 1) =
 
   if not (ext in archives and fileExists(filePath)):
     if not quiet:
-      echo "# Downloading " & file
+      gecho "# Downloading " & file
     mkDir(outdir)
     var cmd = findExe("curl")
     if cmd.len != 0:
@@ -302,12 +303,12 @@ proc downloadUrl*(url, outdir: string, quiet = false, retry = 1) =
 
 proc gitReset*(outdir: string) =
   ## Hard reset the git repository at the specified directory
-  echo "# Resetting " & outdir
+  gecho "# Resetting " & outdir
 
   let cmd = &"cd {outdir.sanitizePath} && git reset --hard"
   while execAction(cmd).output.contains("Permission denied"):
     sleep(1000)
-    echo "#   Retrying ..."
+    gecho "#   Retrying ..."
 
 proc gitCheckout*(file, outdir: string) =
   ## Checkout the specified `file` in the git repository at `outdir`
@@ -315,12 +316,12 @@ proc gitCheckout*(file, outdir: string) =
   ## This effectively resets all changes in the file and can be
   ## used to undo any changes that were made to source files to enable
   ## successful wrapping with `cImport()` or `c2nImport()`.
-  echo "# Resetting " & file
+  gecho "# Resetting " & file
   let file2 = file.relativePath outdir
   let cmd = &"cd {outdir.sanitizePath} && git checkout {file2.sanitizePath}"
   while execAction(cmd).output.contains("Permission denied"):
     sleep(500)
-    echo "#   Retrying ..."
+    gecho "#   Retrying ..."
 
 proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false) =
   ## Pull the specified git repository to the output directory
@@ -343,7 +344,7 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false
   mkDir(outdir)
 
   if not quiet:
-    echo "# Setting up Git repo: " & url
+    gecho "# Setting up Git repo: " & url
   discard execAction(&"cd {outdirQ} && git init .")
   discard execAction(&"cd {outdirQ} && git remote add origin {url}")
 
@@ -360,12 +361,12 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false
 
   if checkout.len != 0:
     if not quiet:
-      echo "# Checking out " & checkout
+      gecho "# Checking out " & checkout
     discard execAction(&"cd {outdirQ} && git fetch", retry = 3)
     discard execAction(&"cd {outdirQ} && git checkout {checkout}")
   else:
     if not quiet:
-      echo "# Pulling repository"
+      gecho "# Pulling repository"
     discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master", retry = 3)
 
 proc gitTags*(outdir: string): seq[string] =
@@ -504,5 +505,5 @@ proc getProjectCacheDir*(name: string, forceClean = true): string =
   result = getNimteropCacheDir() / name
 
   if forceClean and compileOption("forceBuild"):
-    echo "# Removing " & result
+    gecho "# Removing " & result
     rmDir(result)

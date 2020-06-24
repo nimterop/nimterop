@@ -1,11 +1,11 @@
-import os, strformat, strutils, tables
+import json, os, strformat, strutils, tables
 
+
+import ".."/globals
 import "."/[ccompiler, misc, nimconf, shell]
 
 when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
   import marshal
-else:
-  import json
 
 type
   ConanPackage* = ref object
@@ -158,7 +158,7 @@ proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPac
       if channel.len != 0:
         query &= "/" & channel
 
-  echo &"# Searching Conan.io for latest version of {name}"
+  gecho &"# Searching Conan.io for latest version of {name}"
 
   let
     j1 = jsonGet(conanSearchUrl % ["query", query])
@@ -397,7 +397,7 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, main = true) =
 
   doAssert pkg.recipes.len != 0, &"Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
 
-  echo &"# Downloading {pkg.name} v{pkg.version} from Conan.io"
+  gecho &"# Downloading {pkg.name} v{pkg.version} from Conan.io"
   for recipe, builds in pkg.recipes:
     for build in builds:
       if pkg.bhash.len == 0 or pkg.bhash == build.bhash:

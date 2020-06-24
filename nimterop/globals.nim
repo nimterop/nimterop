@@ -1,4 +1,4 @@
-import tables
+import strutils, tables
 
 when defined(TOAST):
   import sets, sequtils, strutils
@@ -124,16 +124,31 @@ when defined(TOAST):
     Status* = enum
       success, unknown, error
 
-  # Redirect output to file when required
-  template gecho*(args: string) =
-    if gState.outputHandle.isNil:
+proc getCommented*(str: string): string =
+  "\n# " & str.strip().replace("\n", "\n# ")
+
+# Redirect output to file when required
+template gecho*(args: string) =
+  when defined(TOAST):
+    when nimvm:
       echo args
     else:
-      gState.outputHandle.writeLine(args)
+      if gState.outputHandle.isNil:
+        echo args
+      else:
+        gState.outputHandle.writeLine(args)
+  else:
+    echo args
 
-  template decho*(args: varargs[string, `$`]): untyped =
+template decho*(args: varargs[string, `$`]): untyped =
+  let
+    str = join(args, "").getCommented()
+  when defined(TOAST):
     if gState.debug:
-      gecho join(args, "").getCommented()
+      gecho str
+  else:
+    if gStateCT.debug:
+      echo str
 
 template nBl*(s: typed): untyped {.used.} =
   (s.len != 0)

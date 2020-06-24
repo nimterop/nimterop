@@ -246,8 +246,8 @@ proc onSymbolOverride*(sym: var Symbol) {.exportc, dynlib.} =
 
     gStateCT.symOverride.add name
 
-  if gStateCT.debug and names.nBl:
-    echo "# Overriding " & names.join(" ")
+  if names.nBl:
+    decho "Overriding " & names.join(" ")
 
 proc cSkipSymbol*(skips: seq[string]) {.compileTime.} =
   ## Similar to `cOverride() <cimport.html#cOverride.m>`_, this macro allows
@@ -412,7 +412,7 @@ macro cDefine*(name: static string, val: static string = ""): untyped =
       {.passC: `str`.}
 
     if gStateCT.debug:
-      echo result.repr & "\n"
+      gecho result.repr & "\n"
 
 proc cAddSearchDir*(dir: string) {.compileTime.} =
   ## Add directory `dir` to the search path used in calls to
@@ -442,7 +442,7 @@ macro cIncludeDir*(dir: static string): untyped =
     result.add quote do:
       {.passC: `str`.}
     if gStateCT.debug:
-      echo result.repr
+      gecho result.repr
 
 proc cAddStdDir*(mode = "c") {.compileTime.} =
   ## Add the standard `c` [default] or `cpp` include paths to search
@@ -545,7 +545,7 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
   result.add stmt.parseStmt()
 
   if gStateCT.debug:
-    echo result.repr
+    gecho result.repr
 
 macro cImport*(filenames: static seq[string], recurse: static bool = false, dynlib: static string = "",
   mode: static string = "c", flags: static string = ""): untyped =
@@ -565,7 +565,7 @@ macro cImport*(filenames: static seq[string], recurse: static bool = false, dynl
   if gStateCT.pluginSourcePath.Bl:
     cPluginHelper(gStateCT.pluginSource)
 
-  echo "# Importing " & fullpaths.join(", ").sanitizePath
+  gecho "# Importing " & fullpaths.join(", ").sanitizePath
 
   let
     output = getToast(fullpaths, recurse, dynlib, mode, flags)
@@ -576,7 +576,7 @@ macro cImport*(filenames: static seq[string], recurse: static bool = false, dynl
     gStateCT.overrides = ""
 
   if gStateCT.debug:
-    echo output
+    gecho output
 
   try:
     let body = parseStmt(output)
@@ -661,7 +661,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
   let
     fullpath = findPath(filename)
 
-  echo "# Importing " & fullpath & " with c2nim"
+  gecho "# Importing " & fullpath & " with c2nim"
 
   let
     output = getToast(@[fullpath], recurse, dynlib, mode, noNimout = true)
@@ -700,7 +700,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
     nimout = &"const {header} = \"{fullpath}\"\n\n" & readFile(npath)
 
   if gStateCT.debug:
-    echo nimout
+    gecho nimout
 
   try:
     let body = parseStmt(nimout)

@@ -1,5 +1,6 @@
 import json, os, osproc, sets, strformat, strutils
 
+import ".."/globals
 import "."/misc
 
 when nimvm:
@@ -42,7 +43,7 @@ proc getJson(projectDir: string): JsonNode =
   try:
     result = parseJson(dump)
   except JsonParsingError as e:
-    echo "# Failed to parse `nim dump` output: " & e.msg
+    gecho "# Failed to parse `nim dump` output: " & e.msg
 
 proc getOsCacheDir(): string =
   # OS default cache directory

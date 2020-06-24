@@ -476,9 +476,9 @@ macro getHeader*(
         {.passL: `ldeps`.join(" ").}
 
       static:
-        echo "# Including library " & lpath
+        gecho "# Including library " & lpath
         if `ldeps`.len != 0:
-          echo "# Including dependencies " & `ldeps`.join(" ")
+          gecho "# Including dependencies " & `ldeps`.join(" ")
     else:
       const
         `lpath`* = when not useStd: `libdir` / lpath.extractFilename() else: lpath
@@ -498,7 +498,7 @@ macro getHeader*(
                 ldeps[i] = ldeptgt
               # Copy downloaded dependencies to `libdir`
               if copied.len != 0:
-                echo "# Copying dependencies: " & copied.join(" ") & "\n#   to " & `libdir`
+                gecho "# Copying dependencies: " & copied.join(" ") & "\n#   to " & `libdir`
               ldeps
           else:
             ldeps
@@ -507,8 +507,8 @@ macro getHeader*(
           when not useStd:
             # Copy downloaded shared libraries to `libdir`
             if not fileExists(`lpath`) or getFileDate(lpath) != getFileDate(`lpath`):
-              echo "# Copying " & `lpath`.extractFilename() & " to " & `libdir`
+              gecho "# Copying " & `lpath`.extractFilename() & " to " & `libdir`
               cpFile(lpath, `lpath`)
 
-          echo "# Including library " & `lpath`
+          gecho "# Including library " & `lpath`
   )

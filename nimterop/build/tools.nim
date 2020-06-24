@@ -5,13 +5,6 @@ import os except findExe
 import ".."/globals
 import "."/[misc, shell]
 
-proc echoDebug(str: string) =
-  let str = "\n# " & str.strip().replace("\n", "\n# ")
-  when defined(TOAST):
-    if gState.debug: echo str
-  else:
-    if gStateCT.debug: echo str
-
 proc configure*(path, check: string, flags = "") =
   ## Run the GNU `configure` command to generate all Makefiles or other
   ## build scripts in the specified path
@@ -30,18 +23,18 @@ proc configure*(path, check: string, flags = "") =
   if (path / check).fileExists():
     return
 
-  echo "# Configuring " & path
+  gecho "# Configuring " & path
 
   if not fileExists(path / "configure"):
     for i in @["autogen.sh", "build" / "autogen.sh"]:
       if fileExists(path / i):
-        echo "#   Running autogen.sh"
+        gecho "#   Running autogen.sh"
 
         when defined(unix):
-          echoDebug execAction(
+          decho execAction(
             &"cd {(path / i).parentDir().sanitizePath} && ./autogen.sh").output
         else:
-          echoDebug execAction(
+          decho execAction(
             &"cd {(path / i).parentDir().sanitizePath} && bash ./autogen.sh").output
 
         break
@@ -49,14 +42,14 @@ proc configure*(path, check: string, flags = "") =
   if not fileExists(path / "configure"):
     for i in @["configure.ac", "configure.in"]:
       if fileExists(path / i):
-        echo "#   Running autoreconf"
+        gecho "#   Running autoreconf"
 
-        echoDebug execAction(&"cd {path.sanitizePath} && autoreconf -fi").output
+        decho execAction(&"cd {path.sanitizePath} && autoreconf -fi").output
 
         break
 
   if fileExists(path / "configure"):
-    echo "#   Running configure " & flags
+    gecho "#   Running configure " & flags
 
     when defined(unix):
       var
@@ -67,7 +60,7 @@ proc configure*(path, check: string, flags = "") =
     if flags.len != 0:
       cmd &= &" {flags}"
 
-    echoDebug execAction(cmd).output
+    decho execAction(cmd).output
 
   doAssert (path / check).fileExists(), "Configure failed"
 
@@ -156,15 +149,15 @@ proc cmake*(path, check, flags: string) =
   if (path / check).fileExists():
     return
 
-  echo "# Running cmake " & flags
-  echo "#   Path: " & path
+  gecho "# Running cmake " & flags
+  gecho "#   Path: " & path
 
   mkDir(path)
 
   let
     cmd = &"cd {path.sanitizePath} && cmake {flags}"
 
-  echoDebug execAction(cmd).output
+  decho execAction(cmd).output
 
   doAssert (path / check).fileExists(), "cmake failed"
 
@@ -184,8 +177,8 @@ proc make*(path, check: string, flags = "", regex = false) =
   if findFile(check, path, regex = regex).len != 0:
     return
 
-  echo "# Running make " & flags
-  echo "#   Path: " & path
+  gecho "# Running make " & flags
+  gecho "#   Path: " & path
 
   var
     cmd = findExe("make")
@@ -200,7 +193,7 @@ proc make*(path, check: string, flags = "", regex = false) =
   if flags.len != 0:
     cmd &= &" {flags}"
 
-  echoDebug execAction(cmd).output
+  decho execAction(cmd).output
 
   doAssert findFile(check, path, regex = regex).len != 0, "make failed"
 
@@ -219,7 +212,7 @@ proc buildWithCmake*(outdir, flags: string): BuildStatus =
             elif uname.contains("mingw"):
               gen = "MinGW Makefiles".quoteShell & " -DCMAKE_SH=\"CMAKE_SH-NOTFOUND\""
             else:
-              echo "Unsupported system: " & uname
+              gecho "Unsupported system: " & uname
           else:
             gen = "MinGW Makefiles".quoteShell
         else:
