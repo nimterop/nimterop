@@ -45,6 +45,11 @@ task btd, "build toast":
 task docs, "Generate docs":
   buildDocs(@["nimterop/all.nim"], "build/htmldocs")
 
+task minitest, "Test for Nim CI":
+  exec "nim c -f -d:danger nimterop/toast"
+  exec "nim c -f -d:checkAbi -r tests/tast2.nim"
+  exec "nim c -f -d:checkAbi -d:zlibStd -d:zlibDL -d:zlibSetVer=1.2.11 -r tests/zlib.nim"
+
 task test, "Test":
   rmFile("tests/timeit.txt")
 

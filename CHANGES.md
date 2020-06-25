@@ -31,6 +31,8 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.0
 
 - The `dynlib` command line parameter to `toast` and `cImport()` can also be the path to a shared library (dll|so|dylib) in place of a Nim const string containing the path. This allows for the traditional use case of passing `"xxxLPath"` to `cImport()` as well as simply passing the path to the library on the command line as is. This allows the creation of standalone cached wrappers as well as the usage of the `--check` and the `--stub` functionality that `toast` provides via `cImport()`.
 
+- `gitPull()` now checks if an existing repository is at the `checkout` value specified. If not, it will pull the latest changes and checkout the specified commit, tag or branch.
+
 
 ## Version 0.5.0
 
