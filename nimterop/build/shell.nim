@@ -323,6 +323,12 @@ proc gitCheckout*(file, outdir: string) =
     sleep(500)
     gecho "#   Retrying ..."
 
+proc gitAtCheckout*(outdir, checkout: string): bool =
+  ## Check if specified git repository is checked out to the specified
+  ## commit hash, tag or branch
+  result = checkout in execAction(
+    &"cd {outdir.sanitizePath} && git log --decorate --no-color -n 1 --format=oneline").output
+
 proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false) =
   ## Pull the specified git repository to the output directory
   ##
@@ -334,12 +340,16 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false
   ## `checkout` is the git tag, branch or commit hash to checkout once
   ## the repository is downloaded. This allows for pinning to a specific
   ## version of the code.
-  if dirExists(outdir/".git"):
-    gitReset(outdir)
-    return
-
   let
     outdirQ = outdir.sanitizePath
+
+  if dirExists(outdir/".git"):
+    gitReset(outdir)
+    if checkout.nBl and not gitAtCheckout(outdir, checkout):
+      gecho &"# Updating repository to checkout {checkout}"
+      discard execAction(
+        &"cd {outdirQ} && git clean -fxd && git fetch && git checkout {checkout}", retry = 3)
+    return
 
   mkDir(outdir)
 

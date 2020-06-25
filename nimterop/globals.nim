@@ -111,7 +111,9 @@ when defined(TOAST):
       "bitwise_expression",
       "shift_expression",
       "math_expression",
-      "escape_sequence"
+      "escape_sequence",
+      "binary_expression",
+      "unary_expression"
     ].toHashSet()
 
     gEnumVals* {.used.} = @[

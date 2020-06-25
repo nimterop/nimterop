@@ -535,7 +535,7 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   # once we upgrade
   of "math_expression", "logical_expression", "relational_expression",
      "bitwise_expression", "equality_expression", "binary_expression",
-     "shift_expression":
+     "shift_expression", "unary_expression":
     # Input -> a == b, a != b, !a, ~a, a < b, a > b, a <= b, a >= b, a >> b, a << b
     # Output ->
     #   typeof(a)(a == typeof(a)(b))

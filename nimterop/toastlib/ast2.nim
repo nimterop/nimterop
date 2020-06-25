@@ -1099,7 +1099,10 @@ proc getTypeProc(gState: State, name: string, node, rnode: TSNode): PNode =
     ncount =
       if not afdecl.isNil:
         # Pointer to function pointer
-        afdecl[0].getXCount("abstract_pointer_declarator")
+        if afdecl[0].getName() == "abstract_parenthesized_declarator":
+          afdecl[0][0].getXCount("abstract_pointer_declarator")
+        else:
+          afdecl[0].getXCount("abstract_pointer_declarator")
       else:
         node.getAtom().tsNodeParent().getPtrCount(reverse = true)
 
