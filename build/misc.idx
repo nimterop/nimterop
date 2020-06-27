@@ -1,0 +1,4 @@
+sanitizePath	build/misc.html#sanitizePath,string	misc: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string	
+getCurrentNimCompiler	build/misc.html#getCurrentNimCompiler	misc: getCurrentNimCompiler(): string	
+compareVersions	build/misc.html#compareVersions,string,string	misc: compareVersions(ver1, ver2: string): int	
+fixCmd	build/misc.html#fixCmd,string	misc: fixCmd(cmd: string): string	

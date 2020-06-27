@@ -1,0 +1,17 @@
+ConanPackage	build/conan.html#ConanPackage	conan: ConanPackage	
+ConanBuild	build/conan.html#ConanBuild	conan: ConanBuild	
+addAltConanBaseUrl	build/conan.html#addAltConanBaseUrl,string,string	conan: addAltConanBaseUrl(name, url: string)	
+`==`	build/conan.html#==,ConanPackage,ConanPackage	conan: `==`(pkg1, pkg2: ConanPackage): bool	
+newConanPackage	build/conan.html#newConanPackage,string,string,string,string,string	conan: newConanPackage(name, version, user = &quot;_&quot;; channel = &quot;_&quot;; bhash = &quot;&quot;; shared = true): ConanPackage	
+newConanPackageFromUri	build/conan.html#newConanPackageFromUri,string	conan: newConanPackageFromUri(uri: string; shared = true): ConanPackage	
+getUriFromConanPackage	build/conan.html#getUriFromConanPackage,ConanPackage	conan: getUriFromConanPackage(pkg: ConanPackage): string	
+searchConan	build/conan.html#searchConan,string,string,string,string	conan: searchConan(name: string; version = &quot;&quot;; user = &quot;&quot;; channel = &quot;&quot;): ConanPackage	
+searchConan	build/conan.html#searchConan,ConanPackage	conan: searchConan(pkg: ConanPackage): ConanPackage	
+getConanBuilds	build/conan.html#getConanBuilds,ConanPackage,string	conan: getConanBuilds(pkg: ConanPackage; filter = &quot;&quot;)	
+getConanRevisions	build/conan.html#getConanRevisions,ConanPackage,ConanBuild	conan: getConanRevisions(pkg: ConanPackage; bld: ConanBuild)	
+loadConanInfo	build/conan.html#loadConanInfo,string	conan: loadConanInfo(outdir: string): ConanPackage	
+saveConanInfo	build/conan.html#saveConanInfo,ConanPackage,string	conan: saveConanInfo(pkg: ConanPackage; outdir: string)	
+dlConanBuild	build/conan.html#dlConanBuild,ConanPackage,ConanBuild,string,string	conan: dlConanBuild(pkg: ConanPackage; bld: ConanBuild; outdir: string; revision = &quot;&quot;)	
+downloadConan	build/conan.html#downloadConan,ConanPackage,string	conan: downloadConan(pkg: ConanPackage; outdir: string; main = true)	
+dlConanRequires	build/conan.html#dlConanRequires,ConanPackage,ConanBuild,string	conan: dlConanRequires(pkg: ConanPackage; bld: ConanBuild; outdir: string)	
+getConanLDeps	build/conan.html#getConanLDeps,ConanPackage,string	conan: getConanLDeps(pkg: ConanPackage; outdir: string; main = true): seq[string]	

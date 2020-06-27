@@ -17,10 +17,10 @@
 <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,500,600' rel='stylesheet' type='text/css'/>
 
 <!-- CSS -->
-<title>types</title>
-<link rel="stylesheet" type="text/css" href="nimdoc.out.css">
+<title>build/misc</title>
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css">
 
-<script type="text/javascript" src="dochack.js"></script>
+<script type="text/javascript" src="../dochack.js"></script>
 
 <script type="text/javascript">
 function main() {
@@ -71,7 +71,7 @@ function main() {
 <body onload="main()">
 <div class="document" id="documentId">
   <div class="container">
-    <h1 class="title">types</h1>
+    <h1 class="title">build/misc</h1>
     <div class="row">
   <div class="three columns">
   <div class="theme-switch-wrapper">
@@ -84,7 +84,7 @@ function main() {
   <div id="global-links">
     <ul class="simple">
     <li>
-      <a href="theindex.html">Index</a>
+      <a href="../theindex.html">Index</a>
     </li>
     </ul>
   </div>
@@ -101,28 +101,22 @@ function main() {
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li>
-  <a class="reference reference-toplevel" href="#7" id="57">Types</a>
+  <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#time_t"
-    title="time_t = time_t_temp.Time"><wbr />time_<wbr />t<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#time64_t"
-    title="time64_t = time_t_temp.Time"><wbr />time64_<wbr />t<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#wchar_t"
-    title="wchar_t {.importc, header: &quot;&lt;cwchar&gt;&quot;.} = object"><wbr />wchar_<wbr />t<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#ptrdiff_t"
-    title="ptrdiff_t = ByteAddress"><wbr />ptrdiff_<wbr />t<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#va_list"
-    title="va_list {.importc, header: &quot;&lt;stdarg.h&gt;&quot;.} = object"><wbr />va_<wbr />list<span class="attachedType"></span></a></li>
-
+    
   </ul>
 </li>
 <li>
-  <a class="reference reference-toplevel" href="#18" id="68">Templates</a>
+  <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#enumOp.t%2C%2C%2C"
-    title="enumOp(op, typ, typout)"><wbr />enum<wbr />Op<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#defineEnum.t"
-    title="defineEnum(typ)"><wbr />define<wbr />Enum<span class="attachedType"></span></a></li>
+      <li><a class="reference" href="#sanitizePath%2Cstring"
+    title="sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string"><wbr />sanitize<wbr />Path<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#getCurrentNimCompiler"
+    title="getCurrentNimCompiler(): string"><wbr />get<wbr />Current<wbr />Nim<wbr />Compiler<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#compareVersions%2Cstring%2Cstring"
+    title="compareVersions(ver1, ver2: string): int"><wbr />compare<wbr />Versions<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#fixCmd%2Cstring"
+    title="fixCmd(cmd: string): string"><wbr />fix<wbr />Cmd<span class="attachedType"></span></a></li>
 
   </ul>
 </li>
@@ -134,58 +128,39 @@ function main() {
   <div id="tocRoot"></div>
   
   <p class="module-desc"></p>
-  <div class="section" id="7">
-<h1><a class="toc-backref" href="#7">Types</a></h1>
+  <div class="section" id="6">
+<h1><a class="toc-backref" href="#6">Imports</a></h1>
 <dl class="item">
-<a id="time_t"></a>
-<dt><pre><a href="types.html#time_t"><span class="Identifier">time_t</span></a> <span class="Other">=</span> <span class="Identifier">time_t_temp</span><span class="Other">.</span><span class="Identifier">Time</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="time64_t"></a>
-<dt><pre><a href="types.html#time64_t"><span class="Identifier">time64_t</span></a> <span class="Other">=</span> <span class="Identifier">time_t_temp</span><span class="Other">.</span><span class="Identifier">Time</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="wchar_t"></a>
-<dt><pre><a href="types.html#wchar_t"><span class="Identifier">wchar_t</span></a> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;&lt;cwchar&gt;&quot;</span></span><span class="Other">.}</span></span> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="ptrdiff_t"></a>
-<dt><pre><a href="types.html#ptrdiff_t"><span class="Identifier">ptrdiff_t</span></a> <span class="Other">=</span> <span class="Identifier">ByteAddress</span></pre></dt>
-<dd>
-
-
-
-</dd>
-<a id="va_list"></a>
-<dt><pre><a href="types.html#va_list"><span class="Identifier">va_list</span></a> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;&lt;stdarg.h&gt;&quot;</span></span><span class="Other">.}</span></span> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
-<dd>
-
-
-
-</dd>
-
+<a class="reference external" href="../globals.html">../globals</a>
 </dl></div>
-<div class="section" id="18">
-<h1><a class="toc-backref" href="#18">Templates</a></h1>
+<div class="section" id="12">
+<h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
-<a id="enumOp.t,,,"></a>
-<dt><pre><span class="Keyword">template</span> <a href="#enumOp.t%2C%2C%2C"><span class="Identifier">enumOp</span></a><span class="Other">(</span><span class="Identifier">op</span><span class="Other">,</span> <span class="Identifier">typ</span><span class="Other">,</span> <span class="Identifier">typout</span><span class="Other">)</span></pre></dt>
+<a id="sanitizePath,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#sanitizePath%2Cstring"><span class="Identifier">sanitizePath</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">noQuote</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">sep</span> <span class="Other">=</span> <span class="Operator">$</span><span class="CharLit">'/'</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 
 
 </dd>
-<a id="defineEnum.t"></a>
-<dt><pre><span class="Keyword">template</span> <a href="#defineEnum.t"><span class="Identifier">defineEnum</span></a><span class="Other">(</span><span class="Identifier">typ</span><span class="Other">)</span></pre></dt>
+<a id="getCurrentNimCompiler"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#getCurrentNimCompiler"><span class="Identifier">getCurrentNimCompiler</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+
+
+
+</dd>
+<a id="compareVersions,string,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#compareVersions%2Cstring%2Cstring"><span class="Identifier">compareVersions</span></a><span class="Other">(</span><span class="Identifier">ver1</span><span class="Other">,</span> <span class="Identifier">ver2</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+
+<p>Compare two version strings x.y.z and return -1, 0, 1</p>
+<p>ver1 &lt; ver2 = -1 ver1 = ver2 = 0 ver1 &gt; ver2 = 1</p>
+
+
+</dd>
+<a id="fixCmd,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#fixCmd%2Cstring"><span class="Identifier">fixCmd</span></a><span class="Other">(</span><span class="Identifier">cmd</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 

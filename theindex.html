@@ -72,10 +72,22 @@ function main() {
 <div class="document" id="documentId">
   <div class="container">
     <h1 class="title">Index</h1>
-    Modules: <a href="build.html">build</a>, <a href="cimport.html">cimport</a>, <a href="compat.html">compat</a>, <a href="docs.html">docs</a>, <a href="globals.html">globals</a>, <a href="paths.html">paths</a>, <a href="plugin.html">plugin</a>, <a href="types.html">types</a>.<br/><p /><h2>API symbols</h2>
-<dl><dt><a name="ast1" href="#ast1"><span>ast1:</span></a></dt><dd><ul class="simple">
+    Modules: <a href="build.html">build</a>, <a href="build/ccompiler.html">build/ccompiler</a>, <a href="build/conan.html">build/conan</a>, <a href="build/getheader.html">build/getheader</a>, <a href="build/jbb.html">build/jbb</a>, <a href="build/misc.html">build/misc</a>, <a href="build/nimconf.html">build/nimconf</a>, <a href="build/shell.html">build/shell</a>, <a href="build/tools.html">build/tools</a>, <a href="cimport.html">cimport</a>, <a href="compat.html">compat</a>, <a href="docs.html">docs</a>, <a href="globals.html">globals</a>, <a href="paths.html">paths</a>, <a href="plugin.html">plugin</a>, <a href="types.html">types</a>.<br/><p /><h2>API symbols</h2>
+<dl><dt><a name="%60%3D%3D%60" href="#%60%3D%3D%60"><span>`==`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="Feature.ast1" href="globals.html#ast1">Feature.ast1</a></li>
+          data-doc-search-tag="build: `==`(pkg1, pkg2: ConanPackage): bool" href="build.html#%3D%3D%2CConanPackage%2CConanPackage">build: `==`(pkg1, pkg2: ConanPackage): bool</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="build: `==`(pkg1, pkg2: JBBPackage): bool" href="build.html#%3D%3D%2CJBBPackage%2CJBBPackage">build: `==`(pkg1, pkg2: JBBPackage): bool</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: `==`(pkg1, pkg2: ConanPackage): bool" href="build/conan.html#%3D%3D%2CConanPackage%2CConanPackage">conan: `==`(pkg1, pkg2: ConanPackage): bool</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: `==`(pkg1, pkg2: JBBPackage): bool" href="build/jbb.html#%3D%3D%2CJBBPackage%2CJBBPackage">jbb: `==`(pkg1, pkg2: JBBPackage): bool</a></li>
+          </ul></dd>
+<dt><a name="addAltConanBaseUrl" href="#addAltConanBaseUrl"><span>addAltConanBaseUrl:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: addAltConanBaseUrl(name, url: string)" href="build.html#addAltConanBaseUrl%2Cstring%2Cstring">build: addAltConanBaseUrl(name, url: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: addAltConanBaseUrl(name, url: string)" href="build/conan.html#addAltConanBaseUrl%2Cstring%2Cstring">conan: addAltConanBaseUrl(name, url: string)</a></li>
           </ul></dd>
 <dt><a name="ast2" href="#ast2"><span>ast2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -88,10 +100,14 @@ function main() {
 <dt><a name="btAutoconf" href="#btAutoconf"><span>btAutoconf:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="BuildType.btAutoconf" href="build.html#btAutoconf">BuildType.btAutoconf</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="BuildType.btAutoconf" href="globals.html#btAutoconf">BuildType.btAutoconf</a></li>
           </ul></dd>
 <dt><a name="btCmake" href="#btCmake"><span>btCmake:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="BuildType.btCmake" href="build.html#btCmake">BuildType.btCmake</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="BuildType.btCmake" href="globals.html#btCmake">BuildType.btCmake</a></li>
           </ul></dd>
 <dt><a name="buildDocs" href="#buildDocs"><span>buildDocs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -99,9 +115,23 @@ function main() {
           defines: openArray[string] = @[]; nimArgs = &quot;&quot;)" href="docs.html#buildDocs%2CopenArray%5Bstring%5D%2Cstring%2CopenArray%5Bstring%5D%2Cstring">docs: buildDocs(files: openArray[string]; path: string; baseDir = getProjectPath() &amp; &quot;/&quot;;
           defines: openArray[string] = @[]; nimArgs = &quot;&quot;)</a></li>
           </ul></dd>
+<dt><a name="BuildStatus" href="#BuildStatus"><span>BuildStatus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="globals: BuildStatus" href="globals.html#BuildStatus">globals: BuildStatus</a></li>
+          </ul></dd>
 <dt><a name="BuildType" href="#BuildType"><span>BuildType:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: BuildType" href="build.html#BuildType">build: BuildType</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="globals: BuildType" href="globals.html#BuildType">globals: BuildType</a></li>
+          </ul></dd>
+<dt><a name="buildWithAutoConf" href="#buildWithAutoConf"><span>buildWithAutoConf:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="tools: buildWithAutoConf(outdir, flags: string): BuildStatus" href="build/tools.html#buildWithAutoConf%2Cstring%2Cstring">tools: buildWithAutoConf(outdir, flags: string): BuildStatus</a></li>
+          </ul></dd>
+<dt><a name="buildWithCmake" href="#buildWithCmake"><span>buildWithCmake:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="tools: buildWithCmake(outdir, flags: string): BuildStatus" href="build/tools.html#buildWithCmake%2Cstring%2Cstring">tools: buildWithCmake(outdir, flags: string): BuildStatus</a></li>
           </ul></dd>
 <dt><a name="c2nImport" href="#c2nImport"><span>c2nImport:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -151,21 +181,53 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="cimport: cIncludeDir(dir: static string): untyped" href="cimport.html#cIncludeDir.m">cimport: cIncludeDir(dir: static string): untyped</a></li>
           </ul></dd>
+<dt><a name="cleanDir" href="#cleanDir"><span>cleanDir:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: cleanDir(dir: string)" href="build.html#cleanDir%2Cstring">build: cleanDir(dir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: cleanDir(dir: string)" href="build/shell.html#cleanDir%2Cstring">shell: cleanDir(dir: string)</a></li>
+          </ul></dd>
 <dt><a name="clearDefines" href="#clearDefines"><span>clearDefines:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: clearDefines(): untyped" href="build.html#clearDefines.m">build: clearDefines(): untyped</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="getheader: clearDefines(): untyped" href="build/getheader.html#clearDefines.m">getheader: clearDefines(): untyped</a></li>
           </ul></dd>
 <dt><a name="cmake" href="#cmake"><span>cmake:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: cmake(path, check, flags: string)" href="build.html#cmake%2Cstring%2Cstring%2Cstring">build: cmake(path, check, flags: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: cmake(path, check, flags: string)" href="build/tools.html#cmake%2Cstring%2Cstring%2Cstring">tools: cmake(path, check, flags: string)</a></li>
+          </ul></dd>
+<dt><a name="compareVersions" href="#compareVersions"><span>compareVersions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: compareVersions(ver1, ver2: string): int" href="build.html#compareVersions%2Cstring%2Cstring">build: compareVersions(ver1, ver2: string): int</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="misc: compareVersions(ver1, ver2: string): int" href="build/misc.html#compareVersions%2Cstring%2Cstring">misc: compareVersions(ver1, ver2: string): int</a></li>
+          </ul></dd>
+<dt><a name="ConanBuild" href="#ConanBuild"><span>ConanBuild:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: ConanBuild" href="build.html#ConanBuild">build: ConanBuild</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: ConanBuild" href="build/conan.html#ConanBuild">conan: ConanBuild</a></li>
+          </ul></dd>
+<dt><a name="ConanPackage" href="#ConanPackage"><span>ConanPackage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: ConanPackage" href="build.html#ConanPackage">build: ConanPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: ConanPackage" href="build/conan.html#ConanPackage">conan: ConanPackage</a></li>
           </ul></dd>
 <dt><a name="Config" href="#Config"><span>Config:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: Config" href="build.html#Config">build: Config</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nimconf: Config" href="build/nimconf.html#Config">nimconf: Config</a></li>
           </ul></dd>
 <dt><a name="configure" href="#configure"><span>configure:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: configure(path, check: string; flags = &quot;&quot;)" href="build.html#configure%2Cstring%2Cstring%2Cstring">build: configure(path, check: string; flags = &quot;&quot;)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: configure(path, check: string; flags = &quot;&quot;)" href="build/tools.html#configure%2Cstring%2Cstring%2Cstring">tools: configure(path, check: string; flags = &quot;&quot;)</a></li>
           </ul></dd>
 <dt><a name="cOverride" href="#cOverride"><span>cOverride:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -177,7 +239,9 @@ function main() {
           </ul></dd>
 <dt><a name="cpFile" href="#cpFile"><span>cpFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="build: cpFile(source, dest: string; move = false)" href="build.html#cpFile%2Cstring%2Cstring">build: cpFile(source, dest: string; move = false)</a></li>
+          data-doc-search-tag="build: cpFile(source, dest: string; psymlink = false; move = false)" href="build.html#cpFile%2Cstring%2Cstring">build: cpFile(source, dest: string; psymlink = false; move = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: cpFile(source, dest: string; psymlink = false; move = false)" href="build/shell.html#cpFile%2Cstring%2Cstring">shell: cpFile(source, dest: string; psymlink = false; move = false)</a></li>
           </ul></dd>
 <dt><a name="cPlugin" href="#cPlugin"><span>cPlugin:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -187,6 +251,12 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="cimport: cPluginPath(path: static[string]): untyped" href="cimport.html#cPluginPath.m%2Cstatic%5Bstring%5D">cimport: cPluginPath(path: static[string]): untyped</a></li>
           </ul></dd>
+<dt><a name="cpTree" href="#cpTree"><span>cpTree:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: cpTree(source, dest: string; move = false)" href="build.html#cpTree%2Cstring%2Cstring">build: cpTree(source, dest: string; move = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: cpTree(source, dest: string; move = false)" href="build/shell.html#cpTree%2Cstring%2Cstring">shell: cpTree(source, dest: string; move = false)</a></li>
+          </ul></dd>
 <dt><a name="cSearchPath" href="#cSearchPath"><span>cSearchPath:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="cimport: cSearchPath(path: string): string" href="cimport.html#cSearchPath%2Cstring">cimport: cSearchPath(path: string): string</a></li>
@@ -195,13 +265,49 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="cimport: cSkipSymbol(skips: seq[string])" href="cimport.html#cSkipSymbol%2Cseq%5Bstring%5D">cimport: cSkipSymbol(skips: seq[string])</a></li>
           </ul></dd>
+<dt><a name="decho" href="#decho"><span>decho:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="globals: decho(args: varargs[string, `$`]): untyped" href="globals.html#decho.t%2Cvarargs%5Bstring%2C%5D">globals: decho(args: varargs[string, `$`]): untyped</a></li>
+          </ul></dd>
 <dt><a name="defineEnum" href="#defineEnum"><span>defineEnum:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: defineEnum(typ)" href="types.html#defineEnum.t">types: defineEnum(typ)</a></li>
           </ul></dd>
+<dt><a name="dlConanBuild" href="#dlConanBuild"><span>dlConanBuild:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: dlConanBuild(pkg: ConanPackage; bld: ConanBuild; outdir: string; revision = &quot;&quot;)" href="build.html#dlConanBuild%2CConanPackage%2CConanBuild%2Cstring%2Cstring">build: dlConanBuild(pkg: ConanPackage; bld: ConanBuild; outdir: string; revision = &quot;&quot;)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: dlConanBuild(pkg: ConanPackage; bld: ConanBuild; outdir: string; revision = &quot;&quot;)" href="build/conan.html#dlConanBuild%2CConanPackage%2CConanBuild%2Cstring%2Cstring">conan: dlConanBuild(pkg: ConanPackage; bld: ConanBuild; outdir: string; revision = &quot;&quot;)</a></li>
+          </ul></dd>
+<dt><a name="dlConanRequires" href="#dlConanRequires"><span>dlConanRequires:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: dlConanRequires(pkg: ConanPackage; bld: ConanBuild; outdir: string)" href="build.html#dlConanRequires%2CConanPackage%2CConanBuild%2Cstring">build: dlConanRequires(pkg: ConanPackage; bld: ConanBuild; outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: dlConanRequires(pkg: ConanPackage; bld: ConanBuild; outdir: string)" href="build/conan.html#dlConanRequires%2CConanPackage%2CConanBuild%2Cstring">conan: dlConanRequires(pkg: ConanPackage; bld: ConanBuild; outdir: string)</a></li>
+          </ul></dd>
+<dt><a name="dlJBBRequires" href="#dlJBBRequires"><span>dlJBBRequires:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: dlJBBRequires(pkg: JBBPackage; outdir: string)" href="build.html#dlJBBRequires%2CJBBPackage%2Cstring">build: dlJBBRequires(pkg: JBBPackage; outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: dlJBBRequires(pkg: JBBPackage; outdir: string)" href="build/jbb.html#dlJBBRequires%2CJBBPackage%2Cstring">jbb: dlJBBRequires(pkg: JBBPackage; outdir: string)</a></li>
+          </ul></dd>
+<dt><a name="downloadConan" href="#downloadConan"><span>downloadConan:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: downloadConan(pkg: ConanPackage; outdir: string; main = true)" href="build.html#downloadConan%2CConanPackage%2Cstring">build: downloadConan(pkg: ConanPackage; outdir: string; main = true)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: downloadConan(pkg: ConanPackage; outdir: string; main = true)" href="build/conan.html#downloadConan%2CConanPackage%2Cstring">conan: downloadConan(pkg: ConanPackage; outdir: string; main = true)</a></li>
+          </ul></dd>
+<dt><a name="downloadJBB" href="#downloadJBB"><span>downloadJBB:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: downloadJBB(pkg: JBBPackage; outdir: string; main = true)" href="build.html#downloadJBB%2CJBBPackage%2Cstring">build: downloadJBB(pkg: JBBPackage; outdir: string; main = true)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: downloadJBB(pkg: JBBPackage; outdir: string; main = true)" href="build/jbb.html#downloadJBB%2CJBBPackage%2Cstring">jbb: downloadJBB(pkg: JBBPackage; outdir: string; main = true)</a></li>
+          </ul></dd>
 <dt><a name="downloadUrl" href="#downloadUrl"><span>downloadUrl:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="build: downloadUrl(url, outdir: string)" href="build.html#downloadUrl%2Cstring%2Cstring">build: downloadUrl(url, outdir: string)</a></li>
+          data-doc-search-tag="build: downloadUrl(url, outdir: string; quiet = false; retry = 1)" href="build.html#downloadUrl%2Cstring%2Cstring%2Cint">build: downloadUrl(url, outdir: string; quiet = false; retry = 1)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: downloadUrl(url, outdir: string; quiet = false; retry = 1)" href="build/shell.html#downloadUrl%2Cstring%2Cstring%2Cint">shell: downloadUrl(url, outdir: string; quiet = false; retry = 1)</a></li>
           </ul></dd>
 <dt><a name="enumOp" href="#enumOp"><span>enumOp:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -209,17 +315,25 @@ function main() {
           </ul></dd>
 <dt><a name="execAction" href="#execAction"><span>execAction:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="build: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;): tuple[
-    output: string, ret: int]" href="build.html#execAction%2Cstring%2Cint%2Cstring">build: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;): tuple[
-    output: string, ret: int]</a></li>
+          data-doc-search-tag="build: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
+           onRetry: proc () = nil): tuple[output: string, ret: int]" href="build.html#execAction%2Cstring%2Cint%2Cstring%2Cproc%29">build: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
+           onRetry: proc () = nil): tuple[output: string, ret: int]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
+           onRetry: proc () = nil): tuple[output: string, ret: int]" href="build/shell.html#execAction%2Cstring%2Cint%2Cstring%2Cproc%29">shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
+           onRetry: proc () = nil): tuple[output: string, ret: int]</a></li>
           </ul></dd>
 <dt><a name="extractTar" href="#extractTar"><span>extractTar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="build: extractTar(tarfile, outdir: string)" href="build.html#extractTar%2Cstring%2Cstring">build: extractTar(tarfile, outdir: string)</a></li>
+          data-doc-search-tag="build: extractTar(tarfile, outdir: string; quiet = false)" href="build.html#extractTar%2Cstring%2Cstring">build: extractTar(tarfile, outdir: string; quiet = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: extractTar(tarfile, outdir: string; quiet = false)" href="build/shell.html#extractTar%2Cstring%2Cstring">shell: extractTar(tarfile, outdir: string; quiet = false)</a></li>
           </ul></dd>
 <dt><a name="extractZip" href="#extractZip"><span>extractZip:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="build: extractZip(zipfile, outdir: string)" href="build.html#extractZip%2Cstring%2Cstring">build: extractZip(zipfile, outdir: string)</a></li>
+          data-doc-search-tag="build: extractZip(zipfile, outdir: string; quiet = false)" href="build.html#extractZip%2Cstring%2Cstring">build: extractZip(zipfile, outdir: string; quiet = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: extractZip(zipfile, outdir: string; quiet = false)" href="build/shell.html#extractZip%2Cstring%2Cstring">shell: extractZip(zipfile, outdir: string; quiet = false)</a></li>
           </ul></dd>
 <dt><a name="Feature" href="#Feature"><span>Feature:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -228,14 +342,30 @@ function main() {
 <dt><a name="findExe" href="#findExe"><span>findExe:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: findExe(exe: string): string" href="build.html#findExe%2Cstring">build: findExe(exe: string): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: findExe(exe: string): string" href="build/shell.html#findExe%2Cstring">shell: findExe(exe: string): string</a></li>
           </ul></dd>
 <dt><a name="findFile" href="#findFile"><span>findFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: findFile(file: string; dir: string; recurse = true; first = false; regex = false): string" href="build.html#findFile%2Cstring%2Cstring">build: findFile(file: string; dir: string; recurse = true; first = false; regex = false): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: findFile(file: string; dir: string; recurse = true; first = false; regex = false): string" href="build/shell.html#findFile%2Cstring%2Cstring">shell: findFile(file: string; dir: string; recurse = true; first = false; regex = false): string</a></li>
+          </ul></dd>
+<dt><a name="findFiles" href="#findFiles"><span>findFiles:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: findFiles(file: string; dir: string; recurse = true; regex = false): seq[string]" href="build.html#findFiles%2Cstring%2Cstring">build: findFiles(file: string; dir: string; recurse = true; regex = false): seq[string]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: findFiles(file: string; dir: string; recurse = true; regex = false): seq[string]" href="build/shell.html#findFiles%2Cstring%2Cstring">shell: findFiles(file: string; dir: string; recurse = true; regex = false): seq[string]</a></li>
+          </ul></dd>
+<dt><a name="fixCmd" href="#fixCmd"><span>fixCmd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="misc: fixCmd(cmd: string): string" href="build/misc.html#fixCmd%2Cstring">misc: fixCmd(cmd: string): string</a></li>
           </ul></dd>
 <dt><a name="flagBuild" href="#flagBuild"><span>flagBuild:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: flagBuild(base: string; flags: openArray[string]): string" href="build.html#flagBuild%2Cstring%2CopenArray%5Bstring%5D">build: flagBuild(base: string; flags: openArray[string]): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: flagBuild(base: string; flags: openArray[string]): string" href="build/tools.html#flagBuild%2Cstring%2CopenArray%5Bstring%5D">tools: flagBuild(base: string; flags: openArray[string]): string</a></li>
           </ul></dd>
 <dt><a name="gDebug" href="#gDebug"><span>gDebug:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -245,77 +375,211 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="build: gDebugCT" href="build.html#gDebugCT">build: gDebugCT</a></li>
           </ul></dd>
+<dt><a name="gecho" href="#gecho"><span>gecho:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="globals: gecho(args: string)" href="globals.html#gecho.t%2Cstring">globals: gecho(args: string)</a></li>
+          </ul></dd>
 <dt><a name="getCmakeIncludePath" href="#getCmakeIncludePath"><span>getCmakeIncludePath:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getCmakeIncludePath(paths: openArray[string]): string" href="build.html#getCmakeIncludePath%2CopenArray%5Bstring%5D">build: getCmakeIncludePath(paths: openArray[string]): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: getCmakeIncludePath(paths: openArray[string]): string" href="build/tools.html#getCmakeIncludePath%2CopenArray%5Bstring%5D">tools: getCmakeIncludePath(paths: openArray[string]): string</a></li>
+          </ul></dd>
+<dt><a name="getCommented" href="#getCommented"><span>getCommented:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="globals: getCommented(str: string): string" href="globals.html#getCommented%2Cstring">globals: getCommented(str: string): string</a></li>
           </ul></dd>
 <dt><a name="getCompiler" href="#getCompiler"><span>getCompiler:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getCompiler(): string" href="build.html#getCompiler">build: getCompiler(): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ccompiler: getCompiler(): string" href="build/ccompiler.html#getCompiler">ccompiler: getCompiler(): string</a></li>
           </ul></dd>
 <dt><a name="getCompilerMode" href="#getCompilerMode"><span>getCompilerMode:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getCompilerMode(path: string): string" href="build.html#getCompilerMode%2Cstring">build: getCompilerMode(path: string): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ccompiler: getCompilerMode(path: string): string" href="build/ccompiler.html#getCompilerMode%2Cstring">ccompiler: getCompilerMode(path: string): string</a></li>
+          </ul></dd>
+<dt><a name="getConanBuilds" href="#getConanBuilds"><span>getConanBuilds:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getConanBuilds(pkg: ConanPackage; filter = &quot;&quot;)" href="build.html#getConanBuilds%2CConanPackage%2Cstring">build: getConanBuilds(pkg: ConanPackage; filter = &quot;&quot;)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: getConanBuilds(pkg: ConanPackage; filter = &quot;&quot;)" href="build/conan.html#getConanBuilds%2CConanPackage%2Cstring">conan: getConanBuilds(pkg: ConanPackage; filter = &quot;&quot;)</a></li>
+          </ul></dd>
+<dt><a name="getConanLDeps" href="#getConanLDeps"><span>getConanLDeps:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getConanLDeps(pkg: ConanPackage; outdir: string; main = true): seq[string]" href="build.html#getConanLDeps%2CConanPackage%2Cstring">build: getConanLDeps(pkg: ConanPackage; outdir: string; main = true): seq[string]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: getConanLDeps(pkg: ConanPackage; outdir: string; main = true): seq[string]" href="build/conan.html#getConanLDeps%2CConanPackage%2Cstring">conan: getConanLDeps(pkg: ConanPackage; outdir: string; main = true): seq[string]</a></li>
+          </ul></dd>
+<dt><a name="getConanRevisions" href="#getConanRevisions"><span>getConanRevisions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getConanRevisions(pkg: ConanPackage; bld: ConanBuild)" href="build.html#getConanRevisions%2CConanPackage%2CConanBuild">build: getConanRevisions(pkg: ConanPackage; bld: ConanBuild)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: getConanRevisions(pkg: ConanPackage; bld: ConanBuild)" href="build/conan.html#getConanRevisions%2CConanPackage%2CConanBuild">conan: getConanRevisions(pkg: ConanPackage; bld: ConanBuild)</a></li>
           </ul></dd>
 <dt><a name="getCurrentNimCompiler" href="#getCurrentNimCompiler"><span>getCurrentNimCompiler:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getCurrentNimCompiler(): string" href="build.html#getCurrentNimCompiler">build: getCurrentNimCompiler(): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="misc: getCurrentNimCompiler(): string" href="build/misc.html#getCurrentNimCompiler">misc: getCurrentNimCompiler(): string</a></li>
+          </ul></dd>
+<dt><a name="getFileDate" href="#getFileDate"><span>getFileDate:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getFileDate(fullpath: string): string" href="build.html#getFileDate%2Cstring">build: getFileDate(fullpath: string): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: getFileDate(fullpath: string): string" href="build/shell.html#getFileDate%2Cstring">shell: getFileDate(fullpath: string): string</a></li>
+          </ul></dd>
+<dt><a name="getGccInfo" href="#getGccInfo"><span>getGccInfo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getGccInfo(): tuple[arch, os, compiler, version: string]" href="build.html#getGccInfo">build: getGccInfo(): tuple[arch, os, compiler, version: string]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ccompiler: getGccInfo(): tuple[arch, os, compiler, version: string]" href="build/ccompiler.html#getGccInfo">ccompiler: getGccInfo(): tuple[arch, os, compiler, version: string]</a></li>
           </ul></dd>
 <dt><a name="getGccLibPaths" href="#getGccLibPaths"><span>getGccLibPaths:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getGccLibPaths(mode: string): seq[string]" href="build.html#getGccLibPaths%2Cstring">build: getGccLibPaths(mode: string): seq[string]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ccompiler: getGccLibPaths(mode: string): seq[string]" href="build/ccompiler.html#getGccLibPaths%2Cstring">ccompiler: getGccLibPaths(mode: string): seq[string]</a></li>
           </ul></dd>
 <dt><a name="getGccModeArg" href="#getGccModeArg"><span>getGccModeArg:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getGccModeArg(mode: string): string" href="build.html#getGccModeArg%2Cstring">build: getGccModeArg(mode: string): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ccompiler: getGccModeArg(mode: string): string" href="build/ccompiler.html#getGccModeArg%2Cstring">ccompiler: getGccModeArg(mode: string): string</a></li>
           </ul></dd>
 <dt><a name="getGccPaths" href="#getGccPaths"><span>getGccPaths:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getGccPaths(mode: string): seq[string]" href="build.html#getGccPaths%2Cstring">build: getGccPaths(mode: string): seq[string]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ccompiler: getGccPaths(mode: string): seq[string]" href="build/ccompiler.html#getGccPaths%2Cstring">ccompiler: getGccPaths(mode: string): seq[string]</a></li>
           </ul></dd>
 <dt><a name="getHeader" href="#getHeader"><span>getHeader:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
-          dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
-          conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;
-          makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;;
-          buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped" href="build.html#getHeader.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5BopenArray%5BBuildType%5D%5D">build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
-          dlurl: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
-          conFlags: static[string] = &quot;&quot;; cmakeFlags: static[string] = &quot;&quot;;
-          makeFlags: static[string] = &quot;&quot;; altNames: static[string] = &quot;&quot;;
+          dlurl: static[string] = &quot;&quot;; conanuri: static[string] = &quot;&quot;;
+          jbburi: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
+          libdir: static[string] = &quot;&quot;; conFlags: static[string] = &quot;&quot;;
+          cmakeFlags: static[string] = &quot;&quot;; makeFlags: static[string] = &quot;&quot;;
+          altNames: static[string] = &quot;&quot;;
+          buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped" href="build.html#getHeader.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5BopenArray%5BBuildType%5D%5D">build: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
+          dlurl: static[string] = &quot;&quot;; conanuri: static[string] = &quot;&quot;;
+          jbburi: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
+          libdir: static[string] = &quot;&quot;; conFlags: static[string] = &quot;&quot;;
+          cmakeFlags: static[string] = &quot;&quot;; makeFlags: static[string] = &quot;&quot;;
+          altNames: static[string] = &quot;&quot;;
           buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="getheader: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
+          dlurl: static[string] = &quot;&quot;; conanuri: static[string] = &quot;&quot;;
+          jbburi: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
+          libdir: static[string] = &quot;&quot;; conFlags: static[string] = &quot;&quot;;
+          cmakeFlags: static[string] = &quot;&quot;; makeFlags: static[string] = &quot;&quot;;
+          altNames: static[string] = &quot;&quot;;
+          buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped" href="build/getheader.html#getHeader.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D%2Cstatic%5BopenArray%5BBuildType%5D%5D">getheader: getHeader(header: static[string]; giturl: static[string] = &quot;&quot;;
+          dlurl: static[string] = &quot;&quot;; conanuri: static[string] = &quot;&quot;;
+          jbburi: static[string] = &quot;&quot;; outdir: static[string] = &quot;&quot;;
+          libdir: static[string] = &quot;&quot;; conFlags: static[string] = &quot;&quot;;
+          cmakeFlags: static[string] = &quot;&quot;; makeFlags: static[string] = &quot;&quot;;
+          altNames: static[string] = &quot;&quot;;
+          buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped</a></li>
+          </ul></dd>
+<dt><a name="getJBBLDeps" href="#getJBBLDeps"><span>getJBBLDeps:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getJBBLDeps(pkg: JBBPackage; outdir: string; shared: bool; main = true): seq[string]" href="build.html#getJBBLDeps%2CJBBPackage%2Cstring%2Cbool">build: getJBBLDeps(pkg: JBBPackage; outdir: string; shared: bool; main = true): seq[string]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: getJBBLDeps(pkg: JBBPackage; outdir: string; shared: bool; main = true): seq[string]" href="build/jbb.html#getJBBLDeps%2CJBBPackage%2Cstring%2Cbool">jbb: getJBBLDeps(pkg: JBBPackage; outdir: string; shared: bool; main = true): seq[string]</a></li>
+          </ul></dd>
+<dt><a name="getJBBRepo" href="#getJBBRepo"><span>getJBBRepo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getJBBRepo(pkg: JBBPackage; outdir: string)" href="build.html#getJBBRepo%2CJBBPackage%2Cstring">build: getJBBRepo(pkg: JBBPackage; outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: getJBBRepo(pkg: JBBPackage; outdir: string)" href="build/jbb.html#getJBBRepo%2CJBBPackage%2Cstring">jbb: getJBBRepo(pkg: JBBPackage; outdir: string)</a></li>
           </ul></dd>
 <dt><a name="getNimcacheDir" href="#getNimcacheDir"><span>getNimcacheDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getNimcacheDir(projectDir = &quot;&quot;): string" href="build.html#getNimcacheDir%2Cstring">build: getNimcacheDir(projectDir = &quot;&quot;): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nimconf: getNimcacheDir(projectDir = &quot;&quot;): string" href="build/nimconf.html#getNimcacheDir%2Cstring">nimconf: getNimcacheDir(projectDir = &quot;&quot;): string</a></li>
           </ul></dd>
 <dt><a name="getNimConfig" href="#getNimConfig"><span>getNimConfig:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getNimConfig(projectDir = &quot;&quot;): Config" href="build.html#getNimConfig%2Cstring">build: getNimConfig(projectDir = &quot;&quot;): Config</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nimconf: getNimConfig(projectDir = &quot;&quot;): Config" href="build/nimconf.html#getNimConfig%2Cstring">nimconf: getNimConfig(projectDir = &quot;&quot;): Config</a></li>
           </ul></dd>
 <dt><a name="getNimConfigFlags" href="#getNimConfigFlags"><span>getNimConfigFlags:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getNimConfigFlags(projectDir = &quot;&quot;): string" href="build.html#getNimConfigFlags%2Cstring">build: getNimConfigFlags(projectDir = &quot;&quot;): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nimconf: getNimConfigFlags(projectDir = &quot;&quot;): string" href="build/nimconf.html#getNimConfigFlags%2Cstring">nimconf: getNimConfigFlags(projectDir = &quot;&quot;): string</a></li>
+          </ul></dd>
+<dt><a name="getNimteropCacheDir" href="#getNimteropCacheDir"><span>getNimteropCacheDir:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="nimconf: getNimteropCacheDir(): string" href="build/nimconf.html#getNimteropCacheDir">nimconf: getNimteropCacheDir(): string</a></li>
+          </ul></dd>
+<dt><a name="getNumProcs" href="#getNumProcs"><span>getNumProcs:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getNumProcs(): string" href="build.html#getNumProcs">build: getNumProcs(): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: getNumProcs(): string" href="build/shell.html#getNumProcs">shell: getNumProcs(): string</a></li>
+          </ul></dd>
+<dt><a name="getOutDir" href="#getOutDir"><span>getOutDir:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getOutDir(projectDir = &quot;&quot;): string" href="build.html#getOutDir%2Cstring">build: getOutDir(projectDir = &quot;&quot;): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nimconf: getOutDir(projectDir = &quot;&quot;): string" href="build/nimconf.html#getOutDir%2Cstring">nimconf: getOutDir(projectDir = &quot;&quot;): string</a></li>
           </ul></dd>
 <dt><a name="getProjectCacheDir" href="#getProjectCacheDir"><span>getProjectCacheDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getProjectCacheDir(name: string; forceClean = true): string" href="build.html#getProjectCacheDir%2Cstring">build: getProjectCacheDir(name: string; forceClean = true): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: getProjectCacheDir(name: string; forceClean = true): string" href="build/shell.html#getProjectCacheDir%2Cstring">shell: getProjectCacheDir(name: string; forceClean = true): string</a></li>
           </ul></dd>
 <dt><a name="getProjectDir" href="#getProjectDir"><span>getProjectDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: getProjectDir(): string" href="build.html#getProjectDir">build: getProjectDir(): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nimconf: getProjectDir(): string" href="build/nimconf.html#getProjectDir">nimconf: getProjectDir(): string</a></li>
+          </ul></dd>
+<dt><a name="getUriFromConanPackage" href="#getUriFromConanPackage"><span>getUriFromConanPackage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: getUriFromConanPackage(pkg: ConanPackage): string" href="build.html#getUriFromConanPackage%2CConanPackage">build: getUriFromConanPackage(pkg: ConanPackage): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: getUriFromConanPackage(pkg: ConanPackage): string" href="build/conan.html#getUriFromConanPackage%2CConanPackage">conan: getUriFromConanPackage(pkg: ConanPackage): string</a></li>
+          </ul></dd>
+<dt><a name="gitAtCheckout" href="#gitAtCheckout"><span>gitAtCheckout:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="shell: gitAtCheckout(outdir, checkout: string): bool" href="build/shell.html#gitAtCheckout%2Cstring%2Cstring">shell: gitAtCheckout(outdir, checkout: string): bool</a></li>
           </ul></dd>
 <dt><a name="gitCheckout" href="#gitCheckout"><span>gitCheckout:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: gitCheckout(file, outdir: string)" href="build.html#gitCheckout%2Cstring%2Cstring">build: gitCheckout(file, outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: gitCheckout(file, outdir: string)" href="build/shell.html#gitCheckout%2Cstring%2Cstring">shell: gitCheckout(file, outdir: string)</a></li>
           </ul></dd>
 <dt><a name="gitPull" href="#gitPull"><span>gitPull:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="build: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)" href="build.html#gitPull%2Cstring%2Cstring%2Cstring%2Cstring">build: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;)</a></li>
+          data-doc-search-tag="build: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;; quiet = false)" href="build.html#gitPull%2Cstring%2Cstring%2Cstring%2Cstring">build: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;; quiet = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;; quiet = false)" href="build/shell.html#gitPull%2Cstring%2Cstring%2Cstring%2Cstring">shell: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;; quiet = false)</a></li>
           </ul></dd>
 <dt><a name="gitReset" href="#gitReset"><span>gitReset:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: gitReset(outdir: string)" href="build.html#gitReset%2Cstring">build: gitReset(outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: gitReset(outdir: string)" href="build/shell.html#gitReset%2Cstring">shell: gitReset(outdir: string)</a></li>
+          </ul></dd>
+<dt><a name="gitTags" href="#gitTags"><span>gitTags:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: gitTags(outdir: string): seq[string]" href="build.html#gitTags%2Cstring">build: gitTags(outdir: string): seq[string]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: gitTags(outdir: string): seq[string]" href="build/shell.html#gitTags%2Cstring">shell: gitTags(outdir: string): seq[string]</a></li>
+          </ul></dd>
+<dt><a name="gNimExe" href="#gNimExe"><span>gNimExe:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: gNimExe" href="build.html#gNimExe">build: gNimExe</a></li>
           </ul></dd>
 <dt><a name="gStateCT" href="#gStateCT"><span>gStateCT:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -324,22 +588,56 @@ function main() {
 <dt><a name="isDefined" href="#isDefined"><span>isDefined:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: isDefined(def: untyped): untyped" href="build.html#isDefined.m%2Cuntyped">build: isDefined(def: untyped): untyped</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="getheader: isDefined(def: untyped): untyped" href="build/getheader.html#isDefined.m%2Cuntyped">getheader: isDefined(def: untyped): untyped</a></li>
+          </ul></dd>
+<dt><a name="JBBPackage" href="#JBBPackage"><span>JBBPackage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: JBBPackage" href="build.html#JBBPackage">build: JBBPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: JBBPackage" href="build/jbb.html#JBBPackage">jbb: JBBPackage</a></li>
           </ul></dd>
 <dt><a name="linkLibs" href="#linkLibs"><span>linkLibs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: linkLibs(names: openArray[string]; staticLink = true): string" href="build.html#linkLibs%2CopenArray%5Bstring%5D">build: linkLibs(names: openArray[string]; staticLink = true): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: linkLibs(names: openArray[string]; staticLink = true): string" href="build/shell.html#linkLibs%2CopenArray%5Bstring%5D">shell: linkLibs(names: openArray[string]; staticLink = true): string</a></li>
+          </ul></dd>
+<dt><a name="loadConanInfo" href="#loadConanInfo"><span>loadConanInfo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: loadConanInfo(outdir: string): ConanPackage" href="build.html#loadConanInfo%2Cstring">build: loadConanInfo(outdir: string): ConanPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: loadConanInfo(outdir: string): ConanPackage" href="build/conan.html#loadConanInfo%2Cstring">conan: loadConanInfo(outdir: string): ConanPackage</a></li>
+          </ul></dd>
+<dt><a name="loadJBBInfo" href="#loadJBBInfo"><span>loadJBBInfo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: loadJBBInfo(outdir: string): JBBPackage" href="build.html#loadJBBInfo%2Cstring">build: loadJBBInfo(outdir: string): JBBPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: loadJBBInfo(outdir: string): JBBPackage" href="build/jbb.html#loadJBBInfo%2Cstring">jbb: loadJBBInfo(outdir: string): JBBPackage</a></li>
           </ul></dd>
 <dt><a name="make" href="#make"><span>make:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: make(path, check: string; flags = &quot;&quot;; regex = false)" href="build.html#make%2Cstring%2Cstring%2Cstring">build: make(path, check: string; flags = &quot;&quot;; regex = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: make(path, check: string; flags = &quot;&quot;; regex = false)" href="build/tools.html#make%2Cstring%2Cstring%2Cstring">tools: make(path, check: string; flags = &quot;&quot;; regex = false)</a></li>
           </ul></dd>
 <dt><a name="mkDir" href="#mkDir"><span>mkDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: mkDir(dir: string)" href="build.html#mkDir%2Cstring">build: mkDir(dir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: mkDir(dir: string)" href="build/shell.html#mkDir%2Cstring">shell: mkDir(dir: string)</a></li>
           </ul></dd>
 <dt><a name="mvFile" href="#mvFile"><span>mvFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: mvFile(source, dest: string)" href="build.html#mvFile%2Cstring%2Cstring">build: mvFile(source, dest: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: mvFile(source, dest: string)" href="build/shell.html#mvFile%2Cstring%2Cstring">shell: mvFile(source, dest: string)</a></li>
+          </ul></dd>
+<dt><a name="mvTree" href="#mvTree"><span>mvTree:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: mvTree(source, dest: string)" href="build.html#mvTree%2Cstring%2Cstring">build: mvTree(source, dest: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: mvTree(source, dest: string)" href="build/shell.html#mvTree%2Cstring%2Cstring">shell: mvTree(source, dest: string)</a></li>
           </ul></dd>
 <dt><a name="myNormalizedPath" href="#myNormalizedPath"><span>myNormalizedPath:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -348,6 +646,24 @@ function main() {
 <dt><a name="nBl" href="#nBl"><span>nBl:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="globals: nBl(s: typed): untyped" href="globals.html#nBl.t%2Ctyped">globals: nBl(s: typed): untyped</a></li>
+          </ul></dd>
+<dt><a name="newConanPackage" href="#newConanPackage"><span>newConanPackage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: newConanPackage(name, version, user = &quot;_&quot;; channel = &quot;_&quot;; bhash = &quot;&quot;; shared = true): ConanPackage" href="build.html#newConanPackage%2Cstring%2Cstring%2Cstring%2Cstring%2Cstring">build: newConanPackage(name, version, user = &quot;_&quot;; channel = &quot;_&quot;; bhash = &quot;&quot;; shared = true): ConanPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: newConanPackage(name, version, user = &quot;_&quot;; channel = &quot;_&quot;; bhash = &quot;&quot;; shared = true): ConanPackage" href="build/conan.html#newConanPackage%2Cstring%2Cstring%2Cstring%2Cstring%2Cstring">conan: newConanPackage(name, version, user = &quot;_&quot;; channel = &quot;_&quot;; bhash = &quot;&quot;; shared = true): ConanPackage</a></li>
+          </ul></dd>
+<dt><a name="newConanPackageFromUri" href="#newConanPackageFromUri"><span>newConanPackageFromUri:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: newConanPackageFromUri(uri: string; shared = true): ConanPackage" href="build.html#newConanPackageFromUri%2Cstring">build: newConanPackageFromUri(uri: string; shared = true): ConanPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: newConanPackageFromUri(uri: string; shared = true): ConanPackage" href="build/conan.html#newConanPackageFromUri%2Cstring">conan: newConanPackageFromUri(uri: string; shared = true): ConanPackage</a></li>
+          </ul></dd>
+<dt><a name="newJBBPackage" href="#newJBBPackage"><span>newJBBPackage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: newJBBPackage(name, version: string): JBBPackage" href="build.html#newJBBPackage%2Cstring%2Cstring">build: newJBBPackage(name, version: string): JBBPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: newJBBPackage(name, version: string): JBBPackage" href="build/jbb.html#newJBBPackage%2Cstring%2Cstring">jbb: newJBBPackage(name, version: string): JBBPackage</a></li>
           </ul></dd>
 <dt><a name="nimteropRoot" href="#nimteropRoot"><span>nimteropRoot:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -376,34 +692,72 @@ function main() {
 <dt><a name="rmDir" href="#rmDir"><span>rmDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: rmDir(dir: string)" href="build.html#rmDir%2Cstring">build: rmDir(dir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: rmDir(dir: string)" href="build/shell.html#rmDir%2Cstring">shell: rmDir(dir: string)</a></li>
           </ul></dd>
 <dt><a name="rmFile" href="#rmFile"><span>rmFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: rmFile(source: string; dir = false)" href="build.html#rmFile%2Cstring">build: rmFile(source: string; dir = false)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: rmFile(source: string; dir = false)" href="build/shell.html#rmFile%2Cstring">shell: rmFile(source: string; dir = false)</a></li>
           </ul></dd>
 <dt><a name="sanitizePath" href="#sanitizePath"><span>sanitizePath:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string" href="build.html#sanitizePath%2Cstring">build: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="misc: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string" href="build/misc.html#sanitizePath%2Cstring">misc: sanitizePath(path: string; noQuote = false; sep = $&apos;/&apos;): string</a></li>
+          </ul></dd>
+<dt><a name="saveConanInfo" href="#saveConanInfo"><span>saveConanInfo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: saveConanInfo(pkg: ConanPackage; outdir: string)" href="build.html#saveConanInfo%2CConanPackage%2Cstring">build: saveConanInfo(pkg: ConanPackage; outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: saveConanInfo(pkg: ConanPackage; outdir: string)" href="build/conan.html#saveConanInfo%2CConanPackage%2Cstring">conan: saveConanInfo(pkg: ConanPackage; outdir: string)</a></li>
+          </ul></dd>
+<dt><a name="saveJBBInfo" href="#saveJBBInfo"><span>saveJBBInfo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: saveJBBInfo(pkg: JBBPackage; outdir: string)" href="build.html#saveJBBInfo%2CJBBPackage%2Cstring">build: saveJBBInfo(pkg: JBBPackage; outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="jbb: saveJBBInfo(pkg: JBBPackage; outdir: string)" href="build/jbb.html#saveJBBInfo%2CJBBPackage%2Cstring">jbb: saveJBBInfo(pkg: JBBPackage; outdir: string)</a></li>
+          </ul></dd>
+<dt><a name="searchConan" href="#searchConan"><span>searchConan:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: searchConan(pkg: ConanPackage): ConanPackage" href="build.html#searchConan%2CConanPackage">build: searchConan(pkg: ConanPackage): ConanPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="build: searchConan(name: string; version = &quot;&quot;; user = &quot;&quot;; channel = &quot;&quot;): ConanPackage" href="build.html#searchConan%2Cstring%2Cstring%2Cstring%2Cstring">build: searchConan(name: string; version = &quot;&quot;; user = &quot;&quot;; channel = &quot;&quot;): ConanPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: searchConan(pkg: ConanPackage): ConanPackage" href="build/conan.html#searchConan%2CConanPackage">conan: searchConan(pkg: ConanPackage): ConanPackage</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="conan: searchConan(name: string; version = &quot;&quot;; user = &quot;&quot;; channel = &quot;&quot;): ConanPackage" href="build/conan.html#searchConan%2Cstring%2Cstring%2Cstring%2Cstring">conan: searchConan(name: string; version = &quot;&quot;; user = &quot;&quot;; channel = &quot;&quot;): ConanPackage</a></li>
           </ul></dd>
 <dt><a name="setCmakeLibName" href="#setCmakeLibName"><span>setCmakeLibName:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)" href="build.html#setCmakeLibName%2Cstring%2Cstring%2Cstring%2Cstring%2Cstring">build: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)" href="build/tools.html#setCmakeLibName%2Cstring%2Cstring%2Cstring%2Cstring%2Cstring">tools: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)</a></li>
           </ul></dd>
 <dt><a name="setCmakePositionIndependentCode" href="#setCmakePositionIndependentCode"><span>setCmakePositionIndependentCode:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: setCmakePositionIndependentCode(outdir: string)" href="build.html#setCmakePositionIndependentCode%2Cstring">build: setCmakePositionIndependentCode(outdir: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: setCmakePositionIndependentCode(outdir: string)" href="build/tools.html#setCmakePositionIndependentCode%2Cstring">tools: setCmakePositionIndependentCode(outdir: string)</a></li>
           </ul></dd>
 <dt><a name="setCmakeProperty" href="#setCmakeProperty"><span>setCmakeProperty:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: setCmakeProperty(outdir, name, property, value: string)" href="build.html#setCmakeProperty%2Cstring%2Cstring%2Cstring%2Cstring">build: setCmakeProperty(outdir, name, property, value: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="tools: setCmakeProperty(outdir, name, property, value: string)" href="build/tools.html#setCmakeProperty%2Cstring%2Cstring%2Cstring%2Cstring">tools: setCmakeProperty(outdir, name, property, value: string)</a></li>
           </ul></dd>
 <dt><a name="setDefines" href="#setDefines"><span>setDefines:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: setDefines(defs: static openArray[string]): untyped" href="build.html#setDefines.m">build: setDefines(defs: static openArray[string]): untyped</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="getheader: setDefines(defs: static openArray[string]): untyped" href="build/getheader.html#setDefines.m">getheader: setDefines(defs: static openArray[string]): untyped</a></li>
           </ul></dd>
 <dt><a name="sleep" href="#sleep"><span>sleep:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: sleep(milsecs: int)" href="build.html#sleep%2Cint">build: sleep(milsecs: int)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: sleep(milsecs: int)" href="build/shell.html#sleep%2Cint">shell: sleep(milsecs: int)</a></li>
           </ul></dd>
 <dt><a name="State" href="#State"><span>State:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -429,6 +783,12 @@ function main() {
 <li><a class="reference external"
           data-doc-search-tag="paths: toastExePath(): string" href="paths.html#toastExePath">paths: toastExePath(): string</a></li>
           </ul></dd>
+<dt><a name="touchFile" href="#touchFile"><span>touchFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="build: touchFile(fullpath: string)" href="build.html#touchFile%2Cstring">build: touchFile(fullpath: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="shell: touchFile(fullpath: string)" href="build/shell.html#touchFile%2Cstring">shell: touchFile(fullpath: string)</a></li>
+          </ul></dd>
 <dt><a name="va_list" href="#va_list"><span>va_list:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: va_list" href="types.html#va_list">types: va_list</a></li>
@@ -440,13 +800,15 @@ function main() {
 <dt><a name="writeNimConfig" href="#writeNimConfig"><span>writeNimConfig:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="build: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)" href="build.html#writeNimConfig%2Cstring%2Cstring">build: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nimconf: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)" href="build/nimconf.html#writeNimConfig%2Cstring%2Cstring">nimconf: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)</a></li>
           </ul></dd>
 </dl>
     <div class="row">
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-05-19 15:39:49 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-06-27 18:05:37 UTC</small>
       </div>
     </div>
   </div>

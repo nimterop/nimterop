@@ -83,6 +83,9 @@ function main() {
   </div>
   <div id="global-links">
     <ul class="simple">
+    <li>
+      <a href="theindex.html">Index</a>
+    </li>
     </ul>
   </div>
   <div id="searchInputDiv">
@@ -181,9 +184,8 @@ function main() {
 <p>Similar to <a class="reference external" href="cimport.html#cOverride.m">cOverride()</a>, this macro allows filtering out symbols not of interest from the generated output.</p>
 <p><a class="reference external" href="cimport.html#cSkipSymbol%2Cseq[T][string]">cSkipSymbol()</a> only affects calls to <a class="reference external" href="cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring">cImport()</a> that follow it.</p>
 
-<p><strong class="examples_text">Examples:</strong></p>
-<pre class="listing"><span class="Keyword">static</span> <span class="Other">:</span>
-  <span class="Identifier">cSkipSymbol</span> <span class="Operator">@</span><span class="Other">[</span><span class="StringLit">&quot;proc1&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;Type2&quot;</span><span class="Other">]</span></pre>
+<p><strong class="examples_text">Example:</strong></p>
+<pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace"> </span><span class="Identifier">cSkipSymbol</span><span class="Whitespace"> </span><span class="Operator">@</span><span class="Punctuation">[</span><span class="StringLit">&quot;proc1&quot;</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="StringLit">&quot;Type2&quot;</span><span class="Punctuation">]</span></pre>
 
 </dd>
 <a id="cSearchPath,string"></a>
@@ -217,13 +219,11 @@ Enable debug messages and display the generated Nim code
 <dd>
 
 Add directory <tt class="docutils literal"><span class="pre">dir</span></tt> to the search path used in calls to <a class="reference external" href="cimport.html#cSearchPath,string">cSearchPath()</a>.
-<p><strong class="examples_text">Examples:</strong></p>
-<pre class="listing"><span class="Keyword">import</span>
-  <span class="Identifier">nimterop</span> <span class="Operator">/</span> <span class="Identifier">paths</span><span class="Other">,</span> <span class="Identifier">os</span>
-
-<span class="Keyword">static</span> <span class="Other">:</span>
-  <span class="Identifier">cAddSearchDir</span> <span class="Identifier">testsIncludeDir</span><span class="Other">(</span><span class="Other">)</span>
-<span class="Identifier">doAssert</span> <span class="Identifier">cSearchPath</span><span class="Other">(</span><span class="StringLit">&quot;test.h&quot;</span><span class="Other">)</span><span class="Other">.</span><span class="Identifier">existsFile</span></pre>
+<p><strong class="examples_text">Example:</strong></p>
+<pre class="listing"><span class="Keyword">import</span><span class="Whitespace"> </span><span class="Identifier">nimterop</span><span class="Operator">/</span><span class="Identifier">paths</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="Identifier">os</span><span class="Whitespace">
+</span><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace">
+  </span><span class="Identifier">cAddSearchDir</span><span class="Whitespace"> </span><span class="Identifier">testsIncludeDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span><span class="Whitespace">
+</span><span class="Identifier">doAssert</span><span class="Whitespace"> </span><span class="Identifier">cSearchPath</span><span class="Punctuation">(</span><span class="StringLit">&quot;test.h&quot;</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Identifier">existsFile</span></pre>
 
 </dd>
 <a id="cAddStdDir,string"></a>
@@ -233,13 +233,10 @@ Add directory <tt class="docutils literal"><span class="pre">dir</span></tt> to 
 <dd>
 
 Add the standard <tt class="docutils literal"><span class="pre">c</span></tt> [default] or <tt class="docutils literal"><span class="pre">cpp</span></tt> include paths to search path used in calls to <a class="reference external" href="cimport.html#cSearchPath,string">cSearchPath()</a>
-<p><strong class="examples_text">Examples:</strong></p>
-<pre class="listing"><span class="Keyword">static</span> <span class="Other">:</span>
-  <span class="Identifier">cAddStdDir</span><span class="Other">(</span><span class="Other">)</span>
-<span class="Keyword">import</span>
-  <span class="Identifier">os</span>
-
-<span class="Identifier">doAssert</span> <span class="Identifier">cSearchPath</span><span class="Other">(</span><span class="StringLit">&quot;math.h&quot;</span><span class="Other">)</span><span class="Other">.</span><span class="Identifier">existsFile</span></pre>
+<p><strong class="examples_text">Example:</strong></p>
+<pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace"> </span><span class="Identifier">cAddStdDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span><span class="Whitespace">
+</span><span class="Keyword">import</span><span class="Whitespace"> </span><span class="Identifier">os</span><span class="Whitespace">
+</span><span class="Identifier">doAssert</span><span class="Whitespace"> </span><span class="Identifier">cSearchPath</span><span class="Punctuation">(</span><span class="StringLit">&quot;math.h&quot;</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Identifier">existsFile</span></pre>
 
 </dd>
 
@@ -279,23 +276,21 @@ When <a class="reference external" href="cimport.html#cOverride.m">cOverride()</
 <p><tt class="docutils literal"><span class="pre">macros</span></tt> and <tt class="docutils literal"><span class="pre">nimterop/plugins</span></tt> are implicitly imported to provide access to standard plugin facilities.</p>
 <p><a class="reference external" href="cimport.html#cPlugin.m">cPlugin()</a>  only affects calls to <a class="reference external" href="cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring">cImport()</a> that follow it.</p>
 
-<p><strong class="examples_text">Examples:</strong></p>
-<pre class="listing"><span class="Identifier">cPlugin</span><span class="Other">:</span>
-  <span class="Keyword">import</span>
-    <span class="Identifier">strutils</span>
+<p><strong class="examples_text">Example:</strong></p>
+<pre class="listing"><span class="Identifier">cPlugin</span><span class="Punctuation">:</span><span class="Whitespace">
+  </span><span class="Keyword">import</span><span class="Whitespace"> </span><span class="Identifier">strutils</span><span class="Whitespace">
 
-  <span class="Keyword">proc</span> <span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Other">(</span><span class="Identifier">sym</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Symbol</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">exportc</span><span class="Other">,</span> <span class="Identifier">dynlib</span></span><span class="Other">.}</span></span> <span class="Other">=</span>
-    <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span> <span class="Other">=</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">strip</span><span class="Other">(</span><span class="Identifier">chars</span> <span class="Other">=</span> <span class="Other">{</span><span class="CharLit">'_'</span><span class="Other">}</span><span class="Other">)</span>
-</pre>
-<p><strong class="examples_text">Examples:</strong></p>
-<pre class="listing"><span class="Identifier">cPlugin</span><span class="Other">:</span>
-  <span class="Keyword">import</span>
-    <span class="Identifier">strutils</span>
+  </span><span class="Comment"># Strip leading and trailing underscores</span><span class="Whitespace">
+  </span><span class="Keyword">proc</span><span class="Whitespace"> </span><span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">sym</span><span class="Punctuation">:</span><span class="Whitespace"> </span><span class="Keyword">var</span><span class="Whitespace"> </span><span class="Identifier">Symbol</span><span class="Punctuation">)</span><span class="Whitespace"> </span><span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">exportc</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="Identifier">dynlib</span><span class="Operator">.</span><span class="Punctuation">}</span><span class="Whitespace"> </span><span class="Operator">=</span><span class="Whitespace">
+    </span><span class="Identifier">sym</span><span class="Operator">.</span><span class="Identifier">name</span><span class="Whitespace"> </span><span class="Operator">=</span><span class="Whitespace"> </span><span class="Identifier">sym</span><span class="Operator">.</span><span class="Identifier">name</span><span class="Operator">.</span><span class="Identifier">strip</span><span class="Punctuation">(</span><span class="Identifier">chars</span><span class="Operator">=</span><span class="Punctuation">{</span><span class="CharLit">&apos;_&apos;</span><span class="Punctuation">}</span><span class="Punctuation">)</span></pre>
+<p><strong class="examples_text">Example:</strong></p>
+<pre class="listing"><span class="Identifier">cPlugin</span><span class="Punctuation">:</span><span class="Whitespace">
+  </span><span class="Keyword">import</span><span class="Whitespace"> </span><span class="Identifier">strutils</span><span class="Whitespace">
 
-  <span class="Keyword">proc</span> <span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Other">(</span><span class="Identifier">sym</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Symbol</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">exportc</span><span class="Other">,</span> <span class="Identifier">dynlib</span></span><span class="Other">.}</span></span> <span class="Other">=</span>
-    <span class="Keyword">if</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">kind</span> <span class="Operator">==</span> <span class="Identifier">nskProc</span> <span class="Keyword">and</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">contains</span><span class="Other">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Other">)</span><span class="Other">:</span>
-      <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span> <span class="Other">=</span> <span class="Identifier">sym</span><span class="Other">.</span><span class="Identifier">name</span><span class="Other">.</span><span class="Identifier">replace</span><span class="Other">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span>
-</pre>
+  </span><span class="Comment"># Strip prefix from procs</span><span class="Whitespace">
+  </span><span class="Keyword">proc</span><span class="Whitespace"> </span><span class="Identifier">onSymbol</span><span class="Operator">*</span><span class="Punctuation">(</span><span class="Identifier">sym</span><span class="Punctuation">:</span><span class="Whitespace"> </span><span class="Keyword">var</span><span class="Whitespace"> </span><span class="Identifier">Symbol</span><span class="Punctuation">)</span><span class="Whitespace"> </span><span class="Punctuation">{</span><span class="Operator">.</span><span class="Identifier">exportc</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="Identifier">dynlib</span><span class="Operator">.</span><span class="Punctuation">}</span><span class="Whitespace"> </span><span class="Operator">=</span><span class="Whitespace">
+    </span><span class="Keyword">if</span><span class="Whitespace"> </span><span class="Identifier">sym</span><span class="Operator">.</span><span class="Identifier">kind</span><span class="Whitespace"> </span><span class="Operator">==</span><span class="Whitespace"> </span><span class="Identifier">nskProc</span><span class="Whitespace"> </span><span class="Keyword">and</span><span class="Whitespace"> </span><span class="Identifier">sym</span><span class="Operator">.</span><span class="Identifier">name</span><span class="Operator">.</span><span class="Identifier">contains</span><span class="Punctuation">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Punctuation">)</span><span class="Punctuation">:</span><span class="Whitespace">
+      </span><span class="Identifier">sym</span><span class="Operator">.</span><span class="Identifier">name</span><span class="Whitespace"> </span><span class="Operator">=</span><span class="Whitespace"> </span><span class="Identifier">sym</span><span class="Operator">.</span><span class="Identifier">name</span><span class="Operator">.</span><span class="Identifier">replace</span><span class="Punctuation">(</span><span class="StringLit">&quot;SDL_&quot;</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="StringLit">&quot;&quot;</span><span class="Punctuation">)</span></pre>
 
 </dd>
 <a id="cPluginPath.m,static[string]"></a>
@@ -405,7 +400,7 @@ Add an include directory that is forwarded to the C/C++ preprocessor if called w
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-05-19 15:39:49 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-06-27 18:05:37 UTC</small>
       </div>
     </div>
   </div>

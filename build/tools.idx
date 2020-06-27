@@ -1,0 +1,10 @@
+configure	build/tools.html#configure,string,string,string	tools: configure(path, check: string; flags = &quot;&quot;)	
+getCmakeIncludePath	build/tools.html#getCmakeIncludePath,openArray[string]	tools: getCmakeIncludePath(paths: openArray[string]): string	
+setCmakeProperty	build/tools.html#setCmakeProperty,string,string,string,string	tools: setCmakeProperty(outdir, name, property, value: string)	
+setCmakeLibName	build/tools.html#setCmakeLibName,string,string,string,string,string	tools: setCmakeLibName(outdir, name, prefix = &quot;&quot;; oname = &quot;&quot;; suffix = &quot;&quot;)	
+setCmakePositionIndependentCode	build/tools.html#setCmakePositionIndependentCode,string	tools: setCmakePositionIndependentCode(outdir: string)	
+cmake	build/tools.html#cmake,string,string,string	tools: cmake(path, check, flags: string)	
+make	build/tools.html#make,string,string,string	tools: make(path, check: string; flags = &quot;&quot;; regex = false)	
+buildWithCmake	build/tools.html#buildWithCmake,string,string	tools: buildWithCmake(outdir, flags: string): BuildStatus	
+buildWithAutoConf	build/tools.html#buildWithAutoConf,string,string	tools: buildWithAutoConf(outdir, flags: string): BuildStatus	
+flagBuild	build/tools.html#flagBuild,string,openArray[string]	tools: flagBuild(base: string; flags: openArray[string]): string	

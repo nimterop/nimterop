@@ -1,0 +1,6 @@
+getCompilerMode	build/ccompiler.html#getCompilerMode,string	ccompiler: getCompilerMode(path: string): string	
+getGccModeArg	build/ccompiler.html#getGccModeArg,string	ccompiler: getGccModeArg(mode: string): string	
+getCompiler	build/ccompiler.html#getCompiler	ccompiler: getCompiler(): string	
+getGccPaths	build/ccompiler.html#getGccPaths,string	ccompiler: getGccPaths(mode: string): seq[string]	
+getGccLibPaths	build/ccompiler.html#getGccLibPaths,string	ccompiler: getGccLibPaths(mode: string): seq[string]	
+getGccInfo	build/ccompiler.html#getGccInfo	ccompiler: getGccInfo(): tuple[arch, os, compiler, version: string]	

@@ -1,0 +1,9 @@
+JBBPackage	build/jbb.html#JBBPackage	jbb: JBBPackage	
+`==`	build/jbb.html#==,JBBPackage,JBBPackage	jbb: `==`(pkg1, pkg2: JBBPackage): bool	
+newJBBPackage	build/jbb.html#newJBBPackage,string,string	jbb: newJBBPackage(name, version: string): JBBPackage	
+getJBBRepo	build/jbb.html#getJBBRepo,JBBPackage,string	jbb: getJBBRepo(pkg: JBBPackage; outdir: string)	
+loadJBBInfo	build/jbb.html#loadJBBInfo,string	jbb: loadJBBInfo(outdir: string): JBBPackage	
+saveJBBInfo	build/jbb.html#saveJBBInfo,JBBPackage,string	jbb: saveJBBInfo(pkg: JBBPackage; outdir: string)	
+downloadJBB	build/jbb.html#downloadJBB,JBBPackage,string	jbb: downloadJBB(pkg: JBBPackage; outdir: string; main = true)	
+dlJBBRequires	build/jbb.html#dlJBBRequires,JBBPackage,string	jbb: dlJBBRequires(pkg: JBBPackage; outdir: string)	
+getJBBLDeps	build/jbb.html#getJBBLDeps,JBBPackage,string,bool	jbb: getJBBLDeps(pkg: JBBPackage; outdir: string; shared: bool; main = true): seq[string]	

@@ -1,0 +1,8 @@
+Config	build/nimconf.html#Config	nimconf: Config	
+getProjectDir	build/nimconf.html#getProjectDir	nimconf: getProjectDir(): string	
+getNimConfig	build/nimconf.html#getNimConfig,string	nimconf: getNimConfig(projectDir = &quot;&quot;): Config	
+getNimConfigFlags	build/nimconf.html#getNimConfigFlags,string	nimconf: getNimConfigFlags(projectDir = &quot;&quot;): string	
+writeNimConfig	build/nimconf.html#writeNimConfig,string,string	nimconf: writeNimConfig(cfgFile: string; projectDir = &quot;&quot;)	
+getNimcacheDir	build/nimconf.html#getNimcacheDir,string	nimconf: getNimcacheDir(projectDir = &quot;&quot;): string	
+getOutDir	build/nimconf.html#getOutDir,string	nimconf: getOutDir(projectDir = &quot;&quot;): string	
+getNimteropCacheDir	build/nimconf.html#getNimteropCacheDir	nimconf: getNimteropCacheDir(): string	

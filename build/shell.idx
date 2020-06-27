@@ -1,0 +1,26 @@
+sleep	build/shell.html#sleep,int	shell: sleep(milsecs: int)	
+execAction	build/shell.html#execAction,string,int,string,proc)	shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;\n           onRetry: proc () = nil): tuple[output: string, ret: int]	
+findExe	build/shell.html#findExe,string	shell: findExe(exe: string): string	
+mkDir	build/shell.html#mkDir,string	shell: mkDir(dir: string)	
+cpFile	build/shell.html#cpFile,string,string	shell: cpFile(source, dest: string; psymlink = false; move = false)	
+mvFile	build/shell.html#mvFile,string,string	shell: mvFile(source, dest: string)	
+rmFile	build/shell.html#rmFile,string	shell: rmFile(source: string; dir = false)	
+rmDir	build/shell.html#rmDir,string	shell: rmDir(dir: string)	
+cleanDir	build/shell.html#cleanDir,string	shell: cleanDir(dir: string)	
+cpTree	build/shell.html#cpTree,string,string	shell: cpTree(source, dest: string; move = false)	
+mvTree	build/shell.html#mvTree,string,string	shell: mvTree(source, dest: string)	
+getFileDate	build/shell.html#getFileDate,string	shell: getFileDate(fullpath: string): string	
+touchFile	build/shell.html#touchFile,string	shell: touchFile(fullpath: string)	
+extractZip	build/shell.html#extractZip,string,string	shell: extractZip(zipfile, outdir: string; quiet = false)	
+extractTar	build/shell.html#extractTar,string,string	shell: extractTar(tarfile, outdir: string; quiet = false)	
+downloadUrl	build/shell.html#downloadUrl,string,string,int	shell: downloadUrl(url, outdir: string; quiet = false; retry = 1)	
+gitReset	build/shell.html#gitReset,string	shell: gitReset(outdir: string)	
+gitCheckout	build/shell.html#gitCheckout,string,string	shell: gitCheckout(file, outdir: string)	
+gitAtCheckout	build/shell.html#gitAtCheckout,string,string	shell: gitAtCheckout(outdir, checkout: string): bool	
+gitPull	build/shell.html#gitPull,string,string,string,string	shell: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;; quiet = false)	
+gitTags	build/shell.html#gitTags,string	shell: gitTags(outdir: string): seq[string]	
+findFiles	build/shell.html#findFiles,string,string	shell: findFiles(file: string; dir: string; recurse = true; regex = false): seq[string]	
+findFile	build/shell.html#findFile,string,string	shell: findFile(file: string; dir: string; recurse = true; first = false; regex = false): string	
+linkLibs	build/shell.html#linkLibs,openArray[string]	shell: linkLibs(names: openArray[string]; staticLink = true): string	
+getNumProcs	build/shell.html#getNumProcs	shell: getNumProcs(): string	
+getProjectCacheDir	build/shell.html#getProjectCacheDir,string	shell: getProjectCacheDir(name: string; forceClean = true): string	
