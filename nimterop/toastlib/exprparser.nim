@@ -580,7 +580,7 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   of "sized_type_specifier", "primitive_type", "type_identifier":
     # Input -> int, unsigned int, long int, etc
     # Output -> cint, cuint, clong, etc
-    let ty = getType(node.val)
+    let ty = gState.getType(node.val, parent = node.getName())
     if ty.len > 0:
       # If ty is not empty, one of C's builtin types has been found
       result = gState.getExprIdent(ty, nskType, parent=node.getName())

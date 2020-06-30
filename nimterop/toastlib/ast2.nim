@@ -1481,6 +1481,11 @@ proc addEnum(gState: State, node: TSNode) =
       if node.getName() == "type_definition" and node.len > 1:
         gState.addTypeTyped(node, ftname = name, offset = offset)
 
+      if gEnumMacro.nBl:
+        # Add enum generation macro once
+        gState.wrapperHeader &= gEnumMacro
+        gEnumMacro = ""
+
 proc addProc(gState: State, node, rnode: TSNode, commentNodes: seq[TSNode]) =
   # Add a proc
   #
@@ -1822,10 +1827,7 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
 
 proc initNim*(gState: State) =
   # Initialize for parseNim() one time
-  gecho """import nimterop/types
-
-{.push hint[ConvFromXtoItselfNotNeeded]: off.}
-"""
+  gState.wrapperHeader = "{.push hint[ConvFromXtoItselfNotNeeded]: off.}\n"
 
   # Track identifiers already rendered and corresponding PNodes
   gState.identifiers = newTable[string, string]()
@@ -1876,6 +1878,7 @@ proc printNim*(gState: State) =
   tree.add gState.varSection
   tree.add gState.procSection
 
+  gecho gState.wrapperHeader
   gecho tree.renderTree()
 
   gecho "{.pop.}"

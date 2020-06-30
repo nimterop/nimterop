@@ -95,7 +95,7 @@ proc getNameInfo*(gState: State, node: TSNode, kind: NimSymKind, parent = ""):
   result.name = gState.getIdentifier(result.origname, kind, parent)
   if result.name.nBl:
     if kind == nskType:
-      result.name = result.name.getType()
+      result.name = gState.getType(result.name, parent)
     result.info = gState.getLineInfo(node)
 
 proc getPtrType*(str: string): string =

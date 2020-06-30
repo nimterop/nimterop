@@ -54,7 +54,7 @@ type
       constIdentifiers*: HashSet[string]     # Const names for enum casting
       identifiers*: TableRef[string, string] # Symbols that have been declared so far indexed by nimName
       skippedSyms*: HashSet[string]          # Symbols that have been skipped due to being unwrappable or
-                                            # the user provided override is blank
+                                             # the user provided override is blank
 
       # Nim compiler objects
       constSection*, enumSection*, pragmaSection*, procSection*, typeSection*, varSection*: PNode
@@ -70,6 +70,9 @@ type
       # Controls whether or not the current expression
       # should validate idents against currently defined idents
       skipIdentValidation*: bool
+
+      # Top level header for wrapper output - include imported types, pragmas and other info
+      wrapperHeader*: string
     else:
       # cimport.nim specific
       compile*: seq[string]      # `cCompile()` list of files already processed

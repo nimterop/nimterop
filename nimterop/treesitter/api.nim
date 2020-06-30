@@ -2,7 +2,8 @@
 
 import strutils, os
 
-import ".."/[setup, paths, types]
+include ".."/enumtype
+import ".."/[paths, setup]
 
 static:
   treesitterSetup()

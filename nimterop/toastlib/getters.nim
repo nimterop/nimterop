@@ -29,7 +29,13 @@ yield""".split(Whitespace).toHashSet()
 
 # Types related
 
+const
+  # Enum macro read from file - written into wrapper when required
+  gEnumMacroConst = staticRead(currentSourcePath.parentDir().parentDir() / "enumtype.nim")
+
 var
+  gEnumMacro* = gEnumMacroConst
+
   gTypeMap* = {
     # char
     "char": "cchar",
@@ -107,13 +113,40 @@ var
     "long double": "clongdouble",
 
     # Misc Nim types
-    "Bool": "bool"
+    "Bool": "bool",
+    "ptrdiff_t": "ByteAddress"
   }.toTable()
 
   # Nim type names that shouldn't need to be wrapped again
   gTypeMapValues* = toSeq(gTypeMap.values).toHashSet()
 
-proc getType*(str: string): string =
+  # Types to import from C/Nim if used in wrapper
+  gTypeImport* = {
+    "time_t": """
+import std/time_t as std_time_t
+type time_t* = Time
+""",
+
+    "time64_t": """
+import std/time_t as std_time64_t
+type time64_t* = Time
+""",
+
+    "wchar_t": """
+when defined(cpp):
+  # http://www.cplusplus.com/reference/cwchar/wchar_t/
+  # In C++, wchar_t is a distinct fundamental type (and thus it is
+  # not defined in <cwchar> nor any other header).
+  type wchar_t* {.importc.} = object
+else:
+  type wchar_t* {.importc, header:"<cwchar>".} = object
+""",
+
+    "va_list": """
+type va_list* {.importc, header:"<stdarg.h>".} = object
+"""}.toTable()
+
+proc getType*(gState: State, str, parent: string): string =
   if str == "void":
     return "object"
 
@@ -121,6 +154,10 @@ proc getType*(str: string): string =
 
   if gTypeMap.hasKey(result):
     result = gTypeMap[result]
+  elif parent.nBl and gTypeImport.hasKey(result) and not gState.identifierNodes.hasKey(result):
+    # Include C/Nim type imports once if a field/param and not already declared
+    gState.wrapperHeader &= "\n" & gTypeImport[result]
+    gTypeImport.del result
 
 # Identifier related
 

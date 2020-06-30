@@ -17,8 +17,7 @@ All `{.compileTime.}` procs must be used in a compile time context, e.g. using:
 
 import hashes, macros, os, strformat, strutils
 
-import "."/[build, globals, paths, types]
-export types
+import "."/[build, globals, paths]
 
 proc interpPath(dir: string): string=
   # TODO: more robust: needs a DirSep after "$projpath"
@@ -153,7 +152,7 @@ proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = ""
 
   # see https://github.com/nimterop/nimterop/issues/69
   (result, ret) = execAction(cmd, die = false, cache = (not gStateCT.nocache),
-                             cacheKey = getCacheValue(fullpaths))
+                             cacheKey = getCacheValue(toastExe) & getCacheValue(fullpaths))
   doAssert ret == 0, getToastError(result)
 
 macro cOverride*(body): untyped =
