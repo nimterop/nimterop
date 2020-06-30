@@ -8,6 +8,10 @@ import "."/toastlib/[ast2, getters, tshelp]
 
 import "."/build/[ccompiler, misc]
 
+var
+  # Output generated before main() is called
+  preMainOut = ""
+
 proc process(gState: State, path: string) =
   doAssert existsFile(path), &"Invalid path {path}"
 
@@ -129,6 +133,7 @@ proc main(
   if source.nBl:
     # Print source after preprocess or Nim output
     if gState.pnim:
+      gecho preMainOut
       gState.initNim()
     for src in source:
       gState.process(src.expandSymlinkAbs())
@@ -187,7 +192,7 @@ proc mergeParams(cmdNames: seq[string], cmdLine = commandLineParams()): seq[stri
     # https://github.com/c-blake/cligen/issues/149
     for param in cmdLine:
       if param.fileExists() and param.splitFile().ext == ".cfg":
-        echo &"# Loading flags from '{param}'"
+        preMainOut &= &"# Loading flags from '{param}'\n"
         for line in param.readFile().splitLines():
           let
             line = line.strip()
@@ -197,7 +202,7 @@ proc mergeParams(cmdNames: seq[string], cmdLine = commandLineParams()): seq[stri
         result.add param
 
     if result.len != 0 and "-h" notin result and "--help" notin result:
-      echo &"""# Generated @ {$now()}
+      preMainOut &= &"""# Generated @ {$now()}
 # Command line:
 #   {getAppFilename()} {result.join(" ")}
 """

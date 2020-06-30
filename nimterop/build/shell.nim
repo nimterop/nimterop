@@ -23,7 +23,8 @@ else:
   export sleep
 
 proc execAction*(cmd: string, retry = 0, die = true, cache = false,
-                 cacheKey = "", onRetry: proc() = nil): tuple[output: string, ret: int] =
+                 cacheKey = "", onRetry: proc() = nil,
+                 onError: proc(output: string, err: int) = nil): tuple[output: string, ret: int] =
   ## Execute an external command - supported at compile time
   ##
   ## Checks if command exits successfully before returning. If not, an
@@ -34,6 +35,8 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
   ## `die = false` - return on errors
   ## `cache = true` - cache results unless cleared with -f
   ## `cacheKey` - key to create unique cache entry
+  ## `onRetry()` - proc to call before retrying
+  ## `onError(output, err)` - proc to call on error
   let
     ccmd = fixCmd(cmd)
 
@@ -80,9 +83,12 @@ proc execAction*(cmd: string, retry = 0, die = true, cache = false,
         onRetry()
       sleep(500)
       result = execAction(cmd, retry = retry - 1, die, cache, cacheKey)
-    elif die:
-      doAssert false, "Command failed: " & $result.ret & "\ncmd: " & ccmd &
-                      "\nresult:\n" & result.output
+    else:
+      if not onError.isNil:
+        onError(result.output, result.ret)
+
+      doAssert not die, "Command failed: " & $result.ret & "\ncmd: " & ccmd &
+                        "\nresult:\n" & result.output
 
 when not defined(TOAST):
   proc findExe*(exe: string): string =

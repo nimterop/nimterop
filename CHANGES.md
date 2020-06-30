@@ -33,6 +33,12 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.0
 
 - `gitPull()` now checks if an existing repository is at the `checkout` value specified. If not, it will pull the latest changes and checkout the specified commit, tag or branch.
 
+### Other improvements
+
+- Generated wrappers no longer depend on nimterop being present - no more `import nimterop/types`. Supporting code is directly included in the wrapper output and only when required. E.g. enum macro is only included if wrapper contains enums. [#125](i125) (since v0.6.1)
+
+- `cImport()` now includes wrapper output from a file rather than inline. Errors in generated wrappers will no longer point to a line in `macros.nim` making debugging easier.
+
 
 ## Version 0.5.0
 
