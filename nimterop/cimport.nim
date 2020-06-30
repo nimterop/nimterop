@@ -154,6 +154,8 @@ proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = ""
     cachePath = getNimteropCacheDir() / "toastCache" / "nimterop_" & $hash
 
   result = cachePath.addFileExt(ext)
+  when defined(Windows):
+    result = result.replace(DirSep, '/')
 
   if not fileExists(result) or compileOption("forceBuild"):
     let
@@ -590,7 +592,10 @@ macro cImport*(filenames: static seq[string], recurse: static bool = false, dynl
     gecho nimFile.readFile()
 
   try:
-    result.add parseStmt("include " & nimFile.changeFileExt(""))
+    let
+      nimFileNode = newStrLitNode(nimFile.changeFileExt(""))
+    result.add quote do:
+      include `nimFileNode`
   except:
     getNimCheckError(nimFile)
 
@@ -702,6 +707,9 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
     gecho nimFile.readFile()
 
   try:
-    result.add parseStmt("include " & nimFile.changeFileExt(""))
+    let
+      nimFileNode = newStrLitNode(nimFile.changeFileExt(""))
+    result.add quote do:
+      include `nimFileNode`
   except:
     getNimCheckError(nimFile)
