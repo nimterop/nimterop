@@ -134,6 +134,8 @@ assert EQ4 == (AVAL < BVAL)
 assert EQ5 == (AVAL != BVAL)
 assert EQ6 == (AVAL == BVAL)
 
+assert SX_NEAR_ZERO == 3.725290298461914e-09
+
 assert SIZEOF == 1
 
 assert COERCE == 645635670332'u64
