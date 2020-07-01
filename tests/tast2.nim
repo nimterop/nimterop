@@ -38,7 +38,11 @@ cOverride:
     A1* = A0
 
 cDefine("SOME_CONST=100")
-cImport(path, flags="-f:ast2 -ENK_,SDL_ -GVICE=SLICE -TMyInt=cint" & flags)
+
+when not defined(WRAPPED):
+  cImport(path, flags="-f:ast2 -ENK_,SDL_ -GVICE=SLICE -TMyInt=cint" & flags, nimFile = "tast2wrapped.nim")
+else:
+  import tast2wrapped
 
 proc getPragmas(n: NimNode): HashSet[string] =
   # Find all pragmas in AST, return as "name" or "name:value" in set

@@ -50,14 +50,10 @@ task minitest, "Test for Nim CI":
   exec "nim c -f -d:checkAbi -r tests/tast2.nim"
   exec "nim c -f -d:checkAbi -d:zlibStd -d:zlibDL -d:zlibSetVer=1.2.11 -r tests/zlib.nim"
 
-task test, "Test":
-  rmFile("tests/timeit.txt")
-
-  buildTimeitTask()
-  buildToastTask()
-
+task basic, "Basic tests":
   execTest "tests/tast2.nim"
   execTest "tests/tast2.nim", "-d:NOHEADER"
+  execTest "tests/tast2.nim", "-d:NOHEADER -d:WRAPPED"
 
   execTest "tests/tnimterop_c.nim"
   execTest "tests/tnimterop_c.nim", "-d:FLAGS=\"-H\""
@@ -65,6 +61,7 @@ task test, "Test":
   execCmd "nim cpp --hints:off -f -r tests/tnimterop_cpp.nim"
   execCmd "./nimterop/toast tests/toast.cfg tests/include/toast.h"
 
+task wrapper, "Wrapper tests":
   execTest "tests/tpcre.nim"
 
   when defined(Linux):
@@ -79,11 +76,28 @@ task test, "Test":
     execTest "tests/tsoloud.nim"
     execTest "tests/tsoloud.nim",  "-d:FLAGS=\"-H\""
 
-  # getHeader tests
+task getheader, "getHeader tests":
   withDir("tests"):
     exec "nim e getheader.nims"
-    if not existsEnv("APPVEYOR"):
+
+task package, "Wrapper package tests":
+  if not existsEnv("APPVEYOR"):
+    withDir("tests"):
       exec "nim e wrappers.nims"
+
+task test, "Test":
+  rmFile("tests/timeit.txt")
+
+  buildTimeitTask()
+  buildToastTask()
+
+  basicTask()
+
+  wrapperTask()
+
+  getheaderTask()
+
+  packageTask()
 
   docsTask()
 

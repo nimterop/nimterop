@@ -15,13 +15,13 @@ Refer to the documentation for `getHeader()` for details on how to use this new 
 
 See the full list of changes here:
 
-https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.0
+https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.1
 
 ### Breaking changes
 
 - The legacy algorithm has been removed as promised. `ast2` is now the default and wrappers no longer need to explicitly specify `-f:ast2` in order to use it.
 
-- All shared libraries installed by `getHeader()` will now get copied into the `libdir` parameter specified. If left blank, `libdir` will default to the directory where the executable binary gets created (outdir). While this is not really a breaking change, it is a change in behavior compared to older versions of nimterop. Note that `Std` libraries are not copied over. [#154](i154)
+- All shared libraries installed by `getHeader()` will now get copied into the `libdir` parameter specified. If left blank, `libdir` will default to the directory where the executable binary gets created (outdir). While this is not really a breaking change, it is a change in behavior compared to older versions of nimterop. Note that `Std` libraries are not copied over. [#154][i154]
 
 - `git.nim` has been removed. This module was an artifact from the early days and was renamed to `build.nim` back in v0.2.0.
 
@@ -33,11 +33,13 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.0
 
 - `gitPull()` now checks if an existing repository is at the `checkout` value specified. If not, it will pull the latest changes and checkout the specified commit, tag or branch.
 
+- `cImport()` can now write the generated wrapper output to a user-defined file with the `nimFile` param. [#127][i127] (since v0.6.1)
+
 ### Other improvements
 
-- Generated wrappers no longer depend on nimterop being present - no more `import nimterop/types`. Supporting code is directly included in the wrapper output and only when required. E.g. enum macro is only included if wrapper contains enums. [#125](i125) (since v0.6.1)
+- Generated wrappers no longer depend on nimterop being present - no more `import nimterop/types`. Supporting code is directly included in the wrapper output and only when required. E.g. enum macro is only included if wrapper contains enums. [#125][i125] (since v0.6.1)
 
-- `cImport()` now includes wrapper output from a file rather than inline. Errors in generated wrappers will no longer point to a line in `macros.nim` making debugging easier.
+- `cImport()` now includes wrapper output from a file rather than inline. Errors in generated wrappers will no longer point to a line in `macros.nim` making debugging easier. (since v0.6.1)
 
 
 ## Version 0.5.0
@@ -50,7 +52,7 @@ Version 0.6.0 of Nimterop will make `ast2` the default backend and the legacy al
 
 See the full list of changes here:
 
-https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.0
+https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.4
 
 ### Breaking changes
 
@@ -108,6 +110,8 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.0
 [i54]: https://github.com/nimterop/nimterop/issues/54
 [i74]: https://github.com/nimterop/nimterop/issues/74
 [i76]: https://github.com/nimterop/nimterop/issues/76
+[i125]: https://github.com/nimterop/nimterop/issues/125
+[i127]: https://github.com/nimterop/nimterop/issues/127
 [i137]: https://github.com/nimterop/nimterop/issues/137
 [i147]: https://github.com/nimterop/nimterop/issues/147
 [i148]: https://github.com/nimterop/nimterop/issues/148
