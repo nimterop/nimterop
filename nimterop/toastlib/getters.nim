@@ -307,7 +307,7 @@ proc getPreprocessor*(gState: State, fullpath: string) =
 
   # Remove gcc special calls
   # https://github.com/tree-sitter/tree-sitter-c/issues/43
-  args.add @["-D__attribute__(x)=", "-D__restrict=", "-D__extension__=", "-D__inline__=inline",
+  args.add @["-D__attribute__(x)=", "-D__restrict=", "-D__restrict__=", "-D__extension__=", "-D__inline__=inline",
     "-D__inline=inline", "-D_Noreturn=", &"{fullpath.sanitizePath}"]
 
   # Include content only from file

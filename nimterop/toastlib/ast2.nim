@@ -1703,8 +1703,9 @@ proc addDef(gState: State, node: TSNode) =
   let
     start = getStartAtom(node)
     commentNodes = gState.getCommentNodes(node)
+    fdecl = node[start+1].firstChildInTree("function_declarator")
 
-  if node[start+1].getName() == "function_declarator":
+  if not fdecl.isNil:
     if not gState.noHeader:
       gState.addProc(node[start+1], node[start], commentNodes)
     else:
