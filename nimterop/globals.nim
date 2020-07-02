@@ -129,7 +129,7 @@ when defined(TOAST):
     Status* = enum
       success, unknown, error
 
-proc getCommented*(str: string): string =
+template getCommented*(str: string): string =
   "\n# " & str.strip().replace("\n", "\n# ")
 
 # Redirect output to file when required
@@ -147,13 +147,13 @@ template gecho*(args: string) =
 
 template decho*(args: varargs[string, `$`]): untyped =
   let
-    str = join(args, "").getCommented()
+    str = join(args, "")
   when defined(TOAST):
     if gState.debug:
-      gecho str
+      gecho str.getCommented()
   else:
     if gStateCT.debug:
-      echo str
+      echo str.getCommented()
 
 template nBl*(s: typed): untyped {.used.} =
   (s.len != 0)

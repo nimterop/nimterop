@@ -13,4 +13,4 @@ import "."/api
 
 {.compile: srcDir / "parser.c".}
 
-proc treeSitterC*(): ptr TSLanguage {.importc: "tree_sitter_c", header: srcDir / "api.h".}
+proc treeSitterC*(): ptr TSLanguage {.importc: "tree_sitter_c".}

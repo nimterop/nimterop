@@ -18,4 +18,4 @@ static:
 {.compile: srcDir / "parser_cpp.c".}
 {.compile: srcDir / "scanner.cc".}
 
-proc treeSitterCpp*(): ptr TSLanguage {.importc: "tree_sitter_cpp", header: srcDir / "api.h".}
+proc treeSitterCpp*(): ptr TSLanguage {.importc: "tree_sitter_cpp".}

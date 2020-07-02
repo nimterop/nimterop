@@ -1,4 +1,4 @@
-import dynlib, macros, os, sequtils, sets, strformat, strutils, tables, times
+import dynlib, macros, os, osproc, sequtils, sets, streams, strformat, strutils, tables, times
 
 import regex
 
@@ -124,12 +124,12 @@ var
   gTypeImport* = {
     "time_t": """
 import std/time_t as std_time_t
-type time_t* = Time
+type time_t* = std_time_t.Time
 """,
 
     "time64_t": """
 import std/time_t as std_time64_t
-type time64_t* = Time
+type time64_t* = std_time_t.Time
 """,
 
     "wchar_t": """
@@ -286,10 +286,7 @@ proc getCurrentHeader*(fullpath: string): string =
 
 proc getPreprocessor*(gState: State, fullpath: string) =
   var
-    cmts = if gState.noComments: "" else: "-CC"
-    cmd = &"""{getCompiler()} -E {cmts} -dD {getGccModeArg(gState.mode)} -w """
-
-    rdata: seq[string]
+    args: seq[string]
     start = false
     sfile = fullpath.sanitizePath(noQuote = true)
 
@@ -297,50 +294,54 @@ proc getPreprocessor*(gState: State, fullpath: string) =
     pDir = sfile.expandFilename().parentDir()
     includeDirs: seq[string]
 
+  args.add @["-E", "-dD", getGccModeArg(gState.mode), "-w"]
+  if not gState.noComments:
+    args.add "-CC"
+
   for inc in gState.includeDirs:
-    cmd &= &"-I{inc.sanitizePath} "
+    args.add &"-I{inc.sanitizePath}"
     includeDirs.add inc.absolutePath().sanitizePath(noQuote = true)
 
   for def in gState.defines:
-    cmd &= &"-D{def} "
+    args.add &"-D{def}"
 
   # Remove gcc special calls
-  if defined(posix):
-    cmd &= "-D__attribute__\\(x\\)= "
-  else:
-    cmd &= "-D__attribute__(x)= "
-
-  cmd &= "-D__restrict= -D__extension__= -D__inline__=inline -D__inline=inline "
-
   # https://github.com/tree-sitter/tree-sitter-c/issues/43
-  cmd &= "-D_Noreturn= "
-
-  cmd &= &"{fullpath.sanitizePath}"
+  args.add @["-D__attribute__(x)=", "-D__restrict=", "-D__extension__=", "-D__inline__=inline",
+    "-D__inline=inline", "-D_Noreturn=", &"{fullpath.sanitizePath}"]
 
   # Include content only from file
-  for line in execAction(cmd).output.splitLines():
-    # We want to keep blank lines here for comment processing
-    if line.len > 1 and line[0 .. 1] == "# ":
-      start = false
-      let
-        saniLine = line.sanitizePath(noQuote = true)
-      if sfile in saniLine or
-        (DirSep notin saniLine and sfileName in saniLine):
-        start = true
-      elif gState.recurse:
-        if pDir.Bl or pDir in saniLine:
+  var
+    p = startProcess(getCompiler(), args = args, options = {poStdErrToStdOut, poUsePath})
+    outp = p.outputStream()
+    line = ""
+
+  # Include content only from file
+  gState.code = ""
+  while true:
+    if outp.readLine(line):
+      # We want to keep blank lines here for comment processing
+      if line.len > 1 and line[0] == '#' and line[1] == ' ':
+        start = false
+        line = line.sanitizePath(noQuote = true)
+        if sfile in line or
+          (DirSep notin line and sfileName in line):
           start = true
-        else:
-          for inc in includeDirs:
-            if inc in saniLine:
-              start = true
-              break
-    else:
-      if start:
-        if "#undef" in line:
-          continue
-        rdata.add line
-  gState.code = rdata.join("\n")
+        elif gState.recurse:
+          if pDir.Bl or pDir in line:
+            start = true
+          else:
+            for inc in includeDirs:
+              if inc in line:
+                start = true
+                break
+      else:
+        if start:
+          if "#undef" in line:
+            continue
+          gState.code.add line & "\n"
+    elif not p.running(): break
+  p.close()
 
 # Plugin related
 
