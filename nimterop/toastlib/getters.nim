@@ -129,7 +129,7 @@ type time_t* = std_time_t.Time
 
     "time64_t": """
 import std/time_t as std_time64_t
-type time64_t* = std_time_t.Time
+type time64_t* = std_time64_t.Time
 """,
 
     "wchar_t": """

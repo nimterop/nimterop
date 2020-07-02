@@ -1668,7 +1668,7 @@ proc addDecl(gState: State, node: TSNode) =
     commentNodes: seq[TSNode]
 
   for i in start+1 ..< node.len:
-    if node[i].getName() == "comment":
+    if node[i].getName() in ["comment", "type_qualifier"]:
       continue
 
     if firstDecl:
