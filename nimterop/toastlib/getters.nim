@@ -167,13 +167,15 @@ proc checkIdentifier(name, kind, parent, origName: string) =
 
   if name.nBl:
     let
-      origStr = if name != origName: &", originally '{origName}' before 'cPlugin:onSymbol()', still" else: ""
-      errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} contains $1 " &
+      origStr = if name != origName: &", originally '{origName}' before 'cPlugin:onSymbol()'," else: ""
+      errmsg = &"Identifier '{parentStr}{name}' ({kind}){origStr} $1 " &
         "which Nim does not allow. Use toast flag '$2' or 'cPlugin()' to modify."
 
-    doAssert name[0] != '_' and name[^1] != '_', errmsg % ["leading/trailing underscores '_'", "--prefix or --suffix"]
+    doAssert name[0] != '_' and name[^1] != '_', errmsg % ["has leading/trailing underscores '_'", "--prefix or --suffix"]
 
-    doAssert (not name.contains("__")): errmsg % ["consecutive underscores '_'", "--replace"]
+    doAssert (not name.contains("__")): errmsg % ["has consecutive underscores '_'", "--replace"]
+
+    doAssert not name[0].isDigit(), errmsg % [&"starts with a digit '{name[0]}'", "--prefix"]
 
   # Cannot blank out symbols which are fields or params
   #
@@ -381,7 +383,8 @@ proc loadPlugin*(gState: State, sourcePath: string) =
       # Compile plugin as library with `markAndSweep` GC
       cmd = &"{gState.nim} c --app:lib --gc:markAndSweep {flags} {outflags} {sourcePath.sanitizePath}"
 
-    discard execAction(cmd)
+      (output, ret) = execAction(cmd, die = false)
+    doAssert ret == 0, output & "\nFailed to compile cPlugin()\n\ncmd: " & cmd
   doAssert fileExists(pdll), "No plugin binary generated for " & sourcePath
 
   let lib = loadLib(pdll)

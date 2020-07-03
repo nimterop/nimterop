@@ -516,3 +516,7 @@ when not defined(NOHEADER):
 # #236
 assert SG_MAX_MIPMAPS is cint
 assert SG_MAX_MIPMAPS == 16
+
+assert parenpoin is object
+var pp: parenpoin
+assert pp.gtk_reserved1 is pointer

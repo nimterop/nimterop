@@ -116,7 +116,7 @@ proc getXCount*(node: TSNode, ntype: string, reverse = false): int =
           break
 
 proc getPtrCount*(node: TSNode, reverse = false): int =
-  node.getXCount("pointer_declarator")
+  node.getXCount("pointer_declarator", reverse)
 
 proc getArrayCount*(node: TSNode, reverse = false): int =
   node.getXCount("array_declarator")

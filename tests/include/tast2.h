@@ -292,6 +292,9 @@ enum {
     SG_MAX_TEXTUREARRAY_LAYERS = 128
 };
 
+struct parenpoin {
+  void (*gtk_reserved1);
+};
 
 
 // DUPLICATES
@@ -586,6 +589,10 @@ enum {
     SG_NUM_SHADER_STAGES = 2,
     SG_MAX_MIPMAPS = 16,
     SG_MAX_TEXTUREARRAY_LAYERS = 128
+};
+
+struct parenpoin {
+  void (*__gtk_reserved1);
 };
 
 #endif

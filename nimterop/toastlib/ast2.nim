@@ -523,7 +523,8 @@ proc newIdentDef(gState: State, name: string, node: TSNode, tname: string, tinfo
         result.add pident
 
       let
-        count = node[offset].getPtrCount()
+        # Could be parenthesized
+        count = node[offset].getAtom().tsNodeParent().getPtrCount(reverse = true)
       if count > 0:
         result.add gState.newPtrTree(count, tident)
       else:
