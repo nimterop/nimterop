@@ -276,7 +276,7 @@ typedef union sx_ivec3 {
     struct {
         int x;
         int y;
-        struct z {
+        struct {
           int z;
         };
     };

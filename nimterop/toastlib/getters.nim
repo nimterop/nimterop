@@ -338,6 +338,10 @@ proc getPreprocessor*(gState: State, fullpath: string) =
                 start = true
                 newHeaders.incl line
                 break
+      elif ": fatal error:" in line:
+        doAssert false,
+          "\n\nFailed in preprocessing, check if `cIncludeDir()` is needed or compiler `mode` is correct (c/cpp)" &
+          "\n\nERROR:$1\n" % line.split(": fatal error:")[1]
       else:
         if start:
           if "#undef" in line:
@@ -345,6 +349,9 @@ proc getPreprocessor*(gState: State, fullpath: string) =
           gState.code.add line & "\n"
     elif not p.running(): break
   p.close()
+  assert p.peekExitCode() == 0,
+    gState.code & "\n\nFailed in preprocessing:\n  " &
+    getCompiler() & " " & args.join(" ")
   gState.headersProcessed.incl newHeaders
 
 # Plugin related
