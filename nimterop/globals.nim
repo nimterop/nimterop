@@ -55,6 +55,7 @@ type
       identifiers*: TableRef[string, string] # Symbols that have been declared so far indexed by nimName
       skippedSyms*: HashSet[string]          # Symbols that have been skipped due to being unwrappable or
                                              # the user provided override is blank
+      headersProcessed*: HashSet[string]     # Headers already processed directly or recursively
 
       # Nim compiler objects
       constSection*, enumSection*, pragmaSection*, procSection*, typeSection*, varSection*: PNode

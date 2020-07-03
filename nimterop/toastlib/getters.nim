@@ -315,6 +315,7 @@ proc getPreprocessor*(gState: State, fullpath: string) =
     p = startProcess(getCompiler(), args = args, options = {poStdErrToStdOut, poUsePath})
     outp = p.outputStream()
     line = ""
+    newHeaders: HashSet[string]
 
   # Include content only from file
   gState.code = ""
@@ -323,17 +324,19 @@ proc getPreprocessor*(gState: State, fullpath: string) =
       # We want to keep blank lines here for comment processing
       if line.len > 1 and line[0] == '#' and line[1] == ' ':
         start = false
-        line = line.sanitizePath(noQuote = true)
-        if sfile in line or
-          (DirSep notin line and sfileName in line):
+        line = line.split('"')[1].sanitizePath(noQuote = true)
+        if sfile == line or
+          (DirSep notin line and sfileName == line):
           start = true
         elif gState.recurse:
-          if pDir.Bl or pDir in line:
+          if (pDir.Bl or pDir in line) and line notin gState.headersProcessed:
             start = true
+            newHeaders.incl line
           else:
             for inc in includeDirs:
-              if inc in line:
+              if line.startsWith(inc) and line notin gState.headersProcessed:
                 start = true
+                newHeaders.incl line
                 break
       else:
         if start:
@@ -342,6 +345,7 @@ proc getPreprocessor*(gState: State, fullpath: string) =
           gState.code.add line & "\n"
     elif not p.running(): break
   p.close()
+  gState.headersProcessed.incl newHeaders
 
 # Plugin related
 
@@ -393,3 +397,4 @@ proc expandSymlinkAbs*(path: string): string =
     result = path.expandFilename().normalizedPath()
   except:
     result = path
+  result = result.sanitizePath(noQuote = true)

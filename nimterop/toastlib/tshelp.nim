@@ -399,3 +399,12 @@ proc getTSNodeNamedChildNames*(node: TSNode): seq[string] =
 
       if name != "comment":
         result.add(name)
+
+proc getNodeError*(gState: State, node: TSNode): bool =
+  let
+    err = node.anyChildInTree("ERROR")
+  if not err.isNil:
+    # Bail on errors
+    gState.printDebug(node)
+    gecho &"# tree-sitter parse error: '{gState.getNodeVal(node).splitLines()[0]}', skipped"
+    result = true

@@ -137,7 +137,7 @@ proc newConstDef(gState: State, node: TSNode, fname = "", fval = ""): PNode =
       # In case symbol was skipped earlier
       gState.skippedSyms.excl origname
     else:
-      gecho &"# const '{origname}' is duplicate, skipped"
+      decho &"const '{origname}' is duplicate, skipped"
   else:
     gecho &"# const '{origname}' has unsupported value '{val.strip()}'"
     gState.skippedSyms.incl origname
@@ -391,7 +391,7 @@ proc newXIdent(gState: State, node: TSNode, kind = nskType, fname = "", pragmas:
 
     gState.identifierNodes[name] = result
   else:
-    gecho &"# {getKeyword(kind)} '{origname}' is duplicate, skipped"
+    decho &"{getKeyword(kind)} '{origname}' is duplicate, skipped"
 
 proc newArrayTree(gState: State, node: TSNode, typ, size: PNode = nil): PNode =
   # Create nkBracketExpr tree depending on input
@@ -1706,6 +1706,9 @@ proc addDef(gState: State, node: TSNode) =
     fdecl = node[start+1].firstChildInTree("function_declarator")
 
   if not fdecl.isNil:
+    if gState.getNodeError(fdecl):
+      return
+
     if not gState.noHeader:
       gState.addProc(node[start+1], node[start], commentNodes)
     else:
@@ -1716,19 +1719,14 @@ proc processNode(gState: State, node: TSNode): Status =
   const
     known = ["preproc_def", "type_definition",
       "struct_specifier", "union_specifier", "enum_specifier",
-      "declaration", "function_definition"].toHashSet()
+      "declaration"].toHashSet()
 
   result = success
   let
     name = node.getName()
   if name in known:
     # Recognized top-level nodes
-    let
-      err = node.anyChildInTree("ERROR")
-    if not err.isNil:
-      # Bail on errors
-      gState.printDebug(node)
-      gecho &"# tree-sitter parse error: '{gState.getNodeVal(node).splitLines()[0]}', skipped"
+    if gState.getNodeError(node):
       result = Status.error
     else:
       # Process nodes
@@ -1750,8 +1748,11 @@ proc processNode(gState: State, node: TSNode): Status =
         gState.addEnum(node)
       of "declaration":
         gState.addDecl(node)
-      of "function_definition":
-        gState.addDef(node)
+  elif name == "function_definition":
+    # Separate since we only need to check function_declarator for errors and
+    # not the compound_statement which could have errors but does not impact
+    # wrapper generation
+    gState.addDef(node)
   else:
     # Unknown, will check child nodes
     result = unknown

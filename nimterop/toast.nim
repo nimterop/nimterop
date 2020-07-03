@@ -136,7 +136,11 @@ proc main(
       gecho preMainOut
       gState.initNim()
     for src in source:
-      gState.process(src.expandSymlinkAbs())
+      let
+        src = src.expandSymlinkAbs()
+      if src notin gState.headersProcessed:
+        gState.process(src)
+        gState.headersProcessed.incl src
     if gState.pnim:
       printNim(gState)
 
