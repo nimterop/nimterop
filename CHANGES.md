@@ -25,6 +25,8 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.1
 
 - `git.nim` has been removed. This module was an artifact from the early days and was renamed to `build.nim` back in v0.2.0.
 
+- Nameless enum values are no longer typed to the made-up enum type name, they are instead typed as `cint` to match the underlying type. This allows using such enums without having to depend on the made-up name which could change if enum ordering changes upstream. [#236][i236] (since v0.6.1)
+
 ### New functionality
 
 - `getHeader()` now detects and links against `.lib` files as part of enabling Conan.io. Not all `.lib` files are compatible with MinGW as already stated above but for those that work, this is a required capability.
@@ -34,6 +36,8 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.1
 - `gitPull()` now checks if an existing repository is at the `checkout` value specified. If not, it will pull the latest changes and checkout the specified commit, tag or branch.
 
 - `cImport()` can now write the generated wrapper output to a user-defined file with the `nimFile` param. [#127][i127] (since v0.6.1)
+
+- Nimterop now supports anonymous nested structs/unions but it only works correctly for unions when `noHeader` is turned off (the default). This is because Nim does not support nested structs/unions and is unaware of the underlying memory structure. [#237][i237] (since v0.6.1)
 
 ### Other improvements
 
@@ -129,3 +133,5 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.4
 [i196]: https://github.com/nimterop/nimterop/issues/196
 [i197]: https://github.com/nimterop/nimterop/issues/197
 [i200]: https://github.com/nimterop/nimterop/issues/200
+[i236]: https://github.com/nimterop/nimterop/issues/236
+[i237]: https://github.com/nimterop/nimterop/issues/237

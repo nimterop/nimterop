@@ -704,6 +704,17 @@ proc newRecListTree(gState: State, name: string, node: TSNode): PNode =
           edecl = node[i].anyChildInTree("enumerator_list")
           commentNodes = gState.getCommentNodes(node[i])
 
+          # Check if struct/union field is anonymous
+          isNamedField = block:
+            var found = false
+            if not fdecl.isNil:
+              var sibling = fdecl.tsNodeParent().tsNodeNextNamedSibling()
+              while not sibling.isNil and sibling.getName() != "field_identifier":
+                sibling = sibling.tsNodeNextNamedSibling()
+              if not sibling.isNil:
+                found = true
+            found
+
           # `tname` is name of nested struct / union / enum just
           # added, passed on as type name for field in `newIdentDefs()`
           (processed, tname) =
@@ -725,11 +736,48 @@ proc newRecListTree(gState: State, name: string, node: TSNode): PNode =
         if processed != success:
           return nil
 
-        # Add nkIdentDefs for each field
-        for field in gState.newIdentDefs(name, node[i], i, ftname = tname, exported = true):
-          if not field.isNil:
-            field.comment = gState.getCommentsStr(commentNodes)
-            result.add field
+        if not fdecl.isNil and not isNamedField:
+          # Since anonymous, add fields directly to this struct/union
+
+          # nkTypeDef(            <= last
+          #  nkPragmaExpr(
+          #   ..
+          #  ),
+          #  nkEmpty(),
+          #  nkObjectTy(          <= last[2]
+          #   nkEmpty(),
+          #   nkEmpty(),
+          #   nkRecList(          <= last[2][2]
+          #    nkIdentDefs(       <= field1
+          #     ..
+          #    ),
+          #    nkIdentDefs(       <= field2
+          #     ..
+          #    )
+          #   )
+          #  )
+          # )
+          let
+            last = gState.typeSection[^1]
+            obj =
+              if last.len > 2 and last[2].kind == nkObjectTy:
+                last[2]
+              else: nil
+            recList =
+              if not obj.isNil and obj.len > 2 and obj[2].kind == nkRecList:
+                obj[2]
+              else: nil
+
+          if not recList.isNil:
+            for identdef in recList:
+              result.add identdef
+            gState.typeSection.sons.del(gState.typeSection.len-1)
+        else:
+          # Add nkIdentDefs for each field
+          for field in gState.newIdentDefs(name, node[i], i, ftname = tname, exported = true):
+            if not field.isNil:
+              field.comment = gState.getCommentsStr(commentNodes)
+              result.add field
 
 proc addTypeObject(gState: State, node: TSNode, typeDef: PNode = nil, fname = "", istype = false, union = false) =
   # Add a type of object
@@ -1444,14 +1492,16 @@ proc addEnum(gState: State, node: TSNode) =
             fval = ""
           if prev.Bl:
             # Starting default value
-            fval = &"(0).{name}"
+            fval = &"(0)"
           else:
             # One greater than previous
-            fval = &"({prev} + 1).{name}"
+            fval = &"({prev} + 1)"
 
           if en.len > 1 and en[1].getName() in gEnumVals:
+            # Enum value specified, evaluate later, don't use calculated value
             fieldDeclarations.add((fname, forigname, "", gState.getNodeVal(en[1]), commentNodes))
           else:
+            # Set calculated value
             fieldDeclarations.add((fname, forigname, fval, "", commentNodes))
 
           fnames.incl fname
@@ -1464,10 +1514,18 @@ proc addEnum(gState: State, node: TSNode) =
       # parseCExpression requires all const identifiers to be present for the enum
       for (fname, forigname, fval, cexpr, commentNodes) in fieldDeclarations:
         let
-          fval =
+          fval = block:
+            var fval = fval
             if fval.Bl:
-              "(" & $gState.parseCExpression(cexpr, name) & ")." & name
-            else: fval
+              # Evaluate enum value from expression
+              fval = &"({$gState.parseCExpression(cexpr, name)})"
+            if origname.nBl:
+              # Named enum so cast to type - #236
+              fval &= &".{name}"
+            else:
+              # Cast to cint to match underlying type
+              fval &= ".cint"
+            fval
 
           # Cannot use newConstDef() since parseString(fval) adds backticks to and/or
           constNode = gState.parseString(&"const {fname}* = {fval}")[0][0]

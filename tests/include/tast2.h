@@ -271,6 +271,27 @@ struct TestMyInt {
   MyInt f1;
 };
 
+// Issue #237
+typedef union sx_ivec3 {
+    struct {
+        int x;
+        int y;
+        struct z {
+          int z;
+        };
+    };
+
+    int n[3];
+} sx_ivec3;
+
+// Issue #236
+enum {
+    SG_INVALID_ID = 0,
+    SG_NUM_SHADER_STAGES = 2,
+    SG_MAX_MIPMAPS = 16,
+    SG_MAX_TEXTUREARRAY_LAYERS = 128
+};
+
 
 
 // DUPLICATES
@@ -546,6 +567,26 @@ struct TestMyInt {
   MyInt f1;
 };
 
+// Issue #237
+typedef union sx_ivec3 {
+    struct {
+        int x;
+        int y;
+        struct z {
+          int z;
+        };
+    };
+
+    int n[3];
+} sx_ivec3;
+
+// Issue #236
+enum {
+    SG_INVALID_ID = 0,
+    SG_NUM_SHADER_STAGES = 2,
+    SG_MAX_MIPMAPS = 16,
+    SG_MAX_TEXTUREARRAY_LAYERS = 128
+};
 
 #endif
 

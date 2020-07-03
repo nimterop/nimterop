@@ -28,8 +28,9 @@ This will download and install nimterop in the standard Nimble package location,
 
 ## Usage
 
-Nimterop can be used in two ways:
+Nimterop can be used in three ways:
 - Creating a wrapper file - a `.nim` file that contains calls to the high-level API that can download and build the C library as well as generate the required Nim code to interface with the library. This wrapper file can then be imported into Nim code like any other module and it will be processed at compile time.
+- Same as the first option except using the `nimFile` param to `cImport()` to write the generated wrapper to a file during build time just once and then importing that generated wrapper into the application like any other Nim module.
 - Using the command line `toast` tool to generate the Nim code which can then be stored into a file and imported separately.
 
 Any combination of the above is possible - only download, build or wrapping and nimterop avoids imposing any particular workflow.
@@ -169,7 +170,7 @@ For types, `{.header: "header.h".}` informs Nim that `header.h` has the symbol a
 
 For functions, `{.header.}` works the same as types and can be omitted if preferred. The `{.importc.}` pragma is still required, unlike types since functions need to be linked to the implementation in the library. The user will need to provide this information at link time with `{.passL.}` and linking to a library with `-lheader` or `path/to/libheader.a`. It is also possible to just use `cCompile()` or `{.compile.}` to compile some C source files which contain the implementation.
 
-While `{.header.}` can be omitted for convenience, it does prevent wrapping of `static inline` functions as well as type checking of the wrapper ABI with `-d:checkAbi` at compile time. The user will need to choose based on the library in question.
+While `{.header.}` can be omitted for convenience, it does prevent wrapping of `static inline` functions as well as type checking of the wrapper ABI with `-d:checkAbi` at compile time. Further, anonymous nested structs/unions within unions will be rendered incorrectly by Nim since it is unaware of the true memory structure of the type. The user will need to choose based on the library in question.
 
 Going further, the `{.dynlib: "path/to/libheader.so".}` pragma can be used to inform Nim to load the library at runtime and link the function instead of linking at compile time. This enables creation of a wrapper that does not need the library present at compile time.
 

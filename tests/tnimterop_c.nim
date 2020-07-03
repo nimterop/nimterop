@@ -70,7 +70,7 @@ var
 
   e: ENUM
   e2: ENUM2 = enum5
-  e3: Enum_testh1 = enum7
+  e3 = enum7
   e4: ENUM4 = enum11
 
   vptr: VOIDPTR

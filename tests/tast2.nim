@@ -353,6 +353,7 @@ checkPragmas(U2, pHeaderBy & @["union"], istype = false)
 var u2: U2
 u2.f1 = addr a15.a2[0]
 
+assert PANEL_WINDOW is nk_panel_type
 assert PANEL_WINDOW == 1
 assert PANEL_GROUP == 2
 assert PANEL_POPUP == 4
@@ -498,3 +499,20 @@ when declared(MyInt):
   assert false, "MyInt is defined!"
 testFields(TestMyInt, "f1!cint")
 checkPragmas(TestMyInt, pHeaderBy, isType = false)
+
+# #237
+assert sx_ivec3 is object
+testFields(sx_ivec3, "x|y|z|n!cint|cint|cint|array[3, cint]")
+checkPragmas(sx_ivec3, pHeaderBy & @["union"], istype = false)
+var sx: sx_ivec3
+sx.x = 5
+assert sx.n[0] == 5
+when not defined(NOHEADER):
+  # Nim doesn't know of the anonymous nested struct so when the header
+  # isn't present, the test below breaks
+  sx.n[1] = 4
+  assert sx.y == 4
+
+# #236
+assert SG_MAX_MIPMAPS is cint
+assert SG_MAX_MIPMAPS == 16
