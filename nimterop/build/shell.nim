@@ -155,7 +155,7 @@ proc rmFile*(source: string, dir = false) =
         if dir:
           "rd /s/q"
         else:
-          "del /s/q/f"
+          "del /q/f"
       else:
         "rm -rf"
     exists =
@@ -335,6 +335,18 @@ proc gitAtCheckout*(outdir, checkout: string): bool =
   result = checkout in execAction(
     &"cd {outdir.sanitizePath} && git log --decorate --no-color -n 1 --format=oneline").output
 
+proc gitDefaultBranch*(outdir: string): string =
+  ## Get the default branch for a git repository before it is pulled
+  result = "master"
+  let
+    output = execAction(
+      &"cd {outdir.sanitizePath} && git remote show origin"
+    ).output
+
+  for line in output.splitLines():
+    if "HEAD branch: " in line:
+      result = line.split("branch: ")[1].strip()
+
 proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false) =
   ## Pull the specified git repository to the output directory
   ##
@@ -375,15 +387,14 @@ proc gitPull*(url: string, outdir = "", plist = "", checkout = "", quiet = false
   # In case directory has old files from another run
   discard execAction(&"cd {outdirQ} && git clean -fxd")
 
-  if checkout.len != 0:
-    if not quiet:
-      gecho "# Checking out " & checkout
-    discard execAction(&"cd {outdirQ} && git fetch", retry = 3)
-    discard execAction(&"cd {outdirQ} && git checkout {checkout}")
-  else:
-    if not quiet:
-      gecho "# Pulling repository"
-    discard execAction(&"cd {outdirQ} && git pull --depth=1 origin master", retry = 3)
+  # Checkout specified branch/tag/commit or default branch - typically master
+  let
+    checkout = if checkout.Bl: gitDefaultBranch(outdir) else: checkout
+
+  if not quiet:
+    gecho "# Checking out " & checkout
+  discard execAction(&"cd {outdirQ} && git fetch", retry = 3)
+  discard execAction(&"cd {outdirQ} && git checkout {checkout}")
 
 proc gitTags*(outdir: string): seq[string] =
   ## Get all the git tags in the specified directory
