@@ -136,8 +136,10 @@ function main() {
 <dt><a name="c2nImport" href="#c2nImport"><span>c2nImport:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="cimport: c2nImport(filename: static string; recurse: static bool = false;
-          dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped" href="cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring">cimport: c2nImport(filename: static string; recurse: static bool = false;
-          dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped</a></li>
+          dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;;
+          flags: static string = &quot;&quot;; nimFile: static string = &quot;&quot;): untyped" href="cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring%2Cstring">cimport: c2nImport(filename: static string; recurse: static bool = false;
+          dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;;
+          flags: static string = &quot;&quot;; nimFile: static string = &quot;&quot;): untyped</a></li>
           </ul></dd>
 <dt><a name="cacheDir" href="#cacheDir"><span>cacheDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -170,12 +172,16 @@ function main() {
 <dt><a name="cImport" href="#cImport"><span>cImport:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="cimport: cImport(filenames: static seq[string]; recurse: static bool = false;
-        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped" href="cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring">cimport: cImport(filenames: static seq[string]; recurse: static bool = false;
-        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped</a></li>
+        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;;
+        nimFile: static string = &quot;&quot;): untyped" href="cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring%2Cstring">cimport: cImport(filenames: static seq[string]; recurse: static bool = false;
+        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;;
+        nimFile: static string = &quot;&quot;): untyped</a></li>
           <li><a class="reference external"
           data-doc-search-tag="cimport: cImport(filename: static string; recurse: static bool = false;
-        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped" href="cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring_2">cimport: cImport(filename: static string; recurse: static bool = false;
-        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;): untyped</a></li>
+        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;;
+        nimFile: static string = &quot;&quot;): untyped" href="cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring%2Cstring_2">cimport: cImport(filename: static string; recurse: static bool = false;
+        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;;
+        nimFile: static string = &quot;&quot;): untyped</a></li>
           </ul></dd>
 <dt><a name="cIncludeDir" href="#cIncludeDir"><span>cIncludeDir:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -320,8 +326,10 @@ function main() {
            onRetry: proc () = nil): tuple[output: string, ret: int]</a></li>
           <li><a class="reference external"
           data-doc-search-tag="shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
-           onRetry: proc () = nil): tuple[output: string, ret: int]" href="build/shell.html#execAction%2Cstring%2Cint%2Cstring%2Cproc%29">shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
-           onRetry: proc () = nil): tuple[output: string, ret: int]</a></li>
+           onRetry: proc () = nil; onError: proc (output: string; err: int) = nil): tuple[
+    output: string, ret: int]" href="build/shell.html#execAction%2Cstring%2Cint%2Cstring%2Cproc%29%2Cproc%28string%2Cint%29">shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
+           onRetry: proc () = nil; onError: proc (output: string; err: int) = nil): tuple[
+    output: string, ret: int]</a></li>
           </ul></dd>
 <dt><a name="extractTar" href="#extractTar"><span>extractTar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -387,7 +395,7 @@ function main() {
           </ul></dd>
 <dt><a name="getCommented" href="#getCommented"><span>getCommented:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="globals: getCommented(str: string): string" href="globals.html#getCommented%2Cstring">globals: getCommented(str: string): string</a></li>
+          data-doc-search-tag="globals: getCommented(str: string): string" href="globals.html#getCommented.t%2Cstring">globals: getCommented(str: string): string</a></li>
           </ul></dd>
 <dt><a name="getCompiler" href="#getCompiler"><span>getCompiler:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -808,7 +816,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-06-27 18:05:37 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-04 00:11:42 UTC</small>
       </div>
     </div>
   </div>

@@ -111,9 +111,10 @@ function main() {
   <ul class="simple simple-toc-section">
       <li><a class="reference" href="#sleep%2Cint"
     title="sleep(milsecs: int)"><wbr />sleep<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#execAction%2Cstring%2Cint%2Cstring%2Cproc%29"
+  <li><a class="reference" href="#execAction%2Cstring%2Cint%2Cstring%2Cproc%29%2Cproc%28string%2Cint%29"
     title="execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;
-           onRetry: proc () = nil): tuple[output: string, ret: int]"><wbr />exec<wbr />Action<span class="attachedType"></span></a></li>
+           onRetry: proc () = nil; onError: proc (output: string; err: int) = nil): tuple[
+    output: string, ret: int]"><wbr />exec<wbr />Action<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#findExe%2Cstring"
     title="findExe(exe: string): string"><wbr />find<wbr />Exe<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#mkDir%2Cstring"
@@ -188,16 +189,17 @@ function main() {
 Sleep at compile time
 
 </dd>
-<a id="execAction,string,int,string,proc)"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#execAction%2Cstring%2Cint%2Cstring%2Cproc%29"><span class="Identifier">execAction</span></a><span class="Other">(</span><span class="Identifier">cmd</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">retry</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">;</span> <span class="Identifier">die</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">cache</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">cacheKey</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span>
-               <span class="Identifier">onRetry</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Other">)</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">[</span><span class="Identifier">output</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">ret</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">]</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma">
-    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ExecIOEffect</span><span class="Other">,</span>
-    <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<a id="execAction,string,int,string,proc),proc(string,int)"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#execAction%2Cstring%2Cint%2Cstring%2Cproc%29%2Cproc%28string%2Cint%29"><span class="Identifier">execAction</span></a><span class="Other">(</span><span class="Identifier">cmd</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">retry</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">;</span> <span class="Identifier">die</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">cache</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">cacheKey</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span>
+               <span class="Identifier">onRetry</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Other">)</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">;</span> <span class="Identifier">onError</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">output</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">err</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">[</span>
+    <span class="Identifier">output</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">ret</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">]</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span>
+                                    <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ExecIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span>
+    <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
 
 <p>Execute an external command - supported at compile time</p>
 <p>Checks if command exits successfully before returning. If not, an error is raised. Always caches results to be used in nimsuggest or nimcheck mode.</p>
-<p><tt class="docutils literal"><span class="pre">retry</span></tt> - number of times command should be retried before error <tt class="docutils literal"><span class="pre">die = false</span></tt> - return on errors <tt class="docutils literal"><span class="pre">cache = true</span></tt> - cache results unless cleared with -f <tt class="docutils literal"><span class="pre">cacheKey</span></tt> - key to create unique cache entry</p>
+<p><tt class="docutils literal"><span class="pre">retry</span></tt> - number of times command should be retried before error <tt class="docutils literal"><span class="pre">die = false</span></tt> - return on errors <tt class="docutils literal"><span class="pre">cache = true</span></tt> - cache results unless cleared with -f <tt class="docutils literal"><span class="pre">cacheKey</span></tt> - key to create unique cache entry <tt class="docutils literal"><span class="pre">onRetry()</span></tt> - proc to call before retrying <tt class="docutils literal"><span class="pre">onError(output, err)</span></tt> - proc to call on error</p>
 
 
 </dd>
@@ -456,7 +458,7 @@ Get number of processors
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-06-27 18:05:35 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-04 00:11:41 UTC</small>
       </div>
     </div>
   </div>

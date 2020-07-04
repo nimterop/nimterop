@@ -1,5 +1,5 @@
 sleep	build/shell.html#sleep,int	shell: sleep(milsecs: int)	
-execAction	build/shell.html#execAction,string,int,string,proc)	shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;\n           onRetry: proc () = nil): tuple[output: string, ret: int]	
+execAction	build/shell.html#execAction,string,int,string,proc),proc(string,int)	shell: execAction(cmd: string; retry = 0; die = true; cache = false; cacheKey = &quot;&quot;;\n           onRetry: proc () = nil; onError: proc (output: string; err: int) = nil): tuple[\n    output: string, ret: int]	
 findExe	build/shell.html#findExe,string	shell: findExe(exe: string): string	
 mkDir	build/shell.html#mkDir,string	shell: mkDir(dir: string)	
 cpFile	build/shell.html#cpFile,string,string	shell: cpFile(source, dest: string; psymlink = false; move = false)	
