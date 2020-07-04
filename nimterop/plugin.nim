@@ -13,10 +13,11 @@ type
 var
   cOverrides*: Table[string, StringHash]
 
-cOverrides = initTable[string, StringHash]()
-cOverrides["nskType"] = StringHash()
-cOverrides["nskConst"] = StringHash()
-cOverrides["nskProc"] = StringHash()
+proc onLoad() {.exportc, dynlib.} =
+  cOverrides = initTable[string, StringHash]()
+  cOverrides["nskType"] = StringHash()
+  cOverrides["nskConst"] = StringHash()
+  cOverrides["nskProc"] = StringHash()
 
 proc onSymbolOverrideFinal*(typ: string): StringHash {.exportc, dynlib.} =
   result = cOverrides[typ]

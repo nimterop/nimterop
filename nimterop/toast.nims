@@ -6,7 +6,7 @@ switch("gcc.linkerexe", "g++")
 
 # Workaround for NilAccessError crash on Windows #98
 # Could also help for OSX/Linux crash
-switch("gc", "markAndSweep")
+switch("gc", "boehm")
 
 # Retain stackTrace for clear errors
 switch("stackTrace", "on")
@@ -24,3 +24,5 @@ switch("out", currentSourcePath.parentDir() / "toast".addFileExt(ExeExt))
 
 # Define TOAST for globals.nim
 switch("define", "TOAST")
+
+switch("passL", "-Wl,--export-dynamic")

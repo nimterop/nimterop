@@ -381,7 +381,7 @@ proc loadPlugin*(gState: State, sourcePath: string) =
       outflags = &"--out:\"{pdll}\""
 
       # Compile plugin as library with `markAndSweep` GC
-      cmd = &"{gState.nim} c --app:lib --gc:markAndSweep {flags} {outflags} {sourcePath.sanitizePath}"
+      cmd = &"{gState.nim} c --app:lib -d:noSignalHandler --gc:boehm --passL:-Bsymbolic {flags} {outflags} {sourcePath.sanitizePath}"
 
       (output, ret) = execAction(cmd, die = false)
     doAssert ret == 0, output & "\nFailed to compile cPlugin()\n\ncmd: " & cmd
@@ -395,6 +395,11 @@ proc loadPlugin*(gState: State, sourcePath: string) =
   gState.onSymbolOverride = cast[OnSymbol](lib.symAddr("onSymbolOverride"))
 
   gState.onSymbolOverrideFinal = cast[OnSymbolOverrideFinal](lib.symAddr("onSymbolOverrideFinal"))
+
+  let
+    onLoad = cast[proc () {.cdecl.}](lib.symAddr("onLoad"))
+  if not onLoad.isNil:
+    onLoad()
 
 # Misc toast helpers
 
