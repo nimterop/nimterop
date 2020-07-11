@@ -15,7 +15,7 @@ Refer to the documentation for `getHeader()` for details on how to use this new 
 
 See the full list of changes here:
 
-https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.1
+https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.3
 
 ### Breaking changes
 
@@ -38,6 +38,8 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.1
 - `cImport()` can now write the generated wrapper output to a user-defined file with the `nimFile` param. [#127][i127] (since v0.6.1)
 
 - Nimterop now supports anonymous nested structs/unions but it only works correctly for unions when `noHeader` is turned off (the default). This is because Nim does not support nested structs/unions and is unaware of the underlying memory structure. [#237][i237] (since v0.6.1)
+
+- `xxxJBB` now allows for customizing the base location to search packages with the `jbbFlags` param to `getHeader()`. Specifying `giturl=xxx` where `xxx` could be a full Git URL or just the username for Github.com allows changing the default Git repo. In addition, `url=xxx` is also supported to download project info and binaries compiled with BinaryBuilder.org but hosted at another non-Git location. (since v0.6.3)
 
 ### Other improvements
 

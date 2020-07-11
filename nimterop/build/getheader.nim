@@ -141,18 +141,14 @@ proc getConanLDeps(outdir: string): seq[string] =
 
   result = pkg.getConanLDeps(outdir)
 
-proc getJBBPath(header, uri, outdir, version: string): string =
+proc getJBBPath(header, uri, flags, outdir, version: string): string =
   let
     spl = uri.split('/', 1)
     name = spl[0]
     hasVersion = version.len != 0
 
   var
-    ver =
-      if spl.len == 2:
-        spl[1]
-      else:
-        ""
+    ver = if spl.len == 2: spl[1] else: ""
 
   if ver.len != 0:
     if "$#" in ver or "$1" in ver:
@@ -166,6 +162,20 @@ proc getJBBPath(header, uri, outdir, version: string): string =
 
   let
     pkg = newJBBPackage(name, ver)
+
+  # Handle `jbbFlags`
+  if flags.nBl:
+    if flags.startsWith("giturl="):
+      let
+        val = flags["giturl=".len .. ^1]
+      if val.contains("://"):
+        pkg.baseUrl = val
+      else:
+        pkg.baseUrl = "https://github.com/" & val
+    elif flags.startsWith("url="):
+      pkg.baseUrl = flags["url=".len .. ^1]
+      pkg.isGit = false
+
   downloadJBB(pkg, outdir)
 
   result = findFile(header, outdir)
@@ -217,7 +227,8 @@ macro getHeader*(
   conanuri: static[string] = "", jbburi: static[string] = "",
   outdir: static[string] = "", libdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
-  altNames: static[string] = "", buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
+  jbbFlags: static[string] = "", altNames: static[string] = "",
+  buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
   ## Get the path to a header file for wrapping with
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
   ## `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
@@ -288,6 +299,13 @@ macro getHeader*(
   ## `conFlags`, `cmakeFlags` and `makeFlags` allow sending custom parameters to `configure`,
   ## `cmake` and `make` in case additional configuration is required as part of the build
   ## process.
+  ##
+  ## `jbbFlags` allows changing the BinaryBuilder.org defaults:
+  ## - `giturl=customUrl` changes the default `https://github.com/JuliaBinaryWrappers` to
+  ##   another Git URL. If no hostname is specified, `https://github.com` is assumed.
+  ## - `url=customUrl` uses regular HTTP instead of Git and looks for `Artifacts.toml` and
+  ##   `Project.toml` files at that location. `$1` or `$#` are replaced with the version
+  ##   if specified.
   ##
   ## `altNames` is a list of alternate names for the library - e.g. zlib uses `zlib.h` for
   ## the header but the typical lib name is `libz.so` and not `libzlib.so`. However, it is
@@ -384,7 +402,7 @@ macro getHeader*(
       `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
 
     # Search for header in outdir (after retrieving code) depending on -d:xxx mode
-    proc getPath(header, giturl, dlurl, conanuri, jbburi, outdir, version: string, shared: bool): string =
+    proc getPath(header, giturl, dlurl, conanuri, jbburi, jbbFlags, outdir, version: string, shared: bool): string =
       when `nameGit`:
         getGitPath(header, giturl, outdir, version)
       elif `nameDL`:
@@ -392,7 +410,7 @@ macro getHeader*(
       elif `nameConan`:
         getConanPath(header, conanuri, outdir, version, shared)
       elif `nameJBB`:
-        getJBBPath(header, jbburi, outdir, version)
+        getJBBPath(header, jbburi, jbbFlags, outdir, version)
       else:
         getLocalPath(header, outdir)
 
@@ -423,7 +441,8 @@ macro getHeader*(
         when useStd:
           stdPath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `outdir`, `version`, not `nameStatic`)
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `jbbFlags`,
+            `outdir`, `version`, not `nameStatic`)
 
     # Run preBuild hook before building library if not Std, Conan or JBB
     when not (useStd or `nameConan` or `nameJBB`) and declared(`preBuild`):
@@ -458,7 +477,8 @@ macro getHeader*(
         if prePath.len != 0:
           prePath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `outdir`, `version`, not `nameStatic`)
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `jbbFlags`,
+            `outdir`, `version`, not `nameStatic`)
 
     static:
       doAssert `path`.len != 0, "\nHeader " & `header` & " not found - " &

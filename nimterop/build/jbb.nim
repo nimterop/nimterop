@@ -12,7 +12,10 @@ type
     name*: string
     version*: string
 
-    url*: string
+    baseUrl*: string    # Location to find package
+    isGit*: bool        # Git or HTTP
+
+    url*: string        # Download URL
 
     sharedLibs*: seq[string]
     staticLibs*: seq[string]
@@ -20,7 +23,7 @@ type
 
 const
   # JBB URLs
-  jbbBaseUrl = "https://github.com/JuliaBinaryWrappers/$1_jll.jl"
+  jbbBaseUrl = "https://github.com/JuliaBinaryWrappers"
 
   jbbInfo = "jbbinfo.json"
   jbbProject = "Project.toml"
@@ -45,6 +48,8 @@ proc newJBBPackage*(name, version: string): JBBPackage =
   result = new(JBBPackage)
   result.name = name
   result.version = version
+  result.baseUrl = jbbBaseUrl
+  result.isGit = true
 
 proc parseJBBProject(pkg: JBBPackage, outdir: string) =
   # Get all dependencies from Project.toml
@@ -127,21 +132,32 @@ proc getJBBRepo*(pkg: JBBPackage, outdir: string) =
   let
     path = outdir / "repos" / pkg.name
 
-  gitPull(
-    jbbBaseUrl % pkg.name,
-    outdir = path,
-    plist = "*.toml",
-    "master",
-    quiet = true
-  )
+  if pkg.isGit:
+    # Get package info using Git
+    gitPull(
+      pkg.baseUrl & ("/$1_jll.jl" % pkg.name),
+      outdir = path,
+      plist = "*.toml",
+      "master",
+      quiet = true
+    )
 
-  if pkg.version.len != 0:
-    # Checkout correct tag
-    let
-      tags = gitTags(path)
-    for i in tags.len - 1 .. 0:
-      if pkg.version in tags[i] and i != tags.len - 1:
-        gitCheckout(path, tags[i-1])
+    if pkg.version.len != 0:
+      # Checkout correct tag
+      let
+        tags = gitTags(path)
+      for i in tags.len - 1 .. 0:
+        if pkg.version in tags[i] and i != tags.len - 1:
+          gitCheckout(path, tags[i-1])
+  else:
+    # Download package info from HTTP
+    var
+      url = pkg.baseUrl
+    if "$#" in url or "$1" in url:
+      doAssert pkg.version.len != 0, "Need version for custom BinaryBuilder.org url: " & url
+      url = url % pkg.version
+    downloadUrl(url & "Artifacts.toml", path, quiet = true)
+    downloadUrl(url & "Project.toml", path, quiet = true)
 
   pkg.parseJBBProject(path)
   pkg.parseJBBArtifacts(path)
