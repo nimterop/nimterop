@@ -19,6 +19,7 @@ type
     debug*: bool               # `cDebug()` or `--debug | -d` to enable debug mode
     defines*: seq[string]      # Symbols added by `cDefine()` and `--define | -D` for C/C++ preprocessor/compiler
     dynlib*: string            # `cImport(dynlib)` or `--dynlib | -l` to specify variable containing library name
+    exclude*: seq[string]      # files or directories to exclude from the wrapped output
     feature*: seq[Feature]     # `--feature | -f` feature flags enabled
     includeDirs*: seq[string]  # Paths added by `cIncludeDir()` and `--includeDirs | -I` for C/C++ preprocessor/compiler
     mode*: string              # `cImport(mode)` or `--mode | -m` to override detected compiler mode - c or cpp

@@ -41,11 +41,15 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.3
 
 - `xxxJBB` now allows for customizing the base location to search packages with the `jbbFlags` param to `getHeader()`. Specifying `giturl=xxx` where `xxx` could be a full Git URL or just the username for Github.com allows changing the default Git repo. In addition, `url=xxx` is also supported to download project info and binaries compiled with BinaryBuilder.org but hosted at another non-Git location. (since v0.6.3)
 
+- It is now possible to exclude the contents of specific files or entire directories from the wrapped output using `--exclude | -X` with `toast` or `cExclude()` from a wrapper. This might be required when a header uses `#include` to pull in external dependencies. E.g. `sciter` has a `#include <gtk/gtk.h>` which pulls in the entire GTK ecosystem which is needed for successful preprocessing but we do not want to include those headers in the wrapped output when using `--recurse | -r`.
+
 ### Other improvements
 
 - Generated wrappers no longer depend on nimterop being present - no more `import nimterop/types`. Supporting code is directly included in the wrapper output and only when required. E.g. enum macro is only included if wrapper contains enums. [#125][i125] (since v0.6.1)
 
 - `cImport()` now includes wrapper output from a file rather than inline. Errors in generated wrappers will no longer point to a line in `macros.nim` making debugging easier. (since v0.6.1)
+
+- `cIncludeDir()` can now accept a `seq[string]` of directories and an optional `exclude` param which sets those include directories to not be included in the wrapped output.
 
 
 ## Version 0.5.0

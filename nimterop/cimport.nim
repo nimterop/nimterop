@@ -120,6 +120,9 @@ proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = ""
   for i in gStateCT.includeDirs:
     cmd.add &" --includeDirs+={i.sanitizePath}"
 
+  for i in gStateCT.exclude:
+    cmd.add &" --exclude+={i.sanitizePath}"
+
   if not noNimout:
     cmd.add &" --pnim"
 
@@ -415,21 +418,52 @@ proc cAddSearchDir*(dir: string) {.compileTime.} =
   if dir notin gStateCT.searchDirs:
     gStateCT.searchDirs.add(dir)
 
-macro cIncludeDir*(dir: static string): untyped =
+macro cIncludeDir*(dirs: static seq[string], exclude: static[bool] = false): untyped =
+  ## Add include directories that are forwarded to the C/C++ preprocessor if
+  ## called within `cImport()` or `c2nImport()` as well as to the C/C++
+  ## compiler during Nim compilation using `{.passC: "-IXXX".}`.
+  ##
+  ## Set `exclude = true` if the contents of these include directories should
+  ## not be included in the wrapped output.
+  for dir in dirs:
+    var dir = interpPath(dir)
+    result = newNimNode(nnkStmtList)
+
+    let fullpath = findPath(dir)
+    if fullpath notin gStateCT.includeDirs:
+      gStateCT.includeDirs.add(fullpath)
+      if exclude:
+        gStateCT.exclude.add(fullpath)
+      let str = &"-I{fullpath.quoteShell}"
+      result.add quote do:
+        {.passC: `str`.}
+      if gStateCT.debug:
+        gecho result.repr
+
+macro cIncludeDir*(dir: static[string], exclude: static[bool] = false): untyped =
   ## Add an include directory that is forwarded to the C/C++ preprocessor if
   ## called within `cImport()` or `c2nImport()` as well as to the C/C++
   ## compiler during Nim compilation using `{.passC: "-IXXX".}`.
-  var dir = interpPath(dir)
-  result = newNimNode(nnkStmtList)
+  ##
+  ## Set `exclude = true` if the contents of this include directory should
+  ## not be included in the wrapped output.
+  return quote do:
+    cIncludeDir(@[`dir`], `exclude` == 1)
 
-  let fullpath = findPath(dir)
-  if fullpath notin gStateCT.includeDirs:
-    gStateCT.includeDirs.add(fullpath)
-    let str = &"-I{fullpath.quoteShell}"
-    result.add quote do:
-      {.passC: `str`.}
-    if gStateCT.debug:
-      gecho result.repr
+macro cExclude*(paths: static seq[string]): untyped =
+  ## Exclude specified paths - files or directories from the wrapped output
+  ##
+  ## Full path to file or directory is required.
+  result = newNimNode(nnkStmtList)
+  for path in paths:
+    gStateCT.exclude.add path
+
+macro cExclude*(path: static string): untyped =
+  ## Exclude specified path - file or directory from the wrapped output.
+  ##
+  ## Full path to file or directory is required.
+  return quote do:
+    cExclude(@[`path`])
 
 proc cAddStdDir*(mode = "c") {.compileTime.} =
   ## Add the standard `c` [default] or `cpp` include paths to search

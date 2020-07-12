@@ -13,7 +13,7 @@ var
   preMainOut = ""
 
 proc process(gState: State, path: string) =
-  doAssert existsFile(path), &"Invalid path {path}"
+  doAssert fileExists(path), &"Invalid path {path}"
 
   if gState.mode.Bl:
     gState.mode = getCompilerMode(path)
@@ -38,6 +38,7 @@ proc main(
     debug = false,
     defines: seq[string] = @[],
     dynlib: string = "",
+    exclude: seq[string] = @[],
     feature: seq[Feature] = @[],
     includeDirs: seq[string] = @[],
     mode = "",
@@ -65,6 +66,7 @@ proc main(
     debug: debug,
     defines: defines,
     dynlib: dynlib,
+    exclude: exclude,
     feature: feature,
     includeDirs: includeDirs,
     mode: mode,
@@ -222,6 +224,7 @@ when isMainModule:
     "debug": "enable debug output",
     "defines": "definitions to pass to preprocessor",
     "dynlib": "{.dynlib.} pragma to import symbols - Nim const string or file path",
+    "exclude": "files or directories to exclude from the wrapped output",
     "feature": "flags to enable experimental features",
     "includeDirs": "include directory to pass to preprocessor",
     "mode": "language parser: c or cpp",
@@ -247,6 +250,7 @@ when isMainModule:
     "debug": 'd',
     "defines": 'D',
     "dynlib": 'l',
+    "exclude": 'X',
     "feature": 'f',
     "includeDirs": 'I',
     "noComments": 'c',

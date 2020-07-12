@@ -286,7 +286,16 @@ proc getKeyword*(kind: NimSymKind): string =
 proc getCurrentHeader*(fullpath: string): string =
   ("header" & fullpath.splitFile().name.multiReplace([(".", ""), ("-", "")]))
 
+proc isIncluded(gState: State, file: string): bool {.inline.} =
+  # Check if the specified file should be excluded from wrapped output
+  if gState.exclude.nBl:
+    for excl in gState.exclude:
+      if file.startsWith(excl):
+        return
+  result = true
+
 proc getPreprocessor*(gState: State, fullpath: string) =
+  # Get preprocessed output from the C/C++ compiler
   var
     args: seq[string]
     start = false
@@ -332,14 +341,15 @@ proc getPreprocessor*(gState: State, fullpath: string) =
           start = true
         elif gState.recurse:
           if (pDir.Bl or pDir in line) and line notin gState.headersProcessed:
-            start = true
             newHeaders.incl line
+            start = gState.isIncluded(line)
           else:
             for inc in includeDirs:
               if line.startsWith(inc) and line notin gState.headersProcessed:
-                start = true
                 newHeaders.incl line
-                break
+                start = gState.isIncluded(line)
+                if start:
+                  break
       elif ": fatal error:" in line:
         doAssert false,
           "\n\nFailed in preprocessing, check if `cIncludeDir()` is needed or compiler `mode` is correct (c/cpp)" &

@@ -132,6 +132,7 @@ cDefine("HAS_ABC")            # Set #defines for preprocessor and compiler
 cDefine("HAS_ABC", "DEF")
 
 cIncludeDir("clib/include")   # Setup any include directories
+cExclude("clib/file.h")       # Exclude file from wrapped output
 
 cImport("clib.h")             # Generate wrappers for header specified
 
@@ -219,6 +220,7 @@ Options:
   -d, --debug          bool      false    enable debug output
   -D=, --defines=      strings   {}       definitions to pass to preprocessor
   -l=, --dynlib=       string    ""       {.dynlib.} pragma to import symbols - Nim const string or file path
+  -X=, --exclude=      strings   {}       files or directories to exclude from the wrapped output
   -f=, --feature=      Features  {}       flags to enable experimental features
   -I=, --includeDirs=  strings   {}       include directory to pass to preprocessor
   -m=, --mode=         string    ""       language parser: c or cpp
