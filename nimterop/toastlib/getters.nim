@@ -139,7 +139,7 @@ when defined(cpp):
   # not defined in <cwchar> nor any other header).
   type wchar_t* {.importc.} = object
 else:
-  type wchar_t* {.importc, header:"<cwchar>".} = object
+  type wchar_t* {.importc, header:"stddef.h".} = object
 """,
 
     "va_list": """
