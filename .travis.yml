@@ -13,7 +13,7 @@ language: c
 env:
   - BRANCH=0.20.2
   - BRANCH=1.0.6
-  - BRANCH=1.2.2
+  - BRANCH=1.2.4
   - BRANCH=devel
 
 cache:
@@ -26,6 +26,7 @@ install:
   - source travis.sh
 
 script:
+  - set -e
   - nimble develop -y
   - nimble test
   - nimble --verbose --nimbleDir:`pwd`/build/fakenimble install nimterop@#head -y
