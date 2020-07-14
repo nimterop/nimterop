@@ -1881,10 +1881,30 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
     gState.pragmaSection.add dynPragma
     count += 1
 
-  # Add `{.experimental: "codeReordering".} for #206
+  # Only if not already done
   if gState.pragmaSection.len == count:
-    # Only if not already done
+    # Add `{.experimental: "codeReordering".} for #206
     gState.pragmaSection.add gState.newPragma(root, "experimental", newStrNode(nkStrLit, "codeReordering"))
+
+    # Create `{.passC.}` from defines
+    for define in gState.defines:
+      gState.pragmaSection.add gState.newPragma(root, "passC", newStrNode(nkStrLit, "-D" & define))
+
+    # Create `{.passC.}` from include directories
+    for inc in gState.includeDirs:
+      gState.pragmaSection.add gState.newPragma(root, "passC", newStrNode(nkStrLit, "-I" & inc.quoteShell))
+
+    # Create `{.passC.}` from passC
+    for passC in gState.passC:
+      gState.pragmaSection.add gState.newPragma(root, "passC", newStrNode(nkStrLit, passC))
+
+    # Create `{.passL.}` from passL
+    for passL in gState.passL:
+      gState.pragmaSection.add gState.newPragma(root, "passL", newStrNode(nkStrLit, passL))
+
+    # Create `{.compile.}` for specified files
+    for file in gState.compile:
+      gState.pragmaSection.add gState.newPragma(root, "compile", newStrNode(nkStrLit, file))
 
 proc initNim*(gState: State) =
   # Initialize for parseNim() one time

@@ -79,10 +79,6 @@ proc jsonGet(url: string): JsonNode =
     discard
   rmFile(file)
 
-template fixOutDir() {.dirty.} =
-  let
-    outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
-
 proc `==`*(pkg1, pkg2: ConanPackage): bool =
   ## Check if two ConanPackage objects are equal
   (not pkg1.isNil and not pkg2.isNil and
@@ -282,9 +278,8 @@ proc getConanRevisions*(pkg: ConanPackage, bld: ConanBuild) =
 
 proc loadConanInfo*(outdir: string): ConanPackage =
   ## Load cached package info from `outdir/conaninfo.json`
-  fixOutDir()
   let
-    file = outdir / conanInfo
+    file = fixRelPath(outdir) / conanInfo
 
   if fileExists(file):
     when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
@@ -297,9 +292,8 @@ proc loadConanInfo*(outdir: string): ConanPackage =
 
 proc saveConanInfo*(pkg: ConanPackage, outdir: string) =
   ## Save downloaded package info to `outdir/conaninfo.json`
-  fixOutDir()
   let
-    file = outdir / conanInfo
+    file = fixRelPath(outdir) / conanInfo
 
   when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
     writeFile(file, $$pkg)
@@ -329,11 +323,11 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
   ## Download specific `revision` of `bld` to `outdir`
   ##
   ## If omitted, the latest revision (first) is downloaded
-  fixOutDir()
-
   doAssert bld.revisions.len != 0, "No build revisions found for Conan.io package " & pkg.getUriFromConanPackage()
 
   let
+    outdir = fixRelPath(outdir)
+
     revision =
       if revision.len != 0:
         revision
@@ -376,8 +370,9 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, main = true) =
   ##
   ## High-level API that handles the end to end Conan process flow to find
   ## latest package binary and downloads and extracts it to `outdir`.
-  fixOutDir()
   let
+    outdir = fixRelPath(outdir)
+
     pkg =
       if pkg.version.len == 0:
         searchConan(pkg)
@@ -415,7 +410,8 @@ proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string) =
   ##
   ## This is not required for shared libs since conan builds them
   ## with all dependencies statically linked in
-  fixOutDir()
+  let
+    outdir = fixRelPath(outdir)
   if bld.options["shared"] == "False":
     for req in bld.requires:
       let

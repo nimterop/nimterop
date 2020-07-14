@@ -24,15 +24,15 @@ cIncludeDir(incl)
 
 when defined(osx):
   cDefine("WITH_COREAUDIO")
-  {.passL: "-framework CoreAudio -framework AudioToolbox".}
+  cPassL("-framework CoreAudio -framework AudioToolbox")
   cCompile(src/"backend/coreaudio/*.cpp")
 elif defined(Linux):
-  {.passL: "-lpthread".}
+  cPassL("-lpthread")
   cDefine("WITH_OSS")
   cCompile(src/"backend/oss/*.cpp")
 elif defined(Windows):
-  {.passC: "-msse".}
-  {.passL: "-lwinmm".}
+  cPassC("-msse")
+  cPassL("-lwinmm")
   cDefine("WITH_WINMM")
   cCompile(src/"backend/winmm/*.cpp")
 else:

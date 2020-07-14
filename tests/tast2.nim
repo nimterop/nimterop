@@ -2,7 +2,7 @@ import macros, os, sets, strutils
 
 import nimterop/[cimport]
 
-{.passC: "-DNIMTEROP".}
+cPassC("-DNIMTEROP")
 
 static:
   # Skip casting on lower nim compilers because

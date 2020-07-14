@@ -65,12 +65,12 @@ when zlibGit or zlibDL:
   when dirExists(baseDir / "buildcache"):
     cIncludeDir(baseDir / "buildcache")
 
-when not zlibStatic:
+when not isDefined(zlibStatic):
   cImport(zlibPath, recurse = true, dynlib = "zlibLPath", flags = FLAGS)
 else:
+  when isDefined(zlibJBB):
+    cPassL("-no-pie")
+
   cImport(zlibPath, recurse = true, flags = FLAGS)
 
 echo "zlib version = " & $zlibVersion()
-
-when isDefined(zlibJBB) and isDefined(zlibStatic):
-  {.passL: "-no-pie".}

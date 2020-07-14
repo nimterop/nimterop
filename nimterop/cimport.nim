@@ -1,77 +1,16 @@
-##[
-This is the main nimterop import file to help with wrapping C/C++ source code.
-
-Check out `template.nim <https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim>`_
-as a starting point for wrapping a new library. The template can be copied and
-trimmed down and modified as required. `templite.nim <https://github.com/nimterop/nimterop/blob/master/nimterop/templite.nim>`_ is a shorter
-version for more experienced users.
-
-All `{.compileTime.}` procs must be used in a compile time context, e.g. using:
-
-.. code-block:: c
-
-   static:
-     cAddStdDir()
-
-]##
-
 import hashes, macros, os, strformat, strutils
 
 import "."/[globals, paths]
 import "."/build/[ccompiler, misc, nimconf, shell]
 
-proc interpPath(dir: string): string=
-  # TODO: more robust: needs a DirSep after "$projpath"
-  # disabling this interpolation as this is error prone, but other less
-  # interpolations can be added, eg see https://github.com/nim-lang/Nim/pull/10530
-  # result = dir.replace("$projpath", getProjectPath())
-  result = dir
-
-proc joinPathIfRel(path1: string, path2: string): string =
-  if path2.isAbsolute:
-    result = path2
-  else:
-    result = joinPath(path1, path2)
-
 proc findPath(path: string, fail = true): string =
   # Relative to project path
-  result = joinPathIfRel(getProjectPath(), path).replace("\\", "/")
+  let
+    path = fixRelPath(path)
+  result = path.replace("\\", "/")
   if not fileExists(result) and not dirExists(result):
     doAssert (not fail), "File or directory not found: " & path
     result = ""
-
-proc walkDirImpl(indir, inext: string, file=true): seq[string] =
-  let
-    dir = joinPathIfRel(getProjectPath(), indir)
-    ext =
-      if inext.nBl:
-        when not defined(Windows):
-          "-name " & inext
-        else:
-          "\\" & inext
-      else:
-        ""
-
-  let
-    cmd =
-      when defined(Windows):
-        if file:
-          "cmd /c dir /s/b/a-d " & dir.replace("/", "\\") & ext
-        else:
-          "cmd /c dir /s/b/ad " & dir.replace("/", "\\")
-      else:
-        if file:
-          "find $1 -type f $2" % [dir, ext]
-        else:
-          "find $1 -type d" % dir
-
-    (output, ret) = execAction(cmd, die = false)
-
-  if ret == 0:
-    result = output.splitLines()
-
-proc fixRelFile(file: string): string =
-  if file.isAbsolute(): file else: getProjectDir() / file
 
 proc getCacheValue(fullpath: string): string =
   if not gStateCT.nocache:
@@ -123,6 +62,15 @@ proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = ""
   for i in gStateCT.exclude:
     cmd.add &" --exclude+={i.sanitizePath}"
 
+  for i in gStateCT.passC:
+    cmd.add &" --passC+={i.quoteShell}"
+
+  for i in gStateCT.passL:
+    cmd.add &" --passL+={i.quoteShell}"
+
+  for i in gStateCT.compile:
+    cmd.add &" --compile+={i.sanitizePath}"
+
   if not noNimout:
     cmd.add &" --pnim"
 
@@ -147,7 +95,7 @@ proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = ""
       ($(cmd & cacheKey).hash().abs()).addFileExt(ext)
 
   if outFile.nBl:
-    result = fixRelFile(outFile)
+    result = fixRelPath(outFile)
   else:
     result = cacheFile
 
@@ -384,7 +332,7 @@ macro cPluginPath*(path: static[string]): untyped =
   doAssert fileExists(path), "Plugin file not found: " & path
   cPluginHelper(readFile(path), imports = "")
 
-proc cSearchPath*(path: string): string {.compileTime.}=
+proc cSearchPath*(path: string): string {.compileTime.} =
   ## Get full path to file or directory `path` in search path configured
   ## using `cAddSearchDir()` and `cAddStdDir()`.
   ##
@@ -416,27 +364,38 @@ proc cDisableCaching*() {.compileTime.} =
   ## `nim -f` can also be used to flush the cached content.
   gStateCT.nocache = true
 
-macro cDefine*(name: static string, val: static string = ""): untyped =
+macro cDefine*(name: static[string], val: static[string] = ""): untyped =
   ## `#define` an identifer that is forwarded to the C/C++ preprocessor if
   ## called within `cImport()` or `c2nImport()` as well as to the C/C++
   ## compiler during Nim compilation using `{.passC: "-DXXX".}`
-  result = newNimNode(nnkStmtList)
-
   var str = name
-  # todo: see https://github.com/nimterop/nimterop/issues/100 for
-  # edge case of empty strings
   if val.nBl:
     str &= &"={val.quoteShell}"
 
   if str notin gStateCT.defines:
     gStateCT.defines.add(str)
-    str = "-D" & str
 
-    result.add quote do:
-      {.passC: `str`.}
+macro cDefine*(values: static seq[string]): untyped =
+  ## `#define` multiple identifers that are forwarded to the C/C++ preprocessor
+  ## if called within `cImport()` or `c2nImport()` as well as to the C/C++
+  ## compiler during Nim compilation using `{.passC: "-DXXX".}`
+  for value in values:
+    let
+      spl = value.split("=", maxsplit = 1)
+      name = spl[0]
+      val = if spl.len == 2: spl[1] else: ""
+    discard quote do:
+      cDefine(`name`, `val`)
 
-    if gStateCT.debug:
-      gecho result.repr & "\n"
+macro cPassC*(value: static string): untyped =
+  ## Create a `{.passC.}` entry that gets forwarded to the C/C++ compiler
+  ## during Nim compilation.
+  gStateCT.passC.add value
+
+macro cPassL*(value: static string): untyped =
+  ## Create a `{.passL.}` entry that gets forwarded to the C/C++ compiler
+  ## during Nim compilation.
+  gStateCT.passL.add value
 
 proc cAddSearchDir*(dir: string) {.compileTime.} =
   ## Add directory `dir` to the search path used in calls to
@@ -445,8 +404,8 @@ proc cAddSearchDir*(dir: string) {.compileTime.} =
     import nimterop/paths, os
     static:
       cAddSearchDir testsIncludeDir()
-    doAssert cSearchPath("test.h").existsFile
-  var dir = interpPath(dir)
+      doAssert cSearchPath("test.h").fileExists
+
   if dir notin gStateCT.searchDirs:
     gStateCT.searchDirs.add(dir)
 
@@ -458,19 +417,11 @@ macro cIncludeDir*(dirs: static seq[string], exclude: static[bool] = false): unt
   ## Set `exclude = true` if the contents of these include directories should
   ## not be included in the wrapped output.
   for dir in dirs:
-    var dir = interpPath(dir)
-    result = newNimNode(nnkStmtList)
-
     let fullpath = findPath(dir)
     if fullpath notin gStateCT.includeDirs:
       gStateCT.includeDirs.add(fullpath)
       if exclude:
         gStateCT.exclude.add(fullpath)
-      let str = &"-I{fullpath.quoteShell}"
-      result.add quote do:
-        {.passC: `str`.}
-      if gStateCT.debug:
-        gecho result.repr
 
 macro cIncludeDir*(dir: static[string], exclude: static[bool] = false): untyped =
   ## Add an include directory that is forwarded to the C/C++ preprocessor if
@@ -501,16 +452,17 @@ proc cAddStdDir*(mode = "c") {.compileTime.} =
   ## Add the standard `c` [default] or `cpp` include paths to search
   ## path used in calls to `cSearchPath()`.
   runnableExamples:
-    static: cAddStdDir()
     import os
-    doAssert cSearchPath("math.h").existsFile
+    static:
+      cAddStdDir()
+      doAssert cSearchPath("math.h").fileExists
   for inc in getGccPaths(mode):
     cAddSearchDir inc
 
-macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
+macro cCompile*(path: static string, mode: static[string] = "c", exclude: static[string] = ""): untyped =
   ## Compile and link C/C++ implementation into resulting binary using `{.compile.}`
   ##
-  ## `path` can be a specific file or contain wildcards:
+  ## `path` can be a specific file or contain `*` wildcard for filename:
   ##
   ## .. code-block:: nim
   ##
@@ -532,26 +484,21 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
   ##
   ##    cCompile("path/to/dir", exclude="test2.c")
 
-  result = newNimNode(nnkStmtList)
-
-  var
-    stmt = ""
-
-  proc fcompile(file: string): string =
+  proc fcompile(file: string) =
     let
       (_, fn, ext) = file.splitFile()
     var
       ufn = fn
       uniq = 1
-    while ufn in gStateCT.compile:
+    while ufn in gStateCT.compcache:
       ufn = fn & $uniq
       uniq += 1
 
     # - https://github.com/nim-lang/Nim/issues/10299
     # - https://github.com/nim-lang/Nim/issues/10486
-    gStateCT.compile.add(ufn)
+    gStateCT.compcache.add(ufn)
     if fn == ufn:
-      return "{.compile: \"$#\".}\n" % file.replace("\\", "/")
+      gStateCT.compile.add file.replace("\\", "/")
     else:
       # - https://github.com/nim-lang/Nim/issues/9370
       let
@@ -559,7 +506,7 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
         tmpFile = file.parentDir() / &"_nimterop_{$hash}_{ufn}{ext}"
       if not tmpFile.fileExists() or file.getFileDate() > tmpFile.getFileDate():
         cpFile(file, tmpFile)
-      return "{.compile: \"$#\".}\n" % tmpFile.replace("\\", "/")
+      gStateCT.compile.add tmpFile.replace("\\", "/")
 
   # Due to https://github.com/nim-lang/Nim/issues/9863
   # cannot use seq[string] for excludes
@@ -572,33 +519,37 @@ macro cCompile*(path: static string, mode = "c", exclude = ""): untyped =
         if excl in file:
           result = false
 
-  proc dcompile(dir, exclude: string, ext=""): string =
+  proc dcompile(dir, exclude: string, ext="") =
     let
-      files = walkDirImpl(dir, ext)
+      (dir, pat) =
+        if "*" in dir:
+          dir.splitPath()
+        else:
+          (dir, "")
 
-    for f in files:
-      if f.nBl and f.notExcluded(exclude):
-        result &= fcompile(f)
+    for file in walkDirRec(dir):
+      if ext.nBl or pat.nBl:
+        let
+          fext = file.splitFile().ext
+        if (ext.nBl and fext != ext) or (pat.nBl and fext != pat[1 .. ^1]):
+          continue
+      if file.notExcluded(exclude):
+        fcompile(file)
 
-  if path.contains("*") or path.contains("?"):
-    stmt &= dcompile(path, exclude.strVal())
+  if "*" in path:
+    dcompile(path, exclude)
   else:
     let fpath = findPath(path)
-    if fileExists(fpath) and fpath.notExcluded(exclude.strVal()):
-      stmt &= fcompile(fpath)
+    if fileExists(fpath) and fpath.notExcluded(exclude):
+      fcompile(fpath)
     elif dirExists(fpath):
-      if mode.strVal().contains("cpp"):
-        for i in @["*.cpp", "*.c++", "*.cc", "*.cxx"]:
-          stmt &= dcompile(fpath, exclude.strVal(), i)
+      if mode.contains("cpp"):
+        for i in @[".cpp", ".c++", ".cc", ".cxx"]:
+          dcompile(fpath, exclude, i)
         when not defined(Windows):
-          stmt &= dcompile(fpath, exclude.strVal(), "*.C")
+          dcompile(fpath, exclude, ".C")
       else:
-        stmt &= dcompile(fpath, exclude.strVal(), "*.c")
-
-  result.add stmt.parseStmt()
-
-  if gStateCT.debug:
-    gecho result.repr
+        dcompile(fpath, exclude, ".c")
 
 macro cImport*(filenames: static seq[string], recurse: static bool = false, dynlib: static string = "",
   mode: static string = "c", flags: static string = "", nimFile: static string = ""): untyped =
@@ -726,7 +677,7 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
 
   let
     hFile = getToast(@[fullpath], recurse, dynlib, mode, noNimout = true)
-    nimFile = if nimFile.nBl: fixRelFile(nimFile) else: hFile.changeFileExt("nim")
+    nimFile = if nimFile.nBl: fixRelPath(nimFile) else: hFile.changeFileExt("nim")
     header = "header" & fullpath.splitFile().name.split(seps = {'-', '.'}).join()
 
   if not fileExists(nimFile) or gStateCT.nocache or compileOption("forceBuild"):
@@ -741,8 +692,29 @@ macro c2nImport*(filename: static string, recurse: static bool = false, dynlib: 
     if flags.nBl:
       cmd.add &" {flags}"
 
+    # Have to create pragmas for c2nim since toast handles this at runtime
     for i in gStateCT.defines:
       cmd.add &" --assumedef:{i.quoteShell}"
+      let str = "-D" & i
+      result.add quote do:
+        {.passC: `str`.}
+
+    for i in gStateCT.includeDirs:
+      let str = &"-I{i.quoteShell}"
+      result.add quote do:
+        {.passC: `str`.}
+
+    for i in gStateCT.passC:
+      result.add quote do:
+        {.passC: `i`.}
+
+    for i in gStateCT.passL:
+      result.add quote do:
+        {.passL: `i`.}
+
+    for i in gStateCT.compile:
+      result.add quote do:
+        {.compile: `i`.}
 
     let
       (c2nimout, ret) = execAction(cmd)

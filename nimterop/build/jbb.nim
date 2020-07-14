@@ -33,10 +33,6 @@ var
   # Reuse dependencies already downloaded
   gJBBRequires {.compileTime.}: Table[string, JBBPackage]
 
-template fixOutDir() {.dirty.} =
-  let
-    outdir = if outdir.isAbsolute(): outdir else: getProjectDir() / outdir
-
 proc `==`*(pkg1, pkg2: JBBPackage): bool =
   ## Check if two JBBPackage objects are equal
   (not pkg1.isNil and not pkg2.isNil and
@@ -164,9 +160,8 @@ proc getJBBRepo*(pkg: JBBPackage, outdir: string) =
 
 proc loadJBBInfo*(outdir: string): JBBPackage =
   ## Load cached package info from `outdir/jbbinfo.json`
-  fixOutDir()
   let
-    file = outdir / jbbInfo
+    file = fixRelPath(outdir) / jbbInfo
 
   if fileExists(file):
     when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
@@ -179,9 +174,8 @@ proc loadJBBInfo*(outdir: string): JBBPackage =
 
 proc saveJBBInfo*(pkg: JBBPackage, outdir: string) =
   ## Save downloaded package info to `outdir/jbbinfo.json`
-  fixOutDir()
   let
-    file = outdir / jbbInfo
+    file = fixRelPath(outdir) / jbbInfo
 
   when (NimMajor, NimMinor, NimPatch) < (1, 2, 0):
     writeFile(file, $$pkg)
@@ -194,7 +188,9 @@ proc downloadJBB*(pkg: JBBPackage, outdir: string, main = true) =
   ##
   ## High-level API that handles the end to end JBB process flow to find
   ## latest package binary and downloads and extracts it to `outdir`.
-  fixOutDir()
+  let
+    outdir = fixRelPath(outdir)
+
   if main:
     let
       cpkg = loadJBBInfo(outdir)
@@ -226,7 +222,8 @@ proc downloadJBB*(pkg: JBBPackage, outdir: string, main = true) =
 
 proc dlJBBRequires*(pkg: JBBPackage, outdir: string) =
   ## Download all required dependencies of this `pkg`
-  fixOutDir()
+  let
+    outdir = fixRelPath(outdir)
   for i in 0 ..< pkg.requires.len:
     let
       rpkg = pkg.requires[i]

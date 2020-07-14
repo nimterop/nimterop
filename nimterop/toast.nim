@@ -34,6 +34,7 @@ proc process(gState: State, path: string) =
 # CLI processing with default values
 proc main(
     check = false,
+    compile: seq[string] = @[],
     convention = "cdecl",
     debug = false,
     defines: seq[string] = @[],
@@ -46,6 +47,8 @@ proc main(
     noComments = false,
     noHeader = false,
     output = "",
+    passC: seq[string] = @[],
+    passL: seq[string] = @[],
     past = false,
     pluginSourcePath: string = "",
     pnim = false,
@@ -62,6 +65,7 @@ proc main(
 
   # Setup global state with arguments
   gState = State(
+    compile: compile,
     convention: convention,
     debug: debug,
     defines: defines,
@@ -73,6 +77,8 @@ proc main(
     nim: nim.sanitizePath,
     noComments: noComments,
     noHeader: noHeader,
+    passC: passC,
+    passL: passL,
     past: past,
     pluginSourcePath: pluginSourcePath,
     pnim: pnim,
@@ -220,6 +226,7 @@ when isMainModule:
   import cligen
   dispatch(main, help = {
     "check": "check generated wrapper with compiler",
+    "compile": "create {.compile.} entries in generated wrapper",
     "convention": "calling convention for wrapped procs",
     "debug": "enable debug output",
     "defines": "definitions to pass to preprocessor",
@@ -232,6 +239,8 @@ when isMainModule:
     "noComments": "exclude top-level comments from output",
     "noHeader": "skip {.header.} pragma in wrapper",
     "output": "file to output content - default: stdout",
+    "passC": "create {.passC.} entries in generated wrapper",
+    "passL": "create {.passL.} entries in generated wrapper",
     "past": "print AST output",
     "pluginSourcePath": "nim file to build and load as a plugin",
     "pnim": "print Nim output",

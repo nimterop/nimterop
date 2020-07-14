@@ -35,13 +35,13 @@ cPlugin:
 cOverride:
   proc OPENSSL_die*(assertion: cstring; file: cstring; line: cint) {.importc.}
 
+cPassL(cryptoLPath)
+
 # Skip comments for https://github.com/tree-sitter/tree-sitter-c/issues/44
 cImport(@[
   basePath / "rsa.h",
   basePath / "err.h",
 ], recurse = true, flags = "-s -c " & FLAGS)
-
-{.passL: cryptoLPath.}
 
 OpensslInit()
 echo $OPENSSL_VERSION_TEXT

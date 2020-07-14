@@ -139,6 +139,8 @@ cImport("clib.h")             # Generate wrappers for header specified
 cCompile("clib/src/*.c")      # Compile in any implementation source files
 ```
 
+All `{.compileTime.}` procs must be used in a compile time context, like `cDebug()` and `cDisableCaching()` above.
+
 Module documentation for the wrapper API can be found [here](https://nimterop.github.io/nimterop/cimport.html).
 
 #### Preprocessing

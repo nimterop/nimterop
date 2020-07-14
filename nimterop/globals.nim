@@ -15,6 +15,7 @@ type
 
   State* = ref object
     # Command line arguments to toast - some forwarded from cimport.nim
+    compile*: seq[string]      # `--compile` to create `{.compile.}` entries in generated wrapper
     convention*: string        # `--convention | -C` to change calling convention from cdecl default
     debug*: bool               # `cDebug()` or `--debug | -d` to enable debug mode
     defines*: seq[string]      # Symbols added by `cDefine()` and `--define | -D` for C/C++ preprocessor/compiler
@@ -26,6 +27,8 @@ type
     nim*: string               # `--nim` to specify full path to Nim compiler
     noComments*: bool          # `--noComments | -c` to disable rendering comments in wrappers
     noHeader*: bool            # `--noHeader | -H` to skip {.header.} pragma in wrapper
+    passC*: seq[string]        # `--passC` to create `{.passC.}` entries in the generated wrapper
+    passL*: seq[string]        # `--passL` to create `{.passL.}` entries in the generated wrapper
     past*: bool                # `--past | -a` to print tree-sitter AST of code
     pluginSourcePath*: string  # `--pluginSourcePath` specified path to plugin file to compile and load
     pnim*: bool                # `--pnim | -n` to render Nim wrapper for header
@@ -77,7 +80,7 @@ type
       wrapperHeader*: string
     else:
       # cimport.nim specific
-      compile*: seq[string]      # `cCompile()` list of files already processed
+      compcache*: seq[string]    # `cCompile()` list of files already processed
       nocache*: bool             # `cDisableCaching()` to disable caching of artifacts
       overrides*: string         # `cOverride()` code which gets added to `cPlugin()` output
       pluginSource*: string      # `cPlugin()` generated code to write to plugin file from

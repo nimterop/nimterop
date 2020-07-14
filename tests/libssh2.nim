@@ -22,12 +22,12 @@ when not libssh2Static:
   when not defined(Windows) and not isDefined(libssh2JBB):
     proc zlibVersion(): cstring {.importc, dynlib: libssh2LPath.}
 else:
+  cPassL("-lpthread")
+
   cImport(libssh2Path, recurse = true, flags = "-c -E_ -F_")
 
   when not defined(Windows) and not isDefined(libssh2JBB):
     proc zlibVersion(): cstring {.importc.}
-
-  {.passL: "-lpthread".}
 
 assert libssh2_init(0) == 0
 
