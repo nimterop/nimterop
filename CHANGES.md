@@ -47,9 +47,11 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.5
 
 - All `cDefine()`, `cIncludeDir()` and `cCompile()` calls now forward relevant pragmas into the generated wrapper further enabling standalone wrappers. [#239][i239]
 
-- Added `cPassC()` and `cPassL()` to forward C/C++ compilation pragmas into the generated wrapper. (since v0.6.5)
+- Added `cPassC()` and `cPassL()` to forward C/C++ compilation pragmas into the generated wrapper. These should be used in place of `{.passC.}` and `{.passL.}` and need to be called before `cImport()` to take effect. (since v0.6.5)
 
 - Added `--compile`, `--passC` and `--passL` flags to `toast` to enable the previous two improvements. (since v0.6.5)
+
+- Added `renderPragma()` to create pragmas inline in case `cImport()` is not being used. (since v0.6.5)
 
 ### Other improvements
 
@@ -60,6 +62,7 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.5
 - `cIncludeDir()` can now accept a `seq[string]` of directories and an optional `exclude` param which sets those include directories to not be included in the wrapped output. (since v0.6.4)
 
 - `cDefine()` can now accept a `seq[string]` of values. (since v0.6.5)
+
 
 ## Version 0.5.0
 

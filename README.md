@@ -97,7 +97,7 @@ Flags can be specified to these tools via `getHeader()` or directly via the unde
 
 If `-d:headerStatic` is specified, `getHeader()` will return the static library path in `headerLPath`. The wrapper writer can check for this and call `cImport()` accordingly as in the example above. If `-d:headerStatic` is omitted, the dynamic library is returned in `headerLPath`.
 
-All dependency libraries (supported by Conan and JBB) will be returned in `headerLDeps`. Static libraries and dependencies are automatically linked using `{.passL.}`. Conan shared libs include all dependencies whereas JBB shared libs expect the required dependencies to be in the same location or in `LD_LIBRARY_PATH`.
+All dependency libraries (supported by Conan and JBB) will be returned in `headerLDeps`. Static libraries and dependencies are automatically linked using `cPassL()`. Conan shared libs include all dependencies whereas JBB shared libs expect the required dependencies to be in the same location or in `LD_LIBRARY_PATH`.
 
 `getHeader()` searches for libraries based on the header name by default:
 - `libheader.so` or `libheader.a` on Linux
@@ -171,7 +171,7 @@ Nim provides some flexibility when it comes to using C/C++ libraries. In order t
 
 For types, `{.header: "header.h".}` informs Nim that `header.h` has the symbol and to `#include "header.h"` in the generated code. However, types can be mostly recreated in pure Nim so it is also possible to omit both `{.importc.}` and `{.header}` and it will work just fine except with a different name in the generated C code. This allows the user to compile the wrapper without requiring `header.h` to be present.
 
-For functions, `{.header.}` works the same as types and can be omitted if preferred. The `{.importc.}` pragma is still required, unlike types since functions need to be linked to the implementation in the library. The user will need to provide this information at link time with `{.passL.}` and linking to a library with `-lheader` or `path/to/libheader.a`. It is also possible to just use `cCompile()` or `{.compile.}` to compile some C source files which contain the implementation.
+For functions, `{.header.}` works the same as types and can be omitted if preferred. The `{.importc.}` pragma is still required, unlike types since functions need to be linked to the implementation in the library. The user will need to provide this information at link time with `cPassL()` and linking to a library with `-lheader` or `path/to/libheader.a`. It is also possible to just use `cCompile()` or `{.compile.}` to compile some C source files which contain the implementation.
 
 While `{.header.}` can be omitted for convenience, it does prevent wrapping of `static inline` functions as well as type checking of the wrapper ABI with `-d:checkAbi` at compile time. Further, anonymous nested structs/unions within unions will be rendered incorrectly by Nim since it is unaware of the true memory structure of the type. The user will need to choose based on the library in question.
 
