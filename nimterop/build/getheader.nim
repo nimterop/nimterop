@@ -33,7 +33,7 @@ macro setDefines*(defs: static openArray[string]): untyped =
   for def in defs:
     let
       nv = def.strip().split("=", maxsplit = 1)
-    if nv.len != 0:
+    if nv.nBl:
       let
         n = nv[0]
         v =
@@ -70,33 +70,33 @@ proc getDynlibExt(): string =
 proc getStdPath(header, mode: string): string =
   for inc in getGccPaths(mode):
     result = findFile(header, inc, recurse = false, first = true)
-    if result.len != 0:
+    if result.nBl:
       break
 
 proc getStdLibPath(lname, mode: string): string =
   for lib in getGccLibPaths(mode):
     result = findFile(lname, lib, recurse = false, first = true, regex = true)
-    if result.len != 0:
+    if result.nBl:
       break
 
 proc getGitPath(header, url, outdir, version: string): string =
-  doAssert url.len != 0, "No git url setup for " & header
-  doAssert findExe("git").len != 0, "git executable missing"
+  doAssert url.nBl, "No git url setup for " & header
+  doAssert findExe("git").nBl, "git executable missing"
 
   gitPull(url, outdir, checkout = version)
 
   result = findFile(header, outdir)
 
 proc getDlPath(header, url, outdir, version: string): string =
-  doAssert url.len != 0, "No download url setup for " & header
+  doAssert url.nBl, "No download url setup for " & header
 
   var
     dlurl = url
   if "$#" in url or "$1" in url:
-    doAssert version.len != 0, "Need version for download url"
+    doAssert version.nBl, "Need version for download url"
     dlurl = url % version
   else:
-    doAssert version.len == 0, "Download url does not contain version"
+    doAssert version.Bl, "Download url does not contain version"
 
   downloadUrl(dlurl, outdir)
 
@@ -107,13 +107,13 @@ proc getDlPath(header, url, outdir, version: string): string =
         dirname = ""
         break
     elif kind == pcDir:
-      if dirname.len == 0:
+      if dirname.Bl:
         dirname = path
       else:
         dirname = ""
         break
 
-  if dirname.len != 0:
+  if dirname.nBl:
     for kind, path in walkDir(outdir / dirname, relative = true):
       mvFile(outdir / dirname / path, outdir / path)
 
@@ -124,9 +124,9 @@ proc getConanPath(header, uri, outdir, version: string, shared: bool): string =
     uri = uri
 
   if "$#" in uri or "$1" in uri:
-    doAssert version.len != 0, "Need version for Conan.io uri: " & uri
+    doAssert version.nBl, "Need version for Conan.io uri: " & uri
     uri = uri % version
-  elif version.len != 0:
+  elif version.nBl:
     uri = uri & "/" & version
 
   let
@@ -145,12 +145,12 @@ proc getJBBPath(header, uri, flags, outdir, version: string): string =
   let
     spl = uri.split('/', 1)
     name = spl[0]
-    hasVersion = version.len != 0
+    hasVersion = version.nBl
 
   var
     ver = if spl.len == 2: spl[1] else: ""
 
-  if ver.len != 0:
+  if ver.nBl:
     if "$#" in ver or "$1" in ver:
       doAssert hasVersion, "Need version for BinaryBuilder.org uri: " & uri
       ver = ver % version
@@ -187,7 +187,7 @@ proc getJBBLDeps(outdir: string, shared: bool): seq[string] =
   result = pkg.getJBBLDeps(outdir, shared)
 
 proc getLocalPath(header, outdir: string): string =
-  if outdir.len != 0:
+  if outdir.nBl:
     result = findFile(header, outdir)
 
 proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildTypes: openArray[BuildType]): string =
@@ -195,7 +195,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
     lpath = findFile(lname, outdir, regex = true)
     makePath = outdir
 
-  if lpath.len != 0:
+  if lpath.nBl:
     return lpath
 
   var buildStatus: BuildStatus
@@ -275,7 +275,7 @@ macro getHeader*(
   ##
   ## The header path is stored in `const xxxPath` and can be used in a `cImport()` call
   ## in the calling wrapper. The dynamic library path is stored in `const xxxLPath` and can
-  ## be used for the `dynlib` parameter (within quotes) or with `{.passL.}`. Any dependency
+  ## be used for the `dynlib` parameter (within quotes) or with `cPassL()`. Any dependency
   ## libraries downloaded by `Conan` or `JBB` are returned in `const xxxLDeps` as a seq[string].
   ##
   ## `libdir` can be used to instruct `getHeader()` to copy shared libraries and their
@@ -285,7 +285,7 @@ macro getHeader*(
   ## reflect this new location. `libdir` is ignored for `Std` mode.
   ##
   ## `-d:xxxStatic` can be specified to statically link with the library instead. This
-  ## will automatically add a `{.passL.}` call to the static library for convenience. Note
+  ## will automatically add a `cPassL()` call to the static library for convenience. Note
   ## that `-d:xxxConan` and `-d:xxxJBB` download all dependency libs as well and the
   ## `xxxLPath` will include paths to all of them separated by space in the right order for
   ## linking.
@@ -335,8 +335,8 @@ macro getHeader*(
     name = origname.split(seps = AllChars-Letters-Digits).join()
 
     # Default to origname if not specified
-    conanuri = if conanuri.len != 0: conanuri else: origname
-    jbburi = if jbburi.len != 0: jbburi else: origname
+    conanuri = if conanuri.nBl: conanuri else: origname
+    jbburi = if jbburi.nBl: jbburi else: origname
 
     # -d:xxx for this header
     stdStr = name & "Std"
@@ -382,10 +382,10 @@ macro getHeader*(
         ""
     mode = getCompilerMode(header)
 
-    libdir = if libdir.len != 0: libdir else: getOutDir()
+    libdir = if libdir.nBl: libdir else: getOutDir()
 
   # Use alternate library names if specified for regex search
-  if altNames.len != 0:
+  if altNames.nBl:
     lre = lre % ("(" & altNames.replace(",", "|") & ")")
   else:
     lre = lre % origname
@@ -491,14 +491,12 @@ macro getHeader*(
         `ldeps`* = ldeps
 
       # Automatically link with static library and dependencies
-      {.passL: `lpath`.}
-      if `ldeps`.len != 0:
-        {.passL: `ldeps`.join(" ").}
-
       static:
         gecho "# Including library " & lpath
-        if `ldeps`.len != 0:
-          gecho "# Including dependencies " & `ldeps`.join(" ")
+        gStateCT.passL.add lpath
+        if ldeps.len != 0:
+          gecho "# Including dependencies " & ldeps.join(" ")
+          gStateCT.passL.add ldeps.join(" ")
     else:
       const
         `lpath`* = when not useStd: `libdir` / lpath.extractFilename() else: lpath
