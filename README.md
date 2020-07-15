@@ -218,10 +218,12 @@ Options:
   -h, --help                              print this cligen-erated help
   --help-syntax                           advanced: prepend,plurals,..
   -k, --check          bool      false    check generated wrapper with compiler
+  --compile=           strings   {}       create {.compile.} entries in generated wrapper
   -C=, --convention=   string    "cdecl"  calling convention for wrapped procs
   -d, --debug          bool      false    enable debug output
   -D=, --defines=      strings   {}       definitions to pass to preprocessor
-  -l=, --dynlib=       string    ""       {.dynlib.} pragma to import symbols - Nim const string or file path
+  -l=, --dynlib=       string    ""       {.dynlib.} pragma to import symbols - Nim const string or
+                                          file path
   -X=, --exclude=      strings   {}       files or directories to exclude from the wrapped output
   -f=, --feature=      Features  {}       flags to enable experimental features
   -I=, --includeDirs=  strings   {}       include directory to pass to preprocessor
@@ -230,6 +232,8 @@ Options:
   -c, --noComments     bool      false    exclude top-level comments from output
   -H, --noHeader       bool      false    skip {.header.} pragma in wrapper
   -o=, --output=       string    ""       file to output content - default: stdout
+  --passC=             strings   {}       create {.passC.} entries in generated wrapper
+  --passL=             strings   {}       create {.passL.} entries in generated wrapper
   -a, --past           bool      false    print AST output
   --pluginSourcePath=  string    ""       nim file to build and load as a plugin
   -n, --pnim           bool      false    print Nim output

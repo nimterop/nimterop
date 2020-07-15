@@ -368,6 +368,8 @@ macro cDefine*(name: static[string], val: static[string] = ""): untyped =
   ## `#define` an identifer that is forwarded to the C/C++ preprocessor if
   ## called within `cImport()` or `c2nImport()` as well as to the C/C++
   ## compiler during Nim compilation using `{.passC: "-DXXX".}`
+  ##
+  ## This needs to be called before `cImport()` to take effect.
   var str = name
   if val.nBl:
     str &= &"={val.quoteShell}"
@@ -379,6 +381,8 @@ macro cDefine*(values: static seq[string]): untyped =
   ## `#define` multiple identifers that are forwarded to the C/C++ preprocessor
   ## if called within `cImport()` or `c2nImport()` as well as to the C/C++
   ## compiler during Nim compilation using `{.passC: "-DXXX".}`
+  ##
+  ## This needs to be called before `cImport()` to take effect.
   for value in values:
     let
       spl = value.split("=", maxsplit = 1)
@@ -390,11 +394,15 @@ macro cDefine*(values: static seq[string]): untyped =
 macro cPassC*(value: static string): untyped =
   ## Create a `{.passC.}` entry that gets forwarded to the C/C++ compiler
   ## during Nim compilation.
+  ##
+  ## This needs to be called before `cImport()` to take effect.
   gStateCT.passC.add value
 
 macro cPassL*(value: static string): untyped =
   ## Create a `{.passL.}` entry that gets forwarded to the C/C++ compiler
   ## during Nim compilation.
+  ##
+  ## This needs to be called before `cImport()` to take effect.
   gStateCT.passL.add value
 
 proc cAddSearchDir*(dir: string) {.compileTime.} =
@@ -416,6 +424,8 @@ macro cIncludeDir*(dirs: static seq[string], exclude: static[bool] = false): unt
   ##
   ## Set `exclude = true` if the contents of these include directories should
   ## not be included in the wrapped output.
+  ##
+  ## This needs to be called before `cImport()` to take effect.
   for dir in dirs:
     let fullpath = findPath(dir)
     if fullpath notin gStateCT.includeDirs:
@@ -430,6 +440,8 @@ macro cIncludeDir*(dir: static[string], exclude: static[bool] = false): untyped 
   ##
   ## Set `exclude = true` if the contents of this include directory should
   ## not be included in the wrapped output.
+  ##
+  ## This needs to be called before `cImport()` to take effect.
   return quote do:
     cIncludeDir(@[`dir`], `exclude` == 1)
 

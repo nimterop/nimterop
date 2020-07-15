@@ -15,7 +15,7 @@ Refer to the documentation for `getHeader()` for details on how to use this new 
 
 See the full list of changes here:
 
-https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.3
+https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.5
 
 ### Breaking changes
 
@@ -26,6 +26,8 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.3
 - `git.nim` has been removed. This module was an artifact from the early days and was renamed to `build.nim` back in v0.2.0.
 
 - Nameless enum values are no longer typed to the made-up enum type name, they are instead typed as `cint` to match the underlying type. This allows using such enums without having to depend on the made-up name which could change if enum ordering changes upstream. [#236][i236] (since v0.6.1)
+
+- Static libraries installed and linked with `getHeader()` now have their `{.passL.}` pragmas forwarded to the generated wrapper. This might lead to link errors in existing wrappers if other dependencies are specified with `{.passL.}` calls and the order of linking is wrong. This can be fixed by changing such explicit `{.passL.}` calls with `cPassL()` which will forward the link call to the generated wrapper as well. (since v0.6.5)
 
 ### New functionality
 
@@ -43,6 +45,12 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.3
 
 - It is now possible to exclude the contents of specific files or entire directories from the wrapped output using `--exclude | -X` with `toast` or `cExclude()` from a wrapper. This might be required when a header uses `#include` to pull in external dependencies. E.g. `sciter` has a `#include <gtk/gtk.h>` which pulls in the entire GTK ecosystem which is needed for successful preprocessing but we do not want to include those headers in the wrapped output when using `--recurse | -r`. (since v0.6.4)
 
+- All `cDefine()`, `cIncludeDir()` and `cCompile()` calls now forward relevant pragmas into the generated wrapper further enabling standalone wrappers. [#239][i239]
+
+- Added `cPassC()` and `cPassL()` to forward C/C++ compilation pragmas into the generated wrapper. (since v0.6.5)
+
+- Added `--compile`, `--passC` and `--passL` flags to `toast` to enable the previous two improvements. (since v0.6.5)
+
 ### Other improvements
 
 - Generated wrappers no longer depend on nimterop being present - no more `import nimterop/types`. Supporting code is directly included in the wrapper output and only when required. E.g. enum macro is only included if wrapper contains enums. [#125][i125] (since v0.6.1)
@@ -51,6 +59,7 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.3
 
 - `cIncludeDir()` can now accept a `seq[string]` of directories and an optional `exclude` param which sets those include directories to not be included in the wrapped output. (since v0.6.4)
 
+- `cDefine()` can now accept a `seq[string]` of values. (since v0.6.5)
 
 ## Version 0.5.0
 
@@ -141,3 +150,4 @@ https://github.com/nimterop/nimterop/compare/v0.4.4...v0.5.4
 [i200]: https://github.com/nimterop/nimterop/issues/200
 [i236]: https://github.com/nimterop/nimterop/issues/236
 [i237]: https://github.com/nimterop/nimterop/issues/237
+[i239]: https://github.com/nimterop/nimterop/issues/239
