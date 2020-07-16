@@ -47,21 +47,12 @@ function main() {
 
   toggleSwitch.addEventListener('change', switchTheme, false);
 
+  const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+  if (currentTheme) {
+    document.documentElement.setAttribute('data-theme', currentTheme);
 
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', "dark");
-    toggleSwitch.checked = true;
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-    document.documentElement.setAttribute('data-theme', "light");
-    toggleSwitch.checked = false;
-  } else {
-    const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-    if (currentTheme) {
-      document.documentElement.setAttribute('data-theme', currentTheme);
-
-      if (currentTheme === 'dark') {
-        toggleSwitch.checked = true;
-      }
+    if (currentTheme === 'dark') {
+      toggleSwitch.checked = true;
     }
   }
 }
@@ -138,6 +129,8 @@ function main() {
     title="getOutDir(projectDir = &quot;&quot;): string"><wbr />get<wbr />Out<wbr />Dir<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#getNimteropCacheDir"
     title="getNimteropCacheDir(): string"><wbr />get<wbr />Nimterop<wbr />Cache<wbr />Dir<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#fixRelPath%2Cstring"
+    title="fixRelPath(path: string): string"><wbr />fix<wbr />Rel<wbr />Path<span class="attachedType"></span></a></li>
 
   </ul>
 </li>
@@ -242,6 +235,13 @@ Get output directory for current compilation or specified <tt class="docutils li
 Get location to cache all nimterop artifacts
 
 </dd>
+<a id="fixRelPath,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#fixRelPath%2Cstring"><span class="Identifier">fixRelPath</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+
+If <tt class="docutils literal"><span class="pre">path</span></tt> is relative, consider relative to <tt class="docutils literal"><span class="pre">projectPath</span></tt>
+
+</dd>
 
 </dl></div>
 
@@ -252,7 +252,7 @@ Get location to cache all nimterop artifacts
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-04 00:11:41 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-16 02:07:14 UTC</small>
       </div>
     </div>
   </div>

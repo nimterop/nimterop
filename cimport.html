@@ -47,21 +47,12 @@ function main() {
 
   toggleSwitch.addEventListener('change', switchTheme, false);
 
+  const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+  if (currentTheme) {
+    document.documentElement.setAttribute('data-theme', currentTheme);
 
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', "dark");
-    toggleSwitch.checked = true;
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-    document.documentElement.setAttribute('data-theme', "light");
-    toggleSwitch.checked = false;
-  } else {
-    const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-    if (currentTheme) {
-      document.documentElement.setAttribute('data-theme', currentTheme);
-
-      if (currentTheme === 'dark') {
-        toggleSwitch.checked = true;
-      }
+    if (currentTheme === 'dark') {
+      toggleSwitch.checked = true;
     }
   }
 }
@@ -109,36 +100,50 @@ function main() {
 <li>
   <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#cSkipSymbol%2Cseq%5Bstring%5D"
-    title="cSkipSymbol(skips: seq[string])"><wbr />c<wbr />Skip<wbr />Symbol<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cSearchPath%2Cstring"
-    title="cSearchPath(path: string): string"><wbr />c<wbr />Search<wbr />Path<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cDebug"
+      <li><a class="reference" href="#cDebug"
     title="cDebug()"><wbr />c<wbr />Debug<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cDisableCaching"
     title="cDisableCaching()"><wbr />c<wbr />Disable<wbr />Caching<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cSearchPath%2Cstring"
+    title="cSearchPath(path: string): string"><wbr />c<wbr />Search<wbr />Path<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cAddSearchDir%2Cstring"
     title="cAddSearchDir(dir: string)"><wbr />c<wbr />Add<wbr />Search<wbr />Dir<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cAddStdDir%2Cstring"
     title="cAddStdDir(mode = &quot;c&quot;)"><wbr />c<wbr />Add<wbr />Std<wbr />Dir<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cSkipSymbol%2Cseq%5Bstring%5D"
+    title="cSkipSymbol(skips: seq[string])"><wbr />c<wbr />Skip<wbr />Symbol<span class="attachedType"></span></a></li>
 
   </ul>
 </li>
 <li>
   <a class="reference reference-toplevel" href="#17" id="67">Macros</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#cOverride.m"
+      <li><a class="reference" href="#cDefine.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D"
+    title="cDefine(name: static[string]; val: static[string] = &quot;&quot;): untyped"><wbr />c<wbr />Define<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cDefine.m"
+    title="cDefine(values: static seq[string]): untyped"><wbr />c<wbr />Define<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cIncludeDir.m%2C%2Cstatic%5Bbool%5D"
+    title="cIncludeDir(dirs: static seq[string]; exclude: static[bool] = false): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cIncludeDir.m%2Cstatic%5Bstring%5D%2Cstatic%5Bbool%5D"
+    title="cIncludeDir(dir: static[string]; exclude: static[bool] = false): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cExclude.m"
+    title="cExclude(paths: static seq[string]): untyped"><wbr />c<wbr />Exclude<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cExclude.m_2"
+    title="cExclude(path: static string): untyped"><wbr />c<wbr />Exclude<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cPassC.m"
+    title="cPassC(value: static string): untyped"><wbr />c<wbr />Pass<wbr />C<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cPassL.m"
+    title="cPassL(value: static string): untyped"><wbr />c<wbr />Pass<wbr />L<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cCompile.m%2C%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D"
+    title="cCompile(path: static string; mode: static[string] = &quot;c&quot;; exclude: static[string] = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#renderPragma.m"
+    title="renderPragma(): untyped"><wbr />render<wbr />Pragma<span class="attachedType"></span></a></li>
+  <li><a class="reference" href="#cOverride.m"
     title="cOverride(body): untyped"><wbr />c<wbr />Override<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cPlugin.m"
     title="cPlugin(body): untyped"><wbr />c<wbr />Plugin<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cPluginPath.m%2Cstatic%5Bstring%5D"
     title="cPluginPath(path: static[string]): untyped"><wbr />c<wbr />Plugin<wbr />Path<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cDefine.m%2C%2Cstring"
-    title="cDefine(name: static string; val: static string = &quot;&quot;): untyped"><wbr />c<wbr />Define<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cIncludeDir.m"
-    title="cIncludeDir(dir: static string): untyped"><wbr />c<wbr />Include<wbr />Dir<span class="attachedType"></span></a></li>
-  <li><a class="reference" href="#cCompile.m%2C%2Cstring%2Cstring"
-    title="cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped"><wbr />c<wbr />Compile<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#cImport.m%2C%2Cstring%2Cstring%2Cstring%2Cstring"
     title="cImport(filenames: static seq[string]; recurse: static bool = false;
         dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;;
@@ -161,11 +166,7 @@ function main() {
   <div class="nine columns" id="content">
   <div id="tocRoot"></div>
   
-  <p class="module-desc"><p>This is the main nimterop import file to help with wrapping C/C++ source code.</p>
-<p>Check out <a class="reference external" href="https://github.com/nimterop/nimterop/blob/master/nimterop/template.nim">template.nim</a> as a starting point for wrapping a new library. The template can be copied and trimmed down and modified as required. <a class="reference external" href="https://github.com/nimterop/nimterop/blob/master/nimterop/templite.nim">templite.nim</a> is a shorter version for more experienced users.</p>
-<p>All <tt class="docutils literal"><span class="pre">{.compileTime.}</span></tt> procs must be used in a compile time context, e.g. using:</p>
-<pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span>
-  <span class="Identifier">cAddStdDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span></pre></p>
+  <p class="module-desc"></p>
   <div class="section" id="6">
 <h1><a class="toc-backref" href="#6">Imports</a></h1>
 <dl class="item">
@@ -174,26 +175,6 @@ function main() {
 <div class="section" id="12">
 <h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
-<a id="cSkipSymbol,seq[string]"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cSkipSymbol%2Cseq%5Bstring%5D"><span class="Identifier">cSkipSymbol</span></a><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
-<dd>
-
-<p>Similar to <tt class="docutils literal"><span class="pre">cOverride()</span></tt>, this macro allows filtering out symbols not of interest from the generated output.</p>
-<p><tt class="docutils literal"><span class="pre">cSkipSymbol()</span></tt> only affects calls to <tt class="docutils literal"><span class="pre">cImport()</span></tt> that follow it.</p>
-
-<p><strong class="examples_text">Example:</strong></p>
-<pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace"> </span><span class="Identifier">cSkipSymbol</span><span class="Whitespace"> </span><span class="Operator">@</span><span class="Punctuation">[</span><span class="StringLit">&quot;proc1&quot;</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="StringLit">&quot;Type2&quot;</span><span class="Punctuation">]</span></pre>
-
-</dd>
-<a id="cSearchPath,string"></a>
-<dt><pre><span class="Keyword">proc</span> <a href="#cSearchPath%2Cstring"><span class="Identifier">cSearchPath</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadDirEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
-<dd>
-
-<p>Get full path to file or directory <tt class="docutils literal"><span class="pre">path</span></tt> in search path configured using <tt class="docutils literal"><span class="pre">cAddSearchDir()</span></tt> and <tt class="docutils literal"><span class="pre">cAddStdDir()</span></tt>.</p>
-<p>This can be used to locate files or directories that can be passed onto <tt class="docutils literal"><span class="pre">cCompile()</span></tt>, <tt class="docutils literal"><span class="pre">cIncludeDir()</span></tt> and <tt class="docutils literal"><span class="pre">cImport()</span></tt>.</p>
-
-
-</dd>
 <a id="cDebug"></a>
 <dt><pre><span class="Keyword">proc</span> <a href="#cDebug"><span class="Identifier">cDebug</span></a><span class="Other">(</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
@@ -211,6 +192,15 @@ Enable debug messages and display the generated Nim code
 
 
 </dd>
+<a id="cSearchPath,string"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#cSearchPath%2Cstring"><span class="Identifier">cSearchPath</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadDirEffect</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+
+<p>Get full path to file or directory <tt class="docutils literal"><span class="pre">path</span></tt> in search path configured using <tt class="docutils literal"><span class="pre">cAddSearchDir()</span></tt> and <tt class="docutils literal"><span class="pre">cAddStdDir()</span></tt>.</p>
+<p>This can be used to locate files or directories that can be passed onto <tt class="docutils literal"><span class="pre">cCompile()</span></tt>, <tt class="docutils literal"><span class="pre">cIncludeDir()</span></tt> and <tt class="docutils literal"><span class="pre">cImport()</span></tt>.</p>
+
+
+</dd>
 <a id="cAddSearchDir,string"></a>
 <dt><pre><span class="Keyword">proc</span> <a href="#cAddSearchDir%2Cstring"><span class="Identifier">cAddSearchDir</span></a><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
 <dd>
@@ -220,7 +210,7 @@ Add directory <tt class="docutils literal"><span class="pre">dir</span></tt> to 
 <pre class="listing"><span class="Keyword">import</span><span class="Whitespace"> </span><span class="Identifier">nimterop</span><span class="Operator">/</span><span class="Identifier">paths</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="Identifier">os</span><span class="Whitespace">
 </span><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace">
   </span><span class="Identifier">cAddSearchDir</span><span class="Whitespace"> </span><span class="Identifier">testsIncludeDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span><span class="Whitespace">
-</span><span class="Identifier">doAssert</span><span class="Whitespace"> </span><span class="Identifier">cSearchPath</span><span class="Punctuation">(</span><span class="StringLit">&quot;test.h&quot;</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Identifier">existsFile</span></pre>
+  </span><span class="Identifier">doAssert</span><span class="Whitespace"> </span><span class="Identifier">cSearchPath</span><span class="Punctuation">(</span><span class="StringLit">&quot;test.h&quot;</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Identifier">fileExists</span></pre>
 
 </dd>
 <a id="cAddStdDir,string"></a>
@@ -231,9 +221,21 @@ Add directory <tt class="docutils literal"><span class="pre">dir</span></tt> to 
 
 Add the standard <tt class="docutils literal"><span class="pre">c</span></tt> [default] or <tt class="docutils literal"><span class="pre">cpp</span></tt> include paths to search path used in calls to <tt class="docutils literal"><span class="pre">cSearchPath()</span></tt>.
 <p><strong class="examples_text">Example:</strong></p>
-<pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace"> </span><span class="Identifier">cAddStdDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span><span class="Whitespace">
-</span><span class="Keyword">import</span><span class="Whitespace"> </span><span class="Identifier">os</span><span class="Whitespace">
-</span><span class="Identifier">doAssert</span><span class="Whitespace"> </span><span class="Identifier">cSearchPath</span><span class="Punctuation">(</span><span class="StringLit">&quot;math.h&quot;</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Identifier">existsFile</span></pre>
+<pre class="listing"><span class="Keyword">import</span><span class="Whitespace"> </span><span class="Identifier">os</span><span class="Whitespace">
+</span><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace">
+  </span><span class="Identifier">cAddStdDir</span><span class="Punctuation">(</span><span class="Punctuation">)</span><span class="Whitespace">
+  </span><span class="Identifier">doAssert</span><span class="Whitespace"> </span><span class="Identifier">cSearchPath</span><span class="Punctuation">(</span><span class="StringLit">&quot;math.h&quot;</span><span class="Punctuation">)</span><span class="Operator">.</span><span class="Identifier">fileExists</span></pre>
+
+</dd>
+<a id="cSkipSymbol,seq[string]"></a>
+<dt><pre><span class="Keyword">proc</span> <a href="#cSkipSymbol%2Cseq%5Bstring%5D"><span class="Identifier">cSkipSymbol</span></a><span class="Other">(</span><span class="Identifier">skips</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span> <span><span class="Other">{</span><span class="Other pragmadots">...</span><span class="Other">}</span></span><span class="pragmawrap"><span class="Other">{.</span><span class="pragma"><span class="Identifier">compileTime</span><span class="Other">,</span> <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span><span class="Other">.}</span></span></pre></dt>
+<dd>
+
+<p>Similar to <tt class="docutils literal"><span class="pre">cOverride()</span></tt>, this macro allows filtering out symbols not of interest from the generated output.</p>
+<p><tt class="docutils literal"><span class="pre">cSkipSymbol()</span></tt> only affects calls to <tt class="docutils literal"><span class="pre">cImport()</span></tt> that follow it.</p>
+
+<p><strong class="examples_text">Example:</strong></p>
+<pre class="listing"><span class="Keyword">static</span><span class="Punctuation">:</span><span class="Whitespace"> </span><span class="Identifier">cSkipSymbol</span><span class="Whitespace"> </span><span class="Operator">@</span><span class="Punctuation">[</span><span class="StringLit">&quot;proc1&quot;</span><span class="Punctuation">,</span><span class="Whitespace"> </span><span class="StringLit">&quot;Type2&quot;</span><span class="Punctuation">]</span></pre>
 
 </dd>
 
@@ -241,6 +243,104 @@ Add the standard <tt class="docutils literal"><span class="pre">c</span></tt> [d
 <div class="section" id="17">
 <h1><a class="toc-backref" href="#17">Macros</a></h1>
 <dl class="item">
+<a id="cDefine.m,static[string],static[string]"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cDefine.m%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D"><span class="Identifier">cDefine</span></a><span class="Other">(</span><span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p><tt class="docutils literal"><span class="pre">#define</span></tt> an identifer that is forwarded to the C/C++ preprocessor if called within <tt class="docutils literal"><span class="pre">cImport()</span></tt> or <tt class="docutils literal"><span class="pre">c2nImport()</span></tt> as well as to the C/C++ compiler during Nim compilation using <tt class="docutils literal"><span class="pre">{.passC: &quot;-DXXX&quot;.}</span></tt></p>
+<p>This needs to be called before <tt class="docutils literal"><span class="pre">cImport()</span></tt> to take effect.</p>
+
+
+</dd>
+<a id="cDefine.m"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cDefine.m"><span class="Identifier">cDefine</span></a><span class="Other">(</span><span class="Identifier">values</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p><tt class="docutils literal"><span class="pre">#define</span></tt> multiple identifers that are forwarded to the C/C++ preprocessor if called within <tt class="docutils literal"><span class="pre">cImport()</span></tt> or <tt class="docutils literal"><span class="pre">c2nImport()</span></tt> as well as to the C/C++ compiler during Nim compilation using <tt class="docutils literal"><span class="pre">{.passC: &quot;-DXXX&quot;.}</span></tt></p>
+<p>This needs to be called before <tt class="docutils literal"><span class="pre">cImport()</span></tt> to take effect.</p>
+
+
+</dd>
+<a id="cIncludeDir.m,,static[bool]"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cIncludeDir.m%2C%2Cstatic%5Bbool%5D"><span class="Identifier">cIncludeDir</span></a><span class="Other">(</span><span class="Identifier">dirs</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">exclude</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">bool</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Add include directories that are forwarded to the C/C++ preprocessor if called within <tt class="docutils literal"><span class="pre">cImport()</span></tt> or <tt class="docutils literal"><span class="pre">c2nImport()</span></tt> as well as to the C/C++ compiler during Nim compilation using <tt class="docutils literal"><span class="pre">{.passC: &quot;-IXXX&quot;.}</span></tt>.</p>
+<p>Set <tt class="docutils literal"><span class="pre">exclude = true</span></tt> if the contents of these include directories should not be included in the wrapped output.</p>
+<p>This needs to be called before <tt class="docutils literal"><span class="pre">cImport()</span></tt> to take effect.</p>
+
+
+</dd>
+<a id="cIncludeDir.m,static[string],static[bool]"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cIncludeDir.m%2Cstatic%5Bstring%5D%2Cstatic%5Bbool%5D"><span class="Identifier">cIncludeDir</span></a><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">exclude</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">bool</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Add an include directory that is forwarded to the C/C++ preprocessor if called within <tt class="docutils literal"><span class="pre">cImport()</span></tt> or <tt class="docutils literal"><span class="pre">c2nImport()</span></tt> as well as to the C/C++ compiler during Nim compilation using <tt class="docutils literal"><span class="pre">{.passC: &quot;-IXXX&quot;.}</span></tt>.</p>
+<p>Set <tt class="docutils literal"><span class="pre">exclude = true</span></tt> if the contents of this include directory should not be included in the wrapped output.</p>
+<p>This needs to be called before <tt class="docutils literal"><span class="pre">cImport()</span></tt> to take effect.</p>
+
+
+</dd>
+<a id="cExclude.m"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cExclude.m"><span class="Identifier">cExclude</span></a><span class="Other">(</span><span class="Identifier">paths</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Exclude specified paths - files or directories from the wrapped output</p>
+<p>Full path to file or directory is required.</p>
+
+
+</dd>
+<a id="cExclude.m_2"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cExclude.m_2"><span class="Identifier">cExclude</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Exclude specified path - file or directory from the wrapped output.</p>
+<p>Full path to file or directory is required.</p>
+
+
+</dd>
+<a id="cPassC.m"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cPassC.m"><span class="Identifier">cPassC</span></a><span class="Other">(</span><span class="Identifier">value</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Create a <tt class="docutils literal"><span class="pre">{.passC.}</span></tt> entry that gets forwarded to the C/C++ compiler during Nim compilation.</p>
+<p><tt class="docutils literal"><span class="pre">cPassC()</span></tt> needs to be called before <tt class="docutils literal"><span class="pre">cImport()</span></tt> to take effect and gets consumed and reset so as not to impact subsequent <tt class="docutils literal"><span class="pre">cImport()</span></tt> calls.</p>
+
+
+</dd>
+<a id="cPassL.m"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cPassL.m"><span class="Identifier">cPassL</span></a><span class="Other">(</span><span class="Identifier">value</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Create a <tt class="docutils literal"><span class="pre">{.passL.}</span></tt> entry that gets forwarded to the C/C++ compiler during Nim compilation.</p>
+<p><tt class="docutils literal"><span class="pre">cPassL()</span></tt> needs to be called before <tt class="docutils literal"><span class="pre">cImport()</span></tt> to take effect and gets consumed and reset so as not to impact subsequent <tt class="docutils literal"><span class="pre">cImport()</span></tt> calls.</p>
+
+
+</dd>
+<a id="cCompile.m,,static[string],static[string]"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#cCompile.m%2C%2Cstatic%5Bstring%5D%2Cstatic%5Bstring%5D"><span class="Identifier">cCompile</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">mode</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">;</span>
+              <span class="Identifier">exclude</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>Compile and link C/C++ implementation into resulting binary using <tt class="docutils literal"><span class="pre">{.compile.}</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">path</span></tt> can be a specific file or contain <tt class="docutils literal"><span class="pre">*</span></tt> wildcard for filename:</p>
+<pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;file.c&quot;</span><span class="Punctuation">)</span>
+<span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/*.c&quot;</span><span class="Punctuation">)</span></pre><p><tt class="docutils literal"><span class="pre">mode</span></tt> recursively searches for code files in <tt class="docutils literal"><span class="pre">path</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">c</span></tt> searches for <tt class="docutils literal"><span class="pre">*.c</span></tt> whereas <tt class="docutils literal"><span class="pre">cpp</span></tt> searches for <tt class="docutils literal"><span class="pre">*.C *.cpp *.c++ *.cc *.cxx</span></tt></p>
+<pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/dir&quot;</span><span class="Punctuation">,</span> <span class="StringLit">&quot;cpp&quot;</span><span class="Punctuation">)</span></pre><p><tt class="docutils literal"><span class="pre">exclude</span></tt> can be used to exclude files by partial string match. Comma separated to specify multiple exclude strings</p>
+<pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/dir&quot;</span><span class="Punctuation">,</span> <span class="Identifier">exclude</span><span class="Operator">=</span><span class="StringLit">&quot;test2.c&quot;</span><span class="Punctuation">)</span></pre><p><tt class="docutils literal"><span class="pre">cCompile()</span></tt> needs to be called before <tt class="docutils literal"><span class="pre">cImport()</span></tt> to take effect and gets consumed and reset so as not to impact subsequent <tt class="docutils literal"><span class="pre">cImport()</span></tt> calls.</p>
+
+
+</dd>
+<a id="renderPragma.m"></a>
+<dt><pre><span class="Keyword">macro</span> <a href="#renderPragma.m"><span class="Identifier">renderPragma</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+
+<p>All <tt class="docutils literal"><span class="pre">cDefine()</span></tt>, <tt class="docutils literal"><span class="pre">cIncludeDir()</span></tt>, <tt class="docutils literal"><span class="pre">cCompile()</span></tt>, <tt class="docutils literal"><span class="pre">cPassC()</span></tt> and <tt class="docutils literal"><span class="pre">cPassL()</span></tt> content typically gets forwarded via <tt class="docutils literal"><span class="pre">cImport()</span></tt> to the generated wrapper to be rendered as part of the output so as to enable standalone wrappers. If <tt class="docutils literal"><span class="pre">cImport()</span></tt> is not being used for some reason, <tt class="docutils literal"><span class="pre">renderPragma()</span></tt> can create these pragmas in the nimterop wrapper itself. A good example is using <tt class="docutils literal"><span class="pre">getHeader()</span></tt> without calling <tt class="docutils literal"><span class="pre">cImport()</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">c2nImport()</span></tt> already uses this macro so there's no need to use it when typically wrapping headers.</p>
+
+
+</dd>
 <a id="cOverride.m"></a>
 <dt><pre><span class="Keyword">macro</span> <a href="#cOverride.m"><span class="Identifier">cOverride</span></a><span class="Other">(</span><span class="Identifier">body</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
@@ -299,33 +399,6 @@ When <tt class="docutils literal"><span class="pre">cOverride()</span></tt> and 
 <p><tt class="docutils literal"><span class="pre">path</span></tt> is relative to the current dir and not necessarily relative to the location of the wrapper file. Use <tt class="docutils literal"><span class="pre">currentSourcePath</span></tt> to specify a path relative to the wrapper file.</p>
 <p>Unlike <tt class="docutils literal"><span class="pre">cPlugin()</span></tt>, this macro also does not implicitly import any other modules since the standalone plugin file will need explicit imports for <tt class="docutils literal"><span class="pre">nim check</span></tt> and suggestions to work. <tt class="docutils literal"><span class="pre">import nimterop/plugin</span></tt> is required for all plugins.</p>
 
-
-</dd>
-<a id="cDefine.m,,string"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cDefine.m%2C%2Cstring"><span class="Identifier">cDefine</span></a><span class="Other">(</span><span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
-<dd>
-
-<tt class="docutils literal"><span class="pre">#define</span></tt> an identifer that is forwarded to the C/C++ preprocessor if called within <tt class="docutils literal"><span class="pre">cImport()</span></tt> or <tt class="docutils literal"><span class="pre">c2nImport()</span></tt> as well as to the C/C++ compiler during Nim compilation using <tt class="docutils literal"><span class="pre">{.passC: &quot;-DXXX&quot;.}</span></tt>
-
-</dd>
-<a id="cIncludeDir.m"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cIncludeDir.m"><span class="Identifier">cIncludeDir</span></a><span class="Other">(</span><span class="Identifier">dir</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
-<dd>
-
-Add an include directory that is forwarded to the C/C++ preprocessor if called within <tt class="docutils literal"><span class="pre">cImport()</span></tt> or <tt class="docutils literal"><span class="pre">c2nImport()</span></tt> as well as to the C/C++ compiler during Nim compilation using <tt class="docutils literal"><span class="pre">{.passC: &quot;-IXXX&quot;.}</span></tt>.
-
-</dd>
-<a id="cCompile.m,,string,string"></a>
-<dt><pre><span class="Keyword">macro</span> <a href="#cCompile.m%2C%2Cstring%2Cstring"><span class="Identifier">cCompile</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">mode</span> <span class="Other">=</span> <span class="StringLit">&quot;c&quot;</span><span class="Other">;</span> <span class="Identifier">exclude</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
-<dd>
-
-<p>Compile and link C/C++ implementation into resulting binary using <tt class="docutils literal"><span class="pre">{.compile.}</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">path</span></tt> can be a specific file or contain wildcards:</p>
-<pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;file.c&quot;</span><span class="Punctuation">)</span>
-<span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/*.c&quot;</span><span class="Punctuation">)</span></pre><p><tt class="docutils literal"><span class="pre">mode</span></tt> recursively searches for code files in <tt class="docutils literal"><span class="pre">path</span></tt>.</p>
-<p><tt class="docutils literal"><span class="pre">c</span></tt> searches for <tt class="docutils literal"><span class="pre">*.c</span></tt> whereas <tt class="docutils literal"><span class="pre">cpp</span></tt> searches for <tt class="docutils literal"><span class="pre">*.C *.cpp *.c++ *.cc *.cxx</span></tt></p>
-<pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/dir&quot;</span><span class="Punctuation">,</span> <span class="StringLit">&quot;cpp&quot;</span><span class="Punctuation">)</span></pre><p><tt class="docutils literal"><span class="pre">exclude</span></tt> can be used to exclude files by partial string match. Comma separated to specify multiple exclude strings</p>
-<pre class="listing"><span class="Identifier">cCompile</span><span class="Punctuation">(</span><span class="StringLit">&quot;path/to/dir&quot;</span><span class="Punctuation">,</span> <span class="Identifier">exclude</span><span class="Operator">=</span><span class="StringLit">&quot;test2.c&quot;</span><span class="Punctuation">)</span></pre>
 
 </dd>
 <a id="cImport.m,,string,string,string,string"></a>
@@ -394,7 +467,7 @@ Add an include directory that is forwarded to the C/C++ preprocessor if called w
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-04 00:11:41 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-16 02:07:15 UTC</small>
       </div>
     </div>
   </div>

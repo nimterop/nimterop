@@ -6,3 +6,4 @@ writeNimConfig	build/nimconf.html#writeNimConfig,string,string	nimconf: writeNim
 getNimcacheDir	build/nimconf.html#getNimcacheDir,string	nimconf: getNimcacheDir(projectDir = &quot;&quot;): string	
 getOutDir	build/nimconf.html#getOutDir,string	nimconf: getOutDir(projectDir = &quot;&quot;): string	
 getNimteropCacheDir	build/nimconf.html#getNimteropCacheDir	nimconf: getNimteropCacheDir(): string	
+fixRelPath	build/nimconf.html#fixRelPath,string	nimconf: fixRelPath(path: string): string	

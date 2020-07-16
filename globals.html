@@ -47,21 +47,12 @@ function main() {
 
   toggleSwitch.addEventListener('change', switchTheme, false);
 
+  const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+  if (currentTheme) {
+    document.documentElement.setAttribute('data-theme', currentTheme);
 
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', "dark");
-    toggleSwitch.checked = true;
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-    document.documentElement.setAttribute('data-theme', "light");
-    toggleSwitch.checked = false;
-  } else {
-    const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-    if (currentTheme) {
-      document.documentElement.setAttribute('data-theme', currentTheme);
-
-      if (currentTheme === 'dark') {
-        toggleSwitch.checked = true;
-      }
+    if (currentTheme === 'dark') {
+      toggleSwitch.checked = true;
     }
   }
 }
@@ -108,16 +99,20 @@ function main() {
   ast2"><wbr />Feature<span class="attachedType"></span></a></li>
   <li><a class="reference" href="#State"
     title="State = ref object
+  compile*: seq[string]
   convention*: string
   debug*: bool
   defines*: seq[string]
   dynlib*: string
+  exclude*: seq[string]
   feature*: seq[Feature]
   includeDirs*: seq[string]
   mode*: string
   nim*: string
   noComments*: bool
   noHeader*: bool
+  passC*: seq[string]
+  passL*: seq[string]
   past*: bool
   pluginSourcePath*: string
   pnim*: bool
@@ -151,7 +146,7 @@ function main() {
       wrapperHeader*: string
 
   else:
-      compile*: seq[string]
+      compcache*: seq[string]
       nocache*: bool
       overrides*: string
       pluginSource*: string
@@ -212,16 +207,20 @@ function main() {
 </dd>
 <a id="State"></a>
 <dt><pre><a href="globals.html#State"><span class="Identifier">State</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">compile</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">convention</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">debug</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">defines</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">dynlib</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">exclude</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">feature</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="globals.html#Feature"><span class="Identifier">Feature</span></a><span class="Other">]</span>
   <span class="Identifier">includeDirs</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">mode</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">nim</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">noComments</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">noHeader</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+  <span class="Identifier">passC</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
+  <span class="Identifier">passL</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">past</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">pluginSourcePath</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">pnim</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
@@ -255,7 +254,7 @@ function main() {
       <span class="Identifier">wrapperHeader</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
 
   <span class="Keyword">else</span><span class="Other">:</span>
-      <span class="Identifier">compile</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
+      <span class="Identifier">compcache</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
       <span class="Identifier">nocache</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
       <span class="Identifier">overrides</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
       <span class="Identifier">pluginSource</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
@@ -348,7 +347,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-04 00:11:41 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-16 02:07:14 UTC</small>
       </div>
     </div>
   </div>

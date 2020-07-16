@@ -1,15 +1,22 @@
-cOverride	cimport.html#cOverride.m	cimport: cOverride(body): untyped	
-cSkipSymbol	cimport.html#cSkipSymbol,seq[string]	cimport: cSkipSymbol(skips: seq[string])	
-cPlugin	cimport.html#cPlugin.m	cimport: cPlugin(body): untyped	
-cPluginPath	cimport.html#cPluginPath.m,static[string]	cimport: cPluginPath(path: static[string]): untyped	
-cSearchPath	cimport.html#cSearchPath,string	cimport: cSearchPath(path: string): string	
 cDebug	cimport.html#cDebug	cimport: cDebug()	
 cDisableCaching	cimport.html#cDisableCaching	cimport: cDisableCaching()	
-cDefine	cimport.html#cDefine.m,,string	cimport: cDefine(name: static string; val: static string = &quot;&quot;): untyped	
+cSearchPath	cimport.html#cSearchPath,string	cimport: cSearchPath(path: string): string	
 cAddSearchDir	cimport.html#cAddSearchDir,string	cimport: cAddSearchDir(dir: string)	
-cIncludeDir	cimport.html#cIncludeDir.m	cimport: cIncludeDir(dir: static string): untyped	
 cAddStdDir	cimport.html#cAddStdDir,string	cimport: cAddStdDir(mode = &quot;c&quot;)	
-cCompile	cimport.html#cCompile.m,,string,string	cimport: cCompile(path: static string; mode = &quot;c&quot;; exclude = &quot;&quot;): untyped	
+cDefine	cimport.html#cDefine.m,static[string],static[string]	cimport: cDefine(name: static[string]; val: static[string] = &quot;&quot;): untyped	
+cDefine	cimport.html#cDefine.m	cimport: cDefine(values: static seq[string]): untyped	
+cIncludeDir	cimport.html#cIncludeDir.m,,static[bool]	cimport: cIncludeDir(dirs: static seq[string]; exclude: static[bool] = false): untyped	
+cIncludeDir	cimport.html#cIncludeDir.m,static[string],static[bool]	cimport: cIncludeDir(dir: static[string]; exclude: static[bool] = false): untyped	
+cExclude	cimport.html#cExclude.m	cimport: cExclude(paths: static seq[string]): untyped	
+cExclude	cimport.html#cExclude.m_2	cimport: cExclude(path: static string): untyped	
+cPassC	cimport.html#cPassC.m	cimport: cPassC(value: static string): untyped	
+cPassL	cimport.html#cPassL.m	cimport: cPassL(value: static string): untyped	
+cCompile	cimport.html#cCompile.m,,static[string],static[string]	cimport: cCompile(path: static string; mode: static[string] = &quot;c&quot;; exclude: static[string] = &quot;&quot;): untyped	
+renderPragma	cimport.html#renderPragma.m	cimport: renderPragma(): untyped	
+cSkipSymbol	cimport.html#cSkipSymbol,seq[string]	cimport: cSkipSymbol(skips: seq[string])	
+cOverride	cimport.html#cOverride.m	cimport: cOverride(body): untyped	
+cPlugin	cimport.html#cPlugin.m	cimport: cPlugin(body): untyped	
+cPluginPath	cimport.html#cPluginPath.m,static[string]	cimport: cPluginPath(path: static[string]): untyped	
 cImport	cimport.html#cImport.m,,string,string,string,string	cimport: cImport(filenames: static seq[string]; recurse: static bool = false;\n        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;;\n        nimFile: static string = &quot;&quot;): untyped	
 cImport	cimport.html#cImport.m,,string,string,string,string_2	cimport: cImport(filename: static string; recurse: static bool = false;\n        dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;; flags: static string = &quot;&quot;;\n        nimFile: static string = &quot;&quot;): untyped	
 c2nImport	cimport.html#c2nImport.m,,string,string,string,string	cimport: c2nImport(filename: static string; recurse: static bool = false;\n          dynlib: static string = &quot;&quot;; mode: static string = &quot;c&quot;;\n          flags: static string = &quot;&quot;; nimFile: static string = &quot;&quot;): untyped	

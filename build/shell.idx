@@ -17,6 +17,7 @@ downloadUrl	build/shell.html#downloadUrl,string,string,int	shell: downloadUrl(ur
 gitReset	build/shell.html#gitReset,string	shell: gitReset(outdir: string)	
 gitCheckout	build/shell.html#gitCheckout,string,string	shell: gitCheckout(file, outdir: string)	
 gitAtCheckout	build/shell.html#gitAtCheckout,string,string	shell: gitAtCheckout(outdir, checkout: string): bool	
+gitDefaultBranch	build/shell.html#gitDefaultBranch,string	shell: gitDefaultBranch(outdir: string): string	
 gitPull	build/shell.html#gitPull,string,string,string,string	shell: gitPull(url: string; outdir = &quot;&quot;; plist = &quot;&quot;; checkout = &quot;&quot;; quiet = false)	
 gitTags	build/shell.html#gitTags,string	shell: gitTags(outdir: string): seq[string]	
 findFiles	build/shell.html#findFiles,string,string	shell: findFiles(file: string; dir: string; recurse = true; regex = false): seq[string]	
