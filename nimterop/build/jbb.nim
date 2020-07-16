@@ -65,7 +65,7 @@ proc parseJBBProject(pkg: JBBPackage, outdir: string) =
     for line in data.splitLines():
       let
         line = line.strip()
-      if line.len != 0:
+      if line.nBl:
         if line.startsWith('['):
           if line == "[deps]":
             deps = true
@@ -100,7 +100,7 @@ proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
     for line in data.splitLines():
       let
         line = line.strip()
-      if line.len != 0:
+      if line.nBl:
         let
           spl = line.split(" = ", 1)
           name = spl[0]
@@ -145,7 +145,7 @@ proc getJBBRepo*(pkg: JBBPackage, outdir: string) =
       quiet = true
     )
 
-    if pkg.version.len != 0:
+    if pkg.version.nBl:
       # Checkout correct tag
       let
         tags = gitTags(path)
@@ -157,7 +157,7 @@ proc getJBBRepo*(pkg: JBBPackage, outdir: string) =
     var
       url = pkg.baseUrl
     if "$#" in url or "$1" in url:
-      doAssert pkg.version.len != 0, "Need version for custom BinaryBuilder.org url: " & url
+      doAssert pkg.version.nBl, "Need version for custom BinaryBuilder.org url: " & url
       url = url % pkg.version
     downloadUrl(url & "Artifacts.toml", path, quiet = true)
     downloadUrl(url & "Project.toml", path, quiet = true)
@@ -209,11 +209,14 @@ proc downloadJBB*(pkg: JBBPackage, outdir: string, main = true) =
 
   pkg.getJBBRepo(outdir)
 
-  doAssert pkg.url.len != 0, &"Failed to download {pkg.name} info from BinaryBuilder.org"
+  if pkg.url.Bl:
+    # No url for deps means no package for that os/arch combo - e.g. Attr
+    doAssert not main, &"Failed to download {pkg.name} info from BinaryBuilder.org"
+    return
 
   let
     vstr =
-      if pkg.version.len != 0:
+      if pkg.version.nBl:
         &" v{pkg.version}"
       else:
         ""
@@ -250,7 +253,7 @@ proc getJBBLDeps*(pkg: JBBPackage, outdir: string, shared: bool, main = true): s
     libs = if shared: pkg.sharedLibs else: pkg.staticLibs
     str = if shared: "shared" else: "static"
 
-  doAssert libs.len != 0, &"No {str} libs found for {pkg.name} in {outdir}"
+  doAssert libs.nBl, &"No {str} libs found for {pkg.name} in {outdir}"
 
   if not main:
     for lib in libs:

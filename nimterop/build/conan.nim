@@ -134,13 +134,13 @@ proc newConanPackageFromUri*(uri: string, shared = true): ConanPackage =
 proc getUriFromConanPackage*(pkg: ConanPackage): string =
   ## Convert a ConanPackage to a conan uri
   result = pkg.name
-  if pkg.version.len != 0:
+  if pkg.version.nBl:
     result &= "/" & pkg.version
-  if pkg.user.len != 0:
+  if pkg.user.nBl:
     result &= "@" & pkg.user
-  if pkg.channel.len != 0:
+  if pkg.channel.nBl:
     result &= "/" & pkg.channel
-  if pkg.bhash.len != 0:
+  if pkg.bhash.nBl:
     result &= ":" & pkg.bhash
 
 proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPackage =
@@ -149,11 +149,11 @@ proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPac
   ## Search is quite slow so it is preferable to specify a version and use `getConanBuilds()`
   var
     query = name
-  if version.len != 0:
+  if version.nBl:
     query &= "/" & version
-    if user.len != 0:
+    if user.nBl:
       query &= "@" & user
-      if channel.len != 0:
+      if channel.nBl:
         query &= "/" & channel
 
   gecho &"# Searching Conan.io for latest version of {name}"
@@ -172,11 +172,11 @@ proc searchConan*(name: string, version = "", user = "", channel = ""): ConanPac
     if "@_/_" in str:
       let
         ver = str.split('/')[1].split('@')[0]
-      if latestv.len == 0 or compareVersions(ver, latestv) > 0:
+      if latestv.Bl or compareVersions(ver, latestv) > 0:
         latestv = ver
         latest = str
 
-  if latest.len != 0:
+  if latest.nBl:
     result = newConanPackageFromUri(latest)
 
 proc searchConan*(pkg: ConanPackage): ConanPackage =
@@ -200,7 +200,7 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
         vsplit[0]
 
     query =
-      if pkg.bhash.len == 0:
+      if pkg.bhash.Bl:
         block:
           var
             query = &"?q=arch={arch}&os={os.capitalizeAscii()}"
@@ -208,7 +208,7 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
             query &= "&build_type=Release"
           if "shared=" notin filter:
             query &= &"&options.shared={($pkg.shared).capitalizeAscii()}"
-          if filter.len != 0:
+          if filter.nBl:
             query &= &"&{filter}"
           if "compiler=" notin filter and os != "windows":
             query &= &"&compiler={compiler}&compiler.version=" & vfilter
@@ -232,7 +232,7 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
 
   if not j1.isNil:
     for bhash, bdata in j1.getFields():
-      if pkg.bhash.len == 0 or pkg.bhash == bhash:
+      if pkg.bhash.Bl or pkg.bhash == bhash:
         let
           bld = new(ConanBuild)
           settings = bdata.getOrDefault("settings")
@@ -328,13 +328,13 @@ proc dlConanBuild*(pkg: ConanPackage, bld: ConanBuild, outdir: string, revision 
   ## Download specific `revision` of `bld` to `outdir`
   ##
   ## If omitted, the latest revision (first) is downloaded
-  doAssert bld.revisions.len != 0, "No build revisions found for Conan.io package " & pkg.getUriFromConanPackage()
+  doAssert bld.revisions.nBl, "No build revisions found for Conan.io package " & pkg.getUriFromConanPackage()
 
   let
     outdir = fixRelPath(outdir)
 
     revision =
-      if revision.len != 0:
+      if revision.nBl:
         revision
       else:
         bld.revisions[0]
@@ -379,7 +379,7 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, main = true) =
     outdir = fixRelPath(outdir)
 
     pkg =
-      if pkg.version.len == 0:
+      if pkg.version.Bl:
         searchConan(pkg)
       else:
         pkg
@@ -395,12 +395,12 @@ proc downloadConan*(pkg: ConanPackage, outdir: string, main = true) =
 
   pkg.getConanBuilds()
 
-  doAssert pkg.recipes.len != 0, &"Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
+  doAssert pkg.recipes.nBl, &"Failed to download {pkg.name} v{pkg.version} from Conan - check https://conan.io/center"
 
   gecho &"# Downloading {pkg.name} v{pkg.version} from Conan.io"
   for recipe, builds in pkg.recipes:
     for build in builds:
-      if pkg.bhash.len == 0 or pkg.bhash == build.bhash:
+      if pkg.bhash.Bl or pkg.bhash == build.bhash:
         pkg.getConanRevisions(build)
         pkg.dlConanBuild(build, outdir)
         pkg.dlConanRequires(build, outdir)
@@ -442,7 +442,7 @@ proc getConanLDeps*(pkg: ConanPackage, outdir: string, main = true): seq[string]
     libs = if pkg.shared: pkg.sharedLibs else: pkg.staticLibs
     str = if pkg.shared: "shared" else: "static"
 
-  doAssert libs.len != 0, &"No {str} libs found for {pkg.name} in {outdir}"
+  doAssert libs.nBl, &"No {str} libs found for {pkg.name} in {outdir}"
 
   if not main:
     for lib in libs:
