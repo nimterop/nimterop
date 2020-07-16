@@ -260,4 +260,6 @@ proc getJBBLDeps*(pkg: JBBPackage, outdir: string, shared: bool, main = true): s
       result.add lib
 
   for cpkg in pkg.requires:
-    result.add cpkg.getJBBLDeps(outdir, shared, main = false)
+    # No url for deps means no package for that os/arch combo - e.g. Attr
+    if cpkg.url.nBl:
+      result.add cpkg.getJBBLDeps(outdir, shared, main = false)
