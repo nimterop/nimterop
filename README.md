@@ -97,7 +97,7 @@ Flags can be specified to these tools via `getHeader()` or directly via the unde
 
 If `-d:headerStatic` is specified, `getHeader()` will return the static library path in `headerLPath`. The wrapper writer can check for this and call `cImport()` accordingly as in the example above. If `-d:headerStatic` is omitted, the dynamic library is returned in `headerLPath`.
 
-All dependency libraries (supported by Conan and JBB) will be returned in `headerLDeps`. Static libraries and dependencies are automatically linked using `cPassL()`. Conan shared libs include all dependencies whereas JBB shared libs expect the required dependencies to be in the same location or in `LD_LIBRARY_PATH`.
+All dependency libraries (supported by Conan and JBB) will be returned in `headerLDeps`. Static libraries and dependencies are automatically linked using `cPassL()`. Conan shared libs typically include dependencies compiled in whereas JBB shared libs expect the required dependencies to be in the same location or in `LD_LIBRARY_PATH`. `conanFlags` and `jbbFlags` can be used to skip required dependencies from being downloaded in case another source is preferred. This can be done with `skip=pkg1,pkg2` to these flags.
 
 `getHeader()` searches for libraries based on the header name by default:
 - `libheader.so` or `libheader.a` on Linux

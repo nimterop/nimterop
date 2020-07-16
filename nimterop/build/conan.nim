@@ -22,6 +22,8 @@ type
     staticLibs*: seq[string]
     requires*: seq[ConanPackage]
 
+    skipRequires*: seq[string]
+
   ConanBuild* = ref object
     ## Build type that stores build specific info and revisions
     bhash*: string
@@ -245,7 +247,10 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
           bld.options = newTable[string, string](8)
           for key, value in options.getFields():
             bld.options[key] = value.getStr()
-        bld.requires = requires.to(seq[string])
+        for req in requires.to(seq[string]):
+          # Filter skipped dependencies
+          if req.toLowerAscii() notin pkg.skipRequires:
+            bld.requires.add req
         bld.recipe_hash = bdata.getOrDefault("recipe_hash").getStr()
 
         if pkg.recipes.hasKey(bld.recipe_hash):
@@ -422,6 +427,7 @@ proc dlConanRequires*(pkg: ConanPackage, bld: ConanBuild, outdir: string) =
       else:
         let
           rpkg = newConanPackageFromUri(req, shared = false)
+        rpkg.skipRequires = pkg.skipRequires
 
         downloadConan(rpkg, outdir, main = false)
         pkg.requires.add rpkg

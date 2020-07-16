@@ -53,6 +53,8 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.5
 
 - Added `renderPragma()` to create pragmas inline in case `cImport()` is not being used. (since v0.6.5)
 
+- `xxxConan` and `xxxJBB` now allow skipping required dependencies by specifying `skip=pkg1,pkg2` to the `conanFlags` and `jbbFlags` params to `getHeader()`. (since v0.6.6)
+
 ### Other improvements
 
 - Generated wrappers no longer depend on nimterop being present - no more `import nimterop/types`. Supporting code is directly included in the wrapper output and only when required. E.g. enum macro is only included if wrapper contains enums. [#125][i125] (since v0.6.1)

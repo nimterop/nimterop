@@ -21,6 +21,8 @@ type
     staticLibs*: seq[string]
     requires*: seq[JBBPackage]
 
+    skipRequires*: seq[string]
+
 const
   # JBB URLs
   jbbBaseUrl = "https://github.com/JuliaBinaryWrappers"
@@ -73,7 +75,12 @@ proc parseJBBProject(pkg: JBBPackage, outdir: string) =
           let
             name = line.split()[0]
           if name.endsWith("_jll"):
-            pkg.requires.add newJBBPackage(name[0 .. ^5], "")
+            # Filter skipped dependencies
+            let
+              pname = name[0 .. ^5]
+            if pname.toLowerAscii() notin pkg.skipRequires:
+              pkg.requires.add newJBBPackage(pname, "")
+              pkg.requires[^1].skipRequires = pkg.skipRequires
 
 proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
   # Get build information from Artifacts.toml

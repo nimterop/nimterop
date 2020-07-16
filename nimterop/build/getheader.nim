@@ -119,7 +119,7 @@ proc getDlPath(header, url, outdir, version: string): string =
 
   result = findFile(header, outdir)
 
-proc getConanPath(header, uri, outdir, version: string, shared: bool): string =
+proc getConanPath(header, uri, flags, outdir, version: string, shared: bool): string =
   var
     uri = uri
 
@@ -131,6 +131,15 @@ proc getConanPath(header, uri, outdir, version: string, shared: bool): string =
 
   let
     pkg = newConanPackageFromUri(uri, shared)
+
+  # Handle `conanFlags`
+  if flags.nBl:
+    for flag in flags.split(" "):
+      if flag.startsWith("skip="):
+        for req in flag["skip=".len .. ^1].split(","):
+          if req.nBl:
+            pkg.skipRequires.add req.toLowerAscii()
+
   downloadConan(pkg, outdir)
 
   result = findFile(header, outdir)
@@ -165,16 +174,21 @@ proc getJBBPath(header, uri, flags, outdir, version: string): string =
 
   # Handle `jbbFlags`
   if flags.nBl:
-    if flags.startsWith("giturl="):
-      let
-        val = flags["giturl=".len .. ^1]
-      if val.contains("://"):
-        pkg.baseUrl = val
-      else:
-        pkg.baseUrl = "https://github.com/" & val
-    elif flags.startsWith("url="):
-      pkg.baseUrl = flags["url=".len .. ^1]
-      pkg.isGit = false
+    for flag in flags.split(" "):
+      if flag.startsWith("giturl="):
+        let
+          val = flag["giturl=".len .. ^1]
+        if val.contains("://"):
+          pkg.baseUrl = val
+        else:
+          pkg.baseUrl = "https://github.com/" & val
+      elif flag.startsWith("url="):
+        pkg.baseUrl = flag["url=".len .. ^1]
+        pkg.isGit = false
+      elif flag.startsWith("skip="):
+        for req in flag["skip=".len .. ^1].split(","):
+          if req.nBl:
+            pkg.skipRequires.add req.toLowerAscii()
 
   downloadJBB(pkg, outdir)
 
@@ -227,7 +241,7 @@ macro getHeader*(
   conanuri: static[string] = "", jbburi: static[string] = "",
   outdir: static[string] = "", libdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
-  jbbFlags: static[string] = "", altNames: static[string] = "",
+  conanFlags: static[string] = "", jbbFlags: static[string] = "", altNames: static[string] = "",
   buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
   ## Get the path to a header file for wrapping with
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
@@ -300,7 +314,12 @@ macro getHeader*(
   ## `cmake` and `make` in case additional configuration is required as part of the build
   ## process.
   ##
-  ## `jbbFlags` allows changing the BinaryBuilder.org defaults:
+  ## `conanFlags` and `jbbFlags` allow changing the Conan.io and BinaryBuilder.org defaults:
+  ## - `skip=pkg1,pkg2` skips the specified packages which are required dependencies of the
+  ##   package in question. This enables downloading those dependencies from other sources
+  ##   if required.
+  ##
+  ## `jbbFlags` allows two additional customizations:
   ## - `giturl=customUrl` changes the default `https://github.com/JuliaBinaryWrappers` to
   ##   another Git URL. If no hostname is specified, `https://github.com` is assumed.
   ## - `url=customUrl` uses regular HTTP instead of Git and looks for `Artifacts.toml` and
@@ -402,13 +421,14 @@ macro getHeader*(
       `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
 
     # Search for header in outdir (after retrieving code) depending on -d:xxx mode
-    proc getPath(header, giturl, dlurl, conanuri, jbburi, jbbFlags, outdir, version: string, shared: bool): string =
+    proc getPath(header, giturl, dlurl, conanuri, conanFlags, jbburi, jbbFlags,
+      outdir, version: string, shared: bool): string =
       when `nameGit`:
         getGitPath(header, giturl, outdir, version)
       elif `nameDL`:
         getDlPath(header, dlurl, outdir, version)
       elif `nameConan`:
-        getConanPath(header, conanuri, outdir, version, shared)
+        getConanPath(header, conanuri, conanFlags, outdir, version, shared)
       elif `nameJBB`:
         getJBBPath(header, jbburi, jbbFlags, outdir, version)
       else:
@@ -441,7 +461,7 @@ macro getHeader*(
         when useStd:
           stdPath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `jbbFlags`,
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `conanFlags`, `jbburi`, `jbbFlags`,
             `outdir`, `version`, not `nameStatic`)
 
     # Run preBuild hook before building library if not Std, Conan or JBB
@@ -477,7 +497,7 @@ macro getHeader*(
         if prePath.len != 0:
           prePath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `jbburi`, `jbbFlags`,
+          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `conanFlags`, `jbburi`, `jbbFlags`,
             `outdir`, `version`, not `nameStatic`)
 
     static:
