@@ -186,12 +186,12 @@ proc getIntNode(number, suffix: string; fromEnum = false): PNode {.inline.} =
   result.intVal = val
   result.flags = flags
 
-proc getNumNode(number, suffix: string): PNode {.inline.} =
+proc getNumNode(number, suffix: string, fromEnum = false): PNode {.inline.} =
   ## Convert a C number to a Nim number PNode
   if number.contains("."):
     getFloatNode(number, suffix)
   else:
-    getIntNode(number, suffix)
+    getIntNode(number, suffix, fromEnum)
 
 proc processNumberLiteral(gState: State, node: TSNode, fromEnum = false): PNode =
   ## Parse a number literal from a TSNode. Can be a float, hex, long, etc
@@ -610,7 +610,7 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode, fromEnum 
   if result.kind != nkNone:
     decho "NODE RESULT: ", result
 
-proc parseCExpression*(gState: State, codeRoot: TSNode): PNode =
+proc parseCExpression*(gState: State, codeRoot: TSNode, fromEnum = false): PNode =
   ## Parse a c expression from a root ts node
 
   # This var is used for keeping track of the type of the first
@@ -618,7 +618,7 @@ proc parseCExpression*(gState: State, codeRoot: TSNode): PNode =
   var tnode: PNode = nil
   result = newNode(nkNone)
   try:
-    result = gState.processTSNode(codeRoot, tnode)
+    result = gState.processTSNode(codeRoot, tnode, fromEnum)
   except ExprParseError as e:
     decho e.msg
     result = newNode(nkNone)
@@ -633,7 +633,7 @@ proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidati
   gState.skipIdentValidation = skipIdentValidation
 
   withCodeAst(gState.currentExpr, gState.mode):
-    result = gState.parseCExpression(root)
+    result = gState.parseCExpression(root, fromEnum)
 
   # Clear the state
   gState.currentExpr = ""
