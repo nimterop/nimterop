@@ -181,7 +181,7 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
     # Nim likes to bump up (unspecified) integer literals to `int64` if they
     # are sufficently large (this is by design). This can cause issues,
     # especially in regards to enum definitions:
-    result = newNode(if false: nkInt32Lit else: nkIntLit)
+    result = newNode(if gState.onEnumerator: nkInt32Lit else: nkIntLit)
 
   result.intVal = val
   result.flags = flags

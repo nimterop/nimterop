@@ -1430,6 +1430,10 @@ proc addEnum(gState: State, node: TSNode) =
   let
     enumlist = node.anyChildInTree("enumerator_list")
   if not enumlist.isNil:
+    gState.onEnumerator = true
+    defer:
+      gState.onEnumerator = false
+
     var
       name, origname = ""
       offset = 0
