@@ -153,9 +153,15 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
   else:
     val = parseInt(number)
 
+  # NOTE: This has some potential to break on platforms where certain popular
+  # assumptions about integer sizes do not follow (e.g. that standard integer
+  # literals are 32 bits long, etc.). Let's hope that we do not have to deal
+  # with that.
+
   case suffix
   of "u", "U":
-    result = newNode(nkUintLit)
+    # Stay on the safe side, see else clause
+    result = newNode(nkUint32Lit)
   of "l", "L":
     # If the value doesn't fit, adjust
     if val > int32.high or val < int32.low:
@@ -173,7 +179,11 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
   of "ull", "ULL":
     result = newNode(nkUint64Lit)
   else:
-    result = newNode(nkIntLit)
+    # Nim likes to bump up (unspecified) integer literals to `int64` if they
+    # are sufficently large (this is by design). This can cause issues,
+    # especially in regards to enum definitions, so we specify the literal
+    # as an `int32`.
+    result = newNode(nkInt32Lit)
 
   result.intVal = val
   result.flags = flags
