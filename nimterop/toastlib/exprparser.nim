@@ -135,7 +135,7 @@ proc getFloatNode(number, suffix: string): PNode {.inline.} =
   except ValueError:
     raise newException(ExprParseError, &"Could not parse float value \"{number}\".")
 
-proc getIntNode(number, suffix: string): PNode {.inline.} =
+proc getIntNode(number, suffix: string; fromEnum = false): PNode {.inline.} =
   ## Get a Nim int node from a C integer expression + suffix
   var
     val: BiggestInt
@@ -160,8 +160,7 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
 
   case suffix
   of "u", "U":
-    # Stay on the safe side, see else clause
-    result = newNode(nkUint32Lit)
+    result = newNode(nkUintLit)
   of "l", "L":
     # If the value doesn't fit, adjust
     if val > int32.high or val < int32.low:
@@ -181,9 +180,8 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
   else:
     # Nim likes to bump up (unspecified) integer literals to `int64` if they
     # are sufficently large (this is by design). This can cause issues,
-    # especially in regards to enum definitions, so we specify the literal
-    # as an `int32`.
-    result = newNode(nkInt32Lit)
+    # especially in regards to enum definitions:
+    result = newNode(if fromEnum: nkInt32Lit else: nkIntLit)
 
   result.intVal = val
   result.flags = flags
@@ -195,7 +193,7 @@ proc getNumNode(number, suffix: string): PNode {.inline.} =
   else:
     getIntNode(number, suffix)
 
-proc processNumberLiteral(gState: State, node: TSNode): PNode =
+proc processNumberLiteral(gState: State, node: TSNode, fromEnum = false): PNode =
   ## Parse a number literal from a TSNode. Can be a float, hex, long, etc
   result = newNode(nkNone)
   let nodeVal = node.val
@@ -222,7 +220,7 @@ proc processNumberLiteral(gState: State, node: TSNode): PNode =
     suffix = $number[number.len - 1]
     number = number[0 ..< ^1]
 
-  result = getNumNode(number, suffix)
+  result = getNumNode(number, suffix, fromEnum)
 
   if result.kind != nkNone and prefix == "-":
     result = nkPrefix.newTree(
@@ -489,7 +487,7 @@ proc processSizeofExpression(gState: State, node: TSNode, typeofNode: var PNode)
     gState.processTSNode(node[0], typeofNode)
   )
 
-proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
+proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode, fromEnum = false): PNode =
   ## Handle all of the types of expressions here. This proc gets called recursively
   ## in the processX procs and will drill down to sub nodes.
   result = newNode(nkNone)
@@ -501,7 +499,7 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   of "number_literal":
     # Input -> 0x1234FE, 1231, 123u, 123ul, 123ull, 1.334f
     # Output -> 0x1234FE, 1231, 123'u, 123'u32, 123'u64, 1.334
-    result = gState.processNumberLiteral(node)
+    result = gState.processNumberLiteral(node, fromEnum)
   of "string_literal":
     # Input -> "foo\0\x42"
     # Output -> "foo\0"
@@ -628,7 +626,7 @@ proc parseCExpression*(gState: State, codeRoot: TSNode): PNode =
     decho "UNEXPECTED EXCEPTION: ", e.msg
     result = newNode(nkNone)
 
-proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidation = false): PNode =
+proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidation = false, fromEnum = false): PNode =
   ## Convert the C string to a nim PNode tree
   gState.currentExpr = code
   gState.currentTyCastName = name
