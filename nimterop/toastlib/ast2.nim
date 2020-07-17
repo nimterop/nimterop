@@ -1519,7 +1519,7 @@ proc addEnum(gState: State, node: TSNode) =
             var fval = fval
             if fval.Bl:
               # Evaluate enum value from expression
-              fval = &"({$gState.parseCExpression(cexpr, name, fromEnum = true)})"
+              fval = &"({$gState.parseCExpression(cexpr, name)})"
             if origname.nBl:
               # Named enum so cast to type - #236
               fval &= &".{name}"

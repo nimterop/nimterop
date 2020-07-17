@@ -135,7 +135,7 @@ proc getFloatNode(number, suffix: string): PNode {.inline.} =
   except ValueError:
     raise newException(ExprParseError, &"Could not parse float value \"{number}\".")
 
-proc getIntNode(number, suffix: string; fromEnum = false): PNode {.inline.} =
+proc getIntNode(number, suffix: string): PNode {.inline.} =
   ## Get a Nim int node from a C integer expression + suffix
   var
     val: BiggestInt
@@ -181,19 +181,19 @@ proc getIntNode(number, suffix: string; fromEnum = false): PNode {.inline.} =
     # Nim likes to bump up (unspecified) integer literals to `int64` if they
     # are sufficently large (this is by design). This can cause issues,
     # especially in regards to enum definitions:
-    result = newNode(if fromEnum: nkInt32Lit else: nkIntLit)
+    result = newNode(if false: nkInt32Lit else: nkIntLit)
 
   result.intVal = val
   result.flags = flags
 
-proc getNumNode(number, suffix: string, fromEnum = false): PNode {.inline.} =
+proc getNumNode(number, suffix: string): PNode {.inline.} =
   ## Convert a C number to a Nim number PNode
   if number.contains("."):
     getFloatNode(number, suffix)
   else:
-    getIntNode(number, suffix, fromEnum)
+    getIntNode(number, suffix)
 
-proc processNumberLiteral(gState: State, node: TSNode, fromEnum = false): PNode =
+proc processNumberLiteral(gState: State, node: TSNode): PNode =
   ## Parse a number literal from a TSNode. Can be a float, hex, long, etc
   result = newNode(nkNone)
   let nodeVal = node.val
@@ -220,7 +220,7 @@ proc processNumberLiteral(gState: State, node: TSNode, fromEnum = false): PNode 
     suffix = $number[number.len - 1]
     number = number[0 ..< ^1]
 
-  result = getNumNode(number, suffix, fromEnum)
+  result = getNumNode(number, suffix)
 
   if result.kind != nkNone and prefix == "-":
     result = nkPrefix.newTree(
@@ -487,7 +487,7 @@ proc processSizeofExpression(gState: State, node: TSNode, typeofNode: var PNode)
     gState.processTSNode(node[0], typeofNode)
   )
 
-proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode, fromEnum = false): PNode =
+proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode): PNode =
   ## Handle all of the types of expressions here. This proc gets called recursively
   ## in the processX procs and will drill down to sub nodes.
   result = newNode(nkNone)
@@ -499,7 +499,7 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode, fromEnum 
   of "number_literal":
     # Input -> 0x1234FE, 1231, 123u, 123ul, 123ull, 1.334f
     # Output -> 0x1234FE, 1231, 123'u, 123'u32, 123'u64, 1.334
-    result = gState.processNumberLiteral(node, fromEnum)
+    result = gState.processNumberLiteral(node)
   of "string_literal":
     # Input -> "foo\0\x42"
     # Output -> "foo\0"
@@ -610,7 +610,7 @@ proc processTSNode(gState: State, node: TSNode, typeofNode: var PNode, fromEnum 
   if result.kind != nkNone:
     decho "NODE RESULT: ", result
 
-proc parseCExpression*(gState: State, codeRoot: TSNode, fromEnum = false): PNode =
+proc parseCExpression*(gState: State, codeRoot: TSNode): PNode =
   ## Parse a c expression from a root ts node
 
   # This var is used for keeping track of the type of the first
@@ -618,7 +618,7 @@ proc parseCExpression*(gState: State, codeRoot: TSNode, fromEnum = false): PNode
   var tnode: PNode = nil
   result = newNode(nkNone)
   try:
-    result = gState.processTSNode(codeRoot, tnode, fromEnum)
+    result = gState.processTSNode(codeRoot, tnode)
   except ExprParseError as e:
     decho e.msg
     result = newNode(nkNone)
@@ -626,14 +626,14 @@ proc parseCExpression*(gState: State, codeRoot: TSNode, fromEnum = false): PNode
     decho "UNEXPECTED EXCEPTION: ", e.msg
     result = newNode(nkNone)
 
-proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidation = false, fromEnum = false): PNode =
+proc parseCExpression*(gState: State, code: string, name = "", skipIdentValidation = false): PNode =
   ## Convert the C string to a nim PNode tree
   gState.currentExpr = code
   gState.currentTyCastName = name
   gState.skipIdentValidation = skipIdentValidation
 
   withCodeAst(gState.currentExpr, gState.mode):
-    result = gState.parseCExpression(root, fromEnum)
+    result = gState.parseCExpression(root)
 
   # Clear the state
   gState.currentExpr = ""
