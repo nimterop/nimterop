@@ -75,8 +75,6 @@ type
       # Controls whether or not the current expression
       # should validate idents against currently defined idents
       skipIdentValidation*: bool
-      # Are we processing an enum? If so, we need to be careful with integer literals
-      onEnumerator*: bool
 
       # Top level header for wrapper output - include imported types, pragmas and other info
       wrapperHeader*: string

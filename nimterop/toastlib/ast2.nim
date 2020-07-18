@@ -1430,10 +1430,6 @@ proc addEnum(gState: State, node: TSNode) =
   let
     enumlist = node.anyChildInTree("enumerator_list")
   if not enumlist.isNil:
-    gState.onEnumerator = true
-    defer:
-      gState.onEnumerator = false
-
     var
       name, origname = ""
       offset = 0
@@ -1523,7 +1519,10 @@ proc addEnum(gState: State, node: TSNode) =
             var fval = fval
             if fval.Bl:
               # Evaluate enum value from expression
-              fval = &"({$gState.parseCExpression(cexpr, name)})"
+              fval = &"cast[cint]({$gState.parseCExpression(cexpr, name)})"
+              # Do a cast here to avoid integer literal weirdness - #240
+              # (in future, especially if Nim-based enums get implemented,
+              # consider a more robust system where we size up enums correctly)
             if origname.nBl:
               # Named enum so cast to type - #236
               fval &= &".{name}"
