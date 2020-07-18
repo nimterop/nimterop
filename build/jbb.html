@@ -109,7 +109,8 @@ function main() {
   url*: string
   sharedLibs*: seq[string]
   staticLibs*: seq[string]
-  requires*: seq[JBBPackage]"><wbr />JBBPackage<span class="attachedType"></span></a></li>
+  requires*: seq[JBBPackage]
+  skipRequires*: seq[string]"><wbr />JBBPackage<span class="attachedType"></span></a></li>
 
   </ul>
 </li>
@@ -161,6 +162,7 @@ function main() {
   <span class="Identifier">sharedLibs</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">staticLibs</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">requires</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="jbb.html#JBBPackage"><span class="Identifier">JBBPackage</span></a><span class="Other">]</span>
+  <span class="Identifier">skipRequires</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
 </pre></dt>
 <dd>
 
@@ -251,7 +253,7 @@ Download all required dependencies of this <tt class="docutils literal"><span cl
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-16 02:07:15 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2020-07-18 01:57:47 UTC</small>
       </div>
     </div>
   </div>
