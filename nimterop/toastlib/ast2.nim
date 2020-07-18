@@ -1519,10 +1519,15 @@ proc addEnum(gState: State, node: TSNode) =
             var fval = fval
             if fval.Bl:
               # Evaluate enum value from expression
-              fval = &"cast[cint]({$gState.parseCExpression(cexpr, name)})"
-              # Do a cast here to avoid integer literal weirdness - #240
-              # (in future, especially if Nim-based enums get implemented,
-              # consider a more robust system where we size up enums correctly)
+              when (NimMajor, NimMinor) >= (1, 0):
+                # Do a cast here to avoid integer literal weirdness - #240
+                fval = &"cast[cint]({$gState.parseCExpression(cexpr, name)})"
+                # In the future, especially if Nim-based enums get implemented,
+                # consider a more robust system where we size up enums based on
+                # possible values
+              else:
+                # VM size-mismatched casts not allowed before 1.0
+                fval = &"({$gState.parseCExpression(cexpr, name)})"
             if origname.nBl:
               # Named enum so cast to type - #236
               fval &= &".{name}"
