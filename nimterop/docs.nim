@@ -1,4 +1,4 @@
-import macros, strformat
+import strformat
 
 from os import parentDir, getCurrentCompilerExe, DirSep
 
@@ -32,7 +32,7 @@ proc execAction(cmd: string): string =
   (result, ret) = gorgeEx(ccmd)
   doAssert ret == 0, "Command failed: " & $ret & "\ncmd: " & ccmd & "\nresult:\n" & result
 
-proc buildDocs*(files: openArray[string], path: string, baseDir = getProjectPath() & $DirSep,
+proc buildDocs*(files: openArray[string], path: string, baseDir = getCurrentDir() & $DirSep,
                 defines: openArray[string] = @[], nimArgs = "") =
   ## Generate docs for all specified nim `files` to the specified `path`
   ##
