@@ -366,6 +366,7 @@ macro getHeader*(
 
     staticStr = name & "Static"
     verStr = name & "SetVer"
+    getPath = name & "GetPath"
 
     # Ident nodes of the -d:xxx to check in when statements
     nameStd = newIdentNode(stdStr)
@@ -375,6 +376,7 @@ macro getHeader*(
     nameJBB = newIdentNode(jbbStr)
 
     nameStatic = newIdentNode(staticStr)
+    nameGetPath = newIdentNode(getPath)
 
     # Consts to generate
     path = newIdentNode(name & "Path")
@@ -421,7 +423,7 @@ macro getHeader*(
       `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
 
     # Search for header in outdir (after retrieving code) depending on -d:xxx mode
-    proc getPath(header, giturl, dlurl, conanuri, conanFlags, jbburi, jbbFlags,
+    proc `nameGetPath`(header, giturl, dlurl, conanuri, conanFlags, jbburi, jbbFlags,
       outdir, version: string, shared: bool): string =
       when `nameGit`:
         getGitPath(header, giturl, outdir, version)
@@ -461,7 +463,7 @@ macro getHeader*(
         when useStd:
           stdPath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `conanFlags`, `jbburi`, `jbbFlags`,
+          `nameGetPath`(`header`, `giturl`, `dlurl`, `conanuri`, `conanFlags`, `jbburi`, `jbbFlags`,
             `outdir`, `version`, not `nameStatic`)
 
     # Run preBuild hook before building library if not Std, Conan or JBB
@@ -497,7 +499,7 @@ macro getHeader*(
         if prePath.len != 0:
           prePath
         else:
-          getPath(`header`, `giturl`, `dlurl`, `conanuri`, `conanFlags`, `jbburi`, `jbbFlags`,
+          `nameGetPath`(`header`, `giturl`, `dlurl`, `conanuri`, `conanFlags`, `jbburi`, `jbbFlags`,
             `outdir`, `version`, not `nameStatic`)
 
     static:

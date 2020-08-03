@@ -633,7 +633,7 @@ iterator newIdentDefs(gState: State, name: string, node: TSNode, offset: SomeInt
     yield result
   else:
     for i in start+1 ..< node.len:
-      if node[i].getName() == "bitfield_clause":
+      if node[i].getName() in ["bitfield_clause", "comment"]:
         continue
       yield gState.newIdentDef(name, node, tname, tinfo, tident, start, i, offset, exported)
 

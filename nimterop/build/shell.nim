@@ -481,14 +481,19 @@ proc linkLibs*(names: openArray[string], staticLink = true): string =
   var
     stat = if staticLink: "--static" else: ""
     resSet: OrderedSet[string]
+    cmd = &"pkg-config --libs --silence-errors {stat}"
   resSet.init()
 
   for name in names:
-    let
-      cmd = &"pkg-config --libs --silence-errors {stat} lib{name}"
-      (libs, _) = execAction(cmd, die = false)
-    for lib in libs.split(" "):
-      resSet.incl lib
+    for n in ["lib" & name, name]:
+      # Try libname and name - e.g. MagickWand doesn't have lib
+      let
+        cmd = &"{cmd} {n}"
+        (libs, _) = execAction(cmd, die = false)
+      if libs.len != 0:
+        for lib in libs.split(" "):
+          resSet.incl lib
+        break
 
   if staticLink:
     resSet.incl "--static"
