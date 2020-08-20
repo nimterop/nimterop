@@ -66,7 +66,7 @@ cache:
     - "$HOME/.choosenim"
 
 install:
-  - export PATH="~/Nim/bin:/usr/local/opt/gettext/bin:$PATH"
+  - export PATH="/usr/local/opt/gettext/bin:$PATH"
   - |
     # Use choosenim if already available for platform, otherwise build nim
     case $TRAVIS_CPU_ARCH in
@@ -75,7 +75,7 @@ install:
         source travis.sh
         ;;
       * )
-        pushd ~
+        pushd $HOME
         if [[ "${BRANCH}" =~ [0-9] ]]; then
           # Tag
           export COMMITLIKE="v${BRANCH}"
@@ -87,6 +87,7 @@ install:
         sh build_all.sh
         popd
         popd
+        export PATH="$HOME/Nim/bin:$PATH"
         ;;
     esac
 
