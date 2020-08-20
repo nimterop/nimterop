@@ -80,7 +80,7 @@ install:
           # Tag
           export COMMITLIKE="v${BRANCH}"
         else
-          export COMMITLIKE="${BRANCH"
+          export COMMITLIKE="${BRANCH}"
         fi
         git clone -b "${COMMITLIKE}" --single-branch https://github.com/nim-lang/Nim.git
         pushd Nim
