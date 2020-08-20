@@ -78,9 +78,9 @@ install:
         pushd ~
         if [[ "${BRANCH}" =~ [0-9] ]]; then
           # Tag
-          COMMITLIKE="v${BRANCH}"
+          export COMMITLIKE="v${BRANCH}"
         else
-          COMMITLIKE="${BRANCH"
+          export COMMITLIKE="${BRANCH"
         fi
         git clone -b "${COMMITLIKE}" --single-branch https://github.com/nim-lang/Nim.git
         pushd Nim
