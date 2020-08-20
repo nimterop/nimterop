@@ -1,8 +1,3 @@
-os:
-  - windows
-  - linux
-  - osx
-
 addons:
   apt:
     packages:
@@ -10,11 +5,61 @@ addons:
 
 language: c
 
-env:
-  - BRANCH=0.20.2
-  - BRANCH=1.0.6
-  - BRANCH=1.2.4
-  - BRANCH=devel
+matrix:
+  include:
+    # Linux - amd64
+    - os: linux
+      arch: amd64
+      env:
+        - BRANCH=0.20.2
+    - os: linux
+      arch: amd64
+      env:
+        - BRANCH=1.0.6
+    - os: linux
+      arch: amd64
+      env:
+        - BRANCH=1.2.4
+    - os: linux
+      arch: amd64
+      env:
+        - BRANCH=devel
+    # Linux - arm64
+    - os: linux
+      arch: arm64
+      env:
+        - BRANCH=1.2.4
+    # Linux - ppc64
+    - os: linux
+      arch: ppc64le
+      env:
+        - BRANCH=1.2.4
+    # macOS - amd64
+    - os: osx
+      env:
+        - BRANCH=0.20.2
+    - os: osx
+      env:
+        - BRANCH=1.2.4
+    - os: osx
+      env:
+        - BRANCH=1.0.6
+    - os: osx
+      env:
+        - BRANCH=devel
+    # windows - amd64
+    - os: windows
+      env:
+        - BRANCH=0.20.2
+    - os: windows
+      env:
+        - BRANCH=1.2.4
+    - os: windows
+      env:
+        - BRANCH=1.0.6
+    - os: windows
+      env:
+        - BRANCH=devel
 
 cache:
   directories:
