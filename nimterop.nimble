@@ -1,6 +1,6 @@
 # Package
 
-version = "0.6.8"
+version = "0.6.9"
 author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
