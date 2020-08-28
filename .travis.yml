@@ -12,16 +12,16 @@ matrix:
     # Linux - amd64
     - env: BRANCH=0.20.2
     - env: BRANCH=1.0.8
-    - env: BRANCH=1.2.6
+    - env: BRANCH=1.2.4
     - env: BRANCH=devel
 
     # Linux - arm64
-    - arch: arm64
-      env: BRANCH=1.2.6
+    # - arch: arm64
+    #   env: BRANCH=1.2.4
 
     # Linux - ppc64
-    - arch: ppc64le
-      env: BRANCH=1.2.6
+    # - arch: ppc64le
+    #   env: BRANCH=1.2.4
 
     # macOS - amd64
     - os: osx
@@ -29,7 +29,7 @@ matrix:
     - os: osx
       env: BRANCH=1.0.8
     - os: osx
-      env: BRANCH=1.2.6
+      env: BRANCH=1.2.4
     - os: osx
       env: BRANCH=devel
 
@@ -39,7 +39,7 @@ matrix:
     - os: windows
       env: BRANCH=1.0.8
     - os: windows
-      env: BRANCH=1.2.6
+      env: BRANCH=1.2.4
     - os: windows
       env: BRANCH=devel
 
