@@ -333,7 +333,8 @@ proc getPreprocessor*(gState: State, fullpath: string) =
   while true:
     if outp.readLine(line):
       # We want to keep blank lines here for comment processing
-      if line.len > 1 and line[0] == '#' and line[1] == ' ':
+      if line.len > 10 and line[0] == '#' and line[1] == ' ' and line.contains('"'):
+        # # 1 "path/to/file.h" 1
         start = false
         line = line.split('"')[1].sanitizePath(noQuote = true)
         if sfile == line or
