@@ -10,8 +10,8 @@ matrix:
 environment:
   matrix:
     - NIM_VERSION: 0.20.2
-    - NIM_VERSION: 1.0.6
-    - NIM_VERSION: 1.2.2
+    - NIM_VERSION: 1.0.8
+    - NIM_VERSION: 1.2.6
 
 for:
 -
