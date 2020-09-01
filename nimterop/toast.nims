@@ -24,3 +24,7 @@ switch("out", currentSourcePath.parentDir() / "toast".addFileExt(ExeExt))
 
 # Define TOAST for globals.nim
 switch("define", "TOAST")
+
+# Static for Windows - #248
+when defined(Windows):
+  switch("passL", "-static")
