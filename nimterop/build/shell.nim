@@ -414,22 +414,8 @@ proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[s
   ##
   ## Turn off recursive search with `recurse`
   var
-    cmd =
-      when defined(Windows):
-        "nimgrep --filenames --oneline --nocolor $1 \"$2\" $3"
-      elif defined(linux):
-        "find $3 $1 -regextype egrep -regex $2"
-      elif defined(osx) or defined(FreeBSD):
-        "find -E $3 $1 -regex $2"
-
-    recursive = ""
-
-  if recurse:
-    when defined(Windows):
-      recursive = "--recursive"
-  else:
-    when not defined(Windows):
-      recursive = "-maxdepth 1"
+    cmd = "nimgrep --follow --filenames --oneline --nocolor $1 \"$2\" $3"
+    recursive = if recurse: "--recursive" else: ""
 
   var
     dir = dir
@@ -443,20 +429,17 @@ proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[s
 
     file = file.extractFilename
 
-  cmd = cmd % [recursive, (".*[\\\\/]" & file & "$").quoteShell, dir.sanitizePath]
+  cmd = cmd % [recursive, (".*[\\\\/]" & file & "$"), dir.sanitizePath]
 
   let
     (files, ret) = execAction(cmd, die = false)
   if ret == 0:
     for line in files.splitLines():
       let f =
-        when defined(Windows):
-          if ": " in line:
-            line.split(": ", maxsplit = 1)[1]
-          else:
-            ""
+        if ": " in line:
+          line.split(": ", maxsplit = 1)[1]
         else:
-          line
+          ""
       if f.len != 0:
         result.add f
 

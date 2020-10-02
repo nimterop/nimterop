@@ -75,7 +75,7 @@ proc getGccLibPaths*(mode: string): seq[string] =
   when defined(osx):
     result.add "/usr/lib"
 
-proc getGccInfo*(): tuple[arch, os, compiler, version: string] =
+proc getGccInfo*(): tuple[arch, os, compiler, version, libc: string] =
   let
     (outp, _) = execAction(&"{getCompiler()} -v")
   for line in outp.splitLines():
@@ -101,3 +101,5 @@ proc getGccInfo*(): tuple[arch, os, compiler, version: string] =
       result.compiler = "clang"
   else:
     result.compiler = "gcc"
+  if "musl" in outp:
+    result.libc = "musl"

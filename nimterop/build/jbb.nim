@@ -17,6 +17,8 @@ type
 
     url*: string        # Download URL
 
+    arch*, os*, libc*: string # Target
+
     sharedLibs*: seq[string]
     staticLibs*: seq[string]
     requires*: seq[JBBPackage]
@@ -39,7 +41,11 @@ proc `==`*(pkg1, pkg2: JBBPackage): bool =
   ## Check if two JBBPackage objects are equal
   (not pkg1.isNil and not pkg2.isNil and
     pkg1.name == pkg2.name and
-    pkg1.version == pkg2.version)
+    pkg1.version == pkg2.version and
+
+    pkg1.arch == pkg2.arch and
+    pkg1.os == pkg2.os and
+    pkg1.libc == pkg2.libc)
 
 proc newJBBPackage*(name, version: string): JBBPackage =
   ## Create a new JBBPackage with specified name and version
@@ -48,6 +54,12 @@ proc newJBBPackage*(name, version: string): JBBPackage =
   result.version = version
   result.baseUrl = jbbBaseUrl
   result.isGit = true
+
+  let
+    (arch, os, _, _, libc) = getGccInfo()
+  result.arch = arch
+  result.os = os
+  result.libc = libc
 
 proc parseJBBProject(pkg: JBBPackage, outdir: string) =
   # Get all dependencies from Project.toml
@@ -87,8 +99,6 @@ proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
   let
     file = outdir / jbbArtifacts
 
-    (arch, os, _, _) = getGccInfo()
-
   if fileExists(file):
     let
       data = readFile(file)
@@ -109,12 +119,14 @@ proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
         # Match arch, os and glibc on Linux to find download URL
         case name
         of "arch":
-          if val == arch and not found: found = true
+          if val == pkg.arch and not found: found = true
         of "os":
-          if val != os and found: found = false
+          if val != pkg.os and found: found = false
         of "libc":
           when defined(Linux):
-            if val != "glibc" and found: found = false
+            if found:
+              let libc = if pkg.libc.nBl: pkg.libc else: "glibc"
+              if val != libc: found = false
         of "url":
           if found:
             pkg.url = val
@@ -125,7 +137,7 @@ proc parseJBBArtifacts(pkg: JBBPackage, outdir: string) =
 proc findJBBLibs(pkg: JBBPackage, outdir: string) =
   pkg.sharedLibs = findFiles("(bin|lib)[\\\\/].*\\.(so|dll|dylib)[0-9.]*", outdir)
 
-  for lib in findFiles("lib[\\\\/].*\\.(a|lib)$", outdir):
+  for lib in findFiles("lib[\\\\/].*\\.(a|lib)", outdir):
     if not lib.endsWith(".dll.a"):
       pkg.staticLibs.add lib
 

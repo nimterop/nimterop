@@ -16,6 +16,8 @@ type
     channel*: string
     recipes*: OrderedTableRef[string, seq[ConanBuild]]
 
+    arch*, os*, compiler*, compversion*: string
+
     bhash*: string
     shared*: bool
     sharedLibs*: seq[string]
@@ -89,6 +91,11 @@ proc `==`*(pkg1, pkg2: ConanPackage): bool =
     pkg1.user == pkg2.user and
     pkg1.channel == pkg2.channel and
 
+    pkg1.arch == pkg2.arch and
+    pkg1.os == pkg2.os and
+    pkg1.compiler == pkg2.compiler and
+    pkg1.compversion == pkg2.compversion and
+
     pkg1.bhash == pkg2.bhash and
     pkg1.shared == pkg2.shared)
 
@@ -100,6 +107,15 @@ proc newConanPackage*(name, version, user = "_", channel = "_", bhash = "", shar
   result.user = user
   result.channel = channel
   result.recipes = newOrderedTable[string, seq[ConanBuild]](2)
+
+  let
+    (arch, os, compiler, compversion, libc) = getGccInfo()
+  doAssert libc != "musl", "Conan does not provide precompiled binaries using musl"
+
+  result.arch = arch
+  result.os = os
+  result.compiler = compiler
+  result.compversion = compversion
 
   result.bhash = bhash
   result.shared = shared
@@ -189,9 +205,7 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
   ## `filter` can be used to tweak search terms
   ##    e.g. build_type=Debug&compiler=clang
   let
-    (arch, os, compiler, version) = getGccInfo()
-
-    vsplit = version.split('.')
+    vsplit = pkg.compversion.split('.')
 
     vfilter =
       when defined(OSX):
@@ -203,18 +217,18 @@ proc getConanBuilds*(pkg: ConanPackage, filter = "") =
       if pkg.bhash.Bl:
         block:
           var
-            query = &"?q=arch={arch}&os={os.capitalizeAscii()}"
+            query = &"?q=arch={pkg.arch}&os={pkg.os.capitalizeAscii()}"
           if "build_type" notin filter:
             query &= "&build_type=Release"
           if "shared=" notin filter:
             query &= &"&options.shared={($pkg.shared).capitalizeAscii()}"
           if filter.nBl:
             query &= &"&{filter}"
-          if "compiler=" notin filter and os != "windows":
-            query &= &"&compiler={compiler}&compiler.version=" & vfilter
-          if "compiler.runtime=" notin filter and os == "windows":
+          if "compiler=" notin filter and pkg.os != "windows":
+            query &= &"&compiler={pkg.compiler}&compiler.version=" & vfilter
+          if "compiler.runtime=" notin filter and pkg.os == "windows":
             query &= &"&compiler.runtime=MD"
-          if "compiler.version=" notin filter and os == "windows":
+          if "compiler.version=" notin filter and pkg.os == "windows":
             query &= &"&compiler.version=14"
 
           query.replace("&", "%20and%20")
