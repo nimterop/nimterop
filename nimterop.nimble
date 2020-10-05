@@ -5,7 +5,7 @@ author      = "genotrance"
 description = "C/C++ interop for Nim"
 license     = "MIT"
 
-bin = @["nimterop/toast"]
+bin = @["nimterop/toast", "nimterop/loaf"]
 installDirs = @["nimterop"]
 
 # Dependencies
@@ -32,6 +32,9 @@ proc execTest(test: string, flags = "", runDocs = true) =
 
 task buildTimeit, "build timer":
   exec "nim c --hints:off -d:danger tests/timeit"
+
+task buildLoaf, "build loaf":
+  execCmd("nim c --hints:off -d:danger nimterop/loaf.nim")
 
 task buildToast, "build toast":
   execCmd("nim c --hints:off -d:danger nimterop/toast.nim")
@@ -89,6 +92,7 @@ task test, "Test":
   rmFile("tests/timeit.txt")
 
   buildTimeitTask()
+  buildLoafTask()
   buildToastTask()
 
   basicTask()

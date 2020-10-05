@@ -407,6 +407,9 @@ proc gitTags*(outdir: string): seq[string] =
     if tag.len != 0:
       result.add tag
 
+proc loafExePath(): string =
+  currentSourcePath.parentDir.parentDir / ("loaf".addFileExt ExeExt)
+
 proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[string] =
   ## Find all matching files in the specified directory
   ##
@@ -414,8 +417,8 @@ proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[s
   ##
   ## Turn off recursive search with `recurse`
   var
-    cmd = "nimgrep --follow --filenames --oneline --nocolor $1 \"$2\" $3"
-    recursive = if recurse: "--recursive" else: ""
+    cmd = loafExePath().quoteShell & " find --rexp $1 \"$2\" $3"
+    recursive = if recurse: "--recurse" else: ""
 
   var
     dir = dir
@@ -435,13 +438,8 @@ proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[s
     (files, ret) = execAction(cmd, die = false)
   if ret == 0:
     for line in files.splitLines():
-      let f =
-        if ": " in line:
-          line.split(": ", maxsplit = 1)[1]
-        else:
-          ""
-      if f.len != 0:
-        result.add f
+      if line.len != 0:
+        result.add line
 
 proc findFile*(file: string, dir: string, recurse = true, first = false, regex = false): string =
   ## Find the file in the specified directory
