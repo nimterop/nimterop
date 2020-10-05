@@ -208,11 +208,12 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
   var
     lpath = findFile(lname, outdir, regex = true)
     makePath = outdir
+    buildStatus: BuildStatus
+    errors: seq[string]
 
   if lpath.nBl:
     return lpath
 
-  var buildStatus: BuildStatus
 
   for buildType in buildTypes:
     case buildType
@@ -223,6 +224,8 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
 
     if buildStatus.built:
       break
+    elif buildStatus.error.nBl:
+      errors.add buildStatus.error
 
   if buildStatus.buildPath.len > 0:
     let libraryExists = findFile(lname, buildStatus.buildPath, regex = true).len > 0
@@ -231,7 +234,7 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
       make(buildStatus.buildPath, lname, makeFlags, regex = true)
       buildStatus.built = true
 
-  let error = if buildStatus.error.len > 0: buildStatus.error else: "No build files found in " & outdir
+  let error = if errors.len > 0: errors.join("\n") else: "No build files found in " & outdir
   doAssert buildStatus.built, &"\nBuild configuration failed - {error}\n"
 
   result = findFile(lname, outdir, regex = true)
