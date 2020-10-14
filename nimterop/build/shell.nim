@@ -416,8 +416,14 @@ proc findFiles*(file: string, dir: string, recurse = true, regex = false): seq[s
   ## `file` is a regular expression if `regex` is true
   ##
   ## Turn off recursive search with `recurse`
+  let
+    loafExe = loafExePath()
+
+  doAssert fileExists(loafExe), "loaf not compiled: " & loafExe.sanitizePath &
+    " make sure 'nimble build' or 'nimble install' built it"
+
   var
-    cmd = loafExePath().quoteShell & " find --rexp $1 \"$2\" $3"
+    cmd = loafExe.quoteShell & " find --rexp $1 \"$2\" $3"
     recursive = if recurse: "--recurse" else: ""
 
   var
