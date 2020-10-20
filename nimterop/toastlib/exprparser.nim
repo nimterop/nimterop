@@ -379,18 +379,28 @@ proc processBinaryExpression(gState: State, node: TSNode, typeofNode: var PNode)
 
   result.add gState.getIdent(nimSym)
   let leftNode = gState.processTSNode(left, typeofNode)
+  var tyNode = typeofNode
 
   if typeofNode.isNil:
     typeofNode = nkCall.newTree(
       gState.getIdent("typeof"),
       leftNode
     )
+    tyNode = typeofNode
 
-  let rightNode = gState.processTSNode(right, typeofNode)
+  # Special case of setting the shift left/right type
+  # to be the type of the direct left operand
+  if binarySym in [">>", "<<"]:
+    tyNode = nkCall.newTree(
+      gState.getIdent("typeof"),
+      leftNode
+    )
+
+  let rightNode = gState.processTSNode(right, tyNode)
 
   result.add leftNode
   result.add nkCall.newTree(
-    typeofNode,
+    tyNode,
     rightNode
   )
   if binarySym == "/":
@@ -399,7 +409,7 @@ proc processBinaryExpression(gState: State, node: TSNode, typeofNode: var PNode)
     # So we need to emulate C here and cast the whole
     # expression to the type of the first arg
     result = nkCall.newTree(
-      typeofNode,
+      tyNode,
       result
     )
 

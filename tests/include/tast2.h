@@ -35,6 +35,7 @@ extern "C" {
 #define EQ4 AVAL < BVAL
 #define EQ5 AVAL != BVAL
 #define EQ6 AVAL == BVAL
+#define SX_NEAR_ZERO (1.0f / (1 << 28))
 
 // testing integer out of long int range
 #define INT_FAST16_MIN (-9223372036854775807L-1)
