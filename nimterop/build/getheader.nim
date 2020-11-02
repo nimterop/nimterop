@@ -524,7 +524,21 @@ macro getHeader*(
           gStateCT.passL.add ldeps.join(" ")
     else:
       const
-        `lpath`* = when not useStd: `libdir` / lpath.extractFilename() else: lpath
+        `lpath`* =
+          when not useStd:
+            block:
+              var
+                lname = lpath.extractFilename()
+                lpathtgt = `libdir` / lname
+              if not fileExists(lpathtgt) or getFileDate(lpath) != getFileDate(lpathtgt):
+                gecho "# Copying " & lname & " to " & `libdir`
+                if not dirExists(`libdir`):
+                  mkDir(`libdir`)
+                cpFile(lpath, lpathtgt)
+              gecho "# Including library " & lpathtgt
+              lpathtgt
+          else:
+            lpath
         `ldeps`* =
           when not useStd:
             block:
@@ -545,13 +559,4 @@ macro getHeader*(
               ldeps
           else:
             ldeps
-
-      static:
-          when not useStd:
-            # Copy downloaded shared libraries to `libdir`
-            if not fileExists(`lpath`) or getFileDate(lpath) != getFileDate(`lpath`):
-              gecho "# Copying " & `lpath`.extractFilename() & " to " & `libdir`
-              cpFile(lpath, `lpath`)
-
-          gecho "# Including library " & `lpath`
   )

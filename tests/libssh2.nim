@@ -7,7 +7,8 @@ getHeader(
   header = "libssh2.h",
   conanuri = "libssh2/$1",
   jbburi = "libssh2/1.9.0",
-  outdir = outdir
+  outdir = outdir,
+  libdir = getOutDir() / "libdir"
 )
 
 cOverride:
@@ -17,10 +18,10 @@ cOverride:
     SOCKET = object
 
 when not libssh2Static:
-  cImport(libssh2Path, recurse = true, dynlib = "libssh2LPath", flags = "-c -E_ -F_")
+  cImport(libssh2Path, recurse = true, dynlib = libssh2LPath, flags = "-c -E_ -F_")
 
   when not defined(Windows) and not isDefined(libssh2JBB):
-    proc zlibVersion(): cstring {.importc, dynlib: libssh2LPath.}
+    proc zlibVersion(): cstring {.importc, dynlib: libssh2LPath.extractFilename().}
 else:
   cPassL("-lpthread")
 

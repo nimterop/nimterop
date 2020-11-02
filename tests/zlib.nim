@@ -66,7 +66,7 @@ when zlibGit or zlibDL:
     cIncludeDir(baseDir / "buildcache")
 
 when not isDefined(zlibStatic):
-  cImport(zlibPath, recurse = true, dynlib = "zlibLPath", flags = FLAGS)
+  cImport(zlibPath, recurse = true, dynlib = zlibLPath, flags = FLAGS)
 else:
   when isDefined(zlibJBB):
     cPassL("-no-pie")

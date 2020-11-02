@@ -1,5 +1,15 @@
 # Nimterop Change History
 
+## Version 0.7.0
+
+This is a minor release that switches from using absolute paths for `cImport()` dynlib parameters to relative paths. This allows nimterop based projects to create binaries that can move around, along with their library dependencies. While this is not a new feature per se, it is potentially a breaking change.
+
+Note that `getHeader()` still returns absolute paths for `xxxLPath` but when passed into `cImport()`, it gets converted to relative paths on Windows and sets `RPATH` on posix systems. This is accomplished with the new `setupDynlib()` proc.
+
+See the full list of changes here:
+
+https://github.com/nimterop/nimterop/compare/v0.6.13...v0.7.0
+
 ## Version 0.6.0
 
 This release adds the ability to download precompiled binaries from [Conan.io](https://conan.io/center) and Julia's [BinaryBuilder.org](https://binarybuilder.org). This alleviates the  headache of searching and downloading libraries manually both for wrapper writers as well as end users. There are some known limitations but it should prove to become more useful as these sites expand their capabilities.
@@ -15,7 +25,7 @@ Refer to the documentation for `getHeader()` for details on how to use this new 
 
 See the full list of changes here:
 
-https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.5
+https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.13
 
 ### Breaking changes
 
@@ -65,6 +75,7 @@ https://github.com/nimterop/nimterop/compare/v0.5.9...v0.6.5
 
 - `cDefine()` can now accept a `seq[string]` of values. (since v0.6.5)
 
+- Enabled support for musl systems. (since v0.6.12)
 
 ## Version 0.5.0
 

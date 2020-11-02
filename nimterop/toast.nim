@@ -230,7 +230,7 @@ when isMainModule:
     "convention": "calling convention for wrapped procs",
     "debug": "enable debug output",
     "defines": "definitions to pass to preprocessor",
-    "dynlib": "{.dynlib.} pragma to import symbols - Nim const string or file path",
+    "dynlib": "{.dynlib.} to load symbols from",
     "exclude": "files or directories to exclude from the wrapped output",
     "feature": "flags to enable experimental features",
     "includeDirs": "include directory to pass to preprocessor",

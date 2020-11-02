@@ -27,7 +27,8 @@ getHeader(
   conanuri = "xz_utils",
   jbburi = "xz",
   outdir = baseDir,
-  conFlags = "--disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo"
+  conFlags = "--disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo",
+  libdir = getOutDir() / "libdir"
 )
 
 cOverride:
@@ -42,7 +43,7 @@ cOverride:
     lzma_index_iter = object
 
 when not lzmaStatic:
-  cImport(lzmaPath, recurse = true, dynlib = "lzmaLPath", flags = tflags)
+  cImport(lzmaPath, recurse = true, dynlib = lzmaLPath, flags = tflags)
 else:
   cImport(lzmaPath, recurse = true, flags = tflags)
 

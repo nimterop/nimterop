@@ -1,4 +1,4 @@
-import strutils
+import os, strutils
 
 proc testCall(cmd, output: string, exitCode: int, delete = true) =
   var
@@ -7,17 +7,31 @@ proc testCall(cmd, output: string, exitCode: int, delete = true) =
   if not delete:
     ccmd = ccmd.replace(" -f ", " ")
 
+  rmDir("temp")
+  rmDir("temp2")
+
+  if "Git" in ccmd or "DL" in ccmd or "JBB" in ccmd or "Conan" in ccmd:
+    ccmd = ccmd.replace("-r", "--outdir:temp -r")
+
   var
     (outp, exitC) = gorgeEx(ccmd)
   echo outp
   doAssert exitC == exitCode, $exitC
   doAssert outp.contains(output), outp
 
+  if dirExists("temp"):
+    mvDir("temp", "temp2")
+    (outp, exitC) = gorgeEx("temp2"/ccmd.split("-r ")[1])
+    echo outp
+    doAssert exitC == exitCode, $exitC
+    doAssert outp.contains(output), outp
+    rmDir("temp2")
+
 var
   cmd = "nim c -f --hints:off -d:checkAbi"
-  lrcmd = " -r lzma.nim"
-  zrcmd = " -r zlib.nim"
-  sshcmd = " -r libssh2.nim"
+  lrcmd = " -r lzma"
+  zrcmd = " -r zlib"
+  sshcmd = " -r libssh2"
   lexp = "liblzma version = "
   zexp = "zlib version = "
 

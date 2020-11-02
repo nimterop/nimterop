@@ -286,6 +286,36 @@ macro cPassL*(value: static string): untyped =
   ## consumed and reset so as not to impact subsequent `cImport()` calls.
   gStateCT.passL.add value
 
+proc setupDynlib*(dynlib: string): string =
+  ## Setup specified dynlib absolute path for loading during runtime.
+  ##
+  ## This is automatically called by `cImport()` if a `dynlib` parameter is
+  ## specified but can be used directly if required for other dynlibs.
+  ##
+  ## On posix, the relative path to the library from the executable output dir
+  ## is added to RPATH and the dynlib filename is returned.
+  ##
+  ## On Windows, the relative path to the library from the executable output dir
+  ## is returned.
+  ##
+  ## The return value can be used in any explicit `{.dynlib.}` or `loadLib()`
+  ## calls.
+  var
+    relpath = relativePath(dynlib, getOutDir())
+  when defined(Windows):
+    result = relpath
+  else:
+    var
+      spath = relpath.splitPath()
+      rpath =
+        if spath.head.Bl:
+          "-Wl,-rpath='$ORIGIN'"
+        else:
+          "-Wl,-rpath='$ORIGIN/" & spath.head & "'"
+    if rpath notin gStateCT.passL:
+      gStateCT.passL.add rpath
+    result = spath.tail
+
 macro cCompile*(path: static string, mode: static[string] = "c", exclude: static[string] = ""): untyped =
   ## Compile and link C/C++ implementation into resulting binary using `{.compile.}`
   ##
@@ -618,6 +648,11 @@ macro cImport*(filenames: static seq[string], recurse: static bool = false, dynl
 
   var
     fullpaths: seq[string]
+    dynlib =
+      if '.' in dynlib:
+        setupDynlib(dynlib)
+      else:
+        dynlib
 
   for filename in filenames:
     fullpaths.add findPath(filename)

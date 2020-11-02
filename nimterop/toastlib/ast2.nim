@@ -1877,6 +1877,13 @@ proc setupPragmas(gState: State, root: TSNode, fullpath: string) =
     if '.' in gState.dynlib:
       gState.addPragma(root, dynPragma, "dynlib", newStrNode(nkStrLit, gState.dynlib))
     else:
+      # Hint to avoid passing variable names for dynlib
+      gState.pragmaSection.add gState.newPragma(
+        root, "hint", newStrNode(nkStrLit,
+          "Passing actual lib path instead of '$#' for dynlib is preferred." %
+          gState.dynlib
+        )
+      )
       gState.addPragma(root, dynPragma, "dynlib", gState.getIdent(gState.dynlib))
     gState.pragmaSection.add dynPragma
     count += 1
