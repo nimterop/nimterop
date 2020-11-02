@@ -301,6 +301,12 @@ macro getHeader*(
   ## where the program binary will be created. The values of `xxxLPath` and `xxxLDeps` will
   ## reflect this new location. `libdir` is ignored for `Std` mode.
   ##
+  ## Note that on Windows, a custom `libdir` only works if a DLL is directly loaded from
+  ## that location by the executable. If this DLL needs to load other dependency DLLs,
+  ## Windows will not be able to find them in `libdir` unless it is added to the search PATH.
+  ## In effect, if `xxxLDeps` is populated on Windows, a custom `libdir` is not supported and
+  ## will raise an error.
+  ##
   ## `-d:xxxStatic` can be specified to statically link with the library instead. This
   ## will automatically add a `cPassL()` call to the static library for convenience. Note
   ## that `-d:xxxConan` and `-d:xxxJBB` download all dependency libs as well and the
@@ -407,6 +413,7 @@ macro getHeader*(
     mode = getCompilerMode(header)
 
     libdir = if libdir.nBl: libdir else: getOutDir()
+    prjOutDir = getOutDir()
 
   # Use alternate library names if specified for regex search
   if altNames.nBl:
@@ -495,6 +502,10 @@ macro getHeader*(
             @[]
         else:
           @[]
+
+    when defined(Windows):
+      doAssert ldeps.len.Bl or `libdir` == `prjOutDir`,
+        "`libdir` cannot be used on Windows for libs with dependencies"
 
     const
       # Header path - search again in case header is generated in build

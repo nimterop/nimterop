@@ -1,4 +1,4 @@
-import os, strutils
+import strutils
 
 proc testCall(cmd, output: string, exitCode: int, delete = true) =
   var
@@ -21,7 +21,7 @@ proc testCall(cmd, output: string, exitCode: int, delete = true) =
 
   if dirExists("temp"):
     mvDir("temp", "temp2")
-    (outp, exitC) = gorgeEx("temp2"/ccmd.split("-r ")[1])
+    (outp, exitC) = gorgeEx("temp2/" & ccmd.split("-r ")[1])
     echo outp
     doAssert exitC == exitCode, $exitC
     doAssert outp.contains(output), outp

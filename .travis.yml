@@ -11,8 +11,9 @@ matrix:
   include:
     # Linux - amd64
     - env: BRANCH=0.20.2
-    - env: BRANCH=1.0.8
-    - env: BRANCH=1.2.4
+    - env: BRANCH=1.0.10
+    - env: BRANCH=1.2.8
+    - env: BRANCH=1.4.0
     - env: BRANCH=devel
 
     # Linux - arm64
@@ -27,9 +28,11 @@ matrix:
     - os: osx
       env: BRANCH=0.20.2
     - os: osx
-      env: BRANCH=1.0.8
+      env: BRANCH=1.0.10
     - os: osx
-      env: BRANCH=1.2.4
+      env: BRANCH=1.2.8
+    - os: osx
+      env: BRANCH=1.4.0
     - os: osx
       env: BRANCH=devel
 
@@ -37,9 +40,11 @@ matrix:
     - os: windows
       env: BRANCH=0.20.2
     - os: windows
-      env: BRANCH=1.0.8
+      env: BRANCH=1.0.10
     - os: windows
-      env: BRANCH=1.2.4
+      env: BRANCH=1.2.8
+    - os: windows
+      env: BRANCH=1.4.0
     - os: windows
       env: BRANCH=devel
 

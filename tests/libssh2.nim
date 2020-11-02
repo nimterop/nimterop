@@ -2,13 +2,15 @@ import nimterop/[build, cimport]
 
 const
   outdir = getProjectCacheDir("libssh2")
+  libdir =
+    when defined(libssh2JBB): "" else: getOutDir() / "libdir"
 
 getHeader(
   header = "libssh2.h",
   conanuri = "libssh2/$1",
   jbburi = "libssh2/1.9.0",
   outdir = outdir,
-  libdir = getOutDir() / "libdir"
+  libdir = libdir
 )
 
 cOverride:
