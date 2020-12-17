@@ -30,6 +30,9 @@ template withCodeAst*(code: string, mode: string, body: untyped): untyped =
   defer:
     tree.tsTreeDelete()
 
+proc `$`*(node: TSNode): string =
+  $node.tsNodeString()
+
 proc isNil*(node: TSNode): bool =
   node.tsNodeIsNull()
 
