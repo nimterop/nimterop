@@ -482,8 +482,9 @@ proc newIdentDef(gState: State, name: string, node: TSNode, tname: string, tinfo
     fdecl = node[offset].firstChildInTree("function_declarator")
     afdecl = node[offset].firstChildInTree("abstract_function_declarator")
     adecl = node[offset].firstChildInTree("array_declarator")
+    aadecl = node[offset].firstChildInTree("abstract_array_declarator")
     abst = node[offset].getName() == "abstract_pointer_declarator"
-  if fdecl.isNil and afdecl.isNil and adecl.isNil:
+  if fdecl.isNil and afdecl.isNil and adecl.isNil and aadecl.isNil:
     if abst:
       # Only for proc with no named param with pointer type
       # Create a param name based on poffset
@@ -581,6 +582,14 @@ proc newIdentDef(gState: State, name: string, node: TSNode, tname: string, tinfo
       # The var is the parent
       name = pident.getIdentName()
 
+    result.add pident
+    result.add gState.getTypeArray(node[offset], tident, name)
+    result.add newNode(nkEmpty)
+  elif not aadecl.isNil:
+    # Unnamed param with array type
+    let
+      pname = "a" & $(poffset+1)
+      pident = gState.getIdent(pname, tinfo, exported)
     result.add pident
     result.add gState.getTypeArray(node[offset], tident, name)
     result.add newNode(nkEmpty)
@@ -1018,8 +1027,11 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
   #
   # `tident` is type PNode
   let
-    # Top-most array declarator
-    adecl = node.firstChildInTree("array_declarator")
+    # Top-most array declarator, possibly unnamed
+    aadecl = node.firstChildInTree("abstract_array_declarator")
+    adecl =
+      if not aadecl.isNil: aadecl
+      else: node.firstChildInTree("array_declarator")
 
     # node could have nested arrays
     acount = adecl.getArrayCount()
@@ -1041,7 +1053,8 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
     #   )
     #  )
     # )
-    ncount = innermost[0].getAtom().tsNodeParent().getPtrCount(reverse = true)
+    ncount = if innermost.len == 0: 0
+      else: innermost[0].getAtom().tsNodeParent().getPtrCount(reverse = true)
 
   result = tident
   var
@@ -1052,17 +1065,18 @@ proc getTypeArray(gState: State, node: TSNode, tident: PNode, name: string): PNo
     result = gState.newPtrTree(tcount, result)
 
   for i in 0 ..< acount:
-    if cnode.len == 2:
+    let nameNodes = if not aadecl.isNil: 0 else: 1
+    if cnode.len-nameNodes == 1:
       # type name[X] => array[X, type]
       let
         # Size of array could be a Nim expression
-        size = gState.parseCExpression(gState.getNodeVal(cnode[1]), skipIdentValidation = true)
+        size = gState.parseCExpression(gState.getNodeVal(cnode[cnode.len-1]), skipIdentValidation = true)
 
       result = gState.newArrayTree(cnode, result, size)
-      cnode = cnode[0]
-    elif cnode.len == 1:
+    elif cnode.len-nameNodes == 0:
       # type name[] = UncheckedArray[type]
       result = gState.newArrayTree(cnode, result)
+    if cnode.len > 0:
       cnode = cnode[0]
 
   if ncount > 0:

@@ -297,6 +297,10 @@ struct parenpoin {
   void (*gtk_reserved1);
 };
 
+// Issue #262
+void issue262_a(int[2]);
+void issue262_b(int[]);
+
 
 // DUPLICATES
 
@@ -595,6 +599,10 @@ enum {
 struct parenpoin {
   void (*__gtk_reserved1);
 };
+
+// Issue #262
+void issue262_a(int[2]);
+void issue262_b(int[]);
 
 #endif
 
