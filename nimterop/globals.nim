@@ -87,7 +87,7 @@ type
       searchDirs*: seq[string]   # `cSearchPath()` added directories for header search
 
   BuildType* = enum
-    btAutoconf, btCmake
+    btAutoconf, btCmake, btMeson
 
   BuildStatus* = object
     built*: bool

@@ -133,6 +133,7 @@ proc getToast(fullpaths: seq[string], recurse: bool = false, dynlib: string = ""
       (output, ret) = execAction(cmd, die = false)
     if ret != 0:
       # If toast fails, print failure to output and delete any generated files
+      echo "XXX ", cmd, " ", output
       let errout = if result.fileExists(): result.readFile() & output else: output
       rmFile(result)
       doAssert false, "\n\n" & errout & "\n"
