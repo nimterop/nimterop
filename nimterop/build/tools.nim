@@ -180,16 +180,25 @@ proc make*(path, check: string, flags = "", regex = false) =
   gecho "# Running make " & flags
   gecho "#   Path: " & path
 
-  var
-    cmd = findExe("make")
+  const
+    makeCmd {.strdefine.} = ""
 
-  if cmd.len == 0:
-    cmd = findExe("mingw32-make")
-    if cmd.len != 0:
-      cpFile(cmd, cmd.replace("mingw32-make", "make"))
-  doAssert cmd.len != 0, "Make not found"
+  when makeCmd.len != 0:
+    var
+      cmd = findExe(makeCmd)
+    doAssert cmd.len != 0, "The make program passed in via -d:makeCmd could not be found!"
+  else:
+    var
+      cmd = findExe("make")
 
-  cmd = &"cd {path.sanitizePath} && make -j {getNumProcs()}"
+    if cmd.len == 0:
+      cmd = findExe("mingw32-make")
+      if cmd.len != 0:
+        cpFile(cmd, cmd.replace("mingw32-make", "make"))
+        cmd = "make"
+    doAssert cmd.len != 0, "Make not found"
+
+  cmd = &"cd {path.sanitizePath} && {cmd} -j {getNumProcs()}"
   if flags.len != 0:
     cmd &= &" {flags}"
 
