@@ -187,6 +187,10 @@ proc make*(path, check: string, flags = "", regex = false) =
     var
       cmd = findExe(makeCmd)
     doAssert cmd.len != 0, "The make program passed in via -d:makeCmd could not be found!"
+  elif defined(freebsd) or defined(openbsd) or defined(netbsd):
+    var
+      cmd = findExe("gmake")
+    doAssert cmd.len != 0, "Please install GNU make as gmake\nBSD make is not supported"
   else:
     var
       cmd = findExe("make")
