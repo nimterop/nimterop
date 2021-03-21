@@ -9,7 +9,7 @@ const srcDir = cacheDir / "treesitter_c" / "src"
 
 import "."/api
 
-{.passC: "-I$1" % srcDir.}
+{.passC: "-I\"$1\"" % srcDir.}
 
 {.compile: srcDir / "parser.c".}
 
