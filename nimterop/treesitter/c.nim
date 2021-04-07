@@ -9,8 +9,8 @@ const srcDir = cacheDir / "treesitter_c" / "src"
 
 import "."/api
 
-{.passC: "-I$1" % srcDir.}
+{.passC: ("-I" & quoteShell(srcDir)) .}
 
-{.compile: srcDir / "parser.c".}
+{.compile: srcDir / "parser.c" .}
 
 proc treeSitterC*(): ptr TSLanguage {.importc: "tree_sitter_c".}

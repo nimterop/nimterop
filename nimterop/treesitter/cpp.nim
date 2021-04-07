@@ -8,7 +8,7 @@ static:
 
 const srcDir = cacheDir / "treesitter_cpp" / "src"
 
-{.passC: "-I$1" % srcDir.}
+{.passC: ("-I" & quoteShell(srcDir)) .}
 
 import "."/api
 

@@ -13,8 +13,8 @@ const sourcePath = cacheDir / "treesitter" / "lib"
 when defined(Linux) and defined(gcc):
   {.passC: "-std=c11".}
 
-{.passC: "-I$1" % (sourcePath / "include").}
-{.passC: "-I$1" % (sourcePath / "src").}
+{.passC: ("-I" & quoteShell(sourcePath / "include")) .}
+{.passC: ("-I" & quoteShell(sourcePath / "src")) .}
 
 {.compile: sourcePath / "src" / "lib.c".}
 
