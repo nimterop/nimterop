@@ -27,6 +27,9 @@ proc getCompiler*(): string =
       else:
         doAssert false, "Nimterop only supports gcc and clang at this time"
 
+  when defined(unix):
+    compiler = "LC_ALL=C " & compiler
+
   result = getEnv("CC", compiler)
 
 proc getGccPaths*(mode: string): seq[string] =
