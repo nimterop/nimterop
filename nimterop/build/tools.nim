@@ -207,7 +207,7 @@ proc buildWithCmake*(outdir, flags: string): BuildStatus =
           if findExe("sh").len != 0:
             let
               uname = execAction("sh -c uname -a").output.toLowerAscii()
-            if uname.contains("msys"):
+            if existsEnv("MSYSTEM") or uname.contains("msys"):
               gen = "MSYS Makefiles".quoteShell
             elif uname.contains("mingw"):
               gen = "MinGW Makefiles".quoteShell & " -DCMAKE_SH=\"CMAKE_SH-NOTFOUND\""
