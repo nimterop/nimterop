@@ -197,6 +197,32 @@ proc make*(path, check: string, flags = "", regex = false) =
 
   doAssert findFile(check, path, regex = regex).len != 0, "make failed"
 
+proc meson*(path: string, check, flags = "", regex = false) =
+  gecho "# Running meson"
+  gecho "#   Path: " & path
+
+  var
+    mesonCmd = findExe("meson")
+  doAssert mesonCmd.len != 0, "meson not found"
+
+  var
+    ninjaCmd = findExe("ninja")
+  doAssert ninjaCmd.len != 0, "ninja not found"
+
+  mkDir(path)
+
+  mesonCmd = &"cd {path.sanitizePath} && meson .. {flags}"
+  if flags.len != 0:
+    mesonCmd &= &" {flags}"
+
+  decho execAction(mesonCmd).output
+  
+  ninjaCmd = &"cd {path.sanitizePath} && ninja"
+
+  decho execAction(ninjaCmd).output
+
+  doAssert findFile(check, path, regex = regex).len != 0, "# meson failed"
+
 proc buildWithCmake*(outdir, flags: string): BuildStatus =
   if not fileExists(outdir / "Makefile"):
     if fileExists(outdir / "CMakeLists.txt"):
@@ -241,6 +267,14 @@ proc buildWithAutoConf*(outdir, flags: string): BuildStatus =
   else:
     result.buildPath = outdir
 
+proc buildWithMeson*(outdir, flags: string): BuildStatus =
+  if fileExists(outdir/ "meson.build"):
+    meson(outdir / "build", "meson.build", flags, regex = true)
+    result.built = true
+  else:
+    result.error = "Could not find meson.build file in project directory $#" % outdir
+
+
 proc flagBuild*(base: string, flags: openArray[string]): string =
   ## Simple helper proc to generate flags for `configure`, `cmake`, etc.
   ##
@@ -254,3 +288,4 @@ proc flagBuild*(base: string, flags: openArray[string]): string =
   ## `flagBuild(base, flags) => " --disable-one --disable-two"`
   for i in flags:
     result &= " " & base % i
+

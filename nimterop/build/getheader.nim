@@ -204,7 +204,7 @@ proc getLocalPath(header, outdir: string): string =
   if outdir.nBl:
     result = findFile(header, outdir)
 
-proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildTypes: openArray[BuildType]): string =
+proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags, mesonFlags: string, buildTypes: openArray[BuildType]): string =
   var
     lpath = findFile(lname, outdir, regex = true)
     makePath = outdir
@@ -221,6 +221,8 @@ proc buildLibrary(lname, outdir, conFlags, cmakeFlags, makeFlags: string, buildT
       buildStatus = buildWithCmake(makePath, cmakeFlags)
     of btAutoconf:
       buildStatus = buildWithAutoConf(makePath, conFlags)
+    of btMeson:
+      buildStatus = buildWithMeson(makePath, mesonFlags)
 
     if buildStatus.built:
       break
@@ -244,8 +246,9 @@ macro getHeader*(
   conanuri: static[string] = "", jbburi: static[string] = "",
   outdir: static[string] = "", libdir: static[string] = "",
   conFlags: static[string] = "", cmakeFlags: static[string] = "", makeFlags: static[string] = "",
-  conanFlags: static[string] = "", jbbFlags: static[string] = "", altNames: static[string] = "",
-  buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf]): untyped =
+  mesonFlags: static[string] = "", conanFlags: static[string] = "",
+  jbbFlags: static[string] = "", altNames: static[string] = "",
+  buildTypes: static[openArray[BuildType]] = [btCmake, btAutoconf, btMeson]): untyped =
   ## Get the path to a header file for wrapping with
   ## `cImport() <cimport.html#cImport.m%2C%2Cstring%2Cstring%2Cstring>`_ or
   ## `c2nImport() <cimport.html#c2nImport.m%2C%2Cstring%2Cstring%2Cstring>`_.
@@ -313,9 +316,9 @@ macro getHeader*(
   ## or clang might lead to incompatibility issues if the library uses Visual Studio
   ## specific compiler features.
   ##
-  ## `conFlags`, `cmakeFlags` and `makeFlags` allow sending custom parameters to `configure`,
-  ## `cmake` and `make` in case additional configuration is required as part of the build
-  ## process.
+  ## `conFlags`, `cmakeFlags`, `makeFlags` and `mesonFlags` allow sending custom parameters
+  ## to `configure`, `cmake`, `make` and `meson` in case additional configuration is required
+  ## as part of the build process.
   ##
   ## `conanFlags` and `jbbFlags` allow changing the Conan.io and BinaryBuilder.org defaults:
   ## - `skip=pkg1,pkg2` skips the specified packages which are required dependencies of the
@@ -482,7 +485,7 @@ macro getHeader*(
         elif `nameConan` or `nameJBB`:
           findFile(`lname`, `outdir`, regex = true)
         else:
-          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildTypes`)
+          buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `mesonFlags`, `buildTypes`)
 
       # Library dependecy paths
       ldeps {.compileTime.}: seq[string] =
