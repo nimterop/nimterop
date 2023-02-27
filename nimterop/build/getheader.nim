@@ -53,7 +53,7 @@ macro isDefined*(def: untyped): untyped =
     sdef = gDefines.hasKey(def.strVal())
   result = newNimNode(nnkStmtList)
   result.add(quote do:
-    when defined(`def`) or `sdef` != 0:
+    when defined(`def`) or `sdef`:
       true
     else:
       false
@@ -418,12 +418,12 @@ macro getHeader*(
   result.add(quote do:
     # Need to check -d:xxx or setDefines()
     const
-      `nameStd`* = when defined(`nameStd`): true else: `stdVal` == 1
-      `nameGit`* = when defined(`nameGit`): true else: `gitVal` == 1
-      `nameDL`* = when defined(`nameDL`): true else: `dlVal` == 1
-      `nameConan`* = when defined(`nameConan`): true else: `conanVal` == 1
-      `nameJBB`* = when defined(`nameJBB`): true else: `jbbVal` == 1
-      `nameStatic`* = when defined(`nameStatic`): true else: `staticVal` == 1
+      `nameStd`* = when defined(`nameStd`): true else: `stdVal`
+      `nameGit`* = when defined(`nameGit`): true else: `gitVal`
+      `nameDL`* = when defined(`nameDL`): true else: `dlVal`
+      `nameConan`* = when defined(`nameConan`): true else: `conanVal`
+      `nameJBB`* = when defined(`nameJBB`): true else: `jbbVal`
+      `nameStatic`* = when defined(`nameStatic`): true else: `staticVal`
 
     # Search for header in outdir (after retrieving code) depending on -d:xxx mode
     proc `nameGetPath`(header, giturl, dlurl, conanuri, conanFlags, jbburi, jbbFlags,
