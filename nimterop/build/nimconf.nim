@@ -23,6 +23,7 @@ type
     nimcacheDir*: string
     outDir*: string
 
+
 proc getJson(projectDir: string): JsonNode =
   # Get `nim dump` json value for `projectDir`
   var
@@ -103,8 +104,17 @@ proc getNimConfig*(projectDir = ""): Config =
       libPath = getCurrentCompilerExe().parentDir().parentDir() / "lib"
       lazyPaths = querySettingSeq(MultipleValueSetting.lazyPaths)
       searchPaths = querySettingSeq(MultipleValueSetting.searchPaths)
+      var 
+        nimcacheDir = querySetting(SingleValueSetting.nimcacheDir) 
+      if not nimcacheDir.isAbsolute():
+        # Relative path will be expanded to absolute
+        # on POSIX and Windows otherwise it will be left as is
+        when defined(posix):
+          nimcacheDir = getEnv("PWD") / nimcacheDir
+        when defined(windows):
+          nimcacheDir = staticExec("cmd /c echo %CD%") / nimcacheDir
       result.nimcacheDir = stripName(
-        querySetting(SingleValueSetting.nimcacheDir),
+        nimcacheDir,
         querySetting(SingleValueSetting.projectName)
       )
       result.outDir = querySetting(SingleValueSetting.outDir)

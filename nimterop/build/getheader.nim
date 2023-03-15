@@ -483,7 +483,7 @@ macro getHeader*(
           findFile(`lname`, `outdir`, regex = true)
         else:
           buildLibrary(`lname`, `outdir`, `conFlags`, `cmakeFlags`, `makeFlags`, `buildTypes`)
-
+    
       # Library dependecy paths
       ldeps {.compileTime.}: seq[string] =
         when not useStd:
