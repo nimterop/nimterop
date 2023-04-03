@@ -392,7 +392,7 @@ proc loadPlugin*(gState: State, sourcePath: string) =
       outflags = &"--out:\"{pdll}\""
 
       # Compile plugin as library with `markAndSweep` GC
-      cmd = &"{gState.nim} c --app:lib --gc:markAndSweep {flags} {outflags} {sourcePath.sanitizePath}"
+      cmd = &"{gState.nim} c --app:lib --skipParentCfg:on --gc:markAndSweep {flags} {outflags} {sourcePath.sanitizePath}"
 
       (output, ret) = execAction(cmd, die = false)
     doAssert ret == 0, output & "\nFailed to compile cPlugin()\n\ncmd: " & cmd
