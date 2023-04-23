@@ -153,6 +153,11 @@ proc getIntNode(number, suffix: string): PNode {.inline.} =
   else:
     val = parseInt(number)
 
+  # NOTE: This has some potential to break on platforms where certain popular
+  # assumptions about integer sizes do not follow (e.g. that standard integer
+  # literals are 32 bits long, etc.). Let's hope that we do not have to deal
+  # with that.
+
   case suffix
   of "u", "U":
     result = newNode(nkUintLit)

@@ -596,6 +596,11 @@ struct parenpoin {
   void (*__gtk_reserved1);
 };
 
+// Issue #240
+typedef enum {
+  x = 0x80000000
+} ThisShouldNotBeI64;
+
 #endif
 
 #ifdef __cplusplus
