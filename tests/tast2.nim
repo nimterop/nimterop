@@ -522,3 +522,6 @@ assert SG_MAX_MIPMAPS == 16
 assert parenpoin is object
 var pp: parenpoin
 assert pp.gtk_reserved1 is pointer
+
+assert issue262_a is proc(a1: array[2, cint]) {.cdecl.}
+assert issue262_b is proc(a1: UncheckedArray[cint]) {.cdecl.}
